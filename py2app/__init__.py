@@ -28,5 +28,5 @@ keys in the dictionary are recognized, most are optional:
                 if a directory is contained, must be the same for all targets
 """
 
-__version__ = "0.3"
+__version__ = "0.3.1"
 import py2app.install

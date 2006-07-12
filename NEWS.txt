@@ -1,3 +1,18 @@
+py2app 0.3.1
+------------
+
+py2app 0.3.1 is a minor bugfix release.
+
+Functional changes:
+
+- New EggInstaller example
+
+Bug Fixes:
+
+- Now ensures that the executable is +x (when installed from egg this may not
+  be the case)
+
+
 py2app 0.3.0
 ------------
 

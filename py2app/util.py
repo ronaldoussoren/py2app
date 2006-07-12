@@ -45,6 +45,11 @@ def in_system_path(filename):
 def fsencoding(s, encoding=sys.getfilesystemencoding()):
     return macholib.util.fsencoding(s, encoding=encoding)
 
+def make_exec(path):
+    mask = os.umask(0)
+    os.umask(mask)
+    os.chmod(path, os.stat(path).st_mode | (0111 & ~mask))
+
 def makedirs(path):
     path = fsencoding(path)
     if not os.path.exists(path):

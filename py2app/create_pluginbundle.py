@@ -4,7 +4,7 @@ import shutil
 from pkg_resources import resource_filename
 
 import py2app.bundletemplate
-from py2app.util import makedirs, mergecopy, mergetree, skipscm
+from py2app.util import makedirs, mergecopy, mergetree, skipscm, make_exec
 
 def create_pluginbundle(destdir, name, extension='.plugin', module=py2app.bundletemplate,
         platform='MacOS', copy=mergecopy, mergetree=mergetree,
@@ -32,6 +32,7 @@ def create_pluginbundle(destdir, name, extension='.plugin', module=py2app.bundle
         kw['CFBundlePackageType'] + kw['CFBundleSignature']
     )
     copy(srcmain, destmain)
+    make_exec(destmain)
     mergetree(
         resource_filename(module.__name__, 'lib'),
         resources,

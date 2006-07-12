@@ -37,7 +37,7 @@ CLASSIFIERS = [
 setup(
     # metadata
     name='py2app',
-    version='0.3',
+    version='0.3.1',
     description='distutils command for creating Mac OS X applications',
     author='Bob Ippolito',
     author_email='bob@redivi.com',

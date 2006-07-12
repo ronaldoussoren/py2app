@@ -4,7 +4,7 @@ import shutil
 # XXX - plugins, prefpane, etc?
 from pkg_resources import resource_filename
 import py2app.apptemplate
-from py2app.util import makedirs, mergecopy, mergetree, skipscm
+from py2app.util import makedirs, mergecopy, mergetree, skipscm, make_exec
 
 def create_appbundle(destdir, name, extension='.app', module=py2app.apptemplate,
         platform='MacOS', copy=mergecopy, mergetree=mergetree,
@@ -32,6 +32,7 @@ def create_appbundle(destdir, name, extension='.app', module=py2app.apptemplate,
         kw['CFBundlePackageType'] + kw['CFBundleSignature']
     )
     copy(srcmain, destmain)
+    make_exec(destmain)
     mergetree(
         resource_filename(module.__name__, 'lib'),
         resources,
