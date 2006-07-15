@@ -18,7 +18,6 @@ def infoPlistDict(CFBundleExecutable, plist={}):
         CFBundleShortVersionString=plist.get('CFBundleVersion', u'0.0'),
         CFBundleSignature=u'????',
         CFBundleVersion=u'0.0',
-        LSPrefersPPC=False,
         LSHasLocalizedDisplayName=False,
         NSAppleScriptEnabled=False,
         NSHumanReadableCopyright=u'Copyright not specified',

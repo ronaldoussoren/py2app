@@ -18,7 +18,6 @@ def infoPlistDict(CFBundleExecutable, plist={}):
         CFBundleSignature=u'????',
         CFBundleVersion=u'0.0',
         LSHasLocalizedDisplayName=False,
-        LSPrefersPPC=False,
         NSAppleScriptEnabled=False,
         NSHumanReadableCopyright=u'Copyright not specified',
         NSMainNibFile=u'MainMenu',
