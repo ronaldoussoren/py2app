@@ -48,7 +48,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
     setup_requires=[
-        "bdist_mpkg>=0.4",
+        "bdist_mpkg>=0.4.2",
     ],
     install_requires=[
         "altgraph>=0.6.7",
