@@ -1068,13 +1068,9 @@ class py2app(Command):
         self.copy_tree(self.framework_dir,
             os.path.join(appdir, 'Contents', 'Frameworks'),
             preserve_symlinks=True)
-        sitepkg = os.path.join(
-            pydir,
-            os.path.splitext(os.path.basename(arcname))[0],
-        )
         for pkg in self.packages:
             pkg = self.get_bootstrap(pkg)
-            dst = os.path.join(sitepkg, os.path.basename(pkg))
+            dst = os.path.join(pydir, os.path.basename(pkg))
             self.mkpath(dst)
             self.copy_tree(pkg, dst)
         for copyext in copyexts:
