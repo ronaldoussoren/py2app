@@ -671,10 +671,15 @@ class py2app(Command):
         archive_name = os.path.join(self.lib_dir,
                                     os.path.basename(get_zipfile(dist)))
 
-        for (path, files) in loader_files:
+        for path, files in loader_files:
             dest = os.path.join(self.collect_dir, path)
+            self.mkpath(dest)
             for fn in files:
-                self.copy_file(fn, os.path.join(dest, os.path.basename(fn)))
+                destfn = os.path.join(dest, os.path.basename(fn))
+                if os.path.isdir(fn):
+                    self.copy_tree(fn, destfn, preserve_symlinks=False)
+                else:
+                    self.copy_file(fn, destfn)
 
         arcname = self.make_lib_archive(archive_name,
             base_dir=self.collect_dir, verbose=self.verbose,
