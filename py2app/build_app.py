@@ -13,7 +13,7 @@ import plistlib
 import shlex
 from cStringIO import StringIO
 
-from distutils.core import Command
+from setuptools import Command
 from distutils.util import convert_path
 from distutils import log
 from distutils.errors import *
