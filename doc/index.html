@@ -338,6 +338,8 @@ the <tt class="docutils literal"><span class="pre">LSPrefersPPC</span></tt> Info
 application to run translated with Rosetta by default. This is necessary
 because the py2app bootstrap application is universal, so Finder
 will try and launch natively by default.</p>
+<p>Alternatively, the <tt class="docutils literal"><span class="pre">--prefer-ppc</span></tt> option can be used as a shortcut to
+ensure that this Info.plist key is set.</p>
 </div>
 </div>
 <div class="section">
@@ -525,10 +527,12 @@ $ python setup.py py2app --help
                         (default is dist)
 --site-packages         include the system and user site-packages into
                         sys.path
---debug-modulegraph     Drop to pdb console after the module finding phase
-                        is complete
 --strip (-S)            strip debug and local symbols from output (on by
                         default, for compatibility)
+--prefer-ppc            Force application to run translated on i386
+                        (LSPrefersPPC=True)
+--debug-modulegraph     Drop to pdb console after the module finding phase
+                        is complete
 --debug-skip-macholib   skip macholib phase (app will not be standalone!)
 </pre>
 </div>

@@ -512,10 +512,12 @@ Options for 'py2app' command::
                           (default is dist)
   --site-packages         include the system and user site-packages into
                           sys.path
-  --debug-modulegraph     Drop to pdb console after the module finding phase
-                          is complete
   --strip (-S)            strip debug and local symbols from output (on by
                           default, for compatibility)
+  --prefer-ppc		  Force application to run translated on i386
+                          (LSPrefersPPC=True)
+  --debug-modulegraph     Drop to pdb console after the module finding phase
+                          is complete
   --debug-skip-macholib   skip macholib phase (app will not be standalone!)
 
 
