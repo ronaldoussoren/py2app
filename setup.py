@@ -39,7 +39,7 @@ setup(
     # metadata
     name='py2app',
     version='0.3.3',
-    description='distutils command for creating Mac OS X applications',
+    description='Create standalone Mac OS X applications with Python',
     author='Bob Ippolito',
     author_email='bob@redivi.com',
     url='http://undefined.org/python/#py2app',
