@@ -87,6 +87,8 @@ setup(
         ],
     },
     zip_safe=False,
+    # workaround for setuptools 0.6b4 bug
+    dependency_links=[],
 )
 
 if 'install' in sys.argv:
