@@ -198,10 +198,12 @@ class py2app(Command):
          "directory to put final built distributions in (default is dist)"),
         ('site-packages', None,
          "include the system and user site-packages into sys.path"),
-        ('debug-modulegraph', None,
-         'Drop to pdb console after the module finding phase is complete'),
         ("strip", 'S',
          "strip debug and local symbols from output (on by default, for compatibility)"),
+        ("prefer-ppc", None,
+         "Force application to run translated on i386 (LSPrefersPPC=True)"),
+        ('debug-modulegraph', None,
+         'Drop to pdb console after the module finding phase is complete'),
         ("debug-skip-macholib", None,
          "skip macholib phase (app will not be standalone!)"),
         ]
@@ -221,6 +223,7 @@ class py2app(Command):
         "debug-modulegraph",
         "debug-skip-macholib",
         "graph",
+        "prefer-ppc",
     ]
 
     def initialize_options (self):
@@ -252,6 +255,7 @@ class py2app(Command):
         self.dist_dir = None
         self.debug_skip_macholib = False
         self.debug_modulegraph = False
+        self.prefer_ppc = False
         self.filters = []
         self.eggs = []
 
@@ -455,6 +459,7 @@ class py2app(Command):
                 argv_emulation=bool(self.argv_emulation),
                 no_chdir=bool(self.no_chdir),
                 optimize=self.optimize,
+                prefer_ppc=self.prefer_ppc,
             ),
         )
 
@@ -465,6 +470,19 @@ class py2app(Command):
             plist.update(getattr(target, 'plist', {}))
         plist.update(self.plist)
         plist.update(self.get_plist_options())
+
+        if self.iconfile:
+            iconfile = self.iconfile
+            if not os.path.exists(iconfile):
+                iconfile = iconfile + '.icns'
+            if not os.path.exists(iconfile):
+                raise DistutilsOptionError("icon file must exist: %r"
+                    % (self.icon,))
+            self.resources.append(iconfile)
+            self.plist[u'CFBundleIconFile'] = os.path.basename(iconfile)
+        if self.prefer_ppc:
+            self.plist[u'LSPrefersPPC'] = True
+
         self.plist = plist
         return plist
 
@@ -850,15 +868,6 @@ class py2app(Command):
         prescripts = []
         if self.site_packages or self.alias:
             prescripts.append('site_packages')
-        if self.iconfile:
-            iconfile = self.iconfile
-            if not os.path.exists(iconfile):
-                iconfile = iconfile + '.icns'
-            if not os.path.exists(iconfile):
-                raise DistutilsOptionError("icon file must exist: %r"
-                    % (self.icon,))
-            self.resources.append(iconfile)
-            self.plist[u'CFBundleIconFile'] = os.path.basename(iconfile)
 
         if self.argv_emulation and self.style == 'app':
             prescripts.append('argv_emulation')

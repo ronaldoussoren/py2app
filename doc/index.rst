@@ -314,6 +314,9 @@ application to run translated with Rosetta by default. This is necessary
 because the py2app bootstrap application is universal, so Finder
 will try and launch natively by default.
 
+Alternatively, the ``--prefer-ppc`` option can be used as a shortcut to
+ensure that this Info.plist key is set.
+
 
 Example setup.py templates
 --------------------------
