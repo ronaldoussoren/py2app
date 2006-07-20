@@ -8,14 +8,15 @@ from setuptools import setup, find_packages
 from pkg_resources import require, DistributionNotFound
 
 cmdclass = {}
-try:
-    require("bdist_mpkg>=0.4")
-except DistributionNotFound:
-    pass
-else:
-    sys.path.insert(1, 'setup-lib')
-    import py2app_mpkg
-    cmdclass.update(py2app_mpkg.cmdclass)
+if 0:
+    try:
+        require("bdist_mpkg>=0.4")
+    except DistributionNotFound:
+        pass
+    else:
+        sys.path.insert(1, 'setup-lib')
+        import py2app_mpkg
+        cmdclass.update(py2app_mpkg.cmdclass)
 
 LONG_DESCRIPTION = file('README.txt').read()
 
@@ -47,9 +48,9 @@ setup(
     platforms=['MacOS X'],
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
-    setup_requires=[
-        "bdist_mpkg>=0.4.2",
-    ],
+    #setup_requires=[
+    #    "bdist_mpkg>=0.4.2",
+    #],
     install_requires=[
         "altgraph>=0.6.7",
         "modulegraph>=0.7",
@@ -90,22 +91,3 @@ setup(
     # workaround for setuptools 0.6b4 bug
     dependency_links=[],
 )
-
-if 'install' in sys.argv:
-    import textwrap
-    print textwrap.dedent(
-    """
-    **NOTE**
-
-    Installing py2app with "setup.py install" *does not* install the following:
-
-    - py2applet (GUI applet to create applet)
-    - PackageInstaller (GUI applet to create metapackages)
-
-    The recommended method for installing py2app is to do:
-
-        $ python setup.py bdist_mpkg --open
-
-    This will create and open an Installer metapackage that contains py2app
-    and all the goodies!
-    """)
