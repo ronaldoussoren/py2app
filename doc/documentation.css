@@ -87,7 +87,7 @@ pre.literal-block {
 
 ul.simple { list-style: none; margin: 0em 0em 1em 1.3em; padding: 0;  }
 ul.simple li {
-    background: url("../_img/g_bullet.gif") no-repeat left .5em;
+    background: url("_img/g_bullet.gif") no-repeat left .5em;
     padding-left: 12px;
 }
 
