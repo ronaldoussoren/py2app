@@ -856,10 +856,10 @@ modulegraph:
     such as `GraphViz`_ dot output.
 
 altgraph:
-    `altgraph`_ is a fork of `Istvan Albert`_'s `graphlib`_, and it used
+    `altgraph`_ is a fork of `Istvan Albert`_'s graphlib, and it used
     internally by both `macholib`_ and `modulegraph`_. It contains
     several small feature and performance enhancements over the original
-    `graphlib`_.
+    graphlib.
 
     
 License
@@ -886,7 +886,6 @@ Copyright (c) 2004-2006 Bob Ippolito <bob at redivi.com>.
 .. _`Xcode`: http://developer.apple.com/tools/xcode/
 .. _`distutils`: http://docs.python.org/lib/module-distutils.html
 .. _`py2exe`: http://cheeseshop.python.org/pypi/py2exe/
-.. _`graphlib`: http://www.personal.psu.edu/staff/i/u/iua1/python/graphlib/html/public/graphlib-module.html
 .. _`Istvan Albert`: http://www.personal.psu.edu/staff/i/u/iua1/
 .. _`strip`: x-man-page://1/strip
 .. _`install_name_tool`: x-man-page://1/install_name_tool
