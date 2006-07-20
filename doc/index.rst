@@ -12,6 +12,8 @@ to make standalone application bundles and plugins from Python
 scripts. py2app is similar in purpose and design to `py2exe`_ for
 Windows.
 
+This documentation corresponds to version 0.3.2 of py2app.
+
 
 Installation
 ------------
