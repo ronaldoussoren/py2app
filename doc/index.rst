@@ -18,20 +18,38 @@ This documentation corresponds to version 0.3.3 of py2app.
 Installation
 ------------
 
-If you have a pre-setuptools version of py2app installed, you must first
-remove it before installing::
+Uninstalling py2app 0.2.x (or earlier)
+======================================
 
-    >>> import os, shutil
-    >>> from distutils.sysconfig import *
-    >>> py2app = os.path.join(get_python_lib(), 'py2app')
-    >>> import shutil           
-    >>> if os.path.isdir(py2app): 
-    ...     shutil.rmtree(py2app)
-    ...     
-    >>> if os.path.exists(py2app + '.pth'):
-    ...     os.unlink(py2app + '.pth')
-    ... 
-    >>> 
+If you have a pre-setuptools version of py2app installed, you must first
+remove it before installing (you may have to run the interpreter with sudo,
+depending on how and where py2app was originally installed). There are
+three paths that need to be removed: ``py2app`` and ``py2app.pth`` in your
+site-packages folder, and the ``py2applet`` script which may be in
+``/usr/local/bin/`` or otherwise in the bin directory belonging to the Python
+framework that was installed.
+
+Here is a Python script that should find these three paths and remove them
+if they exist (you may have to use sudo)::
+
+    #!/usr/bin/env python
+    import os, shutil
+    from distutils.sysconfig import *
+    py2app = os.path.join(get_python_lib(), 'py2app')
+    import shutil           
+    if os.path.isdir(py2app): 
+        print "Removing " + py2app
+        shutil.rmtree(py2app)
+        
+    if os.path.exists(py2app + '.pth'):
+        print "Removing " + py2app + '.pth'
+        os.unlink(py2app + '.pth')
+    
+    for path in os.environ['PATH'].split(':'):
+        script = os.path.join(path, 'py2applet')
+        if os.path.exists(script):
+            print "Removing " + script
+            os.unlink(script)
 
 
 Installing with easy_install
