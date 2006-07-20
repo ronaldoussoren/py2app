@@ -29,4 +29,6 @@ keys in the dictionary are recognized, most are optional:
 """
 
 __version__ = "0.3.3"
-import py2app.install
+
+# This makes the py2app command work in the distutils.core.setup() case
+import setuptools
