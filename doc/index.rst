@@ -283,7 +283,7 @@ Specifying customizations
 There are three ways to specify ``Info.plist`` customizations to py2app.
 
 You can specify an Info.plist XML file on the command-line with the
-``--plist` option, or as a string in your ``setup.py``::
+``--plist`` option, or as a string in your ``setup.py``::
 
     setup(
         app=['MyApplication.py'],
