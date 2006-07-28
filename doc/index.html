@@ -200,9 +200,10 @@ does not create standalone applications, and the applications built in
 alias mode are not portable to other machines. This mode is similar to the
 <a class="reference" href="http://cheeseshop.python.org/pypi/setuptools/">setuptools</a> <tt class="docutils literal"><span class="pre">develop</span></tt> command, or <a class="reference" href="http://developer.apple.com/tools/xcode/">Xcode</a>'s zero-link feature.</p>
 <p>To build the application in alias mode, execute <tt class="docutils literal"><span class="pre">setup.py</span></tt> with the
-<tt class="docutils literal"><span class="pre">py2app</span></tt> command and specify the <tt class="docutils literal"><span class="pre">-A</span></tt> option (or <tt class="docutils literal"><span class="pre">--alias</span></tt>)</p>
-<blockquote>
-$ python setup.py py2app -A</blockquote>
+<tt class="docutils literal"><span class="pre">py2app</span></tt> command and specify the <tt class="docutils literal"><span class="pre">-A</span></tt> option (or <tt class="docutils literal"><span class="pre">--alias</span></tt>):</p>
+<pre class="literal-block">
+$ python setup.py py2app -A
+</pre>
 <p>After this, py2app will spit out a bunch of messages to your terminal
 and you'll end up with new <tt class="docutils literal"><span class="pre">build</span></tt> and <tt class="docutils literal"><span class="pre">dist</span></tt> folders. The <tt class="docutils literal"><span class="pre">build</span></tt>
 folder contains build sludge that you'll never need to touch,

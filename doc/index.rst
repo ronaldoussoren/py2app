@@ -146,7 +146,7 @@ alias mode are not portable to other machines. This mode is similar to the
 `setuptools`_ ``develop`` command, or `Xcode`_'s zero-link feature.
 
 To build the application in alias mode, execute ``setup.py`` with the
-``py2app`` command and specify the ``-A`` option (or ``--alias``)
+``py2app`` command and specify the ``-A`` option (or ``--alias``)::
 
     $ python setup.py py2app -A
 
