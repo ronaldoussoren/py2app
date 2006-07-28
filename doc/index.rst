@@ -685,8 +685,8 @@ The main script is compiled to Python bytecode and analyzed by modulegraph
 for ``import`` bytecode. It uses this to build a dependency graph of all
 involved Python modules.
 
-The dependency graph is primed with any ``includes``, ``excludes``, or
-``packages`` options.
+The dependency graph is primed with any ``--includes``, ``--excludes``, or
+``--packages`` options.
 
 
 Apply recipes
@@ -707,15 +707,15 @@ always be run for every application built. This ensures that the contents
 of your Mac OS X installation (``/usr/``, ``/System/``, excluding
 ``/usr/local/``) will be excluded.
 
-If the ``semi-standalone`` option is used (forced if a vendor Python is being
-used), then the ``not_stdlib_filter`` will be automatically added to ensure
-that the Python standard library is not included.
+If the ``--semi-standalone`` option is used (forced if a vendor Python is
+being used), then the ``not_stdlib_filter`` will be automatically added to
+ensure that the Python standard library is not included.
 
 
 Produce graphs
 ==============
 
-If the ``xref`` or ``graph`` option is used, then the ``modulegraph`` is
+If the ``--xref`` or ``--graph`` option is used, then the ``modulegraph`` is
 output to HTML or `GraphViz`_ respectively. The ``.html`` or ``.dot`` file
 will be in the ``dist`` folder, and will share the application's name.
 
@@ -733,7 +733,7 @@ A ``__boot__.py`` script will be created in the ``Contents/Resources/`` folder
 of the application bundle. This script runs any prescripts used by the
 application and then your main script.
 
-If the ``alias`` option is being used, the build procedure is finished.
+If the ``--alias`` option is being used, the build procedure is finished.
 
 The main script of your application will be copied *as-is* to the 
 ``Contents/Resources/`` folder of the application bundle. If you want to
@@ -764,7 +764,7 @@ them inside the application bundle.
 
 ``Python.framework`` is special-cased here so as to only include the bare
 minimum, otherwise the documentation, entire standard library, etc. would've
-been included. If the ``semi-standalone`` option or a vendor Python is used,
+been included. If the ``--semi-standalone`` option or a vendor Python is used,
 then the ``Python.framework`` is ignored. All other vendor files (those in
 ``/usr/`` or ``/System/`` excluding ``/usr/local/``) are also excluded.
 
@@ -772,7 +772,7 @@ then the ``Python.framework`` is ignored. All other vendor files (those in
 Strip the result
 ================
 
-Unless the ``no-strip`` option is specified, all Mach-O files in the 
+Unless the ``--no-strip`` option is specified, all Mach-O files in the 
 application bundle are stripped using the `strip`_ tool. This removes
 debugging symbols to make your application smaller.
 
@@ -781,7 +781,7 @@ Copy Python configuration
 =========================
 
 This only occurs when not using a vendor Python or using the
-``semi-standalone`` option.
+``--semi-standalone`` option.
 
 The Python configuration, which is used by ``distutils`` and ``pkg_resources``
 is copied to ``Contents/Resources/lib/python2.X/config/``. This is needed
@@ -802,23 +802,27 @@ normally pass to the ``py2app`` command, plus the names of any scripts,
 packages, icons, plist files, or data files that you want to generate
 the application from.
 
-The ``argv-emulation`` is assumed to be desired.
+The ``--argv-emulation`` option is assumed to be desired by default for
+``py2applet`` scripts.
 
 The first ``.py`` file is the main script. The application's name will
 be derived from this main script.
 
-The first ``.icns`` file, if any, will be used as the application's icon.
+The first ``.icns`` file, if any, will be used as the application's icon
+(equivalent to using the ``--iconfile`` option).
 
-Any folder given that contains an ``__init__.py`` will be included using the
-``packages`` option.
+Any folder given that contains an ``__init__.py`` will be wholly included as
+out of the zip file (equivalent to using the ``--packages`` option).
 
 Any other file or folder will be included in the ``Contents/Resources/``
-directory of the application bundle with the ``data_files`` option.
+directory of the application bundle (equivalent to the ``--resources``
+option).
 
-If ``--make-setup`` is passed as the first option to py2applet, it will
+If ``--make-setup`` is passed as the first option to ``py2applet``, it will
 generate a ``setup.py`` file that would do the above if run. This can
 be used to quickly generate a ``setup.py`` for a new project, or if you
-need to tweak a few complex options. 
+need to tweak a few complex options. The `Tutorial`_ demonstrates this
+functionality.
 
 
 Dependencies
