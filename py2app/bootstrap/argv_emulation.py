@@ -7,7 +7,7 @@ def _get_argvemulator():
     import traceback
     from Carbon import AE
     from Carbon.AppleEvents import kCoreEventClass, kAEOpenApplication, \
-        kAEOpenDocuments, keyDirectObject, typeAEList
+        kAEOpenDocuments, keyDirectObject, typeAEList, typeAlias
     from Carbon import Evt
     from Carbon import File
     from Carbon.Events import highLevelEventMask, kHighLevelEvent
