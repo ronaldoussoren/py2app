@@ -1,32 +1,41 @@
 import sys, os
 import pprint
+try:
+    set
+except NameError:
+    from sets import Set as set
 
-def somefunc():
-    print "Hello from py2app"
+def print_sys():
+    for arg in 'prefix', 'exec_prefix', 'executable':
+        print '%s: %s' % (arg, getattr(sys, arg))
 
-    print "frozen", repr(getattr(sys, "frozen", None))
+def host_main():
+    print 'Hello from main executable (pid: %s)' % (os.getpid(),)
+    print_sys()
+    print ''
+    os.spawnv(os.P_WAIT, sys.executable, [sys.executable, __file__, 'subinterpreter', repr(sys.path)])
 
-    import __main__
-    print __main__.__file__
-    print "sys.path", sys.path
-    print "sys.executable", sys.executable
-    print "sys.prefix", sys.prefix
-    print "sys.argv", sys.argv
-    print "os.getcwd()", os.getcwd()
-    pprint.pprint(dict(os.environ))
-
-def innerbundle():
-    import site
-    import os
-    site.addsitedir(os.path.expanduser('~/Library/Python/2.3/site-packages'))
-    print '------------------------'
-    somefunc()
-    from AppKit import NSBeep
-    NSBeep()
+def spawned_main():
+    print 'Hello from spawned executable (pid: %s)' % (os.getpid(),)
+    print_sys()
+    print ''
+    otherpaths = set(filter(os.path.exists, eval(sys.argv[2])))
+    mypaths = set(filter(os.path.exists, sys.path))
+    mine_not_other = list(mypaths - otherpaths)
+    other_not_mine = list(otherpaths - mypaths)
+    mine_not_other.sort()
+    other_not_mine.sort()
+    if mine_not_other or other_not_mine:
+        print 'Path mismatch :('
+        if mine_not_other:
+            print 'sub-interpreter extras: ', mine_not_other
+        if other_not_mine:
+            print 'sub-interpreter missing: ', other_not_mine
+    else:
+        print 'Sub-interpreter launched ok!'
 
 if __name__ == '__main__':
-    if not sys.argv[1:]:
-        somefunc()
-        os.spawnv(os.P_WAIT, sys.executable, [sys.executable, __file__, 'arg'])
+    if sys.argv[1:2] == ['subinterpreter']:
+        spawned_main()
     else:
-        innerbundle()
+        host_main()
