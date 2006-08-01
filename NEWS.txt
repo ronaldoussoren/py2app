@@ -1,3 +1,33 @@
+py2app 0.3.3
+------------
+
+py2app 0.3.3 is a minor bugfix release.
+
+Bug Fixes:
+
+- Fixed a typo in the argv emulation code
+- Removed the unnecessary py2app.install hack (setuptools does that already)
+
+
+py2app 0.3.2
+------------
+
+py2app 0.3.2 is a major bugfix release.
+
+Functional changes:
+
+- Massively updated documentation
+- New prefer-ppc option
+- New recipes: numpy, scipy, matplotlib
+- Updated py2applet script to take options, provide --make-setup
+
+Bug Fixes:
+
+- No longer defaults to LSPrefersPPC
+- Replaced stdlib usage of argvemulator to inline version for i386
+  compatibility
+
+
 py2app 0.3.1
 ------------
 
