@@ -1,3 +1,15 @@
+py2app 0.3.4
+------------
+
+py2app 0.3.4 is a minor bugfix release.
+
+Bug fixes:
+
+- Fixed a typo in the py2applet script
+- Removed some, but not all, compiler warnings from the bundle template
+  (which is still probably broken anyway)
+
+
 py2app 0.3.3
 ------------
 

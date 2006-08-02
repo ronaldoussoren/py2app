@@ -171,7 +171,7 @@ def build(args, scripts, data_files, options):
     old_path = sys.path
     path_insert = set()
     for script in scripts:
-        path_insert.add(os.path.dirname(script['script']))
+        path_insert.add(os.path.dirname(script))
     sys.path = list(path_insert) + old_path
     old_dir = os.getcwd()
     tempdir = tempfile.mkdtemp()

@@ -21,16 +21,13 @@
 //
 NSString *ERR_REALLYBADTITLE = @"The bundle could not be launched.";
 NSString *ERR_TITLEFORMAT = @"%@ has encountered a fatal error, and will now terminate.";
-NSString *ERR_NONAME = @"The Info.plist file must have values for the CFBundleName or CFBundleExecutable strings.";
 NSString *ERR_PYRUNTIMELOCATIONS = @"The Info.plist file must have a PyRuntimeLocations array containing string values for preferred Python runtime locations.  These strings should be \"otool -L\" style mach ids; \"@executable_stub\" and \"~\" prefixes will be translated accordingly.";
 NSString *ERR_NOPYTHONRUNTIME = @"A Python runtime could be located.  You may need to install a framework build of Python, or edit the PyRuntimeLocations array in this bundle's Info.plist file.\rThese runtime locations were attempted:\r\r";
 NSString *ERR_NOPYTHONSCRIPT = @"A main script could not be located in the Resources folder.\rThese files were tried:\r\r";
 NSString *ERR_LINKERRFMT = @"An internal error occurred while attempting to link with:\r\r%s\r\rSee the Console for a detailed dyld error message";
-NSString *ERR_PYTHONEXCEPTION = @"An uncaught exception was raised during execution of the main script:\r\r%@: %@\r\rThis may mean that an unexpected error has occurred, or that you do not have all of the dependencies for this bundle.\r\rSee the Console for a detailed traceback.";
-NSString *ERR_DEFAULTURLTITLE = @"Visit Website";
-NSString *ERR_CONSOLEAPP = @"Console.app";
-NSString *ERR_CONSOLEAPPTITLE = @"Open Console";
-NSString *ERR_TERMINATE = @"Terminate";
+NSString *ERR_PYTHONEXCEPTION = @"An uncaught exception was raised during execution of the main script:\r\r%@: %@\r\rThis may mean that an unexpected error has occurred, or that you do not have all of the dependencies for this bundle.";
+NSString *ERR_COLONPATH = @"Python bundles can not currently run from paths containing a '/' (or ':' from the Terminal).";
+
 #define PYMACAPP_NSIMAGEFLAGS (NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING)
 #define PYMACAPP_NSLOOKUPSYMBOLINIMAGEFLAGS (NSLOOKUPSYMBOLINIMAGE_OPTION_BIND | NSLOOKUPSYMBOLINIMAGE_OPTION_RETURN_ON_ERROR)
 //
@@ -84,11 +81,11 @@ static NSString *getErrorTitle(NSString *bundleName);
 static const char *bundlePath();
 static NSBundle *bundleBundle();
 static int pyobjc_main(int argc, char * const *argv, char * const *envp);
-#if 0
-#if __GNUC__ < 4
-#pragma CALL_ON_LOAD _py2app_bundle_load
-#endif
-#endif
+
+//
+// Mach-O Constructor
+//
+
 static void __attribute__ ((constructor)) _py2app_bundle_load(void);
 
 //
@@ -98,7 +95,7 @@ static void __attribute__ ((constructor)) _py2app_bundle_load(void);
 static
 const char *bundlePath() {
     int i;
-    struct mach_header *myHeader = _dyld_get_image_header_containing_address((unsigned long)&bundlePath);
+    const struct mach_header *myHeader = _dyld_get_image_header_containing_address(&bundlePath);
     int count = _dyld_image_count();
     for (i = 0; i < count; i++) {
         if (_dyld_get_image_header(i) == myHeader) {
