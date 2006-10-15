@@ -1,6 +1,14 @@
 py2app 0.3.5
 ------------
 
+py2app 0.3.5 is a minor bugfix release.
+
+Bug fixes:
+
+- Resolve disable_linecache issue
+- Fix Info.plist and Python path for plugins
+
+
 py2app 0.3.4
 ------------
 
