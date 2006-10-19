@@ -1,6 +1,8 @@
 py2app 0.3.6
 ------------
 
+Bug fixes:
+- Ensure that custom icons are copied into the output bundle
 
 py2app 0.3.5
 ------------
