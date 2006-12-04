@@ -38,20 +38,20 @@ static CFTypeRef getKey(const char *key);
 /*
     Strings
 */
-const char *ERR_REALLYBADTITLE = "The application could not be launched.";
-const char *ERR_TITLEFORMAT = "%@ has encountered a fatal error, and will now terminate.";
-const char *ERR_NONAME = "The Info.plist file must have values for the CFBundleName or CFBundleExecutable strings.";
-const char *ERR_PYRUNTIMELOCATIONS = "The Info.plist file must have a PyRuntimeLocations array containing string values for preferred Python runtime locations.  These strings should be \"otool -L\" style mach ids; \"@executable_stub\" and \"~\" prefixes will be translated accordingly.";
-const char *ERR_NOPYTHONRUNTIME = "A Python runtime could be located.  You may need to install a framework build of Python, or edit the PyRuntimeLocations array in this application's Info.plist file.";
-const char *ERR_NOPYTHONSCRIPT = "A main script could not be located in the Resources folder.;";
-const char *ERR_LINKERRFMT = "An internal error occurred while attempting to link with:\r\r%s\r\rSee the Console for a detailed dyld error message";
-const char *ERR_UNKNOWNPYTHONEXCEPTION = "An uncaught exception was raised during execution of the main script, but its class or name could not be determined";
-const char *ERR_PYTHONEXCEPTION = "An uncaught exception was raised during execution of the main script:\r\r%@: %@\r\rThis may mean that an unexpected error has occurred, or that you do not have all of the dependencies for this application.\r\rSee the Console for a detailed traceback.";
-const char *ERR_COLONPATH = "Python applications can not currently run from paths containing a '/' (or ':' from the Terminal).";
-const char *ERR_DEFAULTURLTITLE = "Visit Website";
-const char *ERR_CONSOLEAPP = "Console.app";
-const char *ERR_CONSOLEAPPTITLE = "Open Console";
-const char *ERR_TERMINATE = "Terminate";
+static const char *ERR_REALLYBADTITLE = "The application could not be launched.";
+static const char *ERR_TITLEFORMAT = "%@ has encountered a fatal error, and will now terminate.";
+static const char *ERR_NONAME = "The Info.plist file must have values for the CFBundleName or CFBundleExecutable strings.";
+static const char *ERR_PYRUNTIMELOCATIONS = "The Info.plist file must have a PyRuntimeLocations array containing string values for preferred Python runtime locations.  These strings should be \"otool -L\" style mach ids; \"@executable_stub\" and \"~\" prefixes will be translated accordingly.";
+static const char *ERR_NOPYTHONRUNTIME = "A Python runtime could be located.  You may need to install a framework build of Python, or edit the PyRuntimeLocations array in this application's Info.plist file.";
+static const char *ERR_NOPYTHONSCRIPT = "A main script could not be located in the Resources folder.;";
+static const char *ERR_LINKERRFMT = "An internal error occurred while attempting to link with:\r\r%s\r\rSee the Console for a detailed dyld error message";
+static const char *ERR_UNKNOWNPYTHONEXCEPTION = "An uncaught exception was raised during execution of the main script, but its class or name could not be determined";
+static const char *ERR_PYTHONEXCEPTION = "An uncaught exception was raised during execution of the main script:\r\r%@: %@\r\rThis may mean that an unexpected error has occurred, or that you do not have all of the dependencies for this application.\r\rSee the Console for a detailed traceback.";
+static const char *ERR_COLONPATH = "Python applications can not currently run from paths containing a '/' (or ':' from the Terminal).";
+static const char *ERR_DEFAULTURLTITLE = "Visit Website";
+static const char *ERR_CONSOLEAPP = "Console.app";
+static const char *ERR_CONSOLEAPPTITLE = "Open Console";
+static const char *ERR_TERMINATE = "Terminate";
 
 /*
     Constants
@@ -67,9 +67,9 @@ const char *ERR_TERMINATE = "Terminate";
 /*
     Globals
 */
-CFMutableArrayRef pool;
+static CFMutableArrayRef pool;
 
-#define USES(NAME) __typeof__(&NAME) x ## NAME
+#define USES(NAME) static __typeof__(&NAME) x ## NAME
 /* ApplicationServices */
 USES(LSOpenFSRef);
 USES(LSFindApplicationForInfo);
@@ -123,19 +123,19 @@ USES(CFStringGetMaximumSizeForEncoding);
     objc
 */
 
-#define CLS(name) objc_getClass(name)
+#define CLS(name) xobjc_getClass(name)
 #define MSG(receiver, selName, ...) \
-    objc_msgSend(receiver, sel_getUid(selName), ## __VA_ARGS__)
-id (*objc_getClass)(const char *name);
-SEL (*sel_getUid)(const char *str);
-id (*objc_msgSend)(id self, SEL op, ...);
+    xobjc_msgSend(receiver, xsel_getUid(selName), ## __VA_ARGS__)
+static id (*xobjc_getClass)(const char *name);
+static SEL (*xsel_getUid)(const char *str);
+static id (*xobjc_msgSend)(id self, SEL op, ...);
 
 /*
     Cocoa
 */
-void (*NSLog)(CFStringRef format, ...);
-BOOL (*NSApplicationLoad)();
-int (*NSRunAlertPanel)(CFStringRef title, CFStringRef msg, CFStringRef defaultButton, CFStringRef alternateButton, CFStringRef otherButton, ...);
+static void (*xNSLog)(CFStringRef format, ...);
+static BOOL (*xNSApplicationLoad)();
+static int (*xNSRunAlertPanel)(CFStringRef title, CFStringRef msg, CFStringRef defaultButton, CFStringRef alternateButton, CFStringRef otherButton, ...);
 
 /*
     Functions
@@ -153,7 +153,7 @@ static int bind_objc_Cocoa_ApplicationServices() {
         cf_dylib, "_" #NAME, \
         PYMACAPP_NSLOOKUPSYMBOLINIMAGEFLAGS); \
     if (!tmpSymbol) return -1; \
-    NAME = (__typeof__(NAME))NSAddressOfSymbol(tmpSymbol); \
+    x ## NAME = (__typeof__(x ## NAME))NSAddressOfSymbol(tmpSymbol); \
     } while (0)
 
     LOOKUP(objc_getClass);
@@ -309,7 +309,7 @@ static CFStringRef getErrorTitle(CFStringRef applicationName) {
 static void ensureGUI() {
     ProcessSerialNumber psn;
     id app = MSG(CLS("NSApplication"), "sharedApplication");
-    NSApplicationLoad();
+    xNSApplicationLoad();
     MSG(app, "activateIgnoringOtherApps:", (BOOL)1);
     if (xGetCurrentProcess(&psn) == noErr) {
         xSetFrontProcess(&psn);
@@ -324,12 +324,12 @@ static int report_error(const char *error) {
         return -1;
     }
     releasePool = MSG(MSG(CLS("NSAutoreleasePool"), "alloc"), "init");
-    NSLog(xCFSTR(error));
-    if (!NSApplicationLoad()) {
-        NSLog(xCFSTR("NSApplicationLoad() failed"));
+    xNSLog(xCFSTR(error));
+    if (!xNSApplicationLoad()) {
+        xNSLog(xCFSTR("NSApplicationLoad() failed"));
     } else {
         ensureGUI();
-        choice = NSRunAlertPanel(
+        choice = xNSRunAlertPanel(
             getErrorTitle(getApplicationName()),
             xCFSTR(error),
             xCFSTR(ERR_TERMINATE),
@@ -584,7 +584,7 @@ static CFStringRef getMainScript() {
     return path;
 }
 
-int report_linkEdit_error() {
+static int report_linkEdit_error() {
     NSLinkEditErrors errorClass;
     int errorNumber;
     CFStringRef errString;
@@ -602,7 +602,7 @@ int report_linkEdit_error() {
     return report_error(buf);
 }
 
-CFStringRef getPythonInterpreter(CFStringRef pyLocation) {
+static CFStringRef getPythonInterpreter(CFStringRef pyLocation) {
     CFBundleRef bndl;
     CFStringRef auxName;
     CFURLRef auxURL;
@@ -819,7 +819,7 @@ static int report_script_error(const char *msg, CFStringRef cls, CFStringRef nam
     AUTORELEASE(title);
     lineCount -= 1;
     xCFArrayRemoveValueAtIndex(lines, lineCount);
-    NSLog(title);
+    xNSLog(title);
     if (lineCount > 0) {
         CFStringRef showerr;
         errmsg = xCFStringCreateByCombiningStrings(
@@ -828,19 +828,19 @@ static int report_script_error(const char *msg, CFStringRef cls, CFStringRef nam
         showerr = MSG(
             MSG(errmsg, "componentsSeparatedByString:", xCFSTR("\r")),
             "componentsJoinedByString:", xCFSTR("\n"));
-        NSLog(showerr);
+        xNSLog(showerr);
     } else {
         errmsg = xCFSTR("");
     }
 
     ensureGUI();
     if (!buttonURL) {
-        int choice = NSRunAlertPanel(
+        int choice = xNSRunAlertPanel(
             title, errmsg, xCFSTR(ERR_TERMINATE),
             xCFSTR(ERR_CONSOLEAPPTITLE), NULL);
         if (choice == NSAlertAlternateReturn) openConsole();
     } else {
-        int choice = NSRunAlertPanel(
+        int choice = xNSRunAlertPanel(
             title, errmsg, xCFSTR(ERR_TERMINATE), buttonString, NULL);
         if (choice == NSAlertAlternateReturn) {
             id ws = MSG(CLS("NSWorkspace"), "sharedWorkspace");

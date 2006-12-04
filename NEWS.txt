@@ -1,8 +1,12 @@
 py2app 0.3.6
 ------------
 
+py2app 0.3.6 is a minor bugfix release.
+
 Bug fixes:
+
 - Ensure that custom icons are copied into the output bundle
+- Solve compatibility problem with some haxies and inputmanager plugins
 
 py2app 0.3.5
 ------------
