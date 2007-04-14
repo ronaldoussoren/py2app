@@ -979,7 +979,7 @@ class py2app(Command):
             if fmwk is None:
                 yield fn
             else:
-                basename = fmwk['name'] + '.framework'
+                basename = fmwk['shortname'] + '.framework'
                 yield os.path.join(fmwk['location'], basename)
     
     def build_alias_executable(self, target, script):
