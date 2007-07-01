@@ -113,17 +113,20 @@ LOADER = """
 def __load():
     import imp, os, sys
     ext = %r
+    dynload_found = False
     for path in sys.path:
         if not path.endswith('lib-dynload'):
             continue
-        ext = os.path.join(path, ext)
-        if os.path.exists(ext):
-            #print "py2app extension module", __name__, "->", ext
-            mod = imp.load_dynamic(__name__, ext)
+        ext_path = os.path.join(path, ext)
+        dynload_found = True
+        # should a system-wide (located in /System/... or /Library/...) lib-dynload even be tried?
+        if os.path.exists(ext_path):
+            #print "py2app extension module", __name__, "->", ext_path
+            mod = imp.load_dynamic(__name__, ext_path)
             #mod.frozen = 1
-            break
-        else:
-            raise ImportError, repr(ext) + " not found"
+            return
+    if dynload_found:
+        raise ImportError, repr(ext_path) + " not found"
     else:
         raise ImportError, "lib-dynload not found"
 __load()
