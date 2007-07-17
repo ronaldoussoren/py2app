@@ -9,7 +9,7 @@ def main():
     src = os.path.join(basepath, 'src', 'main.m')
     if not os.path.exists(dest) or os.stat(dest).st_mtime < os.stat(src).st_mtime:
         CC = os.environ.get("CC", "cc")
-        CFLAGS = '-Os -Wall'
+        CFLAGS = '-Os -Wall -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc'
         LDFLAGS = '-g -bundle -framework Foundation -framework AppKit'
         os.system('"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s %(LDFLAGS)s' % locals())
         os.system('strip -Sx "%(dest)s"' % locals())
