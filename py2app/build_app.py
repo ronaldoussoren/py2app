@@ -12,6 +12,7 @@ import zipfile
 import plistlib
 import shlex
 from cStringIO import StringIO
+from types import ListType, TupleType
 
 from setuptools import Command
 from distutils.util import convert_path
@@ -105,6 +106,12 @@ def validate_target(dist, attr, value):
 def FixupTargets(targets, default_attribute):
     if not targets:
         return targets
+    try:
+        targets = eval(targets)
+    except:
+        pass
+    if type(targets) not in (ListType, TupleType):
+        targets = [targets]
     ret = []
     for target_def in targets:
         if isinstance(target_def, basestring):
@@ -145,8 +152,11 @@ class py2app(Command):
     # List of option tuples: long name, short name (None if no short
     # name), and help string.
 
-
     user_options = [
+        ("app=", None,
+         "application bundle to be built"),
+        ("plugin=", None,
+         "plugin bundle to be built"),
         ('optimize=', 'O',
          "optimization level: -O1 for \"python -O\", "
          "-O2 for \"python -OO\", and -O0 to disable [default: -O0]"),
@@ -227,6 +237,8 @@ class py2app(Command):
     ]
 
     def initialize_options (self):
+        self.app = None
+        self.plugin = None
         self.bdist_base = None
         self.xref = False
         self.graph = False
@@ -819,9 +831,18 @@ class py2app(Command):
     def fixup_distribution(self):
         dist = self.distribution
 
+        # Trying to obtain app and plugin from dist for backward compatibility
+        # reasons.
+        app = dist.app
+        plugin = dist.plugin
+        # If we can get suitable values from self.app or self.plugin, we prefer
+        # them.
+        if self.app is not None or self.plugin is not None:
+            app = self.app
+            plugin = self.plugin
         # Convert our args into target objects.
-        dist.app = FixupTargets(dist.app, "script")
-        dist.plugin = FixupTargets(dist.plugin, "script")
+        dist.app = FixupTargets(app, "script")
+        dist.plugin = FixupTargets(plugin, "script")
         if dist.app and dist.plugin:
             # XXX - support apps and plugins?
             raise DistutilsOptionError(
