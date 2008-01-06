@@ -1,3 +1,9 @@
+"""
+Script for building the example.
+
+Usage:
+    python setup.py py2app
+"""
 from setuptools import setup
 import os
 VERSION = '3.10.1'

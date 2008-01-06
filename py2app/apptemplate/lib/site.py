@@ -12,8 +12,12 @@ _parent = '/'.join(__file__.split('/')[:-1])
 if not _parent.endswith(_libdir):
     _parent += _libdir
 sys.path.append(_parent + '/site-packages.zip')
-import os
 
+# Stuffit decompresses recursively by default, that can mess up py2app bundles,
+# add the uncompressed site-packages to the path to compensate for that.
+sys.path.append(_parent + '/site-packages')
+
+import os
 
 def makepath(*paths):
     dir = os.path.abspath(os.path.join(*paths))

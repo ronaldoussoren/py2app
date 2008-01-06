@@ -22,7 +22,7 @@
 NSString *ERR_REALLYBADTITLE = @"The bundle could not be launched.";
 NSString *ERR_TITLEFORMAT = @"%@ has encountered a fatal error, and will now terminate.";
 NSString *ERR_PYRUNTIMELOCATIONS = @"The Info.plist file must have a PyRuntimeLocations array containing string values for preferred Python runtime locations.  These strings should be \"otool -L\" style mach ids; \"@executable_stub\" and \"~\" prefixes will be translated accordingly.";
-NSString *ERR_NOPYTHONRUNTIME = @"A Python runtime could not be located.  You may need to install a framework build of Python, or edit the PyRuntimeLocations array in this bundle's Info.plist file.\rThese runtime locations were attempted:\r\r";
+NSString *ERR_NOPYTHONRUNTIME = @"A Python runtime could be located.  You may need to install a framework build of Python, or edit the PyRuntimeLocations array in this bundle's Info.plist file.\rThese runtime locations were attempted:\r\r";
 NSString *ERR_NOPYTHONSCRIPT = @"A main script could not be located in the Resources folder.\rThese files were tried:\r\r";
 NSString *ERR_LINKERRFMT = @"An internal error occurred while attempting to link with:\r\r%s\r\rSee the Console for a detailed dyld error message";
 NSString *ERR_PYTHONEXCEPTION = @"An uncaught exception was raised during execution of the main script:\r\r%@: %@\r\rThis may mean that an unexpected error has occurred, or that you do not have all of the dependencies for this bundle.";
@@ -138,8 +138,8 @@ int report_script_error(NSString *err, NSString *errClassName, NSString *errName
 
 static
 int report_error(NSString *err) {
-    NSLog(getErrorTitle(getBundleName()));
-    NSLog(err);
+    NSLog(@"%@", getErrorTitle(getBundleName()));
+    NSLog(@"%@", err);
     return -1;
 }
 

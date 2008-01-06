@@ -7,6 +7,25 @@ Features:
 
 - A new recipe for `PyQt`_ 4.x. This recipe was donated by Kevin Walzer.
 
+py2app 0.4.0
+------------
+
+py2app 0.4.0 is a minor feature release (and was never formally released).
+
+Features:
+- Support for CoreData mapping models (introduced in Mac OS X 10.5)
+- Support for python packages that are stored in zipfiles (such as ``zip_safe``
+  python eggs). 
+
+Bug fixes:
+- Fix incorrect symlink target creation with an alias bundle that has included
+  frameworks.
+- Stuffit tends to extract archives recursively, which results in unzipped
+  code archives inside py2app-created bundles. This version has a workaround
+  for this "feature" for Stuffit.
+- Be more carefull about passing non-constant strings as the template argumenti
+  of string formatting functions (in the app and bundle templates), to avoid
+  crashes under some conditions.
 
 py2app 0.3.6
 ------------

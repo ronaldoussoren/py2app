@@ -324,17 +324,18 @@ static int report_error(const char *error) {
         return -1;
     }
     releasePool = MSG(MSG(CLS("NSAutoreleasePool"), "alloc"), "init");
-    xNSLog(xCFSTR(error));
+    xNSLog(xCFSTR("%@"), xCFSTR(error));
     if (!xNSApplicationLoad()) {
         xNSLog(xCFSTR("NSApplicationLoad() failed"));
     } else {
         ensureGUI();
         choice = xNSRunAlertPanel(
             getErrorTitle(getApplicationName()),
-            xCFSTR(error),
+            xCFSTR("%@"),
             xCFSTR(ERR_TERMINATE),
             xCFSTR(ERR_CONSOLEAPPTITLE),
-            NULL);
+            NULL,
+            xCFSTR(error));
         if (choice == NSAlertAlternateReturn) openConsole();
     }
     MSG(releasePool, "release");
@@ -819,7 +820,7 @@ static int report_script_error(const char *msg, CFStringRef cls, CFStringRef nam
     AUTORELEASE(title);
     lineCount -= 1;
     xCFArrayRemoveValueAtIndex(lines, lineCount);
-    xNSLog(title);
+    xNSLog(xCFSTR("%@"), title);
     if (lineCount > 0) {
         CFStringRef showerr;
         errmsg = xCFStringCreateByCombiningStrings(
@@ -828,7 +829,7 @@ static int report_script_error(const char *msg, CFStringRef cls, CFStringRef nam
         showerr = MSG(
             MSG(errmsg, "componentsSeparatedByString:", xCFSTR("\r")),
             "componentsJoinedByString:", xCFSTR("\n"));
-        xNSLog(showerr);
+        xNSLog(xCFSTR("%@"), showerr);
     } else {
         errmsg = xCFSTR("");
     }
@@ -836,12 +837,13 @@ static int report_script_error(const char *msg, CFStringRef cls, CFStringRef nam
     ensureGUI();
     if (!buttonURL) {
         int choice = xNSRunAlertPanel(
-            title, errmsg, xCFSTR(ERR_TERMINATE),
-            xCFSTR(ERR_CONSOLEAPPTITLE), NULL);
+            title, xCFSTR("%@"), xCFSTR(ERR_TERMINATE),
+            xCFSTR(ERR_CONSOLEAPPTITLE), NULL, errmsg);
         if (choice == NSAlertAlternateReturn) openConsole();
     } else {
         int choice = xNSRunAlertPanel(
-            title, errmsg, xCFSTR(ERR_TERMINATE), buttonString, NULL);
+            title, xCFSTR("%@"), xCFSTR(ERR_TERMINATE),
+            buttonString, NULL, errmsg);
         if (choice == NSAlertAlternateReturn) {
             id ws = MSG(CLS("NSWorkspace"), "sharedWorkspace");
             MSG(ws, "openURL:", buttonURL);

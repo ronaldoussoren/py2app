@@ -38,7 +38,7 @@ CLASSIFIERS = [
 setup(
     # metadata
     name='py2app',
-    version='0.3.6',
+    version='0.4.2',
     description='Create standalone Mac OS X applications with Python',
     author='Bob Ippolito',
     author_email='bob@redivi.com',
@@ -53,7 +53,7 @@ setup(
     #],
     install_requires=[
         "altgraph>=0.6.7",
-        "modulegraph>=0.7",
+        "modulegraph>=0.7.2",
         "macholib>=1.1",
         "bdist_mpkg>=0.4",
     ],

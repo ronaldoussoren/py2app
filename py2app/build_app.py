@@ -6,13 +6,13 @@ Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 from pkg_resources import require
 require("altgraph", "modulegraph", "macholib")
 
+import imp
 import sys
 import os
 import zipfile
 import plistlib
 import shlex
 from cStringIO import StringIO
-from types import ListType, TupleType
 
 from setuptools import Command
 from distutils.util import convert_path
@@ -22,7 +22,7 @@ from distutils.errors import *
 from altgraph.compat import *
 
 from modulegraph.find_modules import find_modules, parse_mf_results
-from modulegraph.modulegraph import SourceModule
+from modulegraph.modulegraph import SourceModule, Package, os_listdir
 
 import macholib.dyld
 import macholib.MachOStandalone
@@ -32,10 +32,11 @@ from py2app.create_pluginbundle import create_pluginbundle
 from py2app.util import \
     fancy_split, byte_compile, make_loader, imp_find_module, \
     copy_tree, fsencoding, strip_files, in_system_path, makedirs, \
-    iter_platform_files, find_version, skipscm, momc
+    iter_platform_files, find_version, skipscm, momc, copy_file, os_path_isdir
 from py2app.filters import \
     not_stdlib_filter, not_system_filter, has_filename_filter
 from py2app import recipes
+
 
 def get_zipfile(dist):
     return getattr(dist, "zipfile", None) or "site-packages.zip"
@@ -110,8 +111,6 @@ def FixupTargets(targets, default_attribute):
         targets = eval(targets)
     except:
         pass
-    if type(targets) not in (ListType, TupleType):
-        targets = [targets]
     ret = []
     for target_def in targets:
         if isinstance(target_def, basestring):
@@ -156,7 +155,7 @@ class py2app(Command):
         ("app=", None,
          "application bundle to be built"),
         ("plugin=", None,
-         "plugin bundle to be built"),
+         "puglin bundle to be built"),
         ('optimize=', 'O',
          "optimization level: -O1 for \"python -O\", "
          "-O2 for \"python -OO\", and -O0 to disable [default: -O0]"),
@@ -172,6 +171,8 @@ class py2app(Command):
          "comma-separated list of frameworks or dylibs to exclude"),
         ("datamodels=", None,
          "xcdatamodels to be compiled and copied into Resources"),
+        ("mappingmodels=", None,
+          "xcmappingmodels to be compiled and copied into Resources"),
         ("resources=", 'r',
          "comma-separated list of additional data files and folders to include (not for code!)"),
         ("frameworks=", 'f',
@@ -261,6 +262,7 @@ class py2app(Command):
         self.frameworks = None
         self.resources = None
         self.datamodels = None
+        self.mappingmodels = None
         self.plist = None
         self.compressed = True
         self.semi_standalone = is_system()
@@ -440,6 +442,23 @@ class py2app(Command):
         for src, dest in self.iter_datamodels(resdir):
             self.mkpath(os.path.dirname(dest))
             momc(src, dest)
+
+    def iter_mappingmodels(self, resdir):
+        for (path, files) in imap(normalize_data_file, self.mappingmodels or ()):
+            path = fsencoding(path)
+            for fn in files:
+                fn = fsencoding(fn)
+                basefn, ext = os.path.splitext(fn)
+                if ext != '.xcmappingmodel':
+                    basefn = fn
+                    fn += '.xcmappingmodel'
+                destfn = os.path.basename(basefn) + '.cdm'
+                yield fn, os.path.join(resdir, path, destfn)
+
+    def compile_mappingmodels(self, resdir):
+        for src, dest in self.iter_mappingmodels(resdir):
+            self.mkpath(os.path.dirname(dest))
+            mapc(src, dest)
         
     def iter_data_files(self):
         dist = self.distribution
@@ -694,6 +713,10 @@ class py2app(Command):
                      verbose=self.verbose,
                      dry_run=self.dry_run)
 
+        for item in py_files:
+            if not isinstance(item, Package): continue
+            self.copy_package_data(item, self.collect_dir)
+
         self.lib_files = []
         self.app_files = []
 
@@ -722,7 +745,7 @@ class py2app(Command):
                 target, arcname, pkgexts, copyexts, target.script)
             exp = os.path.join(dst, 'Contents', 'MacOS')
             execdst = os.path.join(exp, 'python')
-            if is_system() or self.semi_standalone:
+            if self.semi_standalone:
                 self.symlink(sys.executable, execdst)
             else:
                 self.copy_file(sys.executable, execdst)
@@ -745,6 +768,46 @@ class py2app(Command):
                 if self.strip:
                     self.strip_files(platfiles)
             self.app_files.append(dst)
+
+    def copy_package_data(self, package, target_dir):
+        """
+        Copy any package data in a python package into the target_dir.
+
+        This is a bit of a hack, it would be better to identify python eggs
+        and copy those in whole.
+        """
+        exts = [ i[0] for i in imp.get_suffixes() ]
+        exts.append('.py')
+        exts.append('.pyc')
+        exts.append('.pyo')
+        def datafilter(item):
+            for e in exts:
+                if item.endswith(e):
+                    return False
+            return True
+
+        target_dir = os.path.join(target_dir, *(package.identifier.split('.')))
+        for dname in package.packagepath:
+            filenames = filter(datafilter, os_listdir(dname))
+            for fname in filenames:
+                if fname in ('.svn', 'CVS'):
+                    # Scrub revision manager junk
+                    continue
+                pth = os.path.join(dname, fname)
+
+                # Check if we have found a package, exclude those
+                if os_path_isdir(pth):
+                    for p in os_listdir(pth):
+                        if p.startswith('__init__.') and p[8:] in exts:
+                            break
+
+                    else:
+                        copy_tree(pth, os.path.join(target_dir, fname))
+                    continue
+                else:
+                    copy_file(pth, os.path.join(target_dir, fname))
+
+
 
     def strip_files(self, files):
         unstripped = 0L
@@ -818,15 +881,28 @@ class py2app(Command):
         indir = os.path.dirname(os.path.join(info['location'], info['name']))
         outdir = os.path.dirname(os.path.join(dst, info['name']))
         self.mkpath(os.path.join(outdir, 'Resources'))
+        pydir = 'python%d.%d'%(sys.version_info[:2])
+
+        # distutils looks for some files relative to sys.executable, which
+        # means they have to be in the framework...
+        self.mkpath(os.path.join(outdir, 'include'))
+        self.mkpath(os.path.join(outdir, 'include', pydir))
+        self.mkpath(os.path.join(outdir, 'lib'))
+        self.mkpath(os.path.join(outdir, 'lib', pydir))
+        self.mkpath(os.path.join(outdir, 'lib', pydir, 'config'))
         fmwkfiles = [
             os.path.basename(info['name']),
             'Resources/Info.plist',
             'Resources/version.plist',
+            'include/%s/pyconfig.h'%(pydir,),
+            'lib/%s/config/Makefile'%(pydir,)
         ]
         for fn in fmwkfiles:
             self.copy_file(
                 os.path.join(indir, fn),
                 os.path.join(outdir, fn))
+
+
 
     def fixup_distribution(self):
         dist = self.distribution
@@ -835,11 +911,12 @@ class py2app(Command):
         # reasons.
         app = dist.app
         plugin = dist.plugin
-        # If we can get suitable values from self.app or self.plugin, we prefer
+        # If we can get suitable values from self.app and self.plugin, we prefer
         # them.
         if self.app is not None or self.plugin is not None:
             app = self.app
             plugin = self.plugin
+
         # Convert our args into target objects.
         dist.app = FixupTargets(app, "script")
         dist.plugin = FixupTargets(plugin, "script")
@@ -1039,6 +1116,7 @@ class py2app(Command):
             self.symlink(os.path.abspath(src), dest)
 
         self.compile_datamodels(resdir)
+        self.compile_mappingmodels(resdir)
 
         from Carbon.File import FSRef
         aliasdata = FSRef(script).FSNewAliasMinimal().data
@@ -1062,6 +1140,9 @@ class py2app(Command):
     def build_executable(self, target, arcname, pkgexts, copyexts, script):
         # Build an executable for the target
         appdir, resdir, plist = self.create_bundle(target, script)
+        self.appdir = appdir
+        self.resdir = resdir
+        self.plist = plist
 
         for src, dest in self.iter_data_files():
             dest = os.path.join(resdir, dest)
@@ -1072,6 +1153,7 @@ class py2app(Command):
                 self.copy_file(src, dest)
 
         self.compile_datamodels(resdir)
+        self.compile_mappingmodels(resdir)
 
         bootfn = '__boot__'
         bootfile = file(os.path.join(resdir, bootfn + '.py'), 'w')
@@ -1088,14 +1170,22 @@ class py2app(Command):
         self.symlink('../../site.py', os.path.join(pydir, 'site.py'))
         cfgdir = os.path.join(pydir, 'config')
         realcfg = os.path.join(realhome, 'config')
+        real_include = os.path.join(sys.prefix, 'include')
         if self.semi_standalone:
             self.symlink(realcfg, cfgdir)
+            self.symlink(real_include, os.path.join(resdir, 'include'))
         else:
             self.mkpath(cfgdir)
             for fn in 'Makefile', 'Setup', 'Setup.local', 'Setup.config':
                 rfn = os.path.join(realcfg, fn)
                 if os.path.exists(rfn):
                     self.copy_file(rfn, os.path.join(cfgdir, fn))
+
+            inc_dir = os.path.join(resdir, 'include', 'python' + sys.version[:3])
+            self.mkpath(inc_dir)
+            self.copy_file(os.path.join(real_include, 'python%s/pyconfig.h'%(
+                sys.version[:3])), os.path.join(inc_dir, 'pyconfig.h'))
+
 
         self.copy_file(arcname, pydir)
         ext_dir = os.path.join(pydir, os.path.basename(self.ext_dir))
@@ -1114,7 +1204,7 @@ class py2app(Command):
                 os.path.splitext(copyext.filename)[1])
             )
             self.mkpath(os.path.dirname(fn))
-            self.copy_file(copyext.filename, fn)
+            copy_file(copyext.filename, fn, dry_run=self.dry_run)
 
         target.appdir = appdir
         return appdir

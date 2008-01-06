@@ -1,11 +1,136 @@
 from pkg_resources import require
 require("modulegraph", "altgraph", "macholib")
 
-import os, sys, imp
+import os, sys, imp, zipfile, time
 from modulegraph.find_modules import PY_SUFFIXES, C_SUFFIXES
 from modulegraph.util import *
+from modulegraph.modulegraph import os_listdir
 from altgraph.compat import *
 import macholib.util
+
+def os_path_islink(path):
+    """
+    os.path.islink with zipfile support.
+
+    Luckily zipfiles cannot contain symlink, therefore the implementation is
+    trivial.
+    """
+    return os.path.islink(path)
+
+def os_readlink(path):
+    """
+    os.readlink with zipfile support.
+
+    Luckily zipfiles cannot contain symlink, therefore the implementation is
+    trivial.
+    """
+    return os.readlink(path)
+
+def os_path_isdir(path):
+    """
+    os.path.isdir that understands zipfiles.
+
+    Assumes that you're checking a path the is the result of os_listdir and 
+    might give false positives otherwise.
+    """
+    while path.endswith('/') and path != '/':
+        path = path[:-1]
+
+    zf, zp = path_to_zip(path)
+    if zf is None:
+        return os.path.isdir(zp)
+
+    else:
+        zip = zipfile.ZipFile(zf)
+        try:
+            info = zip.getinfo(zp)
+
+        except KeyError:
+            return True
+
+        else:
+            # Not quite true, you can store information about directories in
+            # zipfiles, but those have a lash at the end of the filename
+            return False
+
+def copy_file(source, destination, dry_run=0):
+    zf, zp = path_to_zip(source)
+    if zf is None:
+        data = open(zp,'rb').read()
+    else:
+        data = get_zip_data(zf, zp)
+
+    if not dry_run:
+        fp = open(destination, 'wb')
+        fp.write(data)
+        fp.close()
+
+def get_zip_data(path_to_zip, path_in_zip):
+    zf = zipfile.ZipFile(path_to_zip)
+    return zf.read(path_in_zip)
+
+def path_to_zip(path):
+    """
+    Returns (pathtozip, pathinzip). If path isn't in a zipfile pathtozip
+    will be None
+    """
+    from distutils.errors import DistutilsFileError
+    if os.path.exists(path):
+        return (None, path)
+
+    else:
+        rest = ''
+        while not os.path.exists(path):
+            path, r = os.path.split(path)
+            rest = os.path.join(r, rest)
+
+        if not os.path.isfile(path):
+            # Directory really doesn't exist
+            raise DistutilsFileError(path)
+
+        try:
+           zf = zipfile.ZipFile(path)
+        except zipfile.BadZipfile:
+           raise DistutilsFileError(path)
+
+        if rest.endswith('/'):
+            rest = rest[:-1]
+
+        return path, rest
+
+
+def get_mtime(path, mustExist=True):
+    """
+    Get mtime of a path, even if it is inside a zipfile
+    """
+
+    try:
+        return os.stat(path).st_mtime
+
+    except os.error:
+        from distutils.errors import DistutilsFileError
+        try:
+            path, rest = path_to_zip(path)
+        except DistutilsFileError:
+            if not mustExist:
+                return -1
+            raise
+
+        zf = zipfile.ZipFile(path)
+        info = zf.getinfo(rest)
+        return time.mktime(info.date_time + (0, 0, 0))
+
+def newer(source, target):
+    """
+    distutils.dep_utils.newer with zipfile support
+    """
+
+    msource = get_mtime(source)
+    mtarget = get_mtime(target, mustExist=False)
+
+    return msource > mtarget
+
+
 
 def find_version(fn):
     """
@@ -113,20 +238,17 @@ LOADER = """
 def __load():
     import imp, os, sys
     ext = %r
-    dynload_found = False
     for path in sys.path:
         if not path.endswith('lib-dynload'):
             continue
-        ext_path = os.path.join(path, ext)
-        dynload_found = True
-        # should a system-wide (located in /System/... or /Library/...) lib-dynload even be tried?
-        if os.path.exists(ext_path):
-            #print "py2app extension module", __name__, "->", ext_path
-            mod = imp.load_dynamic(__name__, ext_path)
+        ext = os.path.join(path, ext)
+        if os.path.exists(ext):
+            #print "py2app extension module", __name__, "->", ext
+            mod = imp.load_dynamic(__name__, ext)
             #mod.frozen = 1
-            return
-    if dynload_found:
-        raise ImportError, repr(ext_path) + " not found"
+            break
+        else:
+            raise ImportError, repr(ext) + " not found"
     else:
         raise ImportError, "lib-dynload not found"
 __load()
@@ -184,8 +306,6 @@ byte_compile(files, optimize=%r, force=%r,
     else:
         from py_compile import compile
         from distutils.dir_util import mkpath
-        from distutils.dep_util import newer
-        from distutils.file_util import copy_file
 
         for mod in py_files:
             # Terminology from the py_compile module:
@@ -210,8 +330,17 @@ byte_compile(files, optimize=%r, force=%r,
                 if not dry_run:
                     mkpath(os.path.dirname(cfile))
                     suffix = os.path.splitext(mod.filename)[1]
+
                     if suffix in ('.py', '.pyw'):
-                        compile(mod.filename, cfile, dfile)
+                        zfile, pth = path_to_zip(mod.filename)
+                        if zfile is None:
+                            compile(mod.filename, cfile, dfile)
+                        else:
+                            fn = dfile + '.py'
+                            open(fn, 'wb').write(get_zip_data(zfile, pth))
+                            compile(mod.filename, cfile, dfile)
+                            os.unlink(fn)
+
                     elif suffix in PY_SUFFIXES:
                         # Minor problem: This will happily copy a file
                         # <mod>.pyo to <mod>.pyc or <mod>.pyc to
@@ -330,11 +459,11 @@ def copy_tree(src, dst,
     if condition is None:
         condition = skipscm
 
-    if not dry_run and not os.path.isdir(src):
+    if not dry_run and not os_path_isdir(src):
         raise DistutilsFileError, \
               "cannot copy tree '%s': not a directory" % src
     try:
-        names = os.listdir(src)
+        names = os_listdir(src)
     except os.error, (errno, errstr):
         if dry_run:
             names = []
@@ -353,19 +482,19 @@ def copy_tree(src, dst,
         if (condition is not None) and (not condition(src_name)):
             continue
 
-        if preserve_symlinks and os.path.islink(src_name):
-            link_dest = os.readlink(src_name)
+        if preserve_symlinks and os_path_islink(src_name):
+            link_dest = os_readlink(src_name)
             log.info("linking %s -> %s", dst_name, link_dest)
             if not dry_run:
                 if update and not newer(src, dst_name):
                     pass
                 else:
-                    if os.path.islink(dst_name):
+                    if os_path_islink(dst_name):
                         os.remove(dst_name)
                     os.symlink(link_dest, dst_name)
             outputs.append(dst_name)
 
-        elif os.path.isdir(src_name):
+        elif os_path_isdir(src_name):
             outputs.extend(
                 copy_tree(src_name, dst_name, preserve_mode,
                           preserve_times, preserve_symlinks, update,
@@ -396,5 +525,12 @@ def find_app(app):
     return None
 
 MOMC = '/Library/Application Support/Apple/Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc'
+if not os.path.exists(MOMC):
+    MOMC = '/Developer/Library/Xcode/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc'
+
 def momc(src, dst):
     os.spawnv(os.P_WAIT, MOMC, [MOMC, src, dst])
+
+MAPC = '/Developer/Library/Xcode/Plug-ins/XDMappingModel.xdplugin/Contents/Resources/mapc'
+def mapc(src, dst):
+    os.spawnv(os.P_WAIT, MAPC, [MAPC, src, dst])
