@@ -2,11 +2,11 @@
 Script for building the example.
 
 Usage:
-    python setup.py py2app
+   python setup.py py2app
 """
-from setuptools import setup
+from distutils.core import setup
+import py2app
 
 setup(
-    app=["aclock.py"],
-    setup_requires=["py2app"],
+   app=["hello.py"],
 )

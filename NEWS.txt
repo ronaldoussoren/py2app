@@ -1,3 +1,13 @@
+py2app 0.4.2
+------------
+
+py2app 0.4.2 is a minor feature release
+
+Features:
+
+- A new recipe for `PyQt`_ 4.x. This recipe was donated by Kevin Walzer.
+
+
 py2app 0.3.6
 ------------
 
