@@ -17,7 +17,8 @@ def main():
         #CC = os.environ.get("CC", "cc")
         #CFLAGS = '-Os -Wall'
         #LDFLAGS = '-g -bundle -framework Foundation -framework AppKit'
-        os.system('"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s %(LDFLAGS)s' % locals())
+        os.environ['MACOSX_DEPLOYMENT_TARGET']='10.3'
+        os.system('"%(CC)s" -arch i386 -arch ppc -o "%(dest)s" "%(src)s" %(CFLAGS)s %(LDFLAGS)s' % locals())
         os.system('strip -Sx "%(dest)s"' % locals())
     return dest
 

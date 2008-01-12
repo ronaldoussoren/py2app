@@ -13,7 +13,8 @@ def main():
         cfg = distutils.sysconfig.get_config_vars()
         CC = cfg['CC']
         CFLAGS = cfg['CFLAGS'].replace(' -dynamic', '')
-        os.system('"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s' % locals())
+        os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.3'
+        os.system('"%(CC)s" -arch i386 -arch ppc -o "%(dest)s" "%(src)s" %(CFLAGS)s' % locals())
         #os.system('strip "%(dest)s"' % locals())
     return dest
 

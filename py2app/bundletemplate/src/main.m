@@ -78,8 +78,8 @@ static NSString *pyStandardizePath(NSString *pyLocation);
 static BOOL doesPathExist(NSString *path);
 static NSString *getBundleName(void);
 static NSString *getErrorTitle(NSString *bundleName);
-static const char *bundlePath();
-static NSBundle *bundleBundle();
+static const char *bundlePath(void);
+static NSBundle *bundleBundle(void);
 static int pyobjc_main(int argc, char * const *argv, char * const *envp);
 
 //
@@ -93,7 +93,7 @@ static void __attribute__ ((constructor)) _py2app_bundle_load(void);
 //
 
 static
-const char *bundlePath() {
+const char *bundlePath(void) {
     int i;
     const struct mach_header *myHeader = _dyld_get_image_header_containing_address(&bundlePath);
     int count = _dyld_image_count();
@@ -107,7 +107,7 @@ const char *bundlePath() {
 }
 
 static
-NSBundle *bundleBundle() {
+NSBundle *bundleBundle(void) {
     static NSBundle *myBundle = NULL;
     if (!myBundle) {
         int i;
@@ -144,7 +144,7 @@ int report_error(NSString *err) {
 }
 
 static
-int report_linkEdit_error() {
+int report_linkEdit_error(void) {
     NSLinkEditErrors errorClass;
     int errorNumber;
     const char *fileName;

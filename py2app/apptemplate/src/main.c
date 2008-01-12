@@ -134,14 +134,14 @@ static id (*xobjc_msgSend)(id self, SEL op, ...);
     Cocoa
 */
 static void (*xNSLog)(CFStringRef format, ...);
-static BOOL (*xNSApplicationLoad)();
+static BOOL (*xNSApplicationLoad)(void);
 static int (*xNSRunAlertPanel)(CFStringRef title, CFStringRef msg, CFStringRef defaultButton, CFStringRef alternateButton, CFStringRef otherButton, ...);
 
 /*
     Functions
 */
 
-static int bind_objc_Cocoa_ApplicationServices() {
+static int bind_objc_Cocoa_ApplicationServices(void) {
     static Boolean bound = false;
     if (bound) return 0;
     bound = true;
@@ -190,7 +190,7 @@ static int bind_objc_Cocoa_ApplicationServices() {
     return 0;
 }
     
-static int bind_CoreFoundation() {
+static int bind_CoreFoundation(void) {
     static Boolean bound = false;
     const struct mach_header *cf_dylib;
     if (bound) return 0;
@@ -263,7 +263,7 @@ static int bind_CoreFoundation() {
 #define xCFSTR(s) AUTORELEASE( \
     xCFStringCreateWithCString(NULL, s, kCFStringEncodingUTF8))
 
-static int openConsole() {
+static int openConsole(void) {
     OSStatus err;
     FSRef consoleRef;
     err = xLSFindApplicationForInfo(
@@ -288,7 +288,7 @@ static CFTypeRef getKey(const char *key) {
     return rval;
 }
 
-static CFStringRef getApplicationName() {
+static CFStringRef getApplicationName(void) {
     static CFStringRef name = NULL;
     if (name) return name;
     name = (CFStringRef)getKey("CFBundleName");
@@ -306,7 +306,7 @@ static CFStringRef getErrorTitle(CFStringRef applicationName) {
     return res;
 }
 
-static void ensureGUI() {
+static void ensureGUI(void) {
     ProcessSerialNumber psn;
     id app = MSG(CLS("NSApplication"), "sharedApplication");
     xNSApplicationLoad();
@@ -453,7 +453,7 @@ static void setcfenv(char *name, CFStringRef value) {
     setenv(name, buf, 1);
 }
 
-static void setPythonPath() {
+static void setPythonPath(void) {
     CFMutableArrayRef paths;
     CFURLRef resDir;
     CFStringRef resPath;
@@ -521,7 +521,7 @@ static void setPythonPath() {
 
 
 
-static void setResourcePath() {
+static void setResourcePath(void) {
     CFURLRef resDir;
     CFStringRef resPath;
     resDir = xCFBundleCopyResourcesDirectoryURL(xCFBundleGetMainBundle());
@@ -531,7 +531,7 @@ static void setResourcePath() {
     xCFRelease(resPath);
 }
 
-static void setExecutablePath() {
+static void setExecutablePath(void) {
     char executable_path[PATH_MAX];
     uint32_t bufsize = PATH_MAX;
     if (!_NSGetExecutablePath(executable_path, &bufsize)) {
@@ -540,7 +540,7 @@ static void setExecutablePath() {
     }
 }
 
-static CFStringRef getMainScript() {
+static CFStringRef getMainScript(void) {
     CFMutableArrayRef possibleMains;
     CFBundleRef bndl;
     CFStringRef e_py, e_pyc, e_pyo, path;
@@ -585,7 +585,7 @@ static CFStringRef getMainScript() {
     return path;
 }
 
-static int report_linkEdit_error() {
+static int report_linkEdit_error(void) {
     NSLinkEditErrors errorClass;
     int errorNumber;
     CFStringRef errString;
@@ -621,7 +621,7 @@ static CFStringRef getPythonInterpreter(CFStringRef pyLocation) {
     return NULL;
 }
 
-static CFStringRef getErrorScript() {
+static CFStringRef getErrorScript(void) {
     CFMutableArrayRef errorScripts;
     CFBundleRef bndl;
     CFStringRef path;
