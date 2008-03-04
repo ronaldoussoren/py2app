@@ -508,7 +508,7 @@ class py2app(Command):
                 iconfile = iconfile + '.icns'
             if not os.path.exists(iconfile):
                 raise DistutilsOptionError("icon file must exist: %r"
-                    % (self.icon,))
+                    % (self.iconfile,))
             self.resources.append(iconfile)
             plist[u'CFBundleIconFile'] = os.path.basename(iconfile)
         if self.prefer_ppc:
