@@ -7,6 +7,12 @@ Features:
 
 - A new recipe for `PyQt`_ 4.x. This recipe was donated by Kevin Walzer.
 
+- A new recipe for `virtualenv`_, this allows you to use py2app from 
+  a virtual environment.
+
+.. `virtualenv`_: http://pypi.python.org/pypi/virtualenv
+
+
 py2app 0.4.0
 ------------
 
