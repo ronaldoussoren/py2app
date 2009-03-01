@@ -32,7 +32,8 @@ from py2app.create_pluginbundle import create_pluginbundle
 from py2app.util import \
     fancy_split, byte_compile, make_loader, imp_find_module, \
     copy_tree, fsencoding, strip_files, in_system_path, makedirs, \
-    iter_platform_files, find_version, skipscm, momc, copy_file, os_path_isdir
+    iter_platform_files, find_version, skipscm, momc, copy_file, \
+    os_path_isdir, copy_resource
 from py2app.filters import \
     not_stdlib_filter, not_system_filter, has_filename_filter
 from py2app import recipes
@@ -337,6 +338,13 @@ class py2app(Command):
                 self.iconfile = iconfile
 
         self.runtime_preferences = list(self.get_runtime_preferences())
+
+
+        if self.datamodels:
+            print "WARNING: the datamodels option is deprecated, add model files to the list of resources"
+
+        if self.mappingmodels:
+            print "WARNING: the mappingmodels option is deprecated, add model files to the list of resources"
 
 
     def get_default_plist(self):
@@ -1099,6 +1107,7 @@ class py2app(Command):
             
         
         # symlink data files
+        # XXX: fixme: need to integrate automatic data conversion
         for src, dest in self.iter_data_files():
             dest = os.path.join(resdir, dest)
             if src == dest:
@@ -1147,10 +1156,7 @@ class py2app(Command):
         for src, dest in self.iter_data_files():
             dest = os.path.join(resdir, dest)
             self.mkpath(os.path.dirname(dest))
-            if os.path.isdir(src):
-                self.copy_tree(src, dest, preserve_symlinks=True)
-            else:
-                self.copy_file(src, dest)
+            copy_resource(src, dest, dry_run=self.dry_run)
 
         self.compile_datamodels(resdir)
         self.compile_mappingmodels(resdir)

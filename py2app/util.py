@@ -53,6 +53,36 @@ def os_path_isdir(path):
             # zipfiles, but those have a lash at the end of the filename
             return False
 
+def copy_resource(source, destination, dry_run=0):
+    """
+    Copy a resource file into the application bundle
+    """
+    import py2app.converters as conv
+
+    for mod in conv.__dict__.values():
+        try:
+            func = getattr(mod, 'convert')
+        except AttributeError:
+            continue
+
+        r = func(source, destination)
+        if r:
+            return
+
+    if os.path.isdir(source):
+        # XXX: This is wrong, need to call ourselves recursively
+        if not dry_run:
+            if not os.path.exists(destination):
+                os.mkdir(destination)
+        for fn in os_listdir(source):
+            copy_resource(os.path.join(source, fn), 
+                    os.path.join(destination, fn), dry_run=dry_run)
+
+    else:
+        copy_file(source, destination, dry_run=dry_run)
+
+
+
 def copy_file(source, destination, dry_run=0):
     zf, zp = path_to_zip(source)
     if zf is None:
