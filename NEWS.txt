@@ -10,6 +10,35 @@ Features:
 - A new recipe for `virtualenv`_, this allows you to use py2app from 
   a virtual environment.
 
+- Adds support for converting ``.xib`` files (NIB files for
+  Interface Builder 3)
+
+- Introduces an experimental plugin API for data converters. 
+
+  A conversion plugin should be defined as an entry-point in the
+  ``py2app.converter`` group::
+
+       setup(
+         ...
+	 entry_points = {
+		 'py2app.converter': [
+		     "label          = some_module:converter_function",
+		  ]
+	  },
+	  ...
+      )
+
+  The conversion function should be defined like this::
+
+      from py2app.decorators import converts
+
+      @converts('.png')
+      def optimze_png(source, proposed_destionation, dryrun=0):
+         # Copy 'source' to 'proposed_destination'
+	 # The conversion is allowed to change the proposed
+	 # destination to another name in the same directory.
+         pass
+
 .. `virtualenv`_: http://pypi.python.org/pypi/virtualenv
 
 

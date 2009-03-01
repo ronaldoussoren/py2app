@@ -86,6 +86,12 @@ setup(
         'console_scripts': [
             "py2applet = py2app.script_py2applet:main",
         ],
+        'py2app.converter': [
+            "xib          = py2app.converters.nibfile:convert_xib",
+            "nib          = py2app.converters.nibfile:convert_nib",
+            "datamodel    = py2app.converters.coredata:convert_datamodel",
+            "mappingmodel = py2app.converters.coredata:convert_mappingmodel",
+        ],
     },
     zip_safe=False,
     # workaround for setuptools 0.6b4 bug

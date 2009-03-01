@@ -8,6 +8,8 @@ from modulegraph.modulegraph import os_listdir
 from altgraph.compat import *
 import macholib.util
 
+import pkg_resources
+
 def os_path_islink(path):
     """
     os.path.islink with zipfile support.
@@ -53,21 +55,33 @@ def os_path_isdir(path):
             # zipfiles, but those have a lash at the end of the filename
             return False
 
+gConverterTab = {}
+def find_converter(source):
+    if not gConverterTab:
+        for ep in pkg_resources.iter_entry_points('py2app.converter'):
+            function = ep.load()
+            if not hasattr(function, "py2app_suffix"):
+                print "WARNING: %s does not have 'py2app_suffix' attribute"%(function)
+                continue
+            gConverterTab[function.py2app_suffix] = function
+
+    basename, suffix = os.path.splitext(source)
+    try:
+        return gConverterTab[suffix]
+
+    except KeyError:
+        return None
+
 def copy_resource(source, destination, dry_run=0):
     """
     Copy a resource file into the application bundle
     """
     import py2app.converters as conv
 
-    for mod in conv.__dict__.values():
-        try:
-            func = getattr(mod, 'convert')
-        except AttributeError:
-            continue
-
-        r = func(source, destination)
-        if r:
-            return
+    converter = find_converter(source)
+    if converter is not None:
+        converter(source, destination, dry_run=dry_run)
+        return
 
     if os.path.isdir(source):
         # XXX: This is wrong, need to call ourselves recursively
