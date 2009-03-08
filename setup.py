@@ -55,7 +55,7 @@ setup(
         "altgraph>=0.6.7",
         "modulegraph>=0.7.2dev",
         "macholib>=1.1",
-        "bdist_mpkg>=0.4",
+    #    "bdist_mpkg>=0.4",
     ],
 
     # sources
@@ -92,6 +92,8 @@ setup(
             "datamodel    = py2app.converters.coredata:convert_datamodel",
             "mappingmodel = py2app.converters.coredata:convert_mappingmodel",
         ],
+        'py2app.recipe': [
+        ]
     },
     zip_safe=False,
     # workaround for setuptools 0.6b4 bug
