@@ -1,17 +1,10 @@
 """TinyTinyEdit -- A minimal Document-based Cocoa application."""
 
 
-from PyObjCTools import NibClassBuilder, AppHelper
+from PyObjCTools import AppHelper
 
-
-NibClassBuilder.extractClasses("TinyTinyDocument")
-
-
-# class defined in TinyTinyDocument.nib
-class TinyTinyDocument(NibClassBuilder.AutoBaseClass):
-    # the actual base class is NSDocument
-    # The following outlets are added to the class:
-    # textView
+class TinyTinyDocument(NSDocument):
+    textView = objc.IBOutlet()
 
     path = None
 

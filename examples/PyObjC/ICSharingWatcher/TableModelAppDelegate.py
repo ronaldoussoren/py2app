@@ -1,7 +1,5 @@
 import os
-from Foundation import *
-from AppKit import *
-from PyObjCTools import NibClassBuilder
+from Cocoa import *
 import objc
 import leases
 
@@ -14,8 +12,9 @@ def getLeases(fn):
         lines = leases.EXAMPLE.splitlines()
     return list(leases.leases(lines))
 
-NibClassBuilder.extractClasses("MainMenu")
-class TableModelAppDelegate(NibClassBuilder.AutoBaseClass):
+class TableModelAppDelegate (NSObject):
+    mainWindow = objc.IBOutlet()
+
     def awakeFromNib(self):
         self.timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(1.0, self, 'pollLeases:', {}, True)
 
@@ -33,11 +32,9 @@ class TableModelAppDelegate(NibClassBuilder.AutoBaseClass):
         if not hasattr(self, '_cachedleases'):
             self._cachedleases = getLeases(FILENAME)
         return self._cachedleases
-    leases = objc.accessor(leases)
 
     def setLeases_(self, leases):
         self._cachedleases = leases
-    setLeases_ = objc.accessor(setLeases_)
 
     def windowWillClose_(self, sender):
         if sender is self.mainWindow:

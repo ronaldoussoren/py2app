@@ -1,5 +1,5 @@
 from AppKit import NSTerminateNow, NSApp, NSRunAlertPanel
-from PyObjCTools import NibClassBuilder, AppHelper
+from PyObjCTools import AppHelper
 
 def exception_handler():
     import traceback, sys, os
@@ -16,8 +16,7 @@ def exception_handler():
     title = title.capitalize() + ' Error'
     NSRunAlertPanel(title, message, None, None, None)
 
-NibClassBuilder.extractClasses("MainMenu")
-class PygameAppDelegate(NibClassBuilder.AutoBaseClass):
+class PygameAppDelegate(NSObject):
     def applicationDidFinishLaunching_(self, aNotification):
         try:
             import aliens
