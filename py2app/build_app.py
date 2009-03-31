@@ -975,6 +975,9 @@ class py2app(Command):
         if self.site_packages or self.alias:
             prescripts.append('site_packages')
 
+        if self.style == 'app':
+            prescripts.append('setup_pkgresource')
+
         if self.argv_emulation and self.style == 'app':
             prescripts.append('argv_emulation')
             if u'CFBundleDocumentTypes' not in self.plist:
