@@ -448,6 +448,7 @@ class py2app(Command):
 
     def compile_datamodels(self, resdir):
         for src, dest in self.iter_datamodels(resdir):
+            print "compile datamodel", src, "->", dest
             self.mkpath(os.path.dirname(dest))
             momc(src, dest)
 
@@ -975,8 +976,8 @@ class py2app(Command):
         if self.site_packages or self.alias:
             prescripts.append('site_packages')
 
-        if self.style == 'app':
-            prescripts.append('setup_pkgresource')
+        #if self.style == 'app':
+        #    prescripts.append('setup_pkgresource')
 
         if self.argv_emulation and self.style == 'app':
             prescripts.append('argv_emulation')

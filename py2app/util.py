@@ -571,10 +571,14 @@ def find_app(app):
 MOMC = '/Library/Application Support/Apple/Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc'
 if not os.path.exists(MOMC):
     MOMC = '/Developer/Library/Xcode/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc'
+if not os.path.exists(MOMC):
+    MOMC = '/Developer/usr/bin/momc'
 
 def momc(src, dst):
     os.spawnv(os.P_WAIT, MOMC, [MOMC, src, dst])
 
 MAPC = '/Developer/Library/Xcode/Plug-ins/XDMappingModel.xdplugin/Contents/Resources/mapc'
+if not os.path.exists(MAPC):
+    MAPC = '/Developer/usr/bin/mapc'
 def mapc(src, dst):
     os.spawnv(os.P_WAIT, MAPC, [MAPC, src, dst])
