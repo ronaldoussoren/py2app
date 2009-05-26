@@ -5,6 +5,11 @@ py2app 0.4.2 is a minor feature release
 
 Features:
 
+- When the '--strip' option is specified we now also remove '.dSYM' 
+  directories from the bundle.
+
+- Remove dependency on a 'version.plist' file in the python framework
+
 - A new recipe for `PyQt`_ 4.x. This recipe was donated by Kevin Walzer.
 
 - A new recipe for `virtualenv`_, this allows you to use py2app from 

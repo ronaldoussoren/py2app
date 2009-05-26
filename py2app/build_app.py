@@ -775,6 +775,7 @@ class py2app(Command):
                     mm.mm.run_file(fmwk)
                 platfiles = mm.run()
                 if self.strip:
+                    self.strip_dsym()
                     self.strip_files(platfiles)
             self.app_files.append(dst)
 
@@ -817,6 +818,21 @@ class py2app(Command):
                     copy_file(pth, os.path.join(target_dir, fname))
 
 
+    def strip_dsym(self):
+        """ Remove .dSYM directories in the bundled application """
+
+        #
+        # .dSYM directories are contain detached debugging information and
+        # should be completely removed when the "strip" option is specified.
+        #
+        if self.dry_run:
+            return
+        for dirpath, dnames, fnames in os.walk(self.appdir):
+            for nm in list(dnames):
+                if nm.endswith('.dSYM'):
+                    print "removing debug info: %s/%s"%(dirpath, nm)
+                    shutil.rmtree(os.path.join(dirpath, nm))
+                    dnames.remove(nm)
 
     def strip_files(self, files):
         unstripped = 0L
@@ -902,7 +918,6 @@ class py2app(Command):
         fmwkfiles = [
             os.path.basename(info['name']),
             'Resources/Info.plist',
-            'Resources/version.plist',
             'include/%s/pyconfig.h'%(pydir,),
             'lib/%s/config/Makefile'%(pydir,)
         ]
