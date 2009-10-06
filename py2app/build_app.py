@@ -908,7 +908,7 @@ class py2app(Command):
         indir = os.path.dirname(os.path.join(info['location'], info['name']))
         outdir = os.path.dirname(os.path.join(dst, info['name']))
         self.mkpath(os.path.join(outdir, 'Resources'))
-        pydir = 'python%d.%d'%(sys.version_info[:2])
+        pydir = 'python%d.%d'%(info['version'])
 
         # distutils looks for some files relative to sys.executable, which
         # means they have to be in the framework...

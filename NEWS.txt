@@ -46,6 +46,11 @@ Features:
 
 .. `virtualenv`_: http://pypi.python.org/pypi/virtualenv
 
+Buf fixes:
+
+- This fixes an issue with copying a different version of Python over 
+  to an app/plugin bundle than the one used to run py2app with.
+
 
 py2app 0.4.0
 ------------
