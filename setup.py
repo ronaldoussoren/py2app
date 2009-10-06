@@ -53,8 +53,8 @@ setup(
     #],
     install_requires=[
         "altgraph>=0.6.7",
-        "modulegraph>=0.7.2dev",
-        "macholib>=1.1",
+        "modulegraph>=0.7.3",
+        "macholib>=1.2.1",
     #    "bdist_mpkg>=0.4",
     ],
 
