@@ -1115,7 +1115,12 @@ class py2app(Command):
 
         # symlink python executable
         execdst = os.path.join(appdir, 'Contents', 'MacOS', 'python')
-        self.symlink(sys.executable, execdst)
+        prefixPathExecutable = os.path.join(sys.prefix, 'bin', 'python')
+        if os.path.exists(prefixPathExecutable):
+            pyExecutable = prefixPathExecutable
+        else:
+            pyExecutable = sys.executable
+        self.symlink(pyExecutable, execdst)
 
         # make PYTHONHOME
         pyhome = os.path.join(resdir, 'lib', 'python' + sys.version[:3])

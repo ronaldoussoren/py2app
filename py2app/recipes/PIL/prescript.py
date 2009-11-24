@@ -1,5 +1,9 @@
 def _recipes_pil_prescript(plugins):
-    import Image
+    try:
+        import Image
+    except ImportError:
+        from PIL import Image
+
     import sys
     def init():
         if Image._initialized >= 2:

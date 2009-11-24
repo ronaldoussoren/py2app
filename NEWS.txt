@@ -1,3 +1,18 @@
+py2app 0.4.4
+------------
+
+py2app 0.4.4 is a ...
+
+Features:
+-
+
+Bug fixes:
+- Try both 'import Image' and 'from PIL import Image' in the PIL
+  recipe.
+  (Patch contributed by Christopher Barker)
+- Fix for broken alias builds on MacOSX 10.6 (Snow Leopard)
+  (Patch contributed by Jamer R Eagan)
+
 py2app 0.4.3
 ------------
 
