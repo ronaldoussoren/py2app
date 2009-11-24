@@ -38,7 +38,7 @@ CLASSIFIERS = [
 setup(
     # metadata
     name='py2app',
-    version='0.4.3',
+    version='0.4.4',
     description='Create standalone Mac OS X applications with Python',
     author='Bob Ippolito',
     author_email='bob@redivi.com',
