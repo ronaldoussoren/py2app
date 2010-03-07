@@ -4,7 +4,9 @@ py2app 0.4.4
 py2app 0.4.4 is a ...
 
 Features:
--
+- Add support for the ``--with-framework-name`` option of Python's
+  configure script, that is: py2app now also works when the Python
+  framework is not named 'Python.framework'.
 
 Bug fixes:
 - Try both 'import Image' and 'from PIL import Image' in the PIL

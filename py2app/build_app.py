@@ -39,6 +39,9 @@ from py2app.filters import \
     not_stdlib_filter, not_system_filter, has_filename_filter
 from py2app import recipes
 
+from distutils.sysconfig import get_config_var
+PYTHONRAMEWORK=get_config_var('PYTHONFRAMEWORK')
+
 
 def get_zipfile(dist):
     return getattr(dist, "zipfile", None) or "site-packages.zip"
@@ -887,7 +890,7 @@ class py2app(Command):
 
     def copy_framework(self, info, dst):
         force, self.force = self.force, True
-        if info['shortname'] == 'Python':
+        if info['shortname'] == PYTHONFRAMEWORK:
             self.copy_python_framework(info, dst)
         else:
             self.copy_versioned_framework(info, dst)
