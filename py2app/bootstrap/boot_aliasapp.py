@@ -6,7 +6,7 @@ def _run(*scripts):
     site.addsitedir(os.environ['RESOURCEPATH'])
     for (script, path) in scripts:
         alias = Carbon.File.Alias(rawdata=script)
-        target, wasChanged = alias.ResolveAlias(None)
+        target, wasChanged = alias.FSResolveAlias(None)
         if not os.path.exists(path):
             path = target.as_pathname()
         sys.path.append(os.path.dirname(path))

@@ -9,6 +9,10 @@ Features:
   framework is not named 'Python.framework'.
 
 Bug fixes:
+- Use modern API's in the alias-build bootstrap code, without
+  this 'py2app -A' will result in broken bundles on a 64-bit build
+  of Python. 
+  (Patch contributed by James R Eagan)
 - Try both 'import Image' and 'from PIL import Image' in the PIL
   recipe.
   (Patch contributed by Christopher Barker)
