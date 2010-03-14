@@ -40,7 +40,7 @@ from py2app.filters import \
 from py2app import recipes
 
 from distutils.sysconfig import get_config_var
-PYTHONRAMEWORK=get_config_var('PYTHONFRAMEWORK')
+PYTHONFRAMEWORK=get_config_var('PYTHONFRAMEWORK')
 
 
 def get_zipfile(dist):
