@@ -381,12 +381,20 @@ class py2app(Command):
             version = sys.version
         version = version[:3]
         info = None
+        if os.path.exists(os.path.join(prefix, ".Python")):
+            # We're in a virtualenv environment, locate the real prefix
+            fn = os.path.join(prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
+            if os.path.exists(fn):
+                prefix = open(fn, 'rU').read().strip()
+
         try:
             fmwk = macholib.dyld.framework_find(prefix)
         except ValueError:
             info = None
         else:
             info = macholib.dyld.framework_info(fmwk)
+
+
         if info is not None:
             dylib = info['name']
             runtime = os.path.join(info['location'], info['name'])

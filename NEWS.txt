@@ -1,12 +1,15 @@
-py2app 0.4.4
-------------
+py2app 0.5
+----------
 
-py2app 0.4.4 is a ...
+py2app 0.5 is a minor feature release.
 
 Features:
 - Add support for the ``--with-framework-name`` option of Python's
   configure script, that is: py2app now also works when the Python
   framework is not named 'Python.framework'.
+- Add support for various build flavours of Python (32bit, 3-way, ...)
+- py2app now actually works for me (ronaldoussoren@mac.com) with a 
+  python interpreter in a virtualenv environment.
 
 Bug fixes:
 - Use modern API's in the alias-build bootstrap code, without
@@ -16,8 +19,10 @@ Bug fixes:
 - Try both 'import Image' and 'from PIL import Image' in the PIL
   recipe.
   (Patch contributed by Christopher Barker)
-- Fix for broken alias builds on MacOSX 10.6 (Snow Leopard)
-  (Patch contributed by Jamer R Eagan)
+- The stub executable now works for 64-bit application bundles
+- (Lowlevel) The application stub was rewritten to use
+  ``dlopen`` instead of ``dyld`` APIs. This removes deprecation
+  warnings during compilation.
 
 py2app 0.4.3
 ------------

@@ -42,20 +42,18 @@ setup(
     description='Create standalone Mac OS X applications with Python',
     author='Bob Ippolito',
     author_email='bob@redivi.com',
+    maintainer='Ronald Oussoren',
+    maintainer_email="ronaldoussoren@mac.com",
     url='http://undefined.org/python/#py2app',
     download_url='http://undefined.org/python/#py2app',
     license='MIT or PSF License',
     platforms=['MacOS X'],
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
-    #setup_requires=[
-    #    "bdist_mpkg>=0.4.2",
-    #],
     install_requires=[
         "altgraph>=0.6.7",
         "modulegraph>=0.7.3",
-        "macholib>=1.2.1",
-    #    "bdist_mpkg>=0.4",
+        "macholib>=1.2.2",
     ],
 
     # sources
