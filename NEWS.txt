@@ -12,6 +12,8 @@ Features:
   python interpreter in a virtualenv environment.
 
 Bug fixes:
+- Fix recipe for matplotlib: that recipe caused an exception with
+  current versions of matplotlib and pytz.
 - Use modern API's in the alias-build bootstrap code, without
   this 'py2app -A' will result in broken bundles on a 64-bit build
   of Python. 
