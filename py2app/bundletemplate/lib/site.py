@@ -82,7 +82,7 @@ def addpackage(sitedir, name):
         if dir[0] == '#':
             continue
         if dir.startswith("import"):
-            exec dir
+            exec(dir)
             continue
         if dir[-1] == '\n':
             dir = dir[:-1]

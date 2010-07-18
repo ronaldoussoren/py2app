@@ -18,6 +18,10 @@ sys.path.append(_parent + '/site-packages.zip')
 sys.path.append(_parent + '/site-packages')
 
 import os
+try:
+    basestring
+except NameError:
+    basestring = str
 
 def makepath(*paths):
     dir = os.path.abspath(os.path.join(*paths))
@@ -95,7 +99,7 @@ def addpackage(sitedir, name):
         if dir[0] == '#':
             continue
         if dir.startswith("import"):
-            exec dir
+            exec(dir)
             continue
         if dir[-1] == '\n':
             dir = dir[:-1]

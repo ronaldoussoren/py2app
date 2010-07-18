@@ -10,6 +10,7 @@ Features:
 - Add support for various build flavours of Python (32bit, 3-way, ...)
 - py2app now actually works for me (ronaldoussoren@mac.com) with a 
   python interpreter in a virtualenv environment.
+- Experimental support for python 3
 
 Bug fixes:
 - Fix recipe for matplotlib: that recipe caused an exception with

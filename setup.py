@@ -1,24 +1,18 @@
 #!/usr/bin/env python
 
-import ez_setup
-ez_setup.use_setuptools()
+try:
+    import setuptools
+except ImportError:
+    import distribute_setup
+    distribute_setup.use_setuptools()
 
 import sys, os
 from setuptools import setup, find_packages
 from pkg_resources import require, DistributionNotFound
 
 cmdclass = {}
-if 0:
-    try:
-        require("bdist_mpkg>=0.4")
-    except DistributionNotFound:
-        pass
-    else:
-        sys.path.insert(1, 'setup-lib')
-        import py2app_mpkg
-        cmdclass.update(py2app_mpkg.cmdclass)
 
-LONG_DESCRIPTION = file('README.txt').read()
+LONG_DESCRIPTION = open('README.txt').read()
 
 CLASSIFIERS = [
         'Development Status :: 4 - Beta',
@@ -29,16 +23,22 @@ CLASSIFIERS = [
         'Natural Language :: English',
         'Operating System :: MacOS :: MacOS X',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Objective C',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Software Development :: User Interfaces',
         'Topic :: Software Development :: Build Tools',
 ]
 
+if sys.version_info[0] == 3:
+    extra_args = dict(use_2to3=True)
+else:
+    extra_args = dict()
+
 setup(
     # metadata
     name='py2app',
-    version='0.4.4',
+    version='0.5',
     description='Create standalone Mac OS X applications with Python',
     author='Bob Ippolito',
     author_email='bob@redivi.com',
@@ -51,17 +51,20 @@ setup(
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
     install_requires=[
-        "altgraph>=0.6.7",
-        "modulegraph>=0.7.3",
-        "macholib>=1.2.2",
+        "altgraph>=0.7",
+        "modulegraph>=0.8",
+        "macholib>=1.3",
     ],
 
     # sources
     cmdclass=cmdclass,
-    packages=find_packages(exclude=["ez_setup"]),
+    packages=find_packages(),
     package_data={
         'py2app.apptemplate': [
-            'prebuilt/main',
+            'prebuild/main-32bit',
+            'prebuild/main-fat3',
+            'prebuild/main-intel',
+            'prebuild/main-universal',
             'lib/__error__.sh',
             'lib/site.py',
             'src/main.c',
@@ -96,4 +99,5 @@ setup(
     zip_safe=False,
     # workaround for setuptools 0.6b4 bug
     dependency_links=[],
+    **extra_args
 )

@@ -17,8 +17,6 @@ typedef int (*PyRun_SimpleFilePtr)(FILE *, const char *);
 typedef void (*Py_FinalizePtr)(void);
 typedef PyObject *(*PySys_GetObjectPtr)(const char *);
 typedef int *(*PySys_SetArgvPtr)(int argc, char **argv);
-typedef PyObject *(*PyObject_StrPtr)(PyObject *);
-typedef const char *(*PyString_AsStringPtr)(PyObject *);
 typedef PyObject *(*PyObject_GetAttrStringPtr)(PyObject *, const char *);
 
 typedef CFTypeRef id;
@@ -889,8 +887,6 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(Py_Finalize);
     LOOKUP(PySys_GetObject);
     LOOKUP(PySys_SetArgv);
-    LOOKUP(PyObject_Str);
-    LOOKUP(PyString_AsString);
     LOOKUP(PyObject_GetAttrString);
 
 #undef LOOKUP

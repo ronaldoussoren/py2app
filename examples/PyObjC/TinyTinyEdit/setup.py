@@ -24,4 +24,5 @@ setup(
     ],
     install_requires=["pyobjc-framework-Cocoa"],
     setup_requires=["py2app"],
+    use_2to3 = True,
 )

@@ -15,6 +15,9 @@ import shlex
 import shutil
 from cStringIO import StringIO
 
+from itertools import chain
+
+
 from setuptools import Command
 from distutils.util import convert_path
 from distutils import log
@@ -44,6 +47,8 @@ PYTHONFRAMEWORK=get_config_var('PYTHONFRAMEWORK')
 
 
 def get_zipfile(dist):
+    if sys.version_info[0] == 3:
+        return "python%d%d.zip"%(sys.version_info[:2])
     return getattr(dist, "zipfile", None) or "site-packages.zip"
 
 def framework_copy_condition(src):
@@ -394,7 +399,6 @@ class py2app(Command):
         else:
             info = macholib.dyld.framework_info(fmwk)
 
-
         if info is not None:
             dylib = info['name']
             runtime = os.path.join(info['location'], info['name'])
@@ -624,7 +628,7 @@ class py2app(Command):
             dgraph = os.path.join(appdir, appname + '.html')
             print ("*** creating dependency html: %s ***"
                 % (os.path.basename(dgraph),))
-            mf.create_xref(file(dgraph, 'w'))
+            mf.create_xref(open(dgraph, 'w'))
 
     def build_graph(self, mf, flatpackages):
         for target in self.targets:
@@ -634,7 +638,7 @@ class py2app(Command):
             dgraph = os.path.join(appdir, appname + '.dot')
             print ("*** creating dependency graph: %s ***"
                 % (os.path.basename(dgraph),))
-            mf.graphreport(file(dgraph, 'w'), flatpackages=flatpackages)
+            mf.graphreport(open(dgraph, 'w'), flatpackages=flatpackages)
 
     def finalize_modulefinder(self, mf):
         py_files, extensions = parse_mf_results(mf)
@@ -758,7 +762,10 @@ class py2app(Command):
         arcname = self.make_lib_archive(archive_name,
             base_dir=self.collect_dir, verbose=self.verbose,
             dry_run=self.dry_run)
-        self.lib_files.append(arcname)
+        print "XXXX", arcname
+
+        # XXX: this doesn't work with python3
+        #self.lib_files.append(arcname)
 
         # build the executables
         for target in self.targets:
@@ -769,7 +776,20 @@ class py2app(Command):
             if self.semi_standalone:
                 self.symlink(sys.executable, execdst)
             else:
-                self.copy_file(sys.executable, execdst)
+                if os.path.exists(os.path.join(sys.prefix, ".Python")):
+                    fn = os.path.join(sys.prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
+                    if os.path.exists(fn):
+                        prefix = open(fn, 'rU').read().strip()
+
+                    rest_path = sys.executable[len(sys.prefix)+1:]
+                    if rest_path.startswith('.'):
+                        rest_path = rest_path[1:]
+
+                    print "XXXX", os.path.join(prefix, rest_path)
+                    self.copy_file(os.path.join(prefix, rest_path), execdst)
+
+                else:
+                    self.copy_file(sys.executable, execdst)
             if not self.debug_skip_macholib:
                 mm = PythonStandalone(self, dst, executable_path=exp)
                 dylib, runtime = self.get_runtime()
@@ -1061,7 +1081,7 @@ class py2app(Command):
         if not isinstance(bootstrap, basestring):
             return bootstrap.getvalue()
         else:
-            return file(bootstrap, 'rU').read()
+            return open(bootstrap, 'rU').read()
 
     def create_pluginbundle(self, target, script, use_runtime_preference=True):
         base = target.get_dest_base()
@@ -1168,7 +1188,7 @@ class py2app(Command):
         aliasdata = FSRef(script).FSNewAliasMinimal().data
 
         bootfn = '__boot__'
-        bootfile = file(os.path.join(resdir, bootfn + '.py'), 'w')
+        bootfile = open(os.path.join(resdir, bootfn + '.py'), 'w')
         for fn in target.prescripts:
             bootfile.write(self.get_bootstrap_data(fn))
             bootfile.write('\n\n')
@@ -1199,7 +1219,7 @@ class py2app(Command):
         self.compile_mappingmodels(resdir)
 
         bootfn = '__boot__'
-        bootfile = file(os.path.join(resdir, bootfn + '.py'), 'w')
+        bootfile = open(os.path.join(resdir, bootfn + '.py'), 'w')
         for fn in target.prescripts:
             bootfile.write(self.get_bootstrap_data(fn))
             bootfile.write('\n\n')
@@ -1208,6 +1228,10 @@ class py2app(Command):
 
         self.copy_file(script, resdir)
         pydir = os.path.join(resdir, 'lib', 'python' + sys.version[:3])
+        if sys.version_info[0] == 2:
+            arcdir = os.path.join(resdir, 'lib', 'python' + sys.version[:3])
+        else:
+            arcdir = os.path.join(resdir, 'lib')
         realhome = os.path.join(sys.prefix, 'lib', 'python' + sys.version[:3])
         self.mkpath(pydir)
         self.symlink('../../site.py', os.path.join(pydir, 'site.py'))
@@ -1230,7 +1254,11 @@ class py2app(Command):
                 sys.version[:3])), os.path.join(inc_dir, 'pyconfig.h'))
 
 
-        self.copy_file(arcname, pydir)
+        self.copy_file(arcname, arcdir)
+        if sys.version_info[0] != 2:
+            import zlib
+            self.copy_file(zlib.__file__, os.path.dirname(arcdir))
+        
         ext_dir = os.path.join(pydir, os.path.basename(self.ext_dir))
         self.copy_tree(self.ext_dir, ext_dir, preserve_symlinks=True)
         self.copy_tree(self.framework_dir,

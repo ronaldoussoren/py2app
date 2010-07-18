@@ -32,8 +32,15 @@ class TinyTinyDocument(NSDocument):
         if self.path:
             self.readFromUTF8(self.path)
         else:
-            self.textView.setString_("Welcome to TinyTinyEdit in Python\nVersion: %s\nsys.maxint: %d\nbyteorder: %s"%(
-                sys.version, sys.maxint, sys.byteorder))
+            if hasattr(sys, 'maxint'):
+                maxint = sys.maxint
+                maxint_label = 'maxint'
+            else:
+                maxint = sys.maxsize
+                maxint_label = 'maxsize'
+
+            self.textView.setString_("Welcome to TinyTinyEdit in Python\nVersion: %s\nsys.%s: %d\nbyteorder: %s"%(
+                sys.version, maxint_label, maxint, sys.byteorder))
 
     def readFromUTF8(self, path):
         f = file(path)

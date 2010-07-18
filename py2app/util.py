@@ -180,6 +180,7 @@ def find_version(fn):
     """
     Try to find a __version__ assignment in a source file
     """
+    return "0.0.0"
     import compiler
     from compiler.ast import Module, Stmt, Assign, AssName, Const
     ast = compiler.parseFile(fn)
@@ -211,8 +212,12 @@ def in_system_path(filename):
     """
     return macholib.util.in_system_path(filename)
 
-def fsencoding(s, encoding=sys.getfilesystemencoding()):
-    return macholib.util.fsencoding(s, encoding=encoding)
+if sys.version_info[0] == 2:
+    def fsencoding(s, encoding=sys.getfilesystemencoding()):
+        return macholib.util.fsencoding(s, encoding=encoding)
+else:
+    def fsencoding(s, encoding=sys.getfilesystemencoding()):
+        return s
 
 def make_exec(path):
     mask = os.umask(0)
@@ -292,9 +297,9 @@ def __load():
             #mod.frozen = 1
             break
         else:
-            raise ImportError, repr(ext) + " not found"
+            raise ImportError(repr(ext) + " not found")
     else:
-        raise ImportError, "lib-dynload not found"
+        raise ImportError("lib-dynload not found")
 __load()
 del __load
 """
@@ -489,6 +494,8 @@ def copy_tree(src, dst,
     (the default), the destination of the symlink will be copied.
     'update' and 'verbose' are the same as for 'copy_file'.
     """
+    assert isinstance(src, (str, unicode)), repr(src)
+    assert isinstance(dst, (str, unicode)), repr(dst)
 
 
     from distutils.dir_util import mkpath
