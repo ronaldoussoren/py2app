@@ -23,6 +23,7 @@ CLASSIFIERS = [
         'Natural Language :: English',
         'Operating System :: MacOS :: MacOS X',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
         'Programming Language :: Objective C',
         'Topic :: Software Development :: Libraries :: Python Modules',
@@ -61,7 +62,7 @@ setup(
     packages=find_packages(),
     package_data={
         'py2app.apptemplate': [
-            'prebuild/main-32bit',
+            'prebuild/main-fat',
             'prebuild/main-fat3',
             'prebuild/main-intel',
             'prebuild/main-universal',

@@ -15,7 +15,7 @@ import shlex
 import shutil
 from cStringIO import StringIO
 
-from itertools import chain
+from itertools import chain, imap
 
 
 from setuptools import Command
@@ -762,7 +762,6 @@ class py2app(Command):
         arcname = self.make_lib_archive(archive_name,
             base_dir=self.collect_dir, verbose=self.verbose,
             dry_run=self.dry_run)
-        print "XXXX", arcname
 
         # XXX: this doesn't work with python3
         #self.lib_files.append(arcname)
