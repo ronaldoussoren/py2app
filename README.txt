@@ -8,6 +8,19 @@ Windows.
 NEWS
 ====
 
+py2app 0.5.1
+------------
+
+py2app 0.5.1 is a bugfix release
+
+Bug fixes:
+
+- Ensure stub executables get included in the egg files
+
+- Fix name of the bundletemplate stub executable for 32-bit builds
+
+
+
 py2app 0.5
 ----------
 

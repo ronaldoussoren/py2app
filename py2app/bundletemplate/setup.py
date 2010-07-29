@@ -1,6 +1,7 @@
 import os
 import re
 import distutils.sysconfig
+import distutils.util
 
 gPreBuildVariants = [
     {
@@ -22,7 +23,7 @@ gPreBuildVariants = [
         'cc': 'gcc-4.2',
     },
     {
-        'name': 'main-32bit',
+        'name': 'main-fat',
         'target': '10.3',
         'cflags': '-isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc',
         'cc': 'gcc-4.0',

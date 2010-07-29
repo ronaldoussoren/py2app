@@ -39,7 +39,7 @@ else:
 setup(
     # metadata
     name='py2app',
-    version='0.5',
+    version='0.5.1',
     description='Create standalone Mac OS X applications with Python',
     author='Bob Ippolito',
     author_email='bob@redivi.com',
@@ -62,16 +62,19 @@ setup(
     packages=find_packages(),
     package_data={
         'py2app.apptemplate': [
-            'prebuild/main-fat',
-            'prebuild/main-fat3',
-            'prebuild/main-intel',
-            'prebuild/main-universal',
+            'prebuilt/main-fat',
+            'prebuilt/main-fat3',
+            'prebuilt/main-intel',
+            'prebuilt/main-universal',
             'lib/__error__.sh',
             'lib/site.py',
             'src/main.c',
         ],
         'py2app.bundletemplate': [
-            'prebuilt/main',
+            'prebuilt/main-fat',
+            'prebuilt/main-fat3',
+            'prebuilt/main-intel',
+            'prebuilt/main-universal',
             'lib/__error__.sh',
             'lib/site.py',
             'src/main.m',
