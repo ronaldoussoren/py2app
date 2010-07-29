@@ -39,7 +39,7 @@ else:
 setup(
     # metadata
     name='py2app',
-    version='0.5.1',
+    version='0.5.2',
     description='Create standalone Mac OS X applications with Python',
     author='Bob Ippolito',
     author_email='bob@redivi.com',
