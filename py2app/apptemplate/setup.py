@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import distutils.sysconfig
 import distutils.util
 
@@ -63,9 +64,15 @@ def main():
                 os.stat(dest).st_mtime < os.stat(src).st_mtime):
             os.system('"%(CC)s" -arch i386 -arch ppc -o "%(dest)s" "%(src)s" %(CFLAGS)s' % locals())
 
+    arch = distutils.util.get_platform().split('-')[-1]
+
+    if sys.prefix.startswith('/System') and \
+            sys.version_info[:2] == (2,5):
+        arch = "fat"
+
     dest = os.path.join(
             builddir,
-            'main-' + distutils.util.get_platform().split('-')[-1]
+            'main-' + arch
     )
 
     return dest

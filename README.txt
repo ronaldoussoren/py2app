@@ -8,6 +8,16 @@ Windows.
 NEWS
 ====
 
+py2app 0.5.2
+------------
+
+py2app 0.5.1 is a bugfix release
+
+Bug fixes:
+
+- Ensure that the right stub executable gets found when using
+  the system python 2.5
+
 py2app 0.5.1
 ------------
 
