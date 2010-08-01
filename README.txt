@@ -8,10 +8,20 @@ Windows.
 NEWS
 ====
 
+py2app 0.5.3
+------------
+
+py2app 0.5.3 is a bugfix release
+
+Bug fixes:
+
+- Do not compile ``.nib`` files, it is not strictly needed and
+  breaks PyObjC projects that still use the NibClassBuilder code.
+
 py2app 0.5.2
 ------------
 
-py2app 0.5.1 is a bugfix release
+py2app 0.5.2 is a bugfix release
 
 Bug fixes:
 

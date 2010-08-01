@@ -39,7 +39,7 @@ else:
 setup(
     # metadata
     name='py2app',
-    version='0.5.2',
+    version='0.5.3',
     description='Create standalone Mac OS X applications with Python',
     author='Bob Ippolito',
     author_email='bob@redivi.com',
@@ -53,7 +53,7 @@ setup(
     classifiers=CLASSIFIERS,
     install_requires=[
         "altgraph>=0.7",
-        "modulegraph>=0.8",
+        "modulegraph>=0.8.1",
         "macholib>=1.3",
     ],
 
@@ -93,7 +93,6 @@ setup(
         ],
         'py2app.converter': [
             "xib          = py2app.converters.nibfile:convert_xib",
-            "nib          = py2app.converters.nibfile:convert_nib",
             "datamodel    = py2app.converters.coredata:convert_datamodel",
             "mappingmodel = py2app.converters.coredata:convert_mappingmodel",
         ],
