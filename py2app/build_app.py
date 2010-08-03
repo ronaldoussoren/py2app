@@ -641,6 +641,18 @@ class py2app(Command):
             mf.graphreport(open(dgraph, 'w'), flatpackages=flatpackages)
 
     def finalize_modulefinder(self, mf):
+        for item in mf.flatten():
+            if isinstance(item, Package) and item.filename == '-':
+                fn = os.path.join(self.temp_dir, 'empty_package', '__init__.py')
+                if not os.path.exists(fn):
+                    dn = os.path.dirname(fn)
+                    if not os.path.exists(dn):
+                        os.makedirs(dn)
+                    fp = open(fn, 'w')
+                    fp.close()
+
+                item.filename = fn
+
         py_files, extensions = parse_mf_results(mf)
         py_files = list(py_files)
         extensions = list(extensions)

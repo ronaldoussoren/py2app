@@ -11,7 +11,14 @@ NEWS
 py2app 0.5.3
 ------------
 
-py2app 0.5.3 is a bugfix release
+py2app 0.5.3 is a minor feature release
+
+
+Features:
+
+- py2app can now package namespace packages that were installed
+  using `pip <http://pypi.python.org/pypi/pip>` or the
+  setuptools install option ``--single-version-externally-managed``.
 
 Bug fixes:
 
