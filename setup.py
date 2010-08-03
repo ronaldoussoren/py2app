@@ -62,6 +62,10 @@ setup(
     packages=find_packages(),
     package_data={
         'py2app.apptemplate': [
+            'prebuilt/main-i386',
+            'prebuilt/main-ppc',
+            'prebuilt/main-x86_64',
+            'prebuilt/main-ppc64',
             'prebuilt/main-fat',
             'prebuilt/main-fat3',
             'prebuilt/main-intel',
@@ -71,6 +75,10 @@ setup(
             'src/main.c',
         ],
         'py2app.bundletemplate': [
+            'prebuilt/main-i386',
+            'prebuilt/main-ppc',
+            'prebuilt/main-x86_64',
+            'prebuilt/main-ppc64',
             'prebuilt/main-fat',
             'prebuilt/main-fat3',
             'prebuilt/main-intel',
