@@ -110,5 +110,6 @@ setup(
     zip_safe=False,
     # workaround for setuptools 0.6b4 bug
     dependency_links=[],
+    test_suite='py2app_tests',
     **extra_args
 )
