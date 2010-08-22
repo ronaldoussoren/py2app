@@ -9,13 +9,6 @@ setuptools:
    mechanisms for creating and working with `Python Eggs`_. py2app
    is distributed only as a `Python Egg`_.
 
-bdist_mpkg:
-   `bdist_mpkg`_ is another `setuptools`_ command that allows users to
-   build Installer packages from Python packages. py2app does not 
-   actually depend on `bdist_mpkg`_, however previous versions of
-   py2app were distributed with `bdist_mpkg`_ so it is a dependency
-   for convenience and familiarity.
-
 macholib:
     `macholib`_ reads and writes the Mach-O object file format. 
     Used by py2app to build a dependency graph of dyld and framework

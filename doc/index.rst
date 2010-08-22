@@ -21,11 +21,11 @@ There are several online resources to help you get along with py2app.
 Mailing list:
     http://www.python.org/community/sigs/current/pythonmac-sig/
 
-Trac (issue tracker/wiki/source browser):
-    http://trac.pythonmac.org/py2app/
+Issue tracker:
+    http://bitbucket.org/ronaldoussoren/py2app/issues
 
-Subversion Trunk (latest sources):
-    http://svn.pythonmac.org/py2app/py2app/trunk/
+Source code repository:
+    https://bitbucket.org/ronaldoussoren/py2app/src
 
 PyPI Entry:
     http://pypi.python.org/pypi/py2app/
@@ -40,6 +40,8 @@ py2app may be distributed under the `MIT`_ or `PSF`_ open source
 licenses.
 
 Copyright (c) 2004-2006 Bob Ippolito <bob at redivi.com>.
+
+Copyright (c) 2010 Ronald Oussoren <ronaldoussoren at mac.com>.
 
 Contents:
 
