@@ -1,14 +1,8 @@
-def _run(*scripts):
+def _run(scriptpath):
     global __file__
     import os, sys, site
-    import Carbon.File
     sys.frozen = 'macosx_plugin'
     site.addsitedir(os.environ['RESOURCEPATH'])
-    for (script, path) in scripts:
-        alias = Carbon.File.Alias(rawdata=script)
-        target, wasChanged = alias.FSResolveAlias(None)
-        if not os.path.exists(path):
-            path = target.as_pathname()
-        sys.path.append(os.path.dirname(path))
-        __file__ = path
-        execfile(path, globals(), globals())
+    sys.path.append(os.path.dirname(scriptpath))
+    sys.argv[0] = __file__ = scriptpath
+    execfile(scriptpath, globals(), globals())

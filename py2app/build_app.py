@@ -1195,18 +1195,13 @@ class py2app(Command):
         self.compile_datamodels(resdir)
         self.compile_mappingmodels(resdir)
 
-        from Carbon.File import FSRef
-        aliasdata = FSRef(script).FSNewAliasMinimal().data
-
         bootfn = '__boot__'
         bootfile = open(os.path.join(resdir, bootfn + '.py'), 'w')
         for fn in target.prescripts:
             bootfile.write(self.get_bootstrap_data(fn))
             bootfile.write('\n\n')
         bootfile.write('try:\n')
-        bootfile.write('    _run((%r, %r))\n' % (
-            aliasdata, os.path.realpath(script),
-        ))
+        bootfile.write('    _run(%r)\n' % os.path.realpath(script))
         bootfile.write('except KeyboardInterrupt:\n')
         bootfile.write('    pass\n')
         bootfile.close()
