@@ -1,1 +1,5 @@
 doc/_build
+build
+dist
+py2app.egg-info
+.DS_Store

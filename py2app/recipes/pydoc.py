@@ -5,7 +5,7 @@ def check(cmd, mf):
         return None
     refs = [
         'Tkinter', 'tty', 'BaseHTTPServer', 'mimetools', 'select',
-        'threading', 'ic', 'getopt',
+        'threading', 'ic', 'getopt', 'tkinter',
     ]
     if sys.platform != 'win32':
         refs.append('nturl2path')
