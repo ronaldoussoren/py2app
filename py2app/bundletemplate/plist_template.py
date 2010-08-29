@@ -28,7 +28,7 @@ def infoPlistDict(CFBundleExecutable, plist={}):
             u'lib/python%s',
             u'lib/python%s/lib-dynload',
             u'lib/python%s/site-packages.zip',
-        ]],
+        ]] + [ u'lib/python%s.zip' % version.replace('.', '') ],
         PyRuntimeLocations=[(s % version) for s in [
             u'@executable_path/../Frameworks/Python.framework/Versions/%s/Python',
             u'~/Library/Frameworks/Python.framework/Versions/%s/Python',

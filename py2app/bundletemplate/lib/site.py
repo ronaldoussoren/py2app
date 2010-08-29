@@ -1,10 +1,27 @@
-"""Append module search paths for third-party packages to sys.path.
+"""
+Append module search paths for third-party packages to sys.path.
 
-This is stripped down for use in py2app applications
+This is stripped down and customized for use in py2app applications
 """
 
-import sys, os
+import sys
+# os is actually in the zip, so we need to do this here.
+# we can't call it python24.zip because zlib is not a built-in module (!)
+_libdir = '/lib/python' + sys.version[:3]
+_parent = '/'.join(__file__.split('/')[:-1])
+if not _parent.endswith(_libdir):
+    _parent += _libdir
+sys.path.append(_parent + '/site-packages.zip')
 
+# Stuffit decompresses recursively by default, that can mess up py2app bundles,
+# add the uncompressed site-packages to the path to compensate for that.
+sys.path.append(_parent + '/site-packages')
+
+import os
+try:
+    basestring
+except NameError:
+    basestring = str
 
 def makepath(*paths):
     dir = os.path.abspath(os.path.join(*paths))

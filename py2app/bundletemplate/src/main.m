@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <sys/syslimits.h>
 #include <crt_externs.h>
+#include <wchar.h>
 
 #include <objc/objc-class.h>
 
@@ -30,6 +31,7 @@ NSString *ERR_COLONPATH = @"Python bundles can not currently run from paths cont
 
 #define PYMACAPP_NSIMAGEFLAGS (NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING)
 #define PYMACAPP_NSLOOKUPSYMBOLINIMAGEFLAGS (NSLOOKUPSYMBOLINIMAGE_OPTION_BIND | NSLOOKUPSYMBOLINIMAGE_OPTION_RETURN_ON_ERROR)
+
 //
 // Typedefs
 //
@@ -45,10 +47,10 @@ typedef void (*PyEval_ReleaseLockPtr)(void);
 typedef void (*PyErr_ClearPtr)(void);
 typedef void (*PyErr_PrintPtr)(void);
 typedef int (*PyErr_OccurredPtr)(void);
-typedef PyObject *(*PyString_FromStringPtr)(const char *);
+typedef PyObject *(*PyBytes_FromStringPtr)(const char *);
 typedef int (*PyList_InsertPtr)(PyObject *, int, PyObject *);
 typedef void (*Py_DecRefPtr)(PyObject *);
-typedef void (*Py_SetProgramNamePtr)(const char *);
+typedef void (*Py_SetProgramNamePtr)(const wchar_t *);
 typedef int (*Py_IsInitializedPtr)(void);
 typedef void (*Py_InitializePtr)(void);
 typedef void (*PyEval_InitThreadsPtr)(void);
@@ -56,15 +58,16 @@ typedef PyObject *(*PyRun_FilePtr)(FILE *, const char *, int, PyObject *, PyObje
 typedef PyObject *(*PySys_GetObjectPtr)(const char *);
 typedef int *(*PySys_SetArgvPtr)(int argc, char **argv);
 typedef PyObject *(*PyObject_StrPtr)(PyObject *);
-typedef const char *(*PyString_AsStringPtr)(PyObject *);
+typedef const char *(*PyBytes_AsStringPtr)(PyObject *);
 typedef PyObject *(*PyObject_GetAttrStringPtr)(PyObject *, const char *);
+typedef PyObject *(*PyObject_CallMethodPtr)(PyObject *, const char *, const char *, ...);
 typedef PyObject *(*PyImport_ImportModulePtr)(char *);
 typedef PyObject *(*PyImport_AddModulePtr)(char *);
 typedef PyObject *(*PyModule_AddStringConstantPtr)(PyObject *, char *, char *);
 typedef PyObject *(*PyModule_AddObjectPtr)(PyObject *, char *, PyObject *);
 typedef PyObject *(*PyModule_GetDictPtr)(PyObject *);
 typedef void (*PyObject_SetItemPtr)(PyObject *, PyObject *, PyObject *);
-typedef void (*Py_SetPythonHomePtr)(char *);
+typedef void (*Py_SetPythonHomePtr)(wchar_t *);
 
 //
 // Signatures
@@ -72,7 +75,7 @@ typedef void (*Py_SetPythonHomePtr)(char *);
 
 static void DefaultDecRef(PyObject *op);
 static int report_error(NSString *err);
-static int report_linkEdit_error(void);
+static int report_linkEdit_error(const char* name);
 static int report_script_error(NSString *err, NSString *errClassName, NSString *errName);
 static NSString *pyStandardizePath(NSString *pyLocation);
 static BOOL doesPathExist(NSString *path);
@@ -144,13 +147,14 @@ int report_error(NSString *err) {
 }
 
 static
-int report_linkEdit_error(void) {
+int report_linkEdit_error(const char* name) {
     NSLinkEditErrors errorClass;
     int errorNumber;
     const char *fileName;
     const char *errorString;
     NSLinkEditError(&errorClass, &errorNumber, &fileName, &errorString);
-    NSLog(@"%s", errorString);
+    NSLog(@"%s: %s", name, errorString);
+    printf("<<<py2app>>>> %s: %s\n", name, errorString);
     return report_error([NSString stringWithFormat:ERR_LINKERRFMT, fileName]);
 }
 
@@ -262,6 +266,18 @@ NSString *getMainPyPath(NSDictionary *infoDictionary) {
     return mainPyPath;
 }
 
+int is_ascii_string(const char *s)
+{
+    size_t len = strlen(s);
+    int i;
+    for (i=0; i<len; i++) {
+        unsigned char c = s[i];
+        if (c > 0x7f) {
+            return 0;
+        }
+    }
+    return 1;
+}
 
 int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     NSDictionary *infoDictionary = [bundleBundle() infoDictionary];
@@ -310,10 +326,12 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     // Load the Python dylib (may have already been loaded, that is OK)
     const struct mach_header *py_dylib = NSAddImage([pyLocation fileSystemRepresentation], PYMACAPP_NSIMAGEFLAGS);
     if (!py_dylib) { 
-        return report_linkEdit_error();
+        return report_linkEdit_error([pyLocation fileSystemRepresentation]);
     }
 
-    // Load the symbols we need from Python
+    // Load the symbols we need from Python. We avoid lookups of unicode methods because their
+    // names are mangled by Python (because of UCS2/UCS4 stuff) and looking them up reliably is
+    // problematic.
     NSSymbol tmpSymbol;
 #define LOOKUP_SYMBOL(NAME) \
     tmpSymbol = NSLookupSymbolInImage(py_dylib, "_" #NAME, PYMACAPP_NSLOOKUPSYMBOLINIMAGEFLAGS)
@@ -324,7 +342,7 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
 #define LOOKUP(NAME) \
     LOOKUP_SYMBOL(NAME); \
     if ( !tmpSymbol ) \
-        return report_linkEdit_error(); \
+        return report_linkEdit_error(#NAME); \
     LOOKUP_DEFINE(NAME)
 
     LOOKUP_SYMBOL(Py_DecRef);
@@ -343,10 +361,9 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(PySys_GetObject);
     LOOKUP(PySys_SetArgv);
     LOOKUP(PyObject_Str);
-    LOOKUP(PyString_AsString);
-    LOOKUP(PyString_FromString);
     LOOKUP(PyList_Insert);
     LOOKUP(PyObject_GetAttrString);
+    LOOKUP(PyObject_CallMethod);
     LOOKUP(PyImport_ImportModule);
     LOOKUP(PyImport_AddModule);
     LOOKUP(PyObject_SetItem);
@@ -355,6 +372,23 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(PyModule_GetDict);
     LOOKUP(PyThreadState_Swap);
     LOOKUP(Py_SetPythonHome);
+    
+    /* PyBytes / PyString lookups depend of if we're on py3k or not */
+    PyBytes_AsStringPtr PyBytes_AsString = NULL;
+    PyBytes_FromStringPtr PyBytes_FromString = NULL;
+    LOOKUP_SYMBOL(PyBytes_AsString);
+    int isPy3k = tmpSymbol != NULL;
+    if (isPy3k) {
+        PyBytes_AsString = (PyBytes_AsStringPtr)NSAddressOfSymbol(tmpSymbol);
+        LOOKUP_SYMBOL(PyBytes_FromString);
+        PyBytes_FromString = (PyBytes_FromStringPtr)NSAddressOfSymbol(tmpSymbol);
+    }
+    else {
+        LOOKUP_SYMBOL(PyString_AsString);
+        PyBytes_AsString = (PyBytes_AsStringPtr)NSAddressOfSymbol(tmpSymbol);
+        LOOKUP_SYMBOL(PyString_FromString);
+        PyBytes_FromString = (PyBytes_FromStringPtr)NSAddressOfSymbol(tmpSymbol);
+    }
 
 #undef LOOKUP
 #undef LOOKUP_DEFINE
@@ -369,32 +403,85 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     [newEnviron setObject:[NSString stringWithFormat:@"%p", bundleBundle()] forKey:@"PYOBJC_BUNDLE_ADDRESS"];
     [newEnviron setObject:resourcePath forKey:@"RESOURCEPATH"];
     NSMutableDictionary *oldEnviron = [NSMutableDictionary dictionary];
-
+    
     // bootstrap Python with information about how to find what it needs
     // if it is not already initialized
     if (!was_initialized) {
         // $PREFIX/Python -> $PREFIX
         NSString *pythonProgramName = [pyLocation stringByDeletingLastPathComponent];
-
+        /* The conditional block below is a very ugly workaround for Python 3.1 import bugs (issues
+           8611 and 9425). OS X messing up with locale combined with Python's inability to handle
+           import encodings correctly results in a mess when the plugin is ran from a folder that
+           has non-ascii characters in it. What we do below is we create a symlink to our plugin
+           in a temporary directory (which is pretty sure not to have any non-ascii char in it) and
+           we change all our paths to that symlink. Normally, once Python 3.2 is released, we can
+           get rid of this ugly hack.
+        */
+        if (isPy3k && !is_ascii_string([pythonProgramName fileSystemRepresentation])) {
+            // pythonProgramName at this point looks like:
+            // /some/path/myplugin.plugin/Contents/Frameworks/Python.framework/Versions/3.x
+            // We want basePath to point to /some/path/myplugin.plugin so there are 5 elements to
+            // remove from the path.
+            NSString *basePath = pythonProgramName;
+            int i;
+            for (i=0; i<5; i++) {
+                basePath = [basePath stringByDeletingLastPathComponent];
+            }
+            const char *cPythonHome = tmpnam(NULL);
+            symlink([basePath fileSystemRepresentation], cPythonHome);
+            NSString *newBasePath = [NSString stringWithUTF8String:cPythonHome];
+	    if ([pythonProgramName hasPrefix: basePath]) {
+	        pythonProgramName = [newBasePath stringByAppendingString:[pythonProgramName substringFromIndex: [basePath length]]];
+	    }
+            NSMutableArray *newSysPath = [NSMutableArray array];
+	    NSEnumerator *pathEnumerator = [pythonPathArray objectEnumerator];
+	    NSString *p;
+	    while ((p = [pathEnumerator nextObject])) {
+	        if ([p hasPrefix: basePath]) {
+	           p = [newBasePath stringByAppendingString:[p substringFromIndex: [basePath length]]];
+                   [newSysPath addObject:p];
+	        }
+            }
+            pythonPathArray = newSysPath;
+        }
+    
         // this is the non-framework case, hopefully
         if (![[pyLocation pathExtension] isEqualToString:@""]) {
             pythonProgramName = [pythonProgramName stringByDeletingLastPathComponent];
         }
-
         [newEnviron setObject:[pythonPathArray componentsJoinedByString:@":"] forKey:@"PYTHONPATH"];
-
-        // this doesn't copy, but the NSAutoreleasePool will last long enough
-        Py_SetPythonHome((char *)[pythonProgramName fileSystemRepresentation]);
+        
+        wchar_t wPythonHome[PATH_MAX+1];
+        if (isPy3k) {
+            mbstowcs(wPythonHome, [pythonProgramName fileSystemRepresentation], PATH_MAX+1);
+        }
+        else {
+            // Under 2k, Py_SetPythonHome want (char *) and we have the wrong signature
+            // But it's ok, it works
+            const char *cPythonHome = [pythonProgramName fileSystemRepresentation];
+            memcpy(wPythonHome, cPythonHome, strlen(cPythonHome));
+        }
+        Py_SetPythonHome(wPythonHome);
         
         NSString *pyExecutableName = [infoDictionary objectForKey:@"PyExecutableName"];
         if ( !pyExecutableName ) {
             pyExecutableName = @"python";
         }
-
+    
         pythonProgramName = [[pythonProgramName stringByAppendingPathComponent:@"bin"] stringByAppendingPathComponent:pyExecutableName];
-        Py_SetProgramName([pythonProgramName fileSystemRepresentation]);
+        
+        wchar_t wPythonName[PATH_MAX+1];
+        if (isPy3k) {
+            mbstowcs(wPythonName, [pythonProgramName fileSystemRepresentation], PATH_MAX+1);
+        }
+        else {
+            // Same as Py_SetPythonHome
+            const char *cPythonName = [pythonProgramName fileSystemRepresentation];
+            memcpy(wPythonName, cPythonName, strlen(cPythonName));
+        }
+        Py_SetProgramName(wPythonName);
     }
-
+    
     // Set new environment variables and save older ones (for nested plugin loading)
     NSEnumerator *envEnumerator = [newEnviron keyEnumerator];
     NSString *envKey;
@@ -419,9 +506,10 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
         NSEnumerator *pathEnumerator = [pythonPathArray reverseObjectEnumerator];
         NSString *curPath;
         while ((curPath = [pathEnumerator nextObject])) {
-            PyObject *s = PyString_FromString([curPath UTF8String]);
+            PyObject *b = PyBytes_FromString([curPath UTF8String]);
+            PyObject *s = PyObject_CallMethod(b, "decode", "s", "utf-8");
             PyList_Insert(path, 0, s);
-            Py_DecRef(s);
+            Py_DecRef(b);Py_DecRef(s);
         }
 
         // transfer environment variables into existing Python process
@@ -431,11 +519,13 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
         envEnumerator = [newEnviron keyEnumerator];
         while ((envKey = [envEnumerator nextObject])) {
             char *keyString = (char *)[envKey UTF8String];
-            PyObject *key = PyString_FromString(keyString);
-            PyObject *value = PyString_FromString(getenv(keyString));
+            PyObject *b_key = PyBytes_FromString(keyString);
+            PyObject *b_value = PyBytes_FromString(getenv(keyString));
+            PyObject *key = PyObject_CallMethod(b_key, "decode", "s", "utf-8");
+            PyObject *value = PyObject_CallMethod(b_value, "decode", "s", "utf-8");
             PyObject_SetItem(pyenv, key, value);
-            Py_DecRef(key);
-            Py_DecRef(value);
+            Py_DecRef(b_key);Py_DecRef(key);
+            Py_DecRef(b_value);Py_DecRef(value);
         }
         Py_DecRef(pyenv);
     }
@@ -462,7 +552,8 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
         goto cleanup;
     }
     PyModule_AddStringConstant(module, "__file__", c_mainPyPath);
-    PyObject *builtins = PyImport_ImportModule("__builtin__");
+    char * builtinsName = isPy3k ? "builtins" : "__builtin__";
+    PyObject *builtins = PyImport_ImportModule(builtinsName);
     PyModule_AddObject(module, "__builtins__", builtins);
     PyObject *module_dict = PyModule_GetDict(module);
     if (PyErr_Occurred()) {
@@ -510,12 +601,14 @@ cleanup:
         if ( v )
             exceptionName = PyObject_Str(v);
 
-        NSString *nsExceptionClassName = [NSString stringWithCString:PyString_AsString(exceptionClassName)];
-        Py_DecRef(exceptionClassName);exceptionClassName = NULL;
+        PyObject *b = PyObject_CallMethod(exceptionClassName, "encode", "s", "utf-8");
+        NSString *nsExceptionClassName = [NSString stringWithCString:PyBytes_AsString(b) encoding:NSUTF8StringEncoding];
+        Py_DecRef(exceptionClassName);Py_DecRef(b);
         NSString *nsExceptionName;
         if ( exceptionName ) {
-            nsExceptionName = [NSString stringWithCString:PyString_AsString(exceptionName)];
-            Py_DecRef(exceptionName);exceptionName = NULL;
+            PyObject *b = PyObject_CallMethod(exceptionName, "encode", "s", "utf-8");
+            nsExceptionName = [NSString stringWithCString:PyBytes_AsString(b) encoding:NSUTF8StringEncoding];
+            Py_DecRef(exceptionName);Py_DecRef(b);
         } else {
             nsExceptionName = @"";
         }

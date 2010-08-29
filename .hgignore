@@ -3,3 +3,7 @@ build
 dist
 py2app.egg-info
 .DS_Store
+__pycache__
+
+syntax: glob
+*.dSYM
