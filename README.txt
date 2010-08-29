@@ -20,6 +20,12 @@ Features:
   using `pip <http://pypi.python.org/pypi/pip>` or the
   setuptools install option ``--single-version-externally-managed``.
 
+- the bundle template now supports python3, based on a patch
+  by Virgil Dupras.
+
+- alias builds no longer use Carbon Aliases and therefore are
+  supported with python3 as well (patch by Virgil Dupras)
+
 Bug fixes:
 
 - Do not compile ``.nib`` files, it is not strictly needed and
