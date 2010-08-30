@@ -14,12 +14,14 @@
 #include <sys/syslimits.h>
 #include <crt_externs.h>
 #include <wchar.h>
+#include <locale.h>
 
 #include <objc/objc-class.h>
 
 //
 // Constants
 //
+NSString *ERR_CANNOT_SAVE_LOCALE = @"Cannot save locale information";
 NSString *ERR_REALLYBADTITLE = @"The bundle could not be launched.";
 NSString *ERR_TITLEFORMAT = @"%@ has encountered a fatal error, and will now terminate.";
 NSString *ERR_PYRUNTIMELOCATIONS = @"The Info.plist file must have a PyRuntimeLocations array containing string values for preferred Python runtime locations.  These strings should be \"otool -L\" style mach ids; \"@executable_stub\" and \"~\" prefixes will be translated accordingly.";
@@ -280,6 +282,8 @@ int is_ascii_string(const char *s)
 }
 
 int pyobjc_main(int argc, char * const *argv, char * const *envp) {
+    char* curenv;
+    char* curlocale;
     NSDictionary *infoDictionary = [bundleBundle() infoDictionary];
 
     NSString *pyLocation = nil;
@@ -409,47 +413,6 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     if (!was_initialized) {
         // $PREFIX/Python -> $PREFIX
         NSString *pythonProgramName = [pyLocation stringByDeletingLastPathComponent];
-        /* The conditional block below is a very ugly workaround for Python 3.1 import bugs (issues
-           8611 and 9425). OS X messing up with locale combined with Python's inability to handle
-           import encodings correctly results in a mess when the plugin is ran from a folder that
-           has non-ascii characters in it. What we do below is we create a symlink to our plugin
-           in a temporary directory (which is pretty sure not to have any non-ascii char in it) and
-           we change all our paths to that symlink. Normally, once Python 3.2 is released, we can
-           get rid of this ugly hack.
-        */
-        if (isPy3k && !is_ascii_string([pythonProgramName fileSystemRepresentation])) {
-            // pythonProgramName at this point looks like:
-            // /some/path/myplugin.plugin/Contents/Frameworks/Python.framework/Versions/3.x
-            // We want basePath to point to /some/path/myplugin.plugin so there are 5 elements to
-            // remove from the path.
-            NSString *basePath = pythonProgramName;
-            int i;
-            for (i=0; i<5; i++) {
-                basePath = [basePath stringByDeletingLastPathComponent];
-            }
-            const char *cPythonHome = tmpnam(NULL);
-            symlink([basePath fileSystemRepresentation], cPythonHome);
-            NSString *newBasePath = [NSString stringWithUTF8String:cPythonHome];
-	    if ([pythonProgramName hasPrefix: basePath]) {
-	        pythonProgramName = [newBasePath stringByAppendingString:[pythonProgramName substringFromIndex: [basePath length]]];
-	    }
-            NSMutableArray *newSysPath = [NSMutableArray array];
-	    NSEnumerator *pathEnumerator = [pythonPathArray objectEnumerator];
-	    NSString *p;
-	    while ((p = [pathEnumerator nextObject])) {
-	        if ([p hasPrefix: basePath]) {
-	           p = [newBasePath stringByAppendingString:[p substringFromIndex: [basePath length]]];
-                   [newSysPath addObject:p];
-	        }
-            }
-            pythonPathArray = newSysPath;
-        }
-    
-        // this is the non-framework case, hopefully
-        if (![[pyLocation pathExtension] isEqualToString:@""]) {
-            pythonProgramName = [pythonProgramName stringByDeletingLastPathComponent];
-        }
-        [newEnviron setObject:[pythonPathArray componentsJoinedByString:@":"] forKey:@"PYTHONPATH"];
         
         wchar_t wPythonHome[PATH_MAX+1];
         if (isPy3k) {
@@ -494,10 +457,46 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
         setenv(keyString, (char *)[[newEnviron objectForKey:envKey] UTF8String], 1);
     }
 
+    /*
+     * When apps are started from the Finder (or anywhere
+     * except from the terminal), the LANG and LC_* variables
+     * aren't set in the environment. This confuses Py_Initialize
+     * when it tries to import the codec for UTF-8, 
+     * therefore explicitly set the locale. 
+     *
+     * Also set the LC_CTYPE environment variable because Py_Initialize
+     * reset the locale information using the environment :-(
+     */
+    curlocale = setlocale(LC_ALL, NULL);
+    if (curlocale != NULL) {
+	curlocale = strdup(curlocale);
+	if (curlocale == NULL) {
+		(void)report_error(ERR_CANNOT_SAVE_LOCALE);
+		return -1;
+	}
+    }
+    setlocale(LC_ALL, "en_US.UTF-8");
+
+
     int rval = 0;
     FILE *mainPyFile = NULL;
     Py_Initialize();
     PyEval_InitThreads();
+
+    /*
+     * Reset the environment and locale information
+     */
+    setlocale(LC_CTYPE, curlocale);
+    free(curlocale);
+
+    if (curenv) {
+	setenv("LC_CTYPE", curenv, 1);
+        free(curenv);
+    } else {
+        unsetenv("LC_CTYPE");
+    }
+
+
     PyGILState_STATE gilState = PyGILState_Ensure();
 
     if (was_initialized) {

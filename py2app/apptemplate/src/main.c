@@ -6,7 +6,6 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <locale.h>
-#include <langinfo.h>
 
 /*
     Typedefs
