@@ -28,6 +28,10 @@ Features:
 
 Bug fixes:
 
+- App bundles with Python 3 now work when the application is 
+  stored in a directory with non-ASCII characters in the full
+  name.
+
 - Do not compile ``.nib`` files, it is not strictly needed and
   breaks PyObjC projects that still use the NibClassBuilder code.
 

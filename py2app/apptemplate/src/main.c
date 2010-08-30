@@ -5,6 +5,8 @@
 #include <mach-o/dyld.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <ApplicationServices/ApplicationServices.h>
+#include <locale.h>
+#include <langinfo.h>
 
 /*
     Typedefs
@@ -838,6 +840,8 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     void *py_dylib;
     int rval;
     FILE *mainScriptFile;
+    char* curenv = NULL;
+    char* curlocale = NULL;
 
 
     if (!py2app_getApplicationName()) return report_error(ERR_NONAME);
@@ -890,10 +894,50 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(PyObject_GetAttrString);
 
 #undef LOOKUP
+	
+    /*
+     * When apps are started from the Finder (or anywhere
+     * except from the terminal), the LANG and LC_* variables
+     * aren't set in the environment. This confuses Py_Initialize
+     * when it tries to import the codec for UTF-8, 
+     * therefore explicitly set the locale. 
+     *
+     * Also set the LC_CTYPE environment variable because Py_Initialize
+     * reset the locale information using the environment :-(
+     */
+    curlocale = setlocale(LC_ALL, NULL);
+    if (curlocale != NULL) {
+      curlocale = strdup(curlocale);
+      if (curlocale == NULL) {
+        (void)report_error("cannot save locale information");
+	return -1;
+      }
+    }
+    setlocale(LC_ALL, "en_US.UTF-8");
+
+    curenv = getenv("LC_CTYPE");
+    if (curenv) {
+	    curenv = strdup(curenv);
+    }
+    setenv("LC_CTYPE", "en_US.UTF-8", 1);
 
     py2app_Py_SetProgramName(c_pythonInterpreter);
 
     py2app_Py_Initialize();
+
+
+    /*
+     * Reset the environment and locale information
+     */
+    setlocale(LC_CTYPE, curlocale);
+    free(curlocale);
+
+    if (curenv) {
+	    setenv("LC_CTYPE", curenv, 1);
+	    free(curenv);
+    } else {
+	    unsetenv("LC_CTYPE");
+    }
 
     py2app_CFStringGetCString(
         mainScript, c_mainScript,
@@ -905,6 +949,7 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     argv_new[0] = c_mainScript;
     memcpy(&argv_new[1], &argv[1], (argc - 1) * sizeof(char *));
     py2app_PySys_SetArgv(argc, argv_new);
+
 
     mainScriptFile = fopen(c_mainScript, "r");
     rval = py2app_PyRun_SimpleFile(mainScriptFile, c_mainScript);
