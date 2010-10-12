@@ -15,6 +15,7 @@
 #include <crt_externs.h>
 #include <wchar.h>
 #include <locale.h>
+#include <langinfo.h>
 
 #include <objc/objc-class.h>
 
@@ -401,6 +402,7 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
 
     int was_initialized = Py_IsInitialized();
 
+
     
     // Set up the environment variables to be transferred
     NSMutableDictionary *newEnviron = [NSMutableDictionary dictionary];
@@ -413,19 +415,9 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     if (!was_initialized) {
         // $PREFIX/Python -> $PREFIX
         NSString *pythonProgramName = [pyLocation stringByDeletingLastPathComponent];
-        
-        wchar_t wPythonHome[PATH_MAX+1];
-        if (isPy3k) {
-            mbstowcs(wPythonHome, [pythonProgramName fileSystemRepresentation], PATH_MAX+1);
-        }
-        else {
-            // Under 2k, Py_SetPythonHome want (char *) and we have the wrong signature
-            // But it's ok, it works
-            const char *cPythonHome = [pythonProgramName fileSystemRepresentation];
-            memcpy(wPythonHome, cPythonHome, strlen(cPythonHome));
-        }
-        Py_SetPythonHome(wPythonHome);
-        
+
+	setenv("PYTHONHOME", [resourcePath fileSystemRepresentation], 1);
+
         NSString *pyExecutableName = [infoDictionary objectForKey:@"PyExecutableName"];
         if ( !pyExecutableName ) {
             pyExecutableName = @"python";
@@ -477,6 +469,10 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     }
     setlocale(LC_ALL, "en_US.UTF-8");
 
+    curenv = getenv("LC_CTYPE");
+    if (curenv) {
+            curenv = strdup(curenv);
+    }
 
     int rval = 0;
     FILE *mainPyFile = NULL;

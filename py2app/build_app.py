@@ -737,7 +737,8 @@ class py2app(Command):
                 fn = os.path.realpath(getattr(ext, 'filename', None))
                 pkgexts.append(ext)
             else:
-                py_files.append(self.create_loader(ext))
+                if '.' in ext.identifier:
+                    py_files.append(self.create_loader(ext))
                 copyexts.append(ext)
             extmap[fn] = ext
 
