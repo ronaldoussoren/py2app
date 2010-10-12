@@ -854,6 +854,9 @@ class py2app(Command):
                 if fname in ('.svn', 'CVS'):
                     # Scrub revision manager junk
                     continue
+                if fname in ('__pycache__',):
+                    # Ignore PEP 3147 bytecode cache
+                    continue
                 pth = os.path.join(dname, fname)
 
                 # Check if we have found a package, exclude those
