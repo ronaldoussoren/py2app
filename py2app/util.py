@@ -118,6 +118,7 @@ def path_to_zip(path):
     Returns (pathtozip, pathinzip). If path isn't in a zipfile pathtozip
     will be None
     """
+    orig_path = path
     from distutils.errors import DistutilsFileError
     if os.path.exists(path):
         return (None, path)
@@ -126,16 +127,18 @@ def path_to_zip(path):
         rest = ''
         while not os.path.exists(path):
             path, r = os.path.split(path)
+            if not path:
+                raise DistutilsFileError("File doesn't exist: %s"%(orig_path,))
             rest = os.path.join(r, rest)
 
         if not os.path.isfile(path):
             # Directory really doesn't exist
-            raise DistutilsFileError(path)
+            raise DistutilsFileError("File doesn't exist: %s"%(orig_path,))
 
         try:
            zf = zipfile.ZipFile(path)
         except zipfile.BadZipfile:
-           raise DistutilsFileError(path)
+            raise DistutilsFileError("File doesn't exist: %s"%(orig_path,))
 
         if rest.endswith('/'):
             rest = rest[:-1]

@@ -603,6 +603,7 @@ class py2app(Command):
             else:
                 self.run_normal()
         except:
+            raise
             # XXX - remove when not debugging
             #       distutils sucks
             import pdb, sys, traceback
