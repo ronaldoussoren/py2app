@@ -16,6 +16,18 @@ py2app 0.5.3 is a minor feature release
 
 Features:
 
+- it is now possible to specify which python distributions must
+  be availble when building the bundle by using the 
+  "install_requires" argument of the ``setup()`` function::
+
+     setup(
+
+         ...
+	 install_requires = [
+	 	"pyobjc == 2.2"
+	 ],
+     )
+
 - py2app can now package namespace packages that were installed
   using `pip <http://pypi.python.org/pypi/pip>` or the
   setuptools install option ``--single-version-externally-managed``.
@@ -34,6 +46,11 @@ Bug fixes:
 
 - Do not compile ``.nib`` files, it is not strictly needed and
   breaks PyObjC projects that still use the NibClassBuilder code.
+
+- Better error messsages when trying to include a non-existing
+  file as a resource.
+
+- Don't drop into PDB when an exception occurs.
 
 py2app 0.5.2
 ------------

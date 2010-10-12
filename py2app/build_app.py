@@ -421,6 +421,12 @@ class py2app(Command):
             yield runtime
 
     def run(self):
+        if hasattr(self.distribution, "install_requires") \
+                and self.distribution.install_requires:
+
+            self.distribution.fetch_build_eggs(self.distribution.install_requires)
+
+
         build = self.reinitialize_command('build')
         build.build_base = self.bdist_base
         build.run()
