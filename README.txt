@@ -40,6 +40,9 @@ Features:
 
 Bug fixes:
 
+- Avoid copying the __pycache__ directory in python versions
+  that implement PEP 3147 (Python 3.2 and later)
+
 - App bundles with Python 3 now work when the application is 
   stored in a directory with non-ASCII characters in the full
   name.
