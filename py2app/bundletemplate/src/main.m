@@ -402,6 +402,31 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
 
     int was_initialized = Py_IsInitialized();
 
+    /*
+     * When apps are started from the Finder (or anywhere
+     * except from the terminal), the LANG and LC_* variables
+     * aren't set in the environment. This confuses Py_Initialize
+     * when it tries to import the codec for UTF-8, 
+     * therefore explicitly set the locale. 
+     *
+     * Also set the LC_CTYPE environment variable because Py_Initialize
+     * reset the locale information using the environment :-(
+     */
+    curlocale = setlocale(LC_ALL, NULL);
+    if (curlocale != NULL) {
+	curlocale = strdup(curlocale);
+	if (curlocale == NULL) {
+		(void)report_error(ERR_CANNOT_SAVE_LOCALE);
+		return -1;
+	}
+    }
+    setlocale(LC_ALL, "en_US.UTF-8");
+
+    curenv = getenv("LC_CTYPE");
+    if (curenv) {
+            curenv = strdup(curenv);
+    }
+
 
     
     // Set up the environment variables to be transferred
@@ -449,30 +474,6 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
         setenv(keyString, (char *)[[newEnviron objectForKey:envKey] UTF8String], 1);
     }
 
-    /*
-     * When apps are started from the Finder (or anywhere
-     * except from the terminal), the LANG and LC_* variables
-     * aren't set in the environment. This confuses Py_Initialize
-     * when it tries to import the codec for UTF-8, 
-     * therefore explicitly set the locale. 
-     *
-     * Also set the LC_CTYPE environment variable because Py_Initialize
-     * reset the locale information using the environment :-(
-     */
-    curlocale = setlocale(LC_ALL, NULL);
-    if (curlocale != NULL) {
-	curlocale = strdup(curlocale);
-	if (curlocale == NULL) {
-		(void)report_error(ERR_CANNOT_SAVE_LOCALE);
-		return -1;
-	}
-    }
-    setlocale(LC_ALL, "en_US.UTF-8");
-
-    curenv = getenv("LC_CTYPE");
-    if (curenv) {
-            curenv = strdup(curenv);
-    }
 
     int rval = 0;
     FILE *mainPyFile = NULL;

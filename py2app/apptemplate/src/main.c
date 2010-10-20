@@ -893,6 +893,8 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(PyObject_GetAttrString);
 
 #undef LOOKUP
+
+    int isPy3K = dlsym(py_dylib, "PyBytes_FromString") != NULL;
 	
     /*
      * When apps are started from the Finder (or anywhere
@@ -920,7 +922,15 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     }
     setenv("LC_CTYPE", "en_US.UTF-8", 1);
 
-    py2app_Py_SetProgramName(c_pythonInterpreter);
+    if (isPy3K) {
+	    wchar_t w_pythonInterpreter[PATH_MAX+1];
+	    mbstowcs(w_pythonInterpreter, c_pythonInterpreter, PATH_MAX+1);
+	    py2app_Py_SetProgramName((char*)w_pythonInterpreter);
+
+
+    } else {
+	    py2app_Py_SetProgramName(c_pythonInterpreter);
+    }
 
     py2app_Py_Initialize();
 
