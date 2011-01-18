@@ -41,7 +41,7 @@ licenses.
 
 Copyright (c) 2004-2006 Bob Ippolito <bob at redivi.com>.
 
-Copyright (c) 2010 Ronald Oussoren <ronaldoussoren at mac.com>.
+Copyright (c) 2010-2011 Ronald Oussoren <ronaldoussoren at mac.com>.
 
 Contents:
 
@@ -57,6 +57,7 @@ Contents:
    recipes
    implementation
    py2applet
+   changelog
 
 .. _`setuptools`: http://pypi.python.org/pypi/setuptools/
 .. _`py2exe`: http://pypi.python.org/pypi/py2exe/

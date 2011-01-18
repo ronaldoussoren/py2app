@@ -15,6 +15,7 @@ from distutils import log
 from pkg_resources import require, DistributionNotFound
 
 LONG_DESCRIPTION = open('README.txt').read()
+LONG_DESCRIPTION += '\n' + open('doc/changelog.rst').read()
 
 CLASSIFIERS = [
         'Development Status :: 4 - Beta',
