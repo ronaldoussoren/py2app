@@ -48,6 +48,8 @@ Bug fixes:
 
 - Don't drop into PDB when an exception occurs.
 
+- Issue #5: Avoid a possible stack overflow in the bundle executable
+
 py2app 0.5.2
 ------------
 

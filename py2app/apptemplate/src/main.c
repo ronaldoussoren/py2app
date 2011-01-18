@@ -512,10 +512,10 @@ static void setResourcePath(void) {
 }
 
 static void setExecutablePath(void) {
-    char executable_path[PATH_MAX];
+    char executable_path[PATH_MAX+1];
     uint32_t bufsize = PATH_MAX;
-    if (!_NSGetExecutablePath(executable_path, &bufsize)) {
-        executable_path[bufsize] = '\0';
+    memset(executable_path, '\0', PATH_MAX+1);
+    if (_NSGetExecutablePath(executable_path, &bufsize) == 0) {
         setenv("EXECUTABLEPATH", executable_path, 1);
     }
 }
