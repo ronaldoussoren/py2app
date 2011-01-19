@@ -1,4 +1,6 @@
 #include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <pwd.h>
 #include <dlfcn.h>
@@ -12,6 +14,9 @@
 */
 
 typedef int PyObject;
+typedef PyObject* (*Py_BuildValuePtr)(const char*, ...);
+typedef void (*Py_SetPathPtr)(const wchar_t*);
+typedef int (*PySys_SetObjectPtr)(const char*, PyObject*);
 typedef void (*Py_SetProgramNamePtr)(const char *);
 typedef void (*Py_InitializePtr)(void); 
 typedef int (*PyRun_SimpleFilePtr)(FILE *, const char *);
@@ -883,6 +888,9 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
 	    if (!py2app_ ## NAME) { \
 		return report_linkEdit_error(); \
 	    } 
+
+#define OPT_LOOKUP(NAME) \
+	    NAME ## Ptr py2app_ ## NAME = (NAME ## Ptr)dlsym(py_dylib, #NAME); 
     
     LOOKUP(Py_SetProgramName);
     LOOKUP(Py_Initialize);
@@ -891,10 +899,15 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(PySys_GetObject);
     LOOKUP(PySys_SetArgv);
     LOOKUP(PyObject_GetAttrString);
+    LOOKUP(Py_BuildValue);
+    OPT_LOOKUP(Py_SetPath);
+    LOOKUP(PySys_SetObject);
 
-#undef LOOKUP
 
     int isPy3K = dlsym(py_dylib, "PyBytes_FromString") != NULL;
+
+#undef OPT_LOOKUP
+#undef LOOKUP
 	
     /*
      * When apps are started from the Finder (or anywhere
@@ -923,9 +936,40 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     setenv("LC_CTYPE", "en_US.UTF-8", 1);
 
     if (isPy3K) {
-	    wchar_t w_pythonInterpreter[PATH_MAX+1];
-	    mbstowcs(w_pythonInterpreter, c_pythonInterpreter, PATH_MAX+1);
-	    py2app_Py_SetProgramName((char*)w_pythonInterpreter);
+    	if (py2app_Py_SetPath != NULL) {
+		size_t len = (strlen(resource_path) * 3) + 256;
+		char* search_path = malloc(len);
+		wchar_t* w_search_path;
+
+		if (search_path == NULL) {
+			report_error("cannot allocate sys.path");
+			return -1;
+		}
+		/* FIXME: should use actual python version */
+		snprintf(search_path, len,
+			"%s/lib/python3.2:%s/lib/python32.zip:%s/lib/python3.2/lib-dynload",
+			resource_path, resource_path, resource_path);
+
+		w_search_path = (wchar_t*)malloc(len * sizeof(wchar_t));
+		if (search_path == NULL) {
+			report_error("cannot allocate wide sys.path");
+			return -1;
+		}
+
+		mbstowcs(w_search_path, search_path, len);
+		free(search_path); search_path = NULL;
+
+		py2app_Py_SetPath(w_search_path);
+		free(w_search_path);
+
+		/* sys.prefix and sys.exec_prefix aren't set yet */
+		
+	}
+
+    	wchar_t w_pythonInterpreter[PATH_MAX+1];
+    	mbstowcs(w_pythonInterpreter, c_pythonInterpreter, PATH_MAX+1);
+    	py2app_Py_SetProgramName((char*)w_pythonInterpreter);
+
 
 
     } else {
@@ -933,6 +977,24 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     }
 
     py2app_Py_Initialize();
+
+    if (isPy3K && py2app_Py_SetPath) {
+	    PyObject* prefix = py2app_Py_BuildValue(
+		"s", resource_path);
+	    if (prefix == NULL) {
+        	rval = report_script_error(ERR_PYTHONEXCEPTION);
+		return rval;
+	    }
+
+	    if (py2app_PySys_SetObject("prefix", prefix) == -1) {
+        	rval = report_script_error(ERR_PYTHONEXCEPTION);
+		return rval;
+	    }
+	    if (py2app_PySys_SetObject("exec_prefix", prefix) == -1) {
+        	rval = report_script_error(ERR_PYTHONEXCEPTION);
+		return rval;
+	    }
+     }
 
 
     /*

@@ -39,16 +39,17 @@ class TestBasicApp (unittest.TestCase):
     # a base-class.
     @classmethod
     def setUpClass(cls):
-         p = subprocess.Popen([
-                 sys.executable,
-                     'setup.py', 'py2app'],
-             cwd = os.path.join(DIR_NAME, 'basic_app'),
-             stdout=subprocess.PIPE,
-             stderr=subprocess.STDOUT)
-         lines = p.communicate()[0]
-         if p.wait() != 0:
-             print lines
-             self.fail("Creating basic_app bundle failed")
+        p = subprocess.Popen([
+                sys.executable,
+                    'setup.py', 'py2app'],
+            cwd = os.path.join(DIR_NAME, 'basic_app'),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True)
+        lines = p.communicate()[0]
+        if p.wait() != 0:
+            print (lines)
+            raise AssertionError("Creating basic_app bundle failed")
 
     @classmethod
     def tearDownClass(cls):
@@ -68,6 +69,7 @@ class TestBasicApp (unittest.TestCase):
         p = subprocess.Popen([path],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
+                close_fds=True,
                 )
                 #stderr=subprocess.STDOUT)
         return p
@@ -93,28 +95,33 @@ class TestBasicApp (unittest.TestCase):
         p.stdin.close()
 
         exit = self.wait_with_timeout(p)
-        self.assertEquals(exit, 0)
+        self.assertEqual(exit, 0)
+
+        p.stdout.close()
 
     def test_simple_imports(self):
         p = self.start_app()
 
         # Basic module that is always present:
-        p.stdin.write('import_module("os")\n')
+        p.stdin.write('import_module("os")\n'.encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline()
-        self.assertEquals(ln.strip(), b"os")
+        self.assertEqual(ln.strip(), b"os")
 
         # Dependency of the main module:
-        p.stdin.write('import_module("decimal")\n')
+        p.stdin.write('import_module("decimal")\n'.encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline()
-        self.assertEquals(ln.strip(), b"decimal")
+        self.assertEqual(ln.strip(), b"decimal")
 
         # Not a dependency of the module:
-        p.stdin.write('import_module("xmllib")\n')
+        p.stdin.write('import_module("xmllib")\n'.encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline().decode('utf-8')
         self.assertTrue(ln.strip().startswith("* import failed"), ln)
+
+        p.stdin.close()
+        p.stdout.close()
 
 if __name__ == "__main__":
     unittest.main()

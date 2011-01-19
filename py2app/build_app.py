@@ -13,6 +13,11 @@ import zipfile
 import plistlib
 import shlex
 import shutil
+
+try:
+    import sysconfig
+except ImportError:
+    sysconfig = None
 from cStringIO import StringIO
 
 from itertools import chain, imap
@@ -293,6 +298,9 @@ class py2app(Command):
             self.argv_inject = shlex.split(self.argv_inject)
         self.includes = set(fancy_split(self.includes))
         self.includes.add('encodings.*')
+        #if sys.version_info[:2] >= (3,2):
+        #    self.includes.add('pkgutil')
+        #    self.includes.add('imp')
         self.packages = set(fancy_split(self.packages))
         self.excludes = set(fancy_split(self.excludes))
         self.excludes.add('readline')
@@ -958,6 +966,24 @@ class py2app(Command):
         # XXX - In this particular case we know exactly what we can
         #       get away with.. should this be extended to the general
         #       case?  Per-framework recipes?
+        includedir = None
+        configdir = None
+        if sysconfig is not None:
+            includedir = sysconfig.get_config_var('CONFINCLUDEPY')
+            configdir = sysconfig.get_config_var('LIBPL')
+
+
+        if includedir is None:
+            includedir = 'python%s'%(info['version'])
+        else:
+            includedir = os.path.basename(includedir)
+
+        if configdir is None:
+            configdir = 'config'
+        else:
+            configdir = os.path.basename(configdir)
+
+
         indir = os.path.dirname(os.path.join(info['location'], info['name']))
         outdir = os.path.dirname(os.path.join(dst, info['name']))
         self.mkpath(os.path.join(outdir, 'Resources'))
@@ -966,15 +992,17 @@ class py2app(Command):
         # distutils looks for some files relative to sys.executable, which
         # means they have to be in the framework...
         self.mkpath(os.path.join(outdir, 'include'))
-        self.mkpath(os.path.join(outdir, 'include', pydir))
+        self.mkpath(os.path.join(outdir, 'include', includedir))
         self.mkpath(os.path.join(outdir, 'lib'))
         self.mkpath(os.path.join(outdir, 'lib', pydir))
-        self.mkpath(os.path.join(outdir, 'lib', pydir, 'config'))
+        self.mkpath(os.path.join(outdir, 'lib', pydir, configdir))
+
+
         fmwkfiles = [
             os.path.basename(info['name']),
             'Resources/Info.plist',
-            'include/%s/pyconfig.h'%(pydir,),
-            'lib/%s/config/Makefile'%(pydir,)
+            'include/%s/pyconfig.h'%(includedir),
+            'lib/%s/%s/Makefile'%(pydir, configdir)
         ]
         for fn in fmwkfiles:
             self.copy_file(
@@ -1043,6 +1071,11 @@ class py2app(Command):
 
     def initialize_prescripts(self):
         prescripts = []
+        if sys.version_info[:2] >= (3, 2):
+            # Python 3.2 or later requires a more complicated
+            # bootstrap
+            prescripts.append('import_encodings')
+
         if self.site_packages or self.alias:
             prescripts.append('site_packages')
 
@@ -1227,10 +1260,22 @@ class py2app(Command):
         self.resdir = resdir
         self.plist = plist
 
-        for src, dest in self.iter_data_files():
-            dest = os.path.join(resdir, dest)
-            self.mkpath(os.path.dirname(dest))
-            copy_resource(src, dest, dry_run=self.dry_run)
+        includedir = None
+        configdir = None
+        if sysconfig is not None:
+            includedir = sysconfig.get_config_var('CONFINCLUDEPY')
+            configdir = sysconfig.get_config_var('LIBPL')
+
+
+        if includedir is None:
+            includedir = 'python%s'%(info['version'])
+        else:
+            includedir = os.path.basename(includedir)
+
+        if configdir is None:
+            configdir = 'config'
+        else:
+            configdir = os.path.basename(configdir)
 
         self.compile_datamodels(resdir)
         self.compile_mappingmodels(resdir)
@@ -1252,8 +1297,8 @@ class py2app(Command):
         realhome = os.path.join(sys.prefix, 'lib', 'python' + sys.version[:3])
         self.mkpath(pydir)
         self.symlink('../../site.py', os.path.join(pydir, 'site.py'))
-        cfgdir = os.path.join(pydir, 'config')
-        realcfg = os.path.join(realhome, 'config')
+        cfgdir = os.path.join(pydir, configdir)
+        realcfg = os.path.join(realhome, configdir)
         real_include = os.path.join(sys.prefix, 'include')
         if self.semi_standalone:
             self.symlink(realcfg, cfgdir)
@@ -1265,10 +1310,10 @@ class py2app(Command):
                 if os.path.exists(rfn):
                     self.copy_file(rfn, os.path.join(cfgdir, fn))
 
-            inc_dir = os.path.join(resdir, 'include', 'python' + sys.version[:3])
+            inc_dir = os.path.join(resdir, 'include', includedir)
             self.mkpath(inc_dir)
-            self.copy_file(os.path.join(real_include, 'python%s/pyconfig.h'%(
-                sys.version[:3])), os.path.join(inc_dir, 'pyconfig.h'))
+            self.copy_file(os.path.join(real_include, '%s/pyconfig.h'%(
+                includedir)), os.path.join(inc_dir, 'pyconfig.h'))
 
 
         self.copy_file(arcname, arcdir)
@@ -1293,6 +1338,35 @@ class py2app(Command):
             )
             self.mkpath(os.path.dirname(fn))
             copy_file(copyext.filename, fn, dry_run=self.dry_run)
+
+        if sys.version_info[:2] >= (3, 2):
+            import encodings
+            import encodings.cp437
+            import encodings.utf_8
+            import encodings.latin_1
+            import codecs
+
+            encodings_dir = os.path.join(pydir, 'encodings')
+            self.mkpath(encodings_dir)
+
+            byte_compile([
+                    SourceModule('encodings.__init__', encodings.__file__),
+                    SourceModule('encodings.cp437', encodings.cp437.__file__),
+                    SourceModule('encodings.utf_8', encodings.utf_8.__file__),
+                    SourceModule('encodings.latin_1', encodings.latin_1.__file__),
+                    SourceModule('codecs', codecs.__file__),
+                ],
+                target_dir=pydir,
+                optimize=self.optimize,
+                force=self.force,
+                verbose=self.verbose,
+                dry_run=self.dry_run)
+
+            if not self.dry_run:
+                fp = open(os.path.join(encodings_dir, 'aliases.py'), 'w')
+                fp.write('aliases = {}\n')
+                fp.close()
+
 
         target.appdir = appdir
         return appdir

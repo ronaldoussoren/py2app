@@ -50,6 +50,8 @@ Bug fixes:
 
 - Issue #5: Avoid a possible stack overflow in the bundle executable
 
+- Issue #9: Add support for recent Python 3.2 pre-releases.
+
 py2app 0.5.2
 ------------
 
