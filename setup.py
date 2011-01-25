@@ -11,8 +11,7 @@ from setuptools import setup, find_packages
 from distutils.core import PyPIRCCommand
 from distutils.errors  import DistutilsError
 from distutils import log
-
-from pkg_resources import require, DistributionNotFound
+from setuptools.command import test
 
 LONG_DESCRIPTION = open('README.txt').read()
 LONG_DESCRIPTION += '\n' + open('doc/changelog.rst').read()
@@ -38,6 +37,28 @@ if sys.version_info[0] == 3:
     extra_args = dict(use_2to3=True)
 else:
     extra_args = dict()
+
+
+
+def test_loader():
+    import unittest
+
+    topdir = os.path.dirname(os.path.abspath(__file__))
+    testModules = [ fn[:-3] for fn in os.listdir(os.path.join(topdir, 'py2app_tests')) if fn.endswith('.py')]
+    sys.path.insert(0, os.path.join(topdir, 'py2app_tests'))
+
+    suites = []
+    for modName in testModules:
+        try:
+            module = __import__(modName)
+        except ImportError:
+            print ("SKIP %s: %s"%(modName, sys.exc_info[1]))
+            continue
+
+        s = unittest.defaultTestLoader.loadTestsFromModule(module)
+        suites.append(s)
+
+    return unittest.TestSuite(suites)
 
 class upload_docs (PyPIRCCommand):
     description = "upload sphinx documentation"
@@ -202,7 +223,7 @@ setup(
     cmdclass=dict(
         upload_docs=upload_docs,
     ),
-    packages=find_packages(),
+    packages=find_packages(exclude=['py2app_tests']),
     package_data={
         'py2app.apptemplate': [
             'prebuilt/main-i386',
@@ -251,8 +272,7 @@ setup(
         ]
     },
     zip_safe=False,
-    # workaround for setuptools 0.6b4 bug
-    dependency_links=[],
-    test_suite='py2app_tests',
+    dependency_links=[], # workaround for setuptools 0.6b4 bug
+    test_suite='__main__.test_loader',
     **extra_args
 )

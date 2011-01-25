@@ -6,15 +6,15 @@ def function():
 
 def import_module(name):
     try:
-        exec "import %s"%(name,)
+        exec ("import %s"%(name,))
         m = eval(name)
-    except ImportError, msg:
-        print "* import failed"
+    except ImportError:
+        print ("* import failed")
 
     else:
         for k in name.split('.')[1:]:
             m = getattr(m, k)
-        print m.__name__
+        print (m.__name__)
 
 
 while True:
@@ -23,12 +23,12 @@ while True:
         break
 
     try:
-        exec line
+        exec (line)
     except SystemExit:
         raise
 
-    except Exception, e:
-        print "* Exception", e
+    except Exception:
+        print ("* Exception " + str(sys.exc_info()[1]))
 
     sys.stdout.flush()
     sys.stderr.flush()

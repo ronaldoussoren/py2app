@@ -75,7 +75,7 @@ class TestBasicApp (unittest.TestCase):
         return p
 
     def wait_with_timeout(self, proc, timeout=10):
-        for i in xrange(timeout):
+        for i in range(timeout):
             x = proc.poll()
             if x is None:
                 time.sleep(1)
