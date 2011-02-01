@@ -115,8 +115,15 @@ class TestBasicApp (unittest.TestCase):
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"decimal")
 
-        # Not a dependency of the module:
-        p.stdin.write('import_module("xmllib")\n'.encode('latin1'))
+        if '--alias' not in self.py2app_args:
+            # Not a dependency of the module (stdlib):
+            p.stdin.write('import_module("xmllib")\n'.encode('latin1'))
+            p.stdin.flush()
+            ln = p.stdout.readline().decode('utf-8')
+            self.assertTrue(ln.strip().startswith("* import failed"), ln)
+
+        # Not a dependency of the module (external):
+        p.stdin.write('import_module("py2app")\n'.encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline().decode('utf-8')
         self.assertTrue(ln.strip().startswith("* import failed"), ln)
@@ -124,9 +131,8 @@ class TestBasicApp (unittest.TestCase):
         p.stdin.close()
         p.stdout.close()
 
-# XXX: too look into
-#class TestBasicAliasApp (TestBasicApp):
-#    py2app_args = [ '--alias', ]
+class TestBasicAliasApp (TestBasicApp):
+    py2app_args = [ '--alias', ]
 
 if __name__ == "__main__":
     unittest.main()
