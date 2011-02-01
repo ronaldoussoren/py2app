@@ -33,6 +33,9 @@ Features:
 
 Bug fixes:
 
+- The ``--alias`` option didn't work when building a plugin
+  bundle (issue #10, fix by Virgil Dupras)
+
 - Avoid copying the __pycache__ directory in python versions
   that implement PEP 3147 (Python 3.2 and later)
 

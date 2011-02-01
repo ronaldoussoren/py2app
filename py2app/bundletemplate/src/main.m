@@ -70,7 +70,6 @@ typedef PyObject *(*PyModule_AddStringConstantPtr)(PyObject *, char *, char *);
 typedef PyObject *(*PyModule_AddObjectPtr)(PyObject *, char *, PyObject *);
 typedef PyObject *(*PyModule_GetDictPtr)(PyObject *);
 typedef void (*PyObject_SetItemPtr)(PyObject *, PyObject *, PyObject *);
-typedef void (*Py_SetPythonHomePtr)(wchar_t *);
 
 //
 // Signatures
@@ -269,17 +268,14 @@ NSString *getMainPyPath(NSDictionary *infoDictionary) {
     return mainPyPath;
 }
 
-int is_ascii_string(const char *s)
-{
-    size_t len = strlen(s);
-    int i;
-    for (i=0; i<len; i++) {
-        unsigned char c = s[i];
-        if (c > 0x7f) {
-            return 0;
-        }
+static
+BOOL getPyOption(NSDictionary *infoDictionary, NSString *optionName) {
+    NSDictionary *pyOptions = [infoDictionary objectForKey:@"PyOptions"];
+    NSNumber *optionAsNumber = [pyOptions objectForKey:optionName];
+    if (optionAsNumber == nil) {
+        return NO;
     }
-    return 1;
+    return [optionAsNumber boolValue];
 }
 
 int pyobjc_main(int argc, char * const *argv, char * const *envp) {
@@ -376,7 +372,6 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(PyModule_AddObject);
     LOOKUP(PyModule_GetDict);
     LOOKUP(PyThreadState_Swap);
-    LOOKUP(Py_SetPythonHome);
     
     /* PyBytes / PyString lookups depend of if we're on py3k or not */
     PyBytes_AsStringPtr PyBytes_AsString = NULL;
@@ -440,9 +435,10 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     if (!was_initialized) {
         // $PREFIX/Python -> $PREFIX
         NSString *pythonProgramName = [pyLocation stringByDeletingLastPathComponent];
-
-	setenv("PYTHONHOME", [resourcePath fileSystemRepresentation], 1);
-
+        if (!getPyOption(infoDictionary, @"alias")) {
+            setenv("PYTHONHOME", [resourcePath fileSystemRepresentation], 1);
+        }
+        
         NSString *pyExecutableName = [infoDictionary objectForKey:@"PyExecutableName"];
         if ( !pyExecutableName ) {
             pyExecutableName = @"python";
@@ -455,7 +451,6 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
             mbstowcs(wPythonName, [pythonProgramName fileSystemRepresentation], PATH_MAX+1);
         }
         else {
-            // Same as Py_SetPythonHome
             const char *cPythonName = [pythonProgramName fileSystemRepresentation];
             memcpy(wPythonName, cPythonName, strlen(cPythonName));
         }
