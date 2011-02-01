@@ -32,6 +32,7 @@ DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
 
 class TestBasicApp (unittest.TestCase):
+    py2app_args = []
 
     # Basic setup code
     #
@@ -41,7 +42,7 @@ class TestBasicApp (unittest.TestCase):
     def setUpClass(cls):
         p = subprocess.Popen([
                 sys.executable,
-                    'setup.py', 'py2app'],
+                    'setup.py', 'py2app'] + cls.py2app_args,
             cwd = os.path.join(DIR_NAME, 'basic_app'),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -122,6 +123,10 @@ class TestBasicApp (unittest.TestCase):
 
         p.stdin.close()
         p.stdout.close()
+
+# XXX: too look into
+#class TestBasicAliasApp (TestBasicApp):
+#    py2app_args = [ '--alias', ]
 
 if __name__ == "__main__":
     unittest.main()
