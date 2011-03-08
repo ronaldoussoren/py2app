@@ -30,6 +30,16 @@ import signal
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
+if sys.version_info[0] == 2:
+    def B(value):
+        return value
+
+else:
+    def B(value):
+        return value.encode('latin1')
+
+
+
 
 class TestBasicApp (unittest.TestCase):
     py2app_args = []
@@ -107,13 +117,13 @@ class TestBasicApp (unittest.TestCase):
         p.stdin.write('import_module("os")\n'.encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), b"os")
+        self.assertEqual(ln.strip(), B("os"))
 
         # Dependency of the main module:
         p.stdin.write('import_module("decimal")\n'.encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), b"decimal")
+        self.assertEqual(ln.strip(), B("decimal"))
 
         if '--alias' not in self.py2app_args:
             # Not a dependency of the module (stdlib):

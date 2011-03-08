@@ -43,6 +43,14 @@ else:
     extra_args = dict()
 
 
+if sys.version_info[0] == 3 or (sys.version_info[:2] >= (2,7)):
+    tests_require = []
+else:
+    tests_require = ['unittest2']
+
+
+
+
 
 def test_loader():
     import unittest
@@ -56,7 +64,7 @@ def test_loader():
         try:
             module = __import__(modName)
         except ImportError:
-            print ("SKIP %s: %s"%(modName, sys.exc_info[1]))
+            print ("SKIP %s: %s"%(modName, sys.exc_info()[1]))
             continue
 
         s = unittest.defaultTestLoader.loadTestsFromModule(module)
@@ -239,6 +247,7 @@ setup(
         "modulegraph>=0.8.1",
         "macholib>=1.3",
     ],
+    tests_require=tests_require,
     cmdclass=dict(
         upload_docs=upload_docs,
     ),
