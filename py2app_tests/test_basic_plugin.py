@@ -101,7 +101,7 @@ class TestBasicPlugin (unittest.TestCase):
         p.stdin.flush()
 
         v = p.stdout.readline()
-        self.assertEquals(v.strip(), '+ test startup')
+        self.assertEqual(v.strip(), '+ test startup')
 
         p.stdin.close()
         p.stdout.close()

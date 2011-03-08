@@ -298,7 +298,7 @@ class py2app(Command):
             self.argv_inject = shlex.split(self.argv_inject)
         self.includes = set(fancy_split(self.includes))
         self.includes.add('encodings.*')
-        #if sys.version_info[:2] >= (3,2):
+        #if sys.version_info[:2] >= (3, 2):
         #    self.includes.add('pkgutil')
         #    self.includes.add('imp')
         self.packages = set(fancy_split(self.packages))
@@ -1071,7 +1071,7 @@ class py2app(Command):
 
     def initialize_prescripts(self):
         prescripts = []
-        if sys.version_info[:2] >= (3, 2):
+        if 0 and sys.version_info[:2] >= (3, 2) and not self.alias:
             # Python 3.2 or later requires a more complicated
             # bootstrap
             prescripts.append('import_encodings')
@@ -1268,7 +1268,7 @@ class py2app(Command):
 
 
         if includedir is None:
-            includedir = 'python%s'%(info['version'])
+            includedir = 'python%d.%d'%(sys.version_info[:2])
         else:
             includedir = os.path.basename(includedir)
 
@@ -1339,7 +1339,7 @@ class py2app(Command):
             self.mkpath(os.path.dirname(fn))
             copy_file(copyext.filename, fn, dry_run=self.dry_run)
 
-        if sys.version_info[:2] >= (3, 2):
+        if 0 and sys.version_info[:2] >= (3, 2) and not self.alias:
             import encodings
             import encodings.cp437
             import encodings.utf_8

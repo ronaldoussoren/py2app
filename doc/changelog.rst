@@ -55,6 +55,9 @@ Bug fixes:
 
 - Issue #9: Add support for recent Python 3.2 pre-releases.
 
+- Fix build issues with python 2.5 (due to usage of too modern distutils
+  command subclasses)
+
 py2app 0.5.2
 ------------
 
