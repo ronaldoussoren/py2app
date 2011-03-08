@@ -1,0 +1,12 @@
+include *.txt MANIFEST.in *.py
+graft doc
+graft doc/_static
+graft doc/_templates
+graft py2app_tests
+graft py2app/apptemplate
+graft py2app/bundletemplate
+global-exclude .DS_Store
+global-exclude *.pyc
+global-exclude *.so
+prune py2app/apptemplate/prebuilt/main*.dSYM
+prune py2app/bundletemplate/prebuilt/main*.dSYM

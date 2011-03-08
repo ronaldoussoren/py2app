@@ -58,6 +58,10 @@ Bug fixes:
 - Fix build issues with python 2.5 (due to usage of too modern distutils
   command subclasses)
 
+- The source distribution didn't include all files that needed to be
+  it ever since switching to mercurial, I've added a MANIFEST.in 
+  file rather than relying on setuptool's autoguessing of files to include.
+
 py2app 0.5.2
 ------------
 
