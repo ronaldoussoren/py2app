@@ -14,6 +14,7 @@ from setuptools.command import test
 try:
     from distutils.core import PyPIRCCommand
 except ImportError:
+    PyPIRCCommand = None
     from distutils.core import Command
 
 LONG_DESCRIPTION = open('README.txt').read()
