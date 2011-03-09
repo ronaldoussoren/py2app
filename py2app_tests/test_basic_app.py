@@ -125,24 +125,52 @@ class TestBasicApp (unittest.TestCase):
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), B("decimal"))
 
-        if '--alias' not in self.py2app_args:
+        can_import_stdlib = False
+        if '--alias' in self.py2app_args:
+            can_import_stdlib = True
+
+        if '--semi-standalone' in self.py2app_args:
+            can_import_stdlib = True
+
+        if sys.prefix.startswith('/System/'):
+            can_import_stdlib = True
+
+        if not can_import_stdlib:
             # Not a dependency of the module (stdlib):
-            p.stdin.write('import_module("xmllib")\n'.encode('latin1'))
+            p.stdin.write('import_module("xdrlib")\n'.encode('latin1'))
             p.stdin.flush()
             ln = p.stdout.readline().decode('utf-8')
             self.assertTrue(ln.strip().startswith("* import failed"), ln)
 
-        # Not a dependency of the module (external):
-        p.stdin.write('import_module("py2app")\n'.encode('latin1'))
-        p.stdin.flush()
-        ln = p.stdout.readline().decode('utf-8')
-        self.assertTrue(ln.strip().startswith("* import failed"), ln)
+        else:
+            p.stdin.write('import_module("xdrlib")\n'.encode('latin1'))
+            p.stdin.flush()
+            ln = p.stdout.readline()
+            self.assertEqual(ln.strip(), B("xdrlib"))
+
+        if sys.prefix.startswith('/System'):
+            # py2app is included as part of the system install
+            p.stdin.write('import_module("py2app")\n'.encode('latin1'))
+            p.stdin.flush()
+            ln = p.stdout.readline().decode('utf-8')
+            self.assertEqual(ln.strip(), B("py2app"))
+
+
+        else:
+            # Not a dependency of the module (external):
+            p.stdin.write('import_module("py2app")\n'.encode('latin1'))
+            p.stdin.flush()
+            ln = p.stdout.readline().decode('utf-8')
+            self.assertTrue(ln.strip().startswith("* import failed"), ln)
 
         p.stdin.close()
         p.stdout.close()
 
 class TestBasicAliasApp (TestBasicApp):
     py2app_args = [ '--alias', ]
+
+class TestBasicSemiStandaloneApp (TestBasicApp):
+    py2app_args = [ '--semi-standalone', ]
 
 if __name__ == "__main__":
     unittest.main()

@@ -16,6 +16,8 @@ def import_module(name):
             m = getattr(m, k)
         print (m.__name__)
 
+def print_path():
+    print(sys.path)
 
 while True:
     line = sys.stdin.readline()

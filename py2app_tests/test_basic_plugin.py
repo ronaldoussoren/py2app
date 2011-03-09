@@ -41,7 +41,7 @@ class TestBasicPlugin (unittest.TestCase):
             raise AssertionError("Creating basic_plugin bundle failed")
 
         p = subprocess.Popen([
-            'cc'] +  get_config_var('LDFLAGS').split() + [ 
+            'gcc'] +  get_config_var('LDFLAGS').split() + [ 
                 '-o', 'bundle_loader', os.path.join(DIR_NAME, 'bundle_loader.m'), 
                 '-framework', 'Foundation'],
             stdout=subprocess.PIPE,
@@ -111,6 +111,9 @@ class TestBasicPlugin (unittest.TestCase):
 
 class TestBasicAliasPlugin (TestBasicPlugin):
     py2app_args = [ '--alias' ]
+
+class TestBasicSemiStandalonePlugin (TestBasicPlugin):
+    py2app_args = [ '--semi-standalone' ]
 
 if __name__ == "__main__":
     unittest.main()
