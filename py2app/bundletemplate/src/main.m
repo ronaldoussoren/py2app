@@ -215,6 +215,20 @@ NSString *getPythonLocation(NSArray *pyLocations) {
     return nil;
 }
 
+static NSString* getPythonInterpreter(NSString* pyLocation) {
+    NSBundle* bndl;
+    NSString* auxName;
+
+    bndl = bundleBundle();
+
+    auxName = [[bndl infoDictionary] objectForKey:@"PyExecutableName"];
+    if (!auxName) {
+       auxName = @"python";
+    }
+    return [bndl pathForAuxiliaryExecutable:auxName];
+}
+
+
 static
 NSArray *getPythonPathArray(NSDictionary *infoDictionary, NSString *resourcePath) {
     NSMutableArray *pythonPathArray = [NSMutableArray arrayWithObject: resourcePath];
@@ -268,15 +282,6 @@ NSString *getMainPyPath(NSDictionary *infoDictionary) {
     return mainPyPath;
 }
 
-static
-BOOL getPyOption(NSDictionary *infoDictionary, NSString *optionName) {
-    NSDictionary *pyOptions = [infoDictionary objectForKey:@"PyOptions"];
-    NSNumber *optionAsNumber = [pyOptions objectForKey:optionName];
-    if (optionAsNumber == nil) {
-        return NO;
-    }
-    return [optionAsNumber boolValue];
-}
 
 int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     char* curenv;
@@ -435,7 +440,14 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     if (!was_initialized) {
         // $PREFIX/Python -> $PREFIX
         NSString *pythonProgramName = [pyLocation stringByDeletingLastPathComponent];
-        if (!getPyOption(infoDictionary, @"alias")) {
+	NSString* interpreter = getPythonInterpreter(pyLocation);
+	struct stat sb;
+
+	if (lstat([interpreter fileSystemRepresentation], &sb) == 0) {
+	    if(!((sb.st_mode & S_IFLNK) == S_IFLNK)) {
+            	setenv("PYTHONHOME", [resourcePath fileSystemRepresentation], 1);
+	    }
+	} else {
             setenv("PYTHONHOME", [resourcePath fileSystemRepresentation], 1);
         }
         
@@ -552,7 +564,9 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     }
 
     PyObject *res = PyRun_File(mainPyFile, c_mainPyPath, Py_file_input, module_dict, module_dict);
-    Py_DecRef(res);
+    if (res) {
+	    Py_DecRef(res);
+    }
 
 cleanup:
     // un-transfer the environment variables

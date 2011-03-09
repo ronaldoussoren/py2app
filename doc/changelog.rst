@@ -62,6 +62,10 @@ Bug fixes:
   it ever since switching to mercurial, I've added a MANIFEST.in 
   file rather than relying on setuptool's autoguessing of files to include.
 
+- Bundle template works again with semi-standalone builds (such as
+  when using a system python), this rewrites the fix for issue #10
+  mentioned earlier.
+
 py2app 0.5.2
 ------------
 
