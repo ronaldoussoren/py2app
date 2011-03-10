@@ -53,7 +53,10 @@ else:
 
 
 def test_loader():
-    import unittest
+    if sys.version_info[0] == 3 or sys.version_info[:2] >= (2, 7):
+        import unittest
+    else:
+        import unittest2 as unittest
 
     topdir = os.path.dirname(os.path.abspath(__file__))
     testModules = [ fn[:-3] for fn in os.listdir(os.path.join(topdir, 'py2app_tests')) if fn.endswith('.py')]

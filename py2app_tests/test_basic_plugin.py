@@ -17,6 +17,15 @@ from distutils.sysconfig import get_config_var
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
+if sys.version_info[0] == 2:
+    def B(value):
+        return value
+
+else:
+    def B(value):
+        return value.encode('latin1')
+
+
 
 class TestBasicPlugin (unittest.TestCase):
     py2app_args = []
@@ -101,7 +110,7 @@ class TestBasicPlugin (unittest.TestCase):
         p.stdin.flush()
 
         v = p.stdout.readline()
-        self.assertEqual(v.strip(), '+ test startup')
+        self.assertEqual(v.strip(), B('+ test startup'))
 
         p.stdin.close()
         p.stdout.close()
