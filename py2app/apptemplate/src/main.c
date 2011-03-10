@@ -937,6 +937,12 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
 
     if (isPy3K) {
 #if 0
+	/*
+	 *  Py_SetPath is disabled for now, py2app works without
+	 *  it and the code below requires changes to work properly
+	 *  in all cases (crashes with alias and semi-standalone,
+	 *  and a hardcoded version string in the path string).
+	 */
     	if (py2app_Py_SetPath != NULL) {
 		size_t len = (strlen(resource_path) * 3) + 256;
 		char* search_path = malloc(len);
@@ -980,8 +986,8 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
 
     py2app_Py_Initialize();
 
-    if (isPy3K && py2app_Py_SetPath) {
 #if 0
+    if (isPy3K && py2app_Py_SetPath) {
 	    PyObject* prefix = py2app_Py_BuildValue(
 		"s", resource_path);
 	    if (prefix == NULL) {
@@ -997,8 +1003,8 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
         	rval = report_script_error(ERR_PYTHONEXCEPTION);
 		return rval;
 	    }
-#endif
      }
+#endif
 
 
     /*

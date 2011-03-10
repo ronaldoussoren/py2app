@@ -53,7 +53,7 @@ Bug fixes:
 
 - Issue #5: Avoid a possible stack overflow in the bundle executable
 
-- Issue #9: Add support for recent Python 3.2 pre-releases.
+- Issue #9: Work with python 3.2
 
 - Fix build issues with python 2.5 (due to usage of too modern distutils
   command subclasses)
@@ -65,6 +65,7 @@ Bug fixes:
 - Bundle template works again with semi-standalone builds (such as
   when using a system python), this rewrites the fix for issue #10
   mentioned earlier.
+
 
 py2app 0.5.2
 ------------
