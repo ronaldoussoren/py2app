@@ -31,6 +31,10 @@ Features:
 - alias builds no longer use Carbon Aliases and therefore are
   supported with python3 as well (patch by Virgil Dupras)
 
+- argv emulation doesn't work in python 3, this release
+  will tell you abou this instead of silently failing to 
+  build a working bundle.
+
 Bug fixes:
 
 - The ``--alias`` option didn't work when building a plugin

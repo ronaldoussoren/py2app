@@ -213,7 +213,7 @@ class py2app(Command):
         ("alias", 'A',
          "Use an alias to current source file (for development only!)"),
         ("argv-emulation", 'a',
-         "Use argv emulation [disabled for plugins]"),
+         "Use argv emulation [disabled for plugins]. Does not work with python 3.x"),
         ("argv-inject=", None,
          "Inject some commands into the argv"),
         ("use-pythonpath", None,
@@ -289,6 +289,10 @@ class py2app(Command):
         self.eggs = []
 
     def finalize_options (self):
+        if sys.version_info[0] == 3:
+            if self.argv_emulation:
+                raise DistutilsOptionError("argv-emulation is not supported on python 3.x")
+
         if not self.strip:
             self.no_strip = True
         elif self.no_strip:

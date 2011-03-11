@@ -59,10 +59,10 @@ Options for 'py2app' command::
   --no-strip              do not strip debug and local symbols from output
   --no-chdir (-C)         do not change to the data directory
                           (Contents/Resources) [forced for plugins]
-  --semi-standalone (-s)  depend on an existing installation of Python 2.4
+  --semi-standalone (-s)  depend on an existing installation of Python
   --alias (-A)            Use an alias to current source file (for development
                           only!)
-  --argv-emulation (-a)   Use argv emulation [disabled for plugins]
+  --argv-emulation (-a)   Use argv emulation [disabled for plugins]. Does not work with python 3.x
   --argv-inject           Inject some commands into the argv
   --use-pythonpath        Allow PYTHONPATH to effect the interpreter's
                           environment
