@@ -15,7 +15,9 @@
 
 typedef int PyObject;
 typedef PyObject* (*Py_BuildValuePtr)(const char*, ...);
+#if 0
 typedef void (*Py_SetPathPtr)(const wchar_t*);
+#endif
 typedef int (*PySys_SetObjectPtr)(const char*, PyObject*);
 typedef void (*Py_SetProgramNamePtr)(const char *);
 typedef void (*Py_InitializePtr)(void); 
@@ -900,7 +902,9 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(PySys_SetArgv);
     LOOKUP(PyObject_GetAttrString);
     LOOKUP(Py_BuildValue);
+#if 0
     OPT_LOOKUP(Py_SetPath);
+#endif
     LOOKUP(PySys_SetObject);
 
 

@@ -62,6 +62,7 @@ class TestArgvEmulation (unittest.TestCase):
     # 
 
     def test_basic_start(self):
+        self.maxDiff = None
         path = os.path.join( self.app_dir, 'dist/BasicApp.app')
 
         p = subprocess.Popen(["/usr/bin/open",
@@ -71,7 +72,7 @@ class TestArgvEmulation (unittest.TestCase):
         self.assertEqual(exit, 0)
 
         path = os.path.join( self.app_dir, 'dist/argv.txt')
-        for x in xrange(5):
+        for x in range(5):
             time.sleep(1)
             if os.path.exists(path):
                 break
@@ -82,9 +83,10 @@ class TestArgvEmulation (unittest.TestCase):
         data = fp.read().strip()
         fp.close()
 
-        self.assertEquals(data.strip(), repr([os.path.join(self.app_dir, 'dist/BasicApp.app/Contents/Resources/main.py')]))
+        self.assertEqual(data.strip(), repr([os.path.join(self.app_dir, 'dist/BasicApp.app/Contents/Resources/main.py')]))
 
     def test_start_with_args(self):
+        self.maxDiff = None
         path = os.path.join( self.app_dir, 'dist/BasicApp.app')
 
         p = subprocess.Popen(["/usr/bin/open",
@@ -93,7 +95,7 @@ class TestArgvEmulation (unittest.TestCase):
 
         self.assertEqual(exit, 0)
 
-        for x in xrange(5):
+        for x in range(5):
             time.sleep(1)
             if os.path.exists(path):
                 break
@@ -105,7 +107,7 @@ class TestArgvEmulation (unittest.TestCase):
         data = fp.read().strip()
         fp.close()
 
-        self.assertEquals(data.strip(), repr([os.path.join(self.app_dir, 'dist/BasicApp.app/Contents/Resources/main.py'), '/usr/bin/ssh']))
+        self.assertEqual(data.strip(), repr([os.path.join(self.app_dir, 'dist/BasicApp.app/Contents/Resources/main.py'), '/usr/bin/ssh']))
 
 
 
