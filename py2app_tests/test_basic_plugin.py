@@ -28,6 +28,7 @@ else:
 
 
 class TestBasicPlugin (unittest.TestCase):
+    plugin_dir = os.path.join(DIR_NAME, 'basic_plugin')
     py2app_args = []
 
     # Basic setup code
@@ -40,7 +41,7 @@ class TestBasicPlugin (unittest.TestCase):
         
         p = subprocess.Popen(
             cmd,
-            cwd = os.path.join(DIR_NAME, 'basic_plugin'),
+            cwd = cls.plugin_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             close_fds=True)
@@ -63,11 +64,11 @@ class TestBasicPlugin (unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if os.path.exists(os.path.join(DIR_NAME, 'basic_plugin/build')):
-            shutil.rmtree(os.path.join(DIR_NAME, 'basic_plugin/build'))
+        if os.path.exists(os.path.join(cls.plugin_dir, 'build')):
+            shutil.rmtree(os.path.join(cls.plugin_dir, 'build'))
 
-        if os.path.exists(os.path.join(DIR_NAME, 'basic_plugin/dist')):
-            shutil.rmtree(os.path.join(DIR_NAME, 'basic_plugin/dist'))
+        if os.path.exists(os.path.join(cls.plugin_dir, 'dist')):
+            shutil.rmtree(os.path.join(cls.plugin_dir, 'dist'))
 
         if os.path.exists('bundle_loader'):
             os.unlink('bundle_loader')
@@ -76,8 +77,8 @@ class TestBasicPlugin (unittest.TestCase):
         # Start the test app, return a subprocess object where
         # stdin and stdout are connected to pipes.
         cmd = ['./bundle_loader',
-                    os.path.join(DIR_NAME,
-                                'basic_plugin/dist/BasicPlugin.bundle'),
+                    os.path.join(self.plugin_dir,
+                                'dist/BasicPlugin.bundle'),
         ]
         p = subprocess.Popen(cmd,
                 stdin=subprocess.PIPE,
@@ -122,6 +123,34 @@ class TestBasicAliasPlugin (TestBasicPlugin):
     py2app_args = [ '--alias' ]
 
 class TestBasicSemiStandalonePlugin (TestBasicPlugin):
+    py2app_args = [ '--semi-standalone' ]
+
+
+class TestBasicPluginUnicodePath (TestBasicPlugin):
+    if sys.version_info[0] == 2:
+        plugin_dir = os.path.join(DIR_NAME, 'basic_plugin ' + unichr(2744).encode('utf-8'))
+    else:
+        plugin_dir = os.path.join(DIR_NAME, 'basic_plugin ' + chr(2744))
+
+    @classmethod
+    def setUpClass(cls):
+        if os.path.exists(cls.plugin_dir):
+            shutil.rmtree(cls.plugin_dir)
+
+        assert not os.path.exists(cls.plugin_dir)
+        shutil.copytree(TestBasicPlugin.plugin_dir, cls.plugin_dir)
+
+        super(TestBasicPluginUnicodePath, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        if os.path.exists(cls.plugin_dir):
+            shutil.rmtree(cls.plugin_dir)
+
+class TestBasicAliasPluginUnicodePath (TestBasicPluginUnicodePath):
+    py2app_args = [ '--alias' ]
+
+class TestBasicSemiStandalonePluginUnicodePath (TestBasicPluginUnicodePath):
     py2app_args = [ '--semi-standalone' ]
 
 if __name__ == "__main__":

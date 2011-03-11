@@ -43,6 +43,7 @@ else:
 
 class TestBasicApp (unittest.TestCase):
     py2app_args = []
+    app_dir = os.path.join(DIR_NAME, 'basic_app')
 
     # Basic setup code
     #
@@ -53,7 +54,7 @@ class TestBasicApp (unittest.TestCase):
         p = subprocess.Popen([
                 sys.executable,
                     'setup.py', 'py2app'] + cls.py2app_args,
-            cwd = os.path.join(DIR_NAME, 'basic_app'),
+            cwd = cls.app_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             close_fds=True)
@@ -64,18 +65,18 @@ class TestBasicApp (unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if os.path.exists(os.path.join(DIR_NAME, 'basic_app/build')):
-            shutil.rmtree(os.path.join(DIR_NAME, 'basic_app/build'))
+        if os.path.exists(os.path.join(cls.app_dir, 'build')):
+            shutil.rmtree(os.path.join(cls.app_dir, 'build'))
 
-        if os.path.exists(os.path.join(DIR_NAME, 'basic_app/dist')):
-            shutil.rmtree(os.path.join(DIR_NAME, 'basic_app/dist'))
+        if os.path.exists(os.path.join(cls.app_dir, 'dist')):
+            shutil.rmtree(os.path.join(cls.app_dir, 'dist'))
 
     def start_app(self):
         # Start the test app, return a subprocess object where
         # stdin and stdout are connected to pipes.
         path = os.path.join(
-                DIR_NAME,
-            'basic_app/dist/BasicApp.app/Contents/MacOS/BasicApp')
+                self.app_dir,
+            'dist/BasicApp.app/Contents/MacOS/BasicApp')
 
         p = subprocess.Popen([path],
                 stdin=subprocess.PIPE,
@@ -170,6 +171,34 @@ class TestBasicAliasApp (TestBasicApp):
     py2app_args = [ '--alias', ]
 
 class TestBasicSemiStandaloneApp (TestBasicApp):
+    py2app_args = [ '--semi-standalone', ]
+
+
+class TestBasicAppUnicodePath (TestBasicApp):
+    if sys.version_info[0] == 2:
+        app_dir = os.path.join(DIR_NAME, 'basic_app ' + unichr(2744).encode('utf-8'))
+    else:
+        app_dir = os.path.join(DIR_NAME, 'basic_app ' + chr(2744))
+
+    @classmethod
+    def setUpClass(cls):
+        if os.path.exists(cls.app_dir):
+            shutil.rmtree(cls.app_dir)
+
+        assert not os.path.exists(cls.app_dir)
+        shutil.copytree(TestBasicApp.app_dir, cls.app_dir)
+
+        super(TestBasicAppUnicodePath, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        if os.path.exists(cls.app_dir):
+            shutil.rmtree(cls.app_dir)
+
+class TestBasicAliasAppUnicodePath (TestBasicAppUnicodePath):
+    py2app_args = [ '--alias', ]
+
+class TestBasicSemiStandaloneAppUnicodePath (TestBasicAppUnicodePath):
     py2app_args = [ '--semi-standalone', ]
 
 if __name__ == "__main__":

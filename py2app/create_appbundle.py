@@ -1,6 +1,7 @@
 import os
 import plistlib
 import shutil
+import sys
 # XXX - plugins, prefpane, etc?
 from pkg_resources import resource_filename
 import py2app.apptemplate
@@ -27,7 +28,10 @@ def create_appbundle(destdir, name, extension='.app', module=py2app.apptemplate,
         makedirs(d)
     plist.write(plistPath)
     srcmain = module.setup.main()
-    destmain = os.path.join(platdir, kw['CFBundleExecutable'])
+    if sys.version_info[0] == 2 and isinstance(kw['CFBundleExecutable'], unicode):
+        destmain = os.path.join(platdir, kw['CFBundleExecutable'].encode('utf-8'))
+    else:
+        destmain = os.path.join(platdir, kw['CFBundleExecutable'])
     open(os.path.join(contents, 'PkgInfo'), 'w').write(
         kw['CFBundlePackageType'] + kw['CFBundleSignature']
     )

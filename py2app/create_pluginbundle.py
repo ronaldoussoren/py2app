@@ -1,6 +1,7 @@
 import os
 import plistlib
 import shutil
+import sys
 from pkg_resources import resource_filename
 
 import py2app.bundletemplate
@@ -27,7 +28,10 @@ def create_pluginbundle(destdir, name, extension='.plugin', module=py2app.bundle
         makedirs(d)
     plist.write(plistPath)
     srcmain = module.setup.main()
-    destmain = os.path.join(platdir, kw['CFBundleExecutable'])
+    if sys.version_info[0] == 2 and isinstance(kw['CFBundleExecutable'], unicode):
+        destmain = os.path.join(platdir, kw['CFBundleExecutable'].encode('utf-8'))
+    else:
+        destmain = os.path.join(platdir, kw['CFBundleExecutable'])
     open(os.path.join(contents, 'PkgInfo'), 'w').write(
         kw['CFBundlePackageType'] + kw['CFBundleSignature']
     )

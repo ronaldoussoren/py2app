@@ -66,6 +66,9 @@ Bug fixes:
   when using a system python), this rewrites the fix for issue #10
   mentioned earlier.
 
+- Ensure py2app works correctly when the sources are located in a 
+  directory with non-ascii characters in its name.
+
 
 py2app 0.5.2
 ------------
