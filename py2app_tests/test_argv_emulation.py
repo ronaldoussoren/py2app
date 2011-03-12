@@ -29,6 +29,8 @@ else:
 
 class TestArgvEmulation (unittest.TestCase):
     py2app_args = []
+    setup_file = "setup.py"
+    open_argument = '/usr/bin/ssh'
     app_dir = os.path.join(DIR_NAME, 'argv_app')
 
     # Basic setup code
@@ -39,7 +41,7 @@ class TestArgvEmulation (unittest.TestCase):
     def setUpClass(cls):
         p = subprocess.Popen([
                 sys.executable,
-                    'setup.py', 'py2app'] + cls.py2app_args,
+                    cls.setup_file, 'py2app'] + cls.py2app_args,
             cwd = cls.app_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -90,7 +92,7 @@ class TestArgvEmulation (unittest.TestCase):
         path = os.path.join( self.app_dir, 'dist/BasicApp.app')
 
         p = subprocess.Popen(["/usr/bin/open",
-            '-a', path, 'file:/usr/bin/ssh'])
+            '-a', path, self.open_argument])
         exit = p.wait()
 
         self.assertEqual(exit, 0)
@@ -107,8 +109,13 @@ class TestArgvEmulation (unittest.TestCase):
         data = fp.read().strip()
         fp.close()
 
-        self.assertEqual(data.strip(), repr([os.path.join(self.app_dir, 'dist/BasicApp.app/Contents/Resources/main.py'), '/usr/bin/ssh']))
+        self.assertEqual(data.strip(), repr([os.path.join(self.app_dir, 'dist/BasicApp.app/Contents/Resources/main.py'), self.open_argument]))
 
+class TestArgvEmulationWithUrL (TestArgvEmulation):
+    py2app_args = []
+    setup_file = "setup-with-urlscheme.py"
+    open_argument = 'myurl:mycommand'
+    app_dir = os.path.join(DIR_NAME, 'argv_app')
 
 
 if __name__ == "__main__":

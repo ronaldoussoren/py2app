@@ -13,7 +13,8 @@ else:
         import traceback
         from Carbon import AE
         from Carbon.AppleEvents import kCoreEventClass, kAEOpenApplication, \
-            kAEOpenDocuments, keyDirectObject, typeAEList, typeAlias
+            kAEOpenDocuments, keyDirectObject, typeAEList, typeAlias, \
+            kAEInternetSuite, kAEISGetURL, typeChar
         from Carbon import Evt
         from Carbon import File
         from Carbon.Events import highLevelEventMask, kHighLevelEvent
@@ -29,6 +30,12 @@ else:
                     self.__runapp)
                 AE.AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments,
                     self.__openfiles)
+                AE.AEInstallEventHandler(kAEInternetSuite, kAEISGetURL,
+                        self.__geturl)
+
+                # The definition of kAEInternetSuite seems to be wrong,
+                # the lines below ensures that the code will work anyway.
+                AE.AEInstallEventHandler('GURL', 'GURL', self.__geturl)
 
             def close(self):
                 AE.AERemoveEventHandler(kCoreEventClass, kAEOpenApplication)
@@ -92,6 +99,21 @@ else:
                         sys.argv.append(pathname)
                 except Exception, e:
                     print "argvemulator.py warning: can't unpack an open document event"
+                    import traceback
+                    traceback.print_exc()
+
+                self._quit()
+
+            def __geturl(self, requestevent, replyevent):
+                try:
+                    listdesc = requestevent.AEGetParamDesc(keyDirectObject, typeAEList)
+                    for i in range(listdesc.AECountItems()):
+                        desc = listdesc.AEGetNthDesc(i+1, typeChar)[1]
+                        #url = desc.data.decode('utf8')
+                        url = desc.data
+                        sys.argv.append(url)
+                except Exception, e:
+                    print "argvemulator.py warning: can't unpack a GetURL event"
                     import traceback
                     traceback.print_exc()
 

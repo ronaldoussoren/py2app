@@ -35,6 +35,13 @@ Features:
   will tell you abou this instead of silently failing to 
   build a working bundle.
 
+- add support for custom URLs to the argv emulation code
+  (patch by Brendan Simon). 
+  
+  You will have to add a "CFBundleURLTypes" key to your Info.plist to 
+  use this, the argv emulation code will ensure that the URL
+  to open will end up in ``sys.argv``.
+
 Bug fixes:
 
 - The ``--alias`` option didn't work when building a plugin
