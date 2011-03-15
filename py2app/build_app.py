@@ -31,7 +31,8 @@ from distutils.errors import *
 from altgraph.compat import *
 
 from modulegraph.find_modules import find_modules, parse_mf_results
-from modulegraph.modulegraph import SourceModule, Package, os_listdir
+from modulegraph.modulegraph import SourceModule, Package
+from modulegraph import zipio
 
 import macholib.dyld
 import macholib.MachOStandalone
@@ -42,7 +43,7 @@ from py2app.util import \
     fancy_split, byte_compile, make_loader, imp_find_module, \
     copy_tree, fsencoding, strip_files, in_system_path, makedirs, \
     iter_platform_files, find_version, skipscm, momc, copy_file, \
-    os_path_isdir, copy_resource
+    copy_resource
 from py2app.filters import \
     not_stdlib_filter, not_system_filter, has_filename_filter
 from py2app import recipes
@@ -861,7 +862,7 @@ class py2app(Command):
 
         target_dir = os.path.join(target_dir, *(package.identifier.split('.')))
         for dname in package.packagepath:
-            filenames = filter(datafilter, os_listdir(dname))
+            filenames = filter(datafilter, zipio.listdir(dname))
             for fname in filenames:
                 if fname in ('.svn', 'CVS'):
                     # Scrub revision manager junk
@@ -872,8 +873,8 @@ class py2app(Command):
                 pth = os.path.join(dname, fname)
 
                 # Check if we have found a package, exclude those
-                if os_path_isdir(pth):
-                    for p in os_listdir(pth):
+                if zipio.isdir(pth):
+                    for p in zipio.listdir(pth):
                         if p.startswith('__init__.') and p[8:] in exts:
                             break
 

@@ -1,59 +1,88 @@
 from pkg_resources import require
 require("modulegraph", "altgraph", "macholib")
 
-import os, sys, imp, zipfile, time
+import os, sys, imp, time
 from modulegraph.find_modules import PY_SUFFIXES, C_SUFFIXES
 from modulegraph.util import *
-from modulegraph.modulegraph import os_listdir
+from modulegraph import zipio
 from altgraph.compat import *
 import macholib.util
+import warnings
 
 import pkg_resources
 
+# Deprecated functionality
 def os_path_islink(path):
-    """
-    os.path.islink with zipfile support.
-
-    Luckily zipfiles cannot contain symlink, therefore the implementation is
-    trivial.
-    """
-    return os.path.islink(path)
-
-def os_readlink(path):
-    """
-    os.readlink with zipfile support.
-
-    Luckily zipfiles cannot contain symlink, therefore the implementation is
-    trivial.
-    """
-    return os.readlink(path)
+    warnings.warn("Use zipio.islink instead of os_path_islink",
+            DeprecationWarning)
+    return zipio.islink(path)
 
 def os_path_isdir(path):
-    """
-    os.path.isdir that understands zipfiles.
+    warnings.warn("Use zipio.isdir instead of os_path_isdir",
+            DeprecationWarning)
+    return zipio.islink(path)
 
-    Assumes that you're checking a path the is the result of os_listdir and 
-    might give false positives otherwise.
-    """
-    while path.endswith('/') and path != '/':
-        path = path[:-1]
+def os_readlink(path):
+    warnings.warn("Use zipio.readlink instead of os_readlink",
+            DeprecationWarning)
+    return zipio.islink(path)
 
-    zf, zp = path_to_zip(path)
-    if zf is None:
-        return os.path.isdir(zp)
+import zipfile
+def get_zip_data(path_to_zip, path_in_zip):
+    warnings.warn("Use zipio.open instead of get_zip_data",
+            DeprecationWarning)
+    zf = zipfile.ZipFile(path_to_zip)
+    return zf.read(path_in_zip)
+
+def path_to_zip(path):
+    """
+    Returns (pathtozip, pathinzip). If path isn't in a zipfile pathtozip
+    will be None
+    """
+    warnings.warn("Don't use this function", DeprecationWarning)
+    zf = zipfile.ZipFile(path_to_zip)
+    orig_path = path
+    from distutils.errors import DistutilsFileError
+    if os.path.exists(path):
+        return (None, path)
 
     else:
-        zip = zipfile.ZipFile(zf)
+        rest = ''
+        while not os.path.exists(path):
+            path, r = os.path.split(path)
+            if not path:
+                raise DistutilsFileError("File doesn't exist: %s"%(orig_path,))
+            rest = os.path.join(r, rest)
+
+        if not os.path.isfile(path):
+            # Directory really doesn't exist
+            raise DistutilsFileError("File doesn't exist: %s"%(orig_path,))
+
         try:
-            info = zip.getinfo(zp)
+           zf = zipfile.ZipFile(path)
+        except zipfile.BadZipfile:
+            raise DistutilsFileError("File doesn't exist: %s"%(orig_path,))
 
-        except KeyError:
-            return True
+        if rest.endswith('/'):
+            rest = rest[:-1]
 
-        else:
-            # Not quite true, you can store information about directories in
-            # zipfiles, but those have a lash at the end of the filename
-            return False
+        return path, rest
+
+def get_mtime(path, mustExist=True):
+    """
+    Get mtime of a path, even if it is inside a zipfile
+    """
+    warnings.warn("Don't use this function", DeprecationWarning)
+    try:
+        return zipio.getmtime(target)
+
+    except IOError:
+        if not mustExist:
+            return -1
+
+        raise
+
+# End deprecated functionality
 
 gConverterTab = {}
 def find_converter(source):
@@ -88,7 +117,7 @@ def copy_resource(source, destination, dry_run=0):
         if not dry_run:
             if not os.path.exists(destination):
                 os.mkdir(destination)
-        for fn in os_listdir(source):
+        for fn in zipio.listdir(source):
             copy_resource(os.path.join(source, fn), 
                     os.path.join(destination, fn), dry_run=dry_run)
 
@@ -98,85 +127,30 @@ def copy_resource(source, destination, dry_run=0):
 
 
 def copy_file(source, destination, dry_run=0):
-    zf, zp = path_to_zip(source)
-    if zf is None:
-        data = open(zp,'rb').read()
-    else:
-        data = get_zip_data(zf, zp)
-
-    if not dry_run:
-        fp = open(destination, 'wb')
-        fp.write(data)
-        fp.close()
-
-def get_zip_data(path_to_zip, path_in_zip):
-    zf = zipfile.ZipFile(path_to_zip)
-    return zf.read(path_in_zip)
-
-def path_to_zip(path):
-    """
-    Returns (pathtozip, pathinzip). If path isn't in a zipfile pathtozip
-    will be None
-    """
-    orig_path = path
-    from distutils.errors import DistutilsFileError
-    if os.path.exists(path):
-        return (None, path)
-
-    else:
-        rest = ''
-        while not os.path.exists(path):
-            path, r = os.path.split(path)
-            if not path:
-                raise DistutilsFileError("File doesn't exist: %s"%(orig_path,))
-            rest = os.path.join(r, rest)
-
-        if not os.path.isfile(path):
-            # Directory really doesn't exist
-            raise DistutilsFileError("File doesn't exist: %s"%(orig_path,))
-
-        try:
-           zf = zipfile.ZipFile(path)
-        except zipfile.BadZipfile:
-            raise DistutilsFileError("File doesn't exist: %s"%(orig_path,))
-
-        if rest.endswith('/'):
-            rest = rest[:-1]
-
-        return path, rest
-
-
-def get_mtime(path, mustExist=True):
-    """
-    Get mtime of a path, even if it is inside a zipfile
-    """
-
+    fp_in = zipio.open(source, 'rb')
+    fp_out = None
     try:
-        return os.stat(path).st_mtime
+        if not dry_run:
+            fp_out = open(destination, 'wb')
+            fp_out.write(data)
 
-    except os.error:
-        from distutils.errors import DistutilsFileError
-        try:
-            path, rest = path_to_zip(path)
-        except DistutilsFileError:
-            if not mustExist:
-                return -1
-            raise
+    finally:
+        fp_in.close()
+        if fp_out is not None:
+            fp_out.close()
 
-        zf = zipfile.ZipFile(path)
-        info = zf.getinfo(rest)
-        return time.mktime(info.date_time + (0, 0, 0))
+
+
+
 
 def newer(source, target):
     """
     distutils.dep_utils.newer with zipfile support
     """
-
-    msource = get_mtime(source)
-    mtarget = get_mtime(target, mustExist=False)
-
-    return msource > mtarget
-
+    try:
+        return zipio.getmtime(source) > zipio.getmtime(target)
+    except IOError:
+        return True
 
 
 def find_version(fn):
@@ -384,14 +358,16 @@ byte_compile(files, optimize=%r, force=%r,
                     suffix = os.path.splitext(mod.filename)[1]
 
                     if suffix in ('.py', '.pyw'):
-                        zfile, pth = path_to_zip(mod.filename)
-                        if zfile is None:
-                            compile(mod.filename, cfile, dfile)
-                        else:
-                            fn = dfile + '.py'
-                            open(fn, 'wb').write(get_zip_data(zfile, pth))
-                            compile(mod.filename, cfile, dfile)
-                            os.unlink(fn)
+                        fn = dfile + '.py'
+
+                        fp_in = zipio.open(mod.filename, 'rb')
+                        fp_out = open(fn, 'wb')
+                        fp_out.write(fp_in.read())
+                        fp_in.close()
+                        fp_out.close()
+
+                        compile(fn, cfile, dfile)
+                        os.unlink(fn)
 
                     elif suffix in PY_SUFFIXES:
                         # Minor problem: This will happily copy a file
@@ -513,11 +489,11 @@ def copy_tree(src, dst,
     if condition is None:
         condition = skipscm
 
-    if not dry_run and not os_path_isdir(src):
+    if not dry_run and not os.path.isdir(src):
         raise DistutilsFileError, \
               "cannot copy tree '%s': not a directory" % src
     try:
-        names = os_listdir(src)
+        names = zipio.listdir(src)
     except os.error, (errno, errstr):
         if dry_run:
             names = []
@@ -536,19 +512,19 @@ def copy_tree(src, dst,
         if (condition is not None) and (not condition(src_name)):
             continue
 
-        if preserve_symlinks and os_path_islink(src_name):
-            link_dest = os_readlink(src_name)
+        if preserve_symlinks and zipio.islink(src_name):
+            link_dest = zipio.readlink(src_name)
             log.info("linking %s -> %s", dst_name, link_dest)
             if not dry_run:
                 if update and not newer(src, dst_name):
                     pass
                 else:
-                    if os_path_islink(dst_name):
+                    if zipio.islink(dst_name):
                         os.remove(dst_name)
                     os.symlink(link_dest, dst_name)
             outputs.append(dst_name)
 
-        elif os_path_isdir(src_name):
+        elif os.path.isdir(src_name):
             outputs.extend(
                 copy_tree(src_name, dst_name, preserve_mode,
                           preserve_times, preserve_symlinks, update,

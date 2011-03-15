@@ -1,10 +1,10 @@
 Release history
 ===============
 
-py2app 0.5.3
-------------
+py2app 0.6
+----------
 
-py2app 0.5.3 is a minor feature release
+py2app 0.6 is a minor feature release
 
 
 Features:
@@ -41,6 +41,15 @@ Features:
   You will have to add a "CFBundleURLTypes" key to your Info.plist to 
   use this, the argv emulation code will ensure that the URL
   to open will end up in ``sys.argv``.
+
+- ``py2app.util`` contains a number of functions that are now
+  deprecated an will be removed in a future version, specifically:
+  ``os_path_islink``, ``os_path_isdir``, ``path_to_zip``,
+  ``get_zip_data``, ``get_mtime``,  and ``os_readlink``.
+
+- The module ``py2app.simpleio`` no longer exists, and should never
+  have been in the repository (it was part of a failed rewrite of
+  the I/O layer).
 
 Bug fixes:
 

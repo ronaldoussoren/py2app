@@ -233,7 +233,7 @@ else:
 setup(
     # metadata
     name='py2app',
-    version='0.5.3',
+    version='0.6',
     description='Create standalone Mac OS X applications with Python',
     author='Bob Ippolito',
     author_email='bob@redivi.com',
@@ -246,9 +246,9 @@ setup(
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
     install_requires=[
-        "altgraph>=0.7",
-        "modulegraph>=0.8.1",
-        "macholib>=1.3",
+        "altgraph>=0.9",
+        "modulegraph>=0.9",
+        "macholib>=1.4",
     ],
     tests_require=tests_require,
     cmdclass=dict(
