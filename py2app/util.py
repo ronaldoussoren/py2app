@@ -132,7 +132,7 @@ def copy_file(source, destination, dry_run=0):
     try:
         if not dry_run:
             fp_out = open(destination, 'wb')
-            fp_out.write(data)
+            fp_out.write(fp_in.read())
 
     finally:
         fp_in.close()
@@ -353,8 +353,10 @@ byte_compile(files, optimize=%r, force=%r,
             if force or newer(mod.filename, cfile):
                 if verbose:
                     print "byte-compiling %s to %s" % (mod.filename, dfile)
+                    
                 if not dry_run:
                     mkpath(os.path.dirname(cfile))
+                    mkpath(os.path.dirname(dfile))
                     suffix = os.path.splitext(mod.filename)[1]
 
                     if suffix in ('.py', '.pyw'):
@@ -374,6 +376,7 @@ byte_compile(files, optimize=%r, force=%r,
                         # <mod>.pyo to <mod>.pyc or <mod>.pyc to
                         # <mod>.pyo, but it does seem to work.
                         copy_file(mod.filename, cfile)
+
                     else:
                         raise RuntimeError \
                               ("Don't know how to handle %r" % mod.filename)
