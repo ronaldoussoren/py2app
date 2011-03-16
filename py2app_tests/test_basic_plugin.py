@@ -64,14 +64,14 @@ class TestBasicPlugin (unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        if os.path.exists('bundle_loader'):
+            os.unlink('bundle_loader')
+
         if os.path.exists(os.path.join(cls.plugin_dir, 'build')):
             shutil.rmtree(os.path.join(cls.plugin_dir, 'build'))
 
         if os.path.exists(os.path.join(cls.plugin_dir, 'dist')):
             shutil.rmtree(os.path.join(cls.plugin_dir, 'dist'))
-
-        if os.path.exists('bundle_loader'):
-            os.unlink('bundle_loader')
 
     def start_app(self):
         # Start the test app, return a subprocess object where
@@ -146,6 +146,9 @@ class TestBasicPluginUnicodePath (TestBasicPlugin):
     def tearDownClass(cls):
         if os.path.exists(cls.plugin_dir):
             shutil.rmtree(cls.plugin_dir)
+
+        super(TestBasicPluginUnicodePath, cls).tearDownClass()
+
 
 class TestBasicAliasPluginUnicodePath (TestBasicPluginUnicodePath):
     py2app_args = [ '--alias' ]
