@@ -158,7 +158,7 @@ def make_setup(args, scripts, data_files, options):
         if res == 'n':
             print 'aborted!'
             return
-    f = open('setup.py', 'wb')
+    f = open('setup.py', 'w')
     tvars = tuple(map(pprint.pformat, (scripts, data_files, options)))
     f.write(SETUP_TEMPLATE % tvars)
     f.flush()

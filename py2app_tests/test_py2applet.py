@@ -1,0 +1,51 @@
+import unittest
+import subprocess
+import os, shutil, sys
+from py2app import script_py2applet
+
+
+class TestPy2Applet (unittest.TestCase):
+    def setUp(self):
+        self.testdir = 'test.dir'
+        os.mkdir(self.testdir)
+
+    def tearDown(self):
+        shutil.rmtree(self.testdir)
+
+    def run_py2applet(self, *args):
+        scriptfn = script_py2applet.__file__
+        if scriptfn.endswith('.pyc'):
+            scriptfn = fn[:-1]
+            
+        p = subprocess.Popen([
+            sys.executable, scriptfn ] + list(args),
+            cwd = self.testdir,
+            stdout = subprocess.PIPE,
+            stderr = subprocess.STDOUT,
+            stdin = subprocess.PIPE)
+        p.stdin.write('y\n'.encode('ascii'))
+        data = p.communicate()[0]
+
+        xit = p.wait()
+        if xit != 0:
+            sys.stdout.write(data)
+            self.fail("Running py2applet %s failed"%(" ".join(args),))
+
+
+    def test_generate_setup(self):
+        self.run_py2applet('--make-setup', 'foo.py')
+
+        setupfn = os.path.join(self.testdir, 'setup.py')
+        self.assertTrue(os.path.exists(setupfn))
+        fp = open(setupfn, 'r')
+        contents = fp.read()
+        fp.close()
+
+        self.assertTrue("APP = ['foo.py']" in contents)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+        

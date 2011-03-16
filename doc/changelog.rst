@@ -53,6 +53,8 @@ Features:
 
 Bug fixes:
 
+- py2applet didn't work in python 3.x.
+
 - The ``--alias`` option didn't work when building a plugin
   bundle (issue #10, fix by Virgil Dupras)
 
