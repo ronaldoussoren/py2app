@@ -979,7 +979,7 @@ class py2app(Command):
 
 
         if includedir is None:
-            includedir = 'python%s'%(info['version'])
+            includedir = 'python%d.%d'%(sys.version_info[:2])
         else:
             includedir = os.path.basename(includedir)
 
