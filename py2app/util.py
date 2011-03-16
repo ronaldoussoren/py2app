@@ -522,7 +522,7 @@ def copy_tree(src, dst,
                 if update and not newer(src, dst_name):
                     pass
                 else:
-                    if zipio.islink(dst_name):
+                    if os.path.islink(dst_name):
                         os.remove(dst_name)
                     os.symlink(link_dest, dst_name)
             outputs.append(dst_name)

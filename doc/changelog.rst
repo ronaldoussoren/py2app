@@ -53,6 +53,9 @@ Features:
 
 Bug fixes:
 
+- fix problem with symlinks in copied framework, as reported
+  by Dan Ross.
+
 - py2applet didn't work in python 3.x.
 
 - The ``--alias`` option didn't work when building a plugin
