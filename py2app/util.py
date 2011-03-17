@@ -356,11 +356,10 @@ byte_compile(files, optimize=%r, force=%r,
                     
                 if not dry_run:
                     mkpath(os.path.dirname(cfile))
-                    mkpath(os.path.dirname(dfile))
                     suffix = os.path.splitext(mod.filename)[1]
 
                     if suffix in ('.py', '.pyw'):
-                        fn = dfile + '.py'
+                        fn = cfile + '.py'
 
                         fp_in = zipio.open(mod.filename, 'rb')
                         fp_out = open(fn, 'wb')
@@ -368,6 +367,7 @@ byte_compile(files, optimize=%r, force=%r,
                         fp_in.close()
                         fp_out.close()
 
+                        print "XXX byte-compiling fn=%s cfile=%s dfile=%s"%(fn, cfile, dfile)
                         compile(fn, cfile, dfile)
                         os.unlink(fn)
 

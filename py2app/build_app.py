@@ -290,11 +290,10 @@ class py2app(Command):
         self.eggs = []
 
     def finalize_options (self):
-        if sys.version_info[0] == 3:
-            if self.argv_emulation:
+        if self.argv_emulation:
+            if sys.version_info[0] == 3:
                 raise DistutilsOptionError("argv-emulation is not supported on python 3.x")
-        else:
-            if sys.maxint > 2 ** 32:
+            elif sys.maxint > 2 ** 32:
                 raise DistutilsOptionError("argv-emulation is not supported for 64-bit executables")
 
         if not self.strip:
