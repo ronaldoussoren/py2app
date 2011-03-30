@@ -1,6 +1,27 @@
 Release history
 ===============
 
+py2app 0.6.1
+------------
+
+py2app 0.6.1 is a bugfix release
+
+Bugfixes:
+
+- The code that recreates the stub executables when they are
+  older than the source code now uses ``xcode-select`` to 
+  find the root of SDKs.
+
+  This makes it possible to recreate these executables on machines
+  where both Xcode 3 and Xcode 4 are installed and Xcode 3 is
+  the default Xcode.
+
+- The stub executables were regenerated using Xcode 3
+
+  As a word of warning: Xcode 4 cannot be used to rebuild the
+  stub executables, in particular not those that have support
+  for the PPC architecture.
+
 py2app 0.6
 ----------
 

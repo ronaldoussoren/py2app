@@ -8,17 +8,13 @@ gPreBuildVariants = [
     {
         'name': 'main-universal',
         'target': '10.5',
-        #'cflags': '-isysroot /Developer/SDKs/MacOSX10.5.sdk -arch i386 -arch ppc -arch ppc64 -arch x86_64',
-        'cflags': '-isysroot /Xcode4/SDKs/MacOSX10.5.sdk -arch i386 -arch ppc -arch ppc64 -arch x86_64',
-        #'cflags': '-isysroot /Developer/SDKs/MacOSX10.6.sdk -arch i386 -arch ppc -arch ppc64 -arch x86_64',
+        'cflags': '-isysroot /Developer/SDKs/MacOSX10.5.sdk -arch i386 -arch ppc -arch ppc64 -arch x86_64',
         'cc': 'gcc-4.2',
     },
     {
         'name': 'main-ppc64',
         'target': '10.5',
-        #'cflags': '-isysroot /Developer/SDKs/MacOSX10.5.sdk -arch x86_64',
-        'cflags': '-isysroot /Xcode4/SDKs/MacOSX10.5.sdk -arch x86_64',
-        #'cflags': '-isysroot /Developer/SDKs/MacOSX10.6.sdk -arch x86_64',
+        'cflags': '-isysroot /Developer/SDKs/MacOSX10.5.sdk -arch x86_64',
         'cc': 'gcc-4.2',
     },
     {
@@ -41,26 +37,20 @@ gPreBuildVariants = [
     },
     {
         'name': 'main-i386',
-        #'target': '10.3',
-        #'cflags': '-isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386',
-        'target': '10.4',
-        'cflags': '-isysroot /Developer/SDKs/MacOSX10.6.sdk -arch i386',
+        'target': '10.3',
+        'cflags': '-isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386',
         'cc': 'gcc-4.0',
     },
     {
         'name': 'main-ppc',
-        #'target': '10.3',
-        #'cflags': '-isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch ppc',
-        'target': '10.4',
-        'cflags': '-isysroot /Xcode4/SDKs/MacOSX10.5.sdk -arch ppc',
+        'target': '10.3',
+        'cflags': '-isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch ppc',
         'cc': 'gcc-4.0',
     },
     {
         'name': 'main-fat',
-        #'target': '10.3',
-        #'cflags': '-isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc',
-        'target': '10.4',
-        'cflags': '-isysroot /Xcode4/SDKs/MacOSX10.5.sdk -arch i386 -arch ppc',
+        'target': '10.3',
+        'cflags': '-isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc',
         'cc': 'gcc-4.0',
     },
 ]
@@ -96,15 +86,24 @@ def main(all=False):
 
     name = 'main-' + arch
 
+    root = None
+
+
     for entry in gPreBuildVariants:
         if (not all) and entry['name'] != name: continue
 
-        CC=entry['cc']
-        CFLAGS = BASE_CFLAGS + ' ' + entry['cflags']
-        os.environ['MACOSX_DEPLOYMENT_TARGET'] = entry['target']
         dest = os.path.join(builddir, entry['name'])
+
         if not os.path.exists(dest) or (
                 os.stat(dest).st_mtime < os.stat(src).st_mtime):
+            if root is None:
+                fp = os.popen('xcode-select -print-path', 'r')
+                root = fp.read().strip()
+                fp.close()
+
+            CC=os.path.join(root, 'usr', 'bin', entry['cc'])
+            CFLAGS = BASE_CFLAGS + ' ' + entry['cflags'].replace('@@XCODE_ROOT@@', root)
+            os.environ['MACOSX_DEPLOYMENT_TARGET'] = entry['target']
             os.system('"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s' % locals())
 
     dest = os.path.join(
