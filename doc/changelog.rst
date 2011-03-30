@@ -8,6 +8,12 @@ py2app 0.6.1 is a bugfix release
 
 Bugfixes:
 
+- py2app failed to build the bundle when python package contained
+  a zipfile with data.
+
+  This version solves most of that problem using a rough
+  workaround (the issue is fixed when the filename ends with '.zip').
+
 - The code that recreates the stub executables when they are
   older than the source code now uses ``xcode-select`` to 
   find the root of SDKs.

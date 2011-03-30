@@ -367,7 +367,6 @@ byte_compile(files, optimize=%r, force=%r,
                         fp_in.close()
                         fp_out.close()
 
-                        print "XXX byte-compiling fn=%s cfile=%s dfile=%s"%(fn, cfile, dfile)
                         compile(fn, cfile, dfile)
                         os.unlink(fn)
 

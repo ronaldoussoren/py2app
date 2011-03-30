@@ -875,7 +875,8 @@ class py2app(Command):
                 pth = os.path.join(dname, fname)
 
                 # Check if we have found a package, exclude those
-                if zipio.isdir(pth):
+                if zipio.isdir(pth) and not pth.endswith('.zip'):
+                    # XXX: the 'and not' part is wrong, need to fix zipio.isdir
                     for p in zipio.listdir(pth):
                         if p.startswith('__init__.') and p[8:] in exts:
                             break
