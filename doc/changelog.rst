@@ -22,6 +22,16 @@ Bugfixes:
   stub executables, in particular not those that have support
   for the PPC architecture.
 
+- Don't rebuild the stub executables automaticly, that's 
+  unsafe with Xcode 4 and could trigger accidently when
+  files are installed in a different order than expected.
+
+- Small tweaks to the testsuite to ensure that they work
+  on systems with both Xcode3 and Xcode4 (Xcode3 must be
+  the selected version).
+
+- Better cleanup in the testsuite when ``setupClass`` fails.
+
 py2app 0.6
 ----------
 

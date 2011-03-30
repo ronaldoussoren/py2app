@@ -182,13 +182,20 @@ class TestBasicAppUnicodePath (TestBasicApp):
 
     @classmethod
     def setUpClass(cls):
-        if os.path.exists(cls.app_dir):
-            shutil.rmtree(cls.app_dir)
+        try:
+            if os.path.exists(cls.app_dir):
+                shutil.rmtree(cls.app_dir)
 
-        assert not os.path.exists(cls.app_dir)
-        shutil.copytree(TestBasicApp.app_dir, cls.app_dir)
+            assert not os.path.exists(cls.app_dir)
+            shutil.copytree(TestBasicApp.app_dir, cls.app_dir)
 
-        super(TestBasicAppUnicodePath, cls).setUpClass()
+            super(TestBasicAppUnicodePath, cls).setUpClass()
+
+        except:
+            if os.path.exists(cls.app_dir):
+                shutil.rmtree(cls.app_dir)
+
+            raise
 
     @classmethod
     def tearDownClass(cls):

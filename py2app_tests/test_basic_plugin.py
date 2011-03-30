@@ -37,30 +37,56 @@ class TestBasicPlugin (unittest.TestCase):
     # a base-class.
     @classmethod
     def setUpClass(cls):
-        cmd = [ sys.executable, 'setup.py', 'py2app'] + cls.py2app_args
-        
-        p = subprocess.Popen(
-            cmd,
-            cwd = cls.plugin_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            close_fds=True)
-        lines = p.communicate()[0]
-        if p.wait() != 0:
-            print (lines)
-            raise AssertionError("Creating basic_plugin bundle failed")
+        try:
+            if os.path.exists(os.path.join(cls.plugin_dir, 'build')):
+                shutil.rmtree(os.path.join(cls.plugin_dir, 'build'))
 
-        p = subprocess.Popen([
-            'gcc'] +  get_config_var('LDFLAGS').split() + [ 
-                '-o', 'bundle_loader', os.path.join(DIR_NAME, 'bundle_loader.m'), 
-                '-framework', 'Foundation'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            close_fds=True)
-        lines = p.communicate()[0]
-        if p.wait() != 0:
-            print (lines)
-            raise AssertionError("Creating bundle_loader failed")
+            if os.path.exists(os.path.join(cls.plugin_dir, 'dist')):
+                shutil.rmtree(os.path.join(cls.plugin_dir, 'dist'))
+
+            cmd = [ sys.executable, 'setup.py', 'py2app'] + cls.py2app_args
+            
+            p = subprocess.Popen(
+                cmd,
+                cwd = cls.plugin_dir,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                close_fds=True)
+            lines = p.communicate()[0]
+            if p.wait() != 0:
+                print (lines)
+                raise AssertionError("Creating basic_plugin bundle failed")
+
+            p = subprocess.Popen([
+                'xcode-select', '-print-path'
+            ], stdout = subprocess.PIPE)
+            lines = p.communicate()[0]
+            xit = p.wait()
+            if p.wait() != 0:
+                raise AssertionError("Fetching Xcode root failed")
+
+            root = lines.strip()
+            if sys.version_info[0] != 2:
+                root = root.decode('utf-8')
+
+            cc = get_config_var('CC')
+
+            p = subprocess.Popen([os.path.join(root, 'usr', 'bin', cc) ] 
+                +  get_config_var('LDFLAGS').split() + [ 
+                    '-o', 'bundle_loader', os.path.join(DIR_NAME, 'bundle_loader.m'), 
+                    '-framework', 'Foundation'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                close_fds=True)
+            lines = p.communicate()[0]
+            if p.wait() != 0:
+                print (lines)
+                raise AssertionError("Creating bundle_loader failed")
+
+
+        except:
+            cls.tearDownClass()
+            raise
 
     @classmethod
     def tearDownClass(cls):
@@ -105,7 +131,9 @@ class TestBasicPlugin (unittest.TestCase):
 
     def test_basic_start(self):
         p = self.start_app()
-        p.stdout.readline()
+        v = p.stdout.readline()
+
+        self.assertFalse(v.startswith(B('** Cannot load bundle')))
 
         p.stdin.write('BasicPlugin.bundle:test startup\n'.encode('latin1'))
         p.stdin.flush()
@@ -134,13 +162,19 @@ class TestBasicPluginUnicodePath (TestBasicPlugin):
 
     @classmethod
     def setUpClass(cls):
-        if os.path.exists(cls.plugin_dir):
-            shutil.rmtree(cls.plugin_dir)
+        try:
+            if os.path.exists(cls.plugin_dir):
+                shutil.rmtree(cls.plugin_dir)
 
-        assert not os.path.exists(cls.plugin_dir)
-        shutil.copytree(TestBasicPlugin.plugin_dir, cls.plugin_dir)
+            assert not os.path.exists(cls.plugin_dir)
+            shutil.copytree(TestBasicPlugin.plugin_dir, cls.plugin_dir)
 
-        super(TestBasicPluginUnicodePath, cls).setUpClass()
+            super(TestBasicPluginUnicodePath, cls).setUpClass()
+
+        except:
+            if os.path.exists(cls.plugin_dir):
+                shutil.rmtree(cls.plugin_dir)
+            raise
 
     @classmethod
     def tearDownClass(cls):

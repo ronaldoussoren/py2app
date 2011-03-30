@@ -15,7 +15,7 @@ class TestPy2Applet (unittest.TestCase):
     def run_py2applet(self, *args):
         scriptfn = script_py2applet.__file__
         if scriptfn.endswith('.pyc'):
-            scriptfn = fn[:-1]
+            scriptfn = scriptfn[:-1]
             
         p = subprocess.Popen([
             sys.executable, scriptfn ] + list(args),

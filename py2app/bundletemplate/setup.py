@@ -90,21 +90,22 @@ def main(all=False):
     root = None
 
 
-    for entry in gPreBuildVariants:
-        if (not all) and entry['name'] != name: continue
+    if all:
+        for entry in gPreBuildVariants:
+            if (not all) and entry['name'] != name: continue
 
-        dest = os.path.join(builddir, entry['name'])
-        if not os.path.exists(dest) or (
-                os.stat(dest).st_mtime < os.stat(src).st_mtime):
-            if root is None:
-                fp = os.popen('xcode-select -print-path', 'r')
-                root = fp.read().strip()
-                fp.close()
+            dest = os.path.join(builddir, entry['name'])
+            if not os.path.exists(dest) or (
+                    os.stat(dest).st_mtime < os.stat(src).st_mtime):
+                if root is None:
+                    fp = os.popen('xcode-select -print-path', 'r')
+                    root = fp.read().strip()
+                    fp.close()
 
-            CC=os.path.join(root, 'usr', 'bin', entry['cc'])
-            CFLAGS = BASE_CFLAGS + ' ' + entry['cflags'].replace('@@XCODE_ROOT@@', root)
-            os.environ['MACOSX_DEPLOYMENT_TARGET'] = entry['target']
-            os.system('"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s' % locals())
+                CC=os.path.join(root, 'usr', 'bin', entry['cc'])
+                CFLAGS = BASE_CFLAGS + ' ' + entry['cflags'].replace('@@XCODE_ROOT@@', root)
+                os.environ['MACOSX_DEPLOYMENT_TARGET'] = entry['target']
+                os.system('"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s' % locals())
 
     dest = os.path.join(
             builddir,
