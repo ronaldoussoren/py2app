@@ -1,38 +1,36 @@
 import sys
 import traceback
 
+
 if sys.version_info[0] == 3:
     def B(value):
         return value.encode('ascii')
-    kAEInternetSuite=B('gurl')
-    kAEISGetURL=B('gurl')
-    kCoreEventClass=B('aevt')
-    kAEOpenApplication=B('oapp')
-    kAEOpenDocuments=B('odoc')
-    keyDirectObject=B('----')
-
-    typeAEList=B('list')
-    typeChar=B('TEXT')
-    typeAlias=B('alis')
-
-    highLevelEventMask=1024 
-    kHighLevelEvent=23
-
-    #import ctypes
-
-    # TODO: Reimplement useful bits of AE, Evt and File using ctypes,
-    # when than works drop the 2.x part and use this everywhere.
 else:
-    from Carbon import AE
-    from Carbon.AppleEvents import kCoreEventClass, kAEOpenApplication, \
-        kAEOpenDocuments, keyDirectObject, typeAEList, typeAlias, \
-        kAEInternetSuite, kAEISGetURL, typeChar
-    from Carbon import Evt
-    from Carbon import File
-    from Carbon.Events import highLevelEventMask, kHighLevelEvent
+    def B(value):
+        return value
 
+kAEInternetSuite=B('gurl')
+kAEISGetURL=B('gurl')
+kCoreEventClass=B('aevt')
+kAEOpenApplication=B('oapp')
+kAEOpenDocuments=B('odoc')
+keyDirectObject=B('----')
 
+typeAEList=B('list')
+typeChar=B('TEXT')
+typeAlias=B('alis')
 
+highLevelEventMask=1024 
+kHighLevelEvent=23
+
+import ctypes
+
+from Carbon import AE
+from Carbon import Evt
+from Carbon import File
+
+carbon = ctypes.CDLL('/System/Library/Carbon.framework/Carbon')
+print carbon.RunCurrentEventLoop
 
 
 def _get_argvemulator():

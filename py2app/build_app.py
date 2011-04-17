@@ -361,6 +361,10 @@ class py2app(Command):
             if os.path.exists(iconfile):
                 self.iconfile = iconfile
 
+
+        if self.iconfile is not None:
+            self.resources.append(self.iconfile)
+
         self.runtime_preferences = list(self.get_runtime_preferences())
 
 
@@ -1374,6 +1378,16 @@ class py2app(Command):
                 fp = open(os.path.join(encodings_dir, 'aliases.py'), 'w')
                 fp.write('aliases = {}\n')
                 fp.close()
+
+        for src, dest in self.iter_data_files():
+            dest = os.path.join(resdir, dest)
+            if src == dest:
+                continue
+            makedirs(os.path.dirname(dest))
+            if os.path.isdir(src):
+                self.copy_tree(src, dest, preserve_symlinks=False)
+            else:
+                self.copy_file(src, dest)
 
 
         target.appdir = appdir

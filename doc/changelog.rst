@@ -1,6 +1,22 @@
 Release history
 ===============
 
+py2app 0.6.2
+------------
+
+py2app 0.6.2 is a bugfix release
+
+- py2app failed to copy the iconfile into application bundle
+  (reported by Russel Owen)
+
+- py2app failed to copy resources and data files as well
+  (the ``resource`` key in the py2ap options dictionary and
+  the ``data_files`` argument to the setup function).
+
+  Issue #19, reported by bryon(at)spideroak.com.
+
+
+
 py2app 0.6.1
 ------------
 
