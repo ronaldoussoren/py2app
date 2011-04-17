@@ -5,6 +5,7 @@ graft doc/_templates
 graft py2app_tests
 graft py2app/apptemplate
 graft py2app/bundletemplate
+graft examples
 global-exclude .DS_Store
 global-exclude *.pyc
 global-exclude *.so

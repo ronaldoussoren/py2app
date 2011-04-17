@@ -21,6 +21,8 @@ py2app 0.6.2 is a bugfix release
 
   Report and fix by Erik van Zijst.
 
+- Ensure that the 'examples' directory is included in the source 
+  archive
 
 py2app 0.6.1
 ------------
