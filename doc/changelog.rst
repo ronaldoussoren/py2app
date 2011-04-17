@@ -15,6 +15,11 @@ py2app 0.6.2 is a bugfix release
 
   Issue #19, reported by bryon(at)spideroak.com.
 
+- py2app failed to build application bundles when using virtualenv
+  due to assumptions about the relation between ``sys.prefix`` and
+  ``sys.executable``.
+
+  Report and fix by Erik van Zijst.
 
 
 py2app 0.6.1

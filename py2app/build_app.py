@@ -819,11 +819,10 @@ class py2app(Command):
                     if os.path.exists(fn):
                         prefix = open(fn, 'rU').read().strip()
 
-                    rest_path = sys.executable[len(sys.prefix)+1:]
+                    rest_path = os.path.normpath(sys.executable)[len(os.path.normpath(sys.prefix))+1:]
                     if rest_path.startswith('.'):
                         rest_path = rest_path[1:]
 
-                    print "XXXX", os.path.join(prefix, rest_path)
                     self.copy_file(os.path.join(prefix, rest_path), execdst)
 
                 else:
