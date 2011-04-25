@@ -101,7 +101,7 @@ def find_converter(source):
     except KeyError:
         return None
 
-def copy_resource(source, destination, dry_run=0):
+def copy_resource(source, destination, dry_run=0, symlink=0):
     """
     Copy a resource file into the application bundle
     """
@@ -113,16 +113,22 @@ def copy_resource(source, destination, dry_run=0):
         return
 
     if os.path.isdir(source):
-        # XXX: This is wrong, need to call ourselves recursively
         if not dry_run:
             if not os.path.exists(destination):
                 os.mkdir(destination)
         for fn in zipio.listdir(source):
             copy_resource(os.path.join(source, fn), 
-                    os.path.join(destination, fn), dry_run=dry_run)
+                    os.path.join(destination, fn), dry_run=dry_run, symlink=symlink)
 
     else:
-        copy_file(source, destination, dry_run=dry_run)
+        if symlink:
+            if not dry_run:
+                if os.path.exists(destination):
+                    os.unlink(destination)
+                os.symlink(os.path.abspath(source), destination)
+
+        else:
+            copy_file(source, destination, dry_run=dry_run)
 
 
 

@@ -362,9 +362,6 @@ class py2app(Command):
                 self.iconfile = iconfile
 
 
-        if self.iconfile is not None:
-            self.resources.append(self.iconfile)
-
         self.runtime_preferences = list(self.get_runtime_preferences())
 
 
@@ -1236,7 +1233,12 @@ class py2app(Command):
             if src == dest:
                 continue
             makedirs(os.path.dirname(dest))
-            self.symlink(os.path.abspath(src), dest)
+            try:
+                copy_resource(src, dest, dry_run=self.dry_run, symlink=1)
+            except:
+                import traceback
+                traceback.print_exc()
+                raise
 
         # symlink frameworks
         for src in self.iter_frameworks():
@@ -1383,10 +1385,7 @@ class py2app(Command):
             if src == dest:
                 continue
             makedirs(os.path.dirname(dest))
-            if os.path.isdir(src):
-                self.copy_tree(src, dest, preserve_symlinks=False)
-            else:
-                self.copy_file(src, dest)
+            copy_resource(src, dest, dry_run=self.dry_run)
 
 
         target.appdir = appdir

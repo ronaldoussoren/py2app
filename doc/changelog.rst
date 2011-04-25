@@ -1,6 +1,14 @@
 Release history
 ===============
 
+py2app 0.6.3
+------------
+
+py2app 0.6.3 is a bugfix release
+
+- py2app failed to compile .xib files
+  (as reported on the pythonmac-sig mail-ing list).
+
 py2app 0.6.2
 ------------
 

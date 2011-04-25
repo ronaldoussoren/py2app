@@ -120,8 +120,8 @@ class TestBasicApp (unittest.TestCase):
                 self.assertTrue(os.path.islink(dst_file),
                     '%s is not a symlink'%(dst_file,))
 
-        if '--alias' in self.py2app_args:
-            self.assertTrue(os.path.islink(os.path.join(resource_dir, 'data2')))
+        #if '--alias' in self.py2app_args:
+        #    self.assertTrue(os.path.islink(os.path.join(resource_dir, 'data2')))
 
 
 class TestBasicAliasApp (TestBasicApp):
