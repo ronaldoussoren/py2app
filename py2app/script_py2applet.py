@@ -119,11 +119,15 @@ def main():
         else:
             data_files.append(fn)
 
+    default_argv_emulation=True
+    if sys.maxint > 2**32:
+        default_argv_emulation=False
+
     options = dict(
         packages=packages,
         plist=plist,
         iconfile=iconfile,
-        argv_emulation=True,
+        argv_emulation=default_argv_emulation,
     )
     for k,v in options.items():
         if not v:

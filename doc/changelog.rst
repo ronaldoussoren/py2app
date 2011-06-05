@@ -1,6 +1,17 @@
 Release history
 ===============
 
+py2app 0.6.4
+------------
+
+py2app 0.6.4 is a bugfix release
+
+- Issue #17: py2applet script defaults 'argv_emulation' to False when your using
+  a 64-bit build of python, because that option is not supported on
+  such builds.
+
+  
+
 py2app 0.6.3
 ------------
 
@@ -8,6 +19,7 @@ py2app 0.6.3 is a bugfix release
 
 - py2app failed to compile .xib files
   (as reported on the pythonmac-sig mail-ing list).
+
 
 py2app 0.6.2
 ------------
