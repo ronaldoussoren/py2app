@@ -10,6 +10,10 @@ py2app 0.6.4 is a bugfix release
   a 64-bit build of python, because that option is not supported on
   such builds.
 
+- py2app now clears the temporary directory in 'build' and the output directory
+  in 'dist' before doing anything. This avoids unwanted interactions between
+  results from a previous builds and the current build.
+
   
 
 py2app 0.6.3

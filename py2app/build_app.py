@@ -718,6 +718,9 @@ class py2app(Command):
             self.bdist_dir = os.path.join(bdist_base,
                 'python%s-standalone' % (sys.version[:3],), 'app')
 
+        if os.path.exists(self.bdist_dir):
+            shutil.rmtree(self.bdist_dir)
+        
         self.collect_dir = os.path.abspath(
             os.path.join(self.bdist_dir, "collect"))
         self.mkpath(self.collect_dir)
@@ -726,6 +729,8 @@ class py2app(Command):
         self.mkpath(self.temp_dir)
 
         self.dist_dir = os.path.abspath(self.dist_dir)
+        if os.path.exists(self.dist_dir):
+            shutil.rmtree(self.dist_dir)
         self.mkpath(self.dist_dir)
 
         self.lib_dir = os.path.join(self.bdist_dir,
