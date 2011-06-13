@@ -383,6 +383,13 @@ class py2app(Command):
                 version = find_version(target.script)
             except ValueError:
                 pass
+
+        if not isinstance(version, (str, unicode)):
+            raise DistutilsOptionError("Version must be a string")
+
+        if sys.version_info[0] > 2 and isinstance(version, type('a'.encode('ascii'))):
+            raise DistutilsOptionError("Version must be a string")
+
         plist['CFBundleVersion'] = version
 
         name = self.distribution.get_name()

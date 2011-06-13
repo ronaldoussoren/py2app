@@ -14,6 +14,9 @@ py2app 0.6.4 is a bugfix release
   in 'dist' before doing anything. This avoids unwanted interactions between
   results from a previous builds and the current build.
 
+- Issue #22: py2app will give an error when the specified version is invalid,
+  instead of causing a crash in the generated executable.
+
   
 
 py2app 0.6.3
