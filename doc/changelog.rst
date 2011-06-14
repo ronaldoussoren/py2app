@@ -14,6 +14,9 @@ py2app 0.6.4 is a bugfix release
   This option is experimental, it is far from certain that the implementation
   works on all systems.
 
+- Issue #16: ``--argv-emulation`` now works with Python 3.x and in 64-bit
+  executables.
+
 - Issue #17: py2applet script defaults 'argv_emulation' to False when your using
   a 64-bit build of python, because that option is not supported on
   such builds.

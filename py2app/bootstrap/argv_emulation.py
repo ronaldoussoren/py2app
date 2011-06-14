@@ -1,6 +1,21 @@
-import sys
-import traceback
+"""
+sys.argv emulation
 
+This module starts a basic event loop to collect file- and url-open AppleEvents. Those get
+converted to strings and stuffed into sys.argv. When that is done we continue starting 
+the application.
+
+This is a workaround to convert scripts that expect filenames on the command-line to work 
+in a GUI environment. GUI applications should not use this feature.
+
+NOTE: This module uses ctypes and not the Carbon modules in the stdlib because the latter
+don't work in 64-bit mode and are also not available with python 3.x.
+"""
+
+import sys
+
+import os
+sys.stderr = open('/tmp/stderr.%s.txt'%(os.getpid(),), 'w')
 
 if sys.version_info[0] == 3:
     def B(value):
@@ -9,146 +24,250 @@ else:
     def B(value):
         return value
 
-kAEInternetSuite=B('gurl')
-kAEISGetURL=B('gurl')
-kCoreEventClass=B('aevt')
-kAEOpenApplication=B('oapp')
-kAEOpenDocuments=B('odoc')
-keyDirectObject=B('----')
-
-typeAEList=B('list')
-typeChar=B('TEXT')
-typeAlias=B('alis')
-
-highLevelEventMask=1024 
-kHighLevelEvent=23
-
 import ctypes
+import struct
 
-from Carbon import AE
-from Carbon import Evt
-from Carbon import File
+class AEDesc (ctypes.Structure):
+    _fields_ = [
+        ('descKey', ctypes.c_int),
+        ('descContent', ctypes.c_void_p),
+    ]
 
-carbon = ctypes.CDLL('/System/Library/Carbon.framework/Carbon')
-print carbon.RunCurrentEventLoop
+def _ctypes_setup():
+    carbon = ctypes.CDLL('/System/Library/Carbon.framework/Carbon')
+    cf = ctypes.CDLL('/System/Library/CoreFoundation.framework/CoreFoundation')
+
+    timer_func = ctypes.CFUNCTYPE(
+            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long)
+
+    cf.CFAbsoluteTimeGetCurrent.restype = ctypes.c_double
+    cf.CFRunLoopTimerCreate.restype = ctypes.c_void_p
+    cf.CFRunLoopTimerCreate.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_double,
+            ctypes.c_double,
+            ctypes.c_long,
+            ctypes.c_long,
+            timer_func,
+            ctypes.c_long,
+        ]
+    cf.CFRelease.argtypes = [ctypes.c_void_p]
+    cf.CFRunLoopGetCurrent.restype = ctypes.c_void_p
+    cf.CFRunLoopAddTimer.argtypes = [
+            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+    cf.CFRunLoopRemoveTimer.argtypes = [
+            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+
+    ae_callback = ctypes.CFUNCTYPE(None, ctypes.c_void_p, 
+        ctypes.c_void_p, ctypes.c_long)
+    carbon.AEInstallEventHandler.argtypes = [ 
+            ctypes.c_int, ctypes.c_int, ae_callback,
+            ctypes.c_void_p, ctypes.c_char ]
+    carbon.AERemoveEventHandler.argtypes = [ 
+            ctypes.c_int, ctypes.c_int, ae_callback,
+            ctypes.c_char ]
+
+    
+    carbon.AEGetParamDesc.restype = ctypes.c_int
+    carbon.AEGetParamDesc.argtypes = [
+            ctypes.c_void_p, ctypes.c_int, ctypes.c_int,
+            ctypes.POINTER(AEDesc)]
+
+    carbon.AECountItems.restype = ctypes.c_int
+    carbon.AECountItems.argtypes = [ ctypes.POINTER(AEDesc),
+            ctypes.POINTER(ctypes.c_long) ]
+
+    carbon.AEGetNthDesc.restype = ctypes.c_int
+    carbon.AEGetNthDesc.argtypes = [ 
+            ctypes.c_void_p, ctypes.c_long, ctypes.c_int,
+            ctypes.c_void_p, ctypes.c_void_p ]
+
+    carbon.AEGetDescDataSize.restype = ctypes.c_int
+    carbon.AEGetDescDataSize.argtypes = [ ctypes.POINTER(AEDesc) ]
+
+    carbon.AEGetDescData.restype = ctypes.c_int
+    carbon.AEGetDescData.argtypes = [ 
+            ctypes.POINTER(AEDesc),
+            ctypes.c_void_p,
+            ctypes.c_int,
+            ]
 
 
-def _get_argvemulator():
-    """argvemulator - create sys.argv from OSA events. Used by applets that
-    want unix-style arguments.
-    """
+    carbon.FSRefMakePath.restype = ctypes.c_int
+    carbon.FSRefMakePath.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_uint]
+
+    return carbon, cf
+
+def _run_argvemulator(timeout = 60):
+
+    # Configure ctypes
+    carbon, cf = _ctypes_setup()
+
+    # Global variables
+    kCFRunLoopCommonModes = ctypes.c_void_p.in_dll(cf, 'kCFRunLoopCommonModes')
+
+    # Create a timer that will exit the temporary runloop when we 
+    # don't find arguments soon enough.
+    timer_func = cf.CFRunLoopTimerCreate.argtypes[5]
+
+    @timer_func
+    def delayedQuit(runloop, info):
+        carbon.QuitApplicationEventLoop()
 
 
-    class ArgvCollector:
+    qtimer = cf.CFRunLoopTimerCreate(
+        0,
+        cf.CFAbsoluteTimeGetCurrent() + timeout,
+        0, 
+        0, 
+        0,
+        delayedQuit,
+        0,
+    )
+    cf.CFRunLoopAddTimer(cf.CFRunLoopGetCurrent(), qtimer, kCFRunLoopCommonModes)
 
-        """A minimal FrameWork.Application-like class"""
+    # Configure AppleEvent handlers
+    ae_callback = carbon.AEInstallEventHandler.argtypes[2]
 
-        def __init__(self):
-            self.quitting = 0
+    kAEInternetSuite,   = struct.unpack('>i', B('GURL'))
+    kAEISGetURL,        = struct.unpack('>i', B('GURL'))
+    kCoreEventClass,    = struct.unpack('>i', B('aevt'))
+    kAEOpenApplication, = struct.unpack('>i', B('oapp'))
+    kAEOpenDocuments,   = struct.unpack('>i', B('odoc'))
+    keyDirectObject,    = struct.unpack('>i', B('----'))
+    typeAEList,         = struct.unpack('>i', B('list'))
+    typeChar,           = struct.unpack('>i', B('TEXT'))
+    typeFSRef,          = struct.unpack('>i', B('fsrf'))
+    FALSE               = B('\0')
 
-            AE.AEInstallEventHandler(kCoreEventClass, kAEOpenApplication,
-                self.__runapp)
-            AE.AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments,
-                self.__openfiles)
-            AE.AEInstallEventHandler(kAEInternetSuite, kAEISGetURL,
-                    self.__geturl)
 
-            # The definition of kAEInternetSuite seems to be wrong,
-            # the lines below ensures that the code will work anyway.
-            AE.AEInstallEventHandler('GURL', 'GURL', self.__geturl)
+    @ae_callback
+    def open_app_handler(message, reply, refcon):
+        carbon.QuitApplicationEventLoop()
 
-        def close(self):
-            AE.AERemoveEventHandler(kCoreEventClass, kAEOpenApplication)
-            AE.AERemoveEventHandler(kCoreEventClass, kAEOpenDocuments)
-            AE.AERemoveEventHandler(kAEInternetSuite, kAEISGetURL)
-            AE.AERemoveEventHandler('GURL', 'GURL')
+    carbon.AEInstallEventHandler(kCoreEventClass, kAEOpenApplication,
+            open_app_handler, 0, FALSE)
 
-        def mainloop(self, mask = highLevelEventMask, timeout = 1*60):
-            # Note: this is not the right way to run an event loop in OSX or
-            # even "recent" versions of MacOS9. This is however code that has
-            # proven itself.
+    @ae_callback
+    def open_file_handler(message, reply, refcon):
+        listdesc = AEDesc()
+        sts = carbon.AEGetParamDesc(message, keyDirectObject, typeAEList,
+                ctypes.byref(listdesc))
+        if sts != 0:
+            print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
+            carbon.QuitApplicationEventLoop()
+            return
 
-            # Remove the funny -psn_xxx_xxx argument
-            if len(sys.argv) > 1 and sys.argv[1][:4] == '-psn':
-                del sys.argv[1]
+        item_count = ctypes.c_long()
+        sts = carbon.AECountItems(ctypes.byref(listdesc), ctypes.byref(item_count))
+        if sts != 0:
+            print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
+            carbon.QuitApplicationEventLoop()
+            return
 
-            stoptime = Evt.TickCount() + timeout
-            while not self.quitting and Evt.TickCount() < stoptime:
-                self._dooneevent(mask, timeout)
-
-            if not self.quitting:
-                print "argvemulator: timeout waiting for arguments"
-
-            self.close()
-
-        def _dooneevent(self, mask = highLevelEventMask, timeout = 1*60):
-            got, event = Evt.WaitNextEvent(mask, timeout)
-            if got:
-                self._lowlevelhandler(event)
-
-        def _lowlevelhandler(self, event):
-            what, message, when, where, modifiers = event
-            h, v = where
-            if what == kHighLevelEvent:
-                try:
-                    AE.AEProcessAppleEvent(event)
-                except AE.Error, err:
-                    msg = "High Level Event: %r %r" % (hex(message),
-                        hex(h | (v<<16)))
-                    print 'AE error: ', err
-                    print 'in', msg
-                    traceback.print_exc()
+        desc = AEDesc()
+        for i in range(item_count.value):
+            sts = carbon.AEGetNthDesc(ctypes.byref(listdesc), i+1, typeFSRef, 0, ctypes.byref(desc))
+            if sts != 0:
+                print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
+                carbon.QuitApplicationEventLoop()
                 return
+
+            sz = carbon.AEGetDescDataSize(ctypes.byref(desc))
+            buf = ctypes.create_string_buffer(sz)
+            sts = carbon.AEGetDescData(ctypes.byref(desc), buf, sz)
+            if sts != 0:
+                print >>sys.stderr, "argvemulator warning: cannot extract open document event"
+                continue
+
+            fsref = buf
+
+            buf = ctypes.create_string_buffer(1024)
+            sts = carbon.FSRefMakePath(ctypes.byref(fsref), buf, 1023)
+            if sts != 0:
+                print >>sys.stderr, "argvemulator warning: cannot extract open document event"
+                continue
+
+            print >>sys.stderr, "Adding: %s"%(repr(buf.value.decode('utf-8')),)
+
+            if sys.version_info[0] > 2:
+                sys.argv.append(buf.value.decode('utf-8'))
             else:
-                print "Unhandled event:", event
+                sys.argv.append(buf.value)
+
+        carbon.QuitApplicationEventLoop()
+
+    carbon.AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments,
+            open_file_handler, 0, FALSE)
+
+    @ae_callback
+    def open_url_handler(message, reply, refcon):
+        listdesc = AEDesc()
+        ok = carbon.AEGetParamDesc(message, keyDirectObject, typeAEList,
+                ctypes.byref(listdesc))
+        if ok != 0:
+            print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
+            carbon.QuitApplicationEventLoop()
+            return
+
+        item_count = ctypes.c_long()
+        sts = carbon.AECountItems(ctypes.byref(listdesc), ctypes.byref(item_count))
+        if sts != 0:
+            print >>sys.stderr, "argvemulator warning: cannot unpack open url event"
+            carbon.QuitApplicationEventLoop()
+            return
+
+        desc = AEDesc()
+        for i in range(item_count.value):
+            sts = carbon.AEGetNthDesc(ctypes.byref(listdesc), i+1, typeChar, 0, ctypes.byref(desc))
+            if sts != 0:
+                print >>sys.stderr, "argvemulator warning: cannot unpack open URL event"
+                carbon.QuitApplicationEventLoop()
+                return
+
+            sz = carbon.AEGetDescDataSize(ctypes.byref(desc))
+            buf = ctypes.create_string_buffer(sz)
+            sts = carbon.AEGetDescData(ctypes.byref(desc), buf, sz)
+            if sts != 0:
+                print >>sys.stderr, "argvemulator warning: cannot extract open URL event"
+
+            else:
+                if sys.version_info[0] > 2:
+                    sys.argv.append(buf.value.decode('utf-8'))
+                else:
+                    sys.argv.append(buf.value)
+
+        carbon.QuitApplicationEventLoop()
+    
+    carbon.AEInstallEventHandler(kAEInternetSuite, kAEISGetURL,
+            open_url_handler, 0, FALSE)
 
 
-        def _quit(self):
-            self.quitting = 1
 
-        def __runapp(self, requestevent, replyevent):
-            self._quit()
+    # Remove the funny -psn_xxx_xxx argument
+    if len(sys.argv) > 1 and sys.argv[1][:4] == '-psn':
+        del sys.argv[1]
 
-        def __openfiles(self, requestevent, replyevent):
-            try:
-                listdesc = requestevent.AEGetParamDesc(keyDirectObject,
-                    typeAEList)
-                for i in range(listdesc.AECountItems()):
-                    aliasdesc = listdesc.AEGetNthDesc(i+1, typeAlias)[1]
-                    alias = File.Alias(rawdata=aliasdesc.data)
-                    fsref = alias.FSResolveAlias(None)[0]
-                    pathname = fsref.as_pathname()
-                    sys.argv.append(pathname)
-            except Exception, e:
-                print "argvemulator.py warning: can't unpack an open document event"
-                import traceback
-                traceback.print_exc()
+    # Now run the eventloop to collect arguments
+    carbon.RunApplicationEventLoop()
 
-            self._quit()
+    # Clean up 
+    cf.CFRunLoopRemoveTimer(
+            cf.CFRunLoopGetCurrent(), qtimer, kCFRunLoopCommonModes)
+    cf.CFRelease(qtimer)
 
-        def __geturl(self, requestevent, replyevent):
-            try:
-                listdesc = requestevent.AEGetParamDesc(keyDirectObject, typeAEList)
-                for i in range(listdesc.AECountItems()):
-                    desc = listdesc.AEGetNthDesc(i+1, typeChar)[1]
-                    #url = desc.data.decode('utf8')
-                    url = desc.data
-                    sys.argv.append(url)
-            except Exception, e:
-                print "argvemulator.py warning: can't unpack a GetURL event"
-                import traceback
-                traceback.print_exc()
-
-            self._quit()
-
-    return ArgvCollector()
+    carbon.AERemoveEventHandler(kCoreEventClass, kAEOpenApplication, 
+            open_app_handler, FALSE)
+    carbon.AERemoveEventHandler(kCoreEventClass, kAEOpenDocuments,
+            open_file_handler, FALSE)
+    carbon.AERemoveEventHandler(kAEInternetSuite, kAEISGetURL,
+            open_url_handler, FALSE)
 
 def _argv_emulation():
     import sys
     # only use if started by LaunchServices
     for arg in sys.argv[1:]:
         if arg.startswith('-psn'):
-            _get_argvemulator().mainloop()
+            _run_argvemulator()
             break
 _argv_emulation()
-

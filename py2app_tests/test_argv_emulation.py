@@ -83,7 +83,7 @@ class TestArgvEmulation (unittest.TestCase):
         self.assertEqual(exit, 0)
 
         path = os.path.join( self.app_dir, 'dist/argv.txt')
-        for x in range(5):
+        for x in range(70):     # Argv emulation can take up-to 60 seconds
             time.sleep(1)
             if os.path.exists(path):
                 break
@@ -107,14 +107,14 @@ class TestArgvEmulation (unittest.TestCase):
         self.assertEqual(exit, 0)
 
         path = os.path.join( self.app_dir, 'dist/argv.txt')
-        for x in range(5):
+        for x in range(70):     # Argv emulation can take up-to 60 seconds
             time.sleep(1)
             if os.path.exists(path):
                 break
 
         self.assertTrue(os.path.isfile(path))
 
-        fp = open(path)
+        fp = open(path, 'r')
         data = fp.read().strip()
         fp.close()
 
