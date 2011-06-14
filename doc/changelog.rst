@@ -17,6 +17,9 @@ py2app 0.6.4 is a bugfix release
 - Issue #22: py2app will give an error when the specified version is invalid,
   instead of causing a crash in the generated executable.
 
+- Issue #23: py2app failed to work when an .egg directory was implictly added
+  to ``sys.path`` by setuptools and the "-O" option was used (for example
+  ``python setup.py py2app -O2``)
   
 
 py2app 0.6.3

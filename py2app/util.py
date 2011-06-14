@@ -325,11 +325,19 @@ byte_compile(files, optimize=%r, force=%r,
 
             script.close()
 
-        cmd = [sys.executable, script_name]
+        # Ensure that py2app is on PYTHONPATH, this ensures that
+        # py2app.util can be found even when we're running from
+        # an .egg that was downloaded by setuptools
+        import py2app
+        pp = os.path.dirname(os.path.dirname(py2app.__file__))
+        if 'PYTHONPATH' in os.environ:
+            pp = '%:%s'%(pp, PYTHONPATH)
+
+        cmd = ['/usr/bin/env', 'PYTHONPATH=%s'%(pp,), sys.executable, script_name]
         if optimize == 1:
-            cmd.insert(1, "-O")
+            cmd.insert(3, "-O")
         elif optimize == 2:
-            cmd.insert(1, "-OO")
+            cmd.insert(3, "-OO")
         spawn(cmd, verbose=verbose, dry_run=dry_run)
         execute(os.remove, (script_name,), "removing %s" % script_name,
                 verbose=verbose, dry_run=dry_run)

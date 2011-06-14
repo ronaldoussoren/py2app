@@ -8,4 +8,5 @@ __pycache__
 syntax: glob
 *.dSYM
 *.pyc
+*.pyo
 unittest2-*.egg

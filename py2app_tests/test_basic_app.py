@@ -43,6 +43,7 @@ else:
 
 class TestBasicApp (unittest.TestCase):
     py2app_args = []
+    python_args = []
     app_dir = os.path.join(DIR_NAME, 'basic_app')
 
     # Basic setup code
@@ -52,7 +53,7 @@ class TestBasicApp (unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         p = subprocess.Popen([
-                sys.executable,
+                sys.executable ] + cls.python_args + [
                     'setup.py', 'py2app'] + cls.py2app_args,
             cwd = cls.app_dir,
             stdout=subprocess.PIPE,
@@ -207,6 +208,12 @@ class TestBasicAliasAppUnicodePath (TestBasicAppUnicodePath):
 
 class TestBasicSemiStandaloneAppUnicodePath (TestBasicAppUnicodePath):
     py2app_args = [ '--semi-standalone', ]
+
+class TestOptimized1 (TestBasicApp):
+    py2app_args = [ '-O1' ]
+
+class TestOptimized2 (TestBasicApp):
+    py2app_args = [ '-O2' ]
 
 if __name__ == "__main__":
     unittest.main()
