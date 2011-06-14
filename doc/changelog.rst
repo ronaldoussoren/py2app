@@ -6,6 +6,14 @@ py2app 0.6.4
 
 py2app 0.6.4 is a bugfix release
 
+- Issue #15: py2app now has an option to emulate the shell environment you
+  get by opening a window in the Terminal.
+
+  Usage: ``python setup.py py2app --emulate-shell-environment``
+
+  This option is experimental, it is far from certain that the implementation
+  works on all systems.
+
 - Issue #17: py2applet script defaults 'argv_emulation' to False when your using
   a 64-bit build of python, because that option is not supported on
   such builds.

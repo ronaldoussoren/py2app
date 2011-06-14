@@ -78,3 +78,4 @@ Options for 'py2app' command::
   --debug-modulegraph     Drop to pdb console after the module finding phase
                           is complete
   --debug-skip-macholib   skip macholib phase (app will not be standalone!)
+  --emulate-shell-environment emulate the shell environment in a Terminal window

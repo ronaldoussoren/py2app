@@ -1,5 +1,5 @@
 """
-Testcase for checking argv_emulation
+Testcase for checking emulate_shell_environment
 """
 import sys
 if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2,7)) or \
@@ -28,11 +28,10 @@ else:
 
 
 
-class TestArgvEmulation (unittest.TestCase):
+class TestShellEnvironment (unittest.TestCase):
     py2app_args = []
     setup_file = "setup.py"
-    open_argument = '/usr/bin/ssh'
-    app_dir = os.path.join(DIR_NAME, 'argv_app')
+    app_dir = os.path.join(DIR_NAME, 'shell_app')
 
     # Basic setup code
     #
@@ -72,7 +71,7 @@ class TestArgvEmulation (unittest.TestCase):
     # End of setup code
     # 
 
-    def test_basic_start(self):
+    def test_shell_environment(self):
         self.maxDiff = None
         path = os.path.join( self.app_dir, 'dist/BasicApp.app')
 
@@ -82,7 +81,7 @@ class TestArgvEmulation (unittest.TestCase):
 
         self.assertEqual(exit, 0)
 
-        path = os.path.join( self.app_dir, 'dist/argv.txt')
+        path = os.path.join( self.app_dir, 'dist/env.txt')
         for x in range(5):
             time.sleep(1)
             if os.path.exists(path):
@@ -94,39 +93,15 @@ class TestArgvEmulation (unittest.TestCase):
         data = fp.read().strip()
         fp.close()
 
-        self.assertEqual(data.strip(), repr([os.path.join(self.app_dir, 'dist/BasicApp.app/Contents/Resources/main.py')]))
+        env = eval(data)
+        path = env['PATH']
+        
+        self.assertNotEqual(path, '/usr/bin:/bin')
+        
+        elems = path.split(':')
+        self.assertIn('/usr/bin', elems)
 
-    def test_start_with_args(self):
-        self.maxDiff = None
-        path = os.path.join( self.app_dir, 'dist/BasicApp.app')
-
-        p = subprocess.Popen(["/usr/bin/open",
-            '-a', path, self.open_argument])
-        exit = p.wait()
-
-        self.assertEqual(exit, 0)
-
-        path = os.path.join( self.app_dir, 'dist/argv.txt')
-        for x in range(5):
-            time.sleep(1)
-            if os.path.exists(path):
-                break
-
-        self.assertTrue(os.path.isfile(path))
-
-        fp = open(path)
-        data = fp.read().strip()
-        fp.close()
-
-        self.assertEqual(data.strip(), repr([os.path.join(self.app_dir, 'dist/BasicApp.app/Contents/Resources/main.py'), self.open_argument]))
-
-class TestArgvEmulationWithUrL (TestArgvEmulation):
-    py2app_args = []
-    setup_file = "setup-with-urlscheme.py"
-    open_argument = 'myurl:mycommand'
-    app_dir = os.path.join(DIR_NAME, 'argv_app')
 
 
 if __name__ == "__main__":
     unittest.main()
-

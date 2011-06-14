@@ -217,6 +217,8 @@ class py2app(Command):
          "Use argv emulation [disabled for plugins]. Does not work with python 3.x"),
         ("argv-inject=", None,
          "Inject some commands into the argv"),
+        ("emulate-shell-environment", None,
+         "Emulate the shell environment you get in a Terminal window"),
         ("use-pythonpath", None,
          "Allow PYTHONPATH to effect the interpreter's environment"),
         ('bdist-base=', 'b',
@@ -251,6 +253,7 @@ class py2app(Command):
         "debug-skip-macholib",
         "graph",
         "prefer-ppc",
+        "emulate-shell-environment",
     ]
 
     def initialize_options (self):
@@ -267,6 +270,7 @@ class py2app(Command):
         self.extension = None
         self.alias = 0
         self.argv_emulation = 0
+        self.emulate_shell_environment = 0
         self.argv_inject = None
         self.no_chdir = 0
         self.site_packages = False
@@ -542,6 +546,7 @@ class py2app(Command):
                 site_packages=bool(self.site_packages),
                 alias=bool(self.alias),
                 argv_emulation=bool(self.argv_emulation),
+                emulate_shell_environment=bool(self.emulate_shell_environment),
                 no_chdir=bool(self.no_chdir),
                 optimize=self.optimize,
                 prefer_ppc=self.prefer_ppc,
@@ -1101,6 +1106,9 @@ class py2app(Command):
 
         #if self.style == 'app':
         #    prescripts.append('setup_pkgresource')
+
+        if self.emulate_shell_environment:
+            prescripts.append('emulate_shell_environment')
 
         if self.argv_emulation and self.style == 'app':
             prescripts.append('argv_emulation')
