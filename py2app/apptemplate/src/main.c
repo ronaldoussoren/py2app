@@ -26,6 +26,8 @@ typedef void (*Py_FinalizePtr)(void);
 typedef PyObject *(*PySys_GetObjectPtr)(const char *);
 typedef int *(*PySys_SetArgvPtr)(int argc, char **argv);
 typedef PyObject *(*PyObject_GetAttrStringPtr)(PyObject *, const char *);
+typedef wchar_t* (*_Py_DecodeUTF8_surrogateescapePtr)(const char *s, ssize_t size);
+
 
 typedef CFTypeRef id;
 typedef const char * SEL;
@@ -905,6 +907,7 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
 #if 0
     OPT_LOOKUP(Py_SetPath);
 #endif
+    OPT_LOOKUP(_Py_DecodeUTF8_surrogateescape);
     LOOKUP(PySys_SetObject);
 
 
@@ -921,7 +924,7 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
      * therefore explicitly set the locale. 
      *
      * Also set the LC_CTYPE environment variable because Py_Initialize
-     * reset the locale information using the environment :-(
+     * resets the locale information using the environment :-(
      */
     curlocale = setlocale(LC_ALL, NULL);
     if (curlocale != NULL) {
@@ -940,48 +943,9 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     setenv("LC_CTYPE", "en_US.UTF-8", 1);
 
     if (isPy3K) {
-#if 0
-	/*
-	 *  Py_SetPath is disabled for now, py2app works without
-	 *  it and the code below requires changes to work properly
-	 *  in all cases (crashes with alias and semi-standalone,
-	 *  and a hardcoded version string in the path string).
-	 */
-    	if (py2app_Py_SetPath != NULL) {
-		size_t len = (strlen(resource_path) * 3) + 256;
-		char* search_path = malloc(len);
-		wchar_t* w_search_path;
-
-		if (search_path == NULL) {
-			report_error("cannot allocate sys.path");
-			return -1;
-		}
-		/* FIXME: should use actual python version */
-		snprintf(search_path, len,
-			"%s/lib/python3.2:%s/lib/python32.zip:%s/lib/python3.2/lib-dynload",
-			resource_path, resource_path, resource_path);
-
-		w_search_path = (wchar_t*)malloc(len * sizeof(wchar_t));
-		if (search_path == NULL) {
-			report_error("cannot allocate wide sys.path");
-			return -1;
-		}
-
-		mbstowcs(w_search_path, search_path, len);
-		free(search_path); search_path = NULL;
-
-		py2app_Py_SetPath(w_search_path);
-		free(w_search_path);
-
-		/* sys.prefix and sys.exec_prefix aren't set yet */
-		
-	}
-#endif
-
     	wchar_t w_pythonInterpreter[PATH_MAX+1];
     	mbstowcs(w_pythonInterpreter, c_pythonInterpreter, PATH_MAX+1);
     	py2app_Py_SetProgramName((char*)w_pythonInterpreter);
-
 
 
     } else {
@@ -989,27 +953,6 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     }
 
     py2app_Py_Initialize();
-
-#if 0
-    if (isPy3K && py2app_Py_SetPath) {
-	    PyObject* prefix = py2app_Py_BuildValue(
-		"s", resource_path);
-	    if (prefix == NULL) {
-        	rval = report_script_error(ERR_PYTHONEXCEPTION);
-		return rval;
-	    }
-
-	    if (py2app_PySys_SetObject("prefix", prefix) == -1) {
-        	rval = report_script_error(ERR_PYTHONEXCEPTION);
-		return rval;
-	    }
-	    if (py2app_PySys_SetObject("exec_prefix", prefix) == -1) {
-        	rval = report_script_error(ERR_PYTHONEXCEPTION);
-		return rval;
-	    }
-     }
-#endif
-
 
     /*
      * Reset the environment and locale information
@@ -1029,10 +972,23 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
         sizeof(c_mainScript), kCFStringEncodingUTF8);
     py2app_CFRelease(mainScript);
 
-    argv_new = alloca((argc + 1) * sizeof(char *));
-    argv_new[argc] = NULL;
-    argv_new[0] = c_mainScript;
-    memcpy(&argv_new[1], &argv[1], (argc - 1) * sizeof(char *));
+    if (isPy3K) {
+       int i;
+
+       argv_new = alloca((argc+1) * sizeof(wchar_t));
+       argv_new[argc] = NULL;
+       argv_new[0] = (char*)py2app__Py_DecodeUTF8_surrogateescape(c_mainScript, strlen(c_mainScript));
+
+       for (i = 1; i < argc; i++) {
+	  argv_new[1] = (char*)py2app__Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]));
+       }
+
+    } else {
+       argv_new = alloca((argc + 1) * sizeof(char *));
+       argv_new[argc] = NULL;
+       argv_new[0] = c_mainScript;
+       memcpy(&argv_new[1], &argv[1], (argc - 1) * sizeof(char *));
+    }
     py2app_PySys_SetArgv(argc, argv_new);
 
 
