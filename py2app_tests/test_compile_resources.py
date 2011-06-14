@@ -11,6 +11,7 @@ import time
 import os
 import signal
 import plistlib
+import py2app
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -35,13 +36,21 @@ class TestBasicApp (unittest.TestCase):
     # a base-class.
     @classmethod
     def setUpClass(cls):
+        env=os.environ.copy()
+        pp = os.path.dirname(os.path.dirname(py2app.__file__))
+        if 'PYTHONPATH' in env:
+            env['PYTHONPATH'] = pp + ':' + env['PYTHONPATH']
+        else:
+            env['PYTHONPATH'] = pp
+
         p = subprocess.Popen([
                 sys.executable,
                     'setup.py', 'py2app'] + cls.py2app_args,
             cwd = cls.app_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            close_fds=True)
+            close_fds=True,
+            env=env)
         lines = p.communicate()[0]
         if p.wait() != 0:
             print (lines)

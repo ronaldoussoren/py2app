@@ -2,6 +2,7 @@ import unittest
 import subprocess
 import os, shutil, sys
 from py2app import script_py2applet
+import py2app
 
 
 class TestPy2Applet (unittest.TestCase):
@@ -13,6 +14,13 @@ class TestPy2Applet (unittest.TestCase):
         shutil.rmtree(self.testdir)
 
     def run_py2applet(self, *args):
+        env=os.environ.copy()
+        pp = os.path.dirname(os.path.dirname(py2app.__file__))
+        if 'PYTHONPATH' in env:
+            env['PYTHONPATH'] = pp + ':' + env['PYTHONPATH']
+        else:
+            env['PYTHONPATH'] = pp
+
         scriptfn = script_py2applet.__file__
         if scriptfn.endswith('.pyc'):
             scriptfn = scriptfn[:-1]
@@ -22,7 +30,8 @@ class TestPy2Applet (unittest.TestCase):
             cwd = self.testdir,
             stdout = subprocess.PIPE,
             stderr = subprocess.STDOUT,
-            stdin = subprocess.PIPE)
+            stdin = subprocess.PIPE,
+            env=env)
         p.stdin.write('y\n'.encode('ascii'))
         data = p.communicate()[0]
 

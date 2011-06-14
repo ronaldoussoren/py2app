@@ -331,7 +331,7 @@ byte_compile(files, optimize=%r, force=%r,
         import py2app
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
         if 'PYTHONPATH' in os.environ:
-            pp = '%:%s'%(pp, PYTHONPATH)
+            pp = '%s:%s'%(pp, os.environ['PYTHONPATH'])
 
         cmd = ['/usr/bin/env', 'PYTHONPATH=%s'%(pp,), sys.executable, script_name]
         if optimize == 1:
