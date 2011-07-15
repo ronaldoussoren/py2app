@@ -54,6 +54,9 @@ class TestBasicPlugin (unittest.TestCase):
             else:
                 env['PYTHONPATH'] = pp
 
+            if 'LANG' not in env:
+                env['LANG'] = 'en_US.UTF-8'
+
             
             p = subprocess.Popen(
                 cmd,
