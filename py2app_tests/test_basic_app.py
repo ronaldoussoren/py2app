@@ -59,6 +59,11 @@ class TestBasicApp (unittest.TestCase):
             env['PYTHONPATH'] = pp + ':' + env['PYTHONPATH']
         else:
             env['PYTHONPATH'] = pp
+	
+        if 'LANG' not in env:
+            # Ensure that testing though SSH works
+            env['LANG'] = 'en_US.UTF-8'
+
         p = subprocess.Popen([
                 sys.executable ] + cls.python_args + [
                     'setup.py', 'py2app'] + cls.py2app_args,
@@ -189,6 +194,7 @@ class TestBasicAppUnicodePath (TestBasicApp):
         app_dir = os.path.join(DIR_NAME, 'basic_app ' + unichr(2744).encode('utf-8'))
     else:
         app_dir = os.path.join(DIR_NAME, 'basic_app ' + chr(2744))
+
 
     @classmethod
     def setUpClass(cls):
