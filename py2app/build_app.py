@@ -831,7 +831,15 @@ class py2app(Command):
                     if rest_path.startswith('.'):
                         rest_path = rest_path[1:]
 
-                    self.copy_file(os.path.join(prefix, rest_path), execdst)
+                    if PYTHONFRAMEWORK:
+                        # When we're using a python framework bin/python refers to a stub executable
+                        # that we don't want use, we need the executable in Resources/Python.app
+                        dpath = os.path.join(prefix, 'Resources', 'Python.app', 'Contents', 'MacOS')
+                        self.copy_file(os.path.join(dpath, PYTHONFRAMEWORK), execdst)
+
+
+                    else:
+                        self.copy_file(os.path.join(prefix, rest_path), execdst)
 
                 else:
                     self.copy_file(sys.executable, execdst)
