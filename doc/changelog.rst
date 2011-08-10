@@ -32,6 +32,8 @@ py2app 0.6.4 is a bugfix release
   to ``sys.path`` by setuptools and the "-O" option was used (for example
   ``python setup.py py2app -O2``)
   
+- Issue #26: py2app copied the wrong executable into the application bundle
+  when using virtualenv with a framework build of Python.
 
 py2app 0.6.3
 ------------
