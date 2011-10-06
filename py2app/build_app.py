@@ -31,7 +31,7 @@ from distutils.errors import *
 from altgraph.compat import *
 
 from modulegraph.find_modules import find_modules, parse_mf_results
-from modulegraph.modulegraph import SourceModule, Package
+from modulegraph.modulegraph import SourceModule, Package, Script
 from modulegraph import zipio
 
 import macholib.dyld
@@ -683,7 +683,11 @@ class py2app(Command):
                 item.filename = fn
 
         py_files, extensions = parse_mf_results(mf)
-        py_files = list(py_files)
+
+        # Remove all top-level scripts from the list of python files,
+        # those get treated differently.
+        py_files = [ item for item in py_files if not isinstance(item, Script) ]
+
         extensions = list(extensions)
         return py_files, extensions
 

@@ -6,6 +6,11 @@ py2app 0.6.4
 
 py2app 0.6.4 is a bugfix release
 
+- Issue #30: py2app bundles failed to launch properly when the scriptfile
+  has the same name as a python package used by the application.
+
+  At the moment the issue has not yet been solved for alias builds.
+
 - Issue #15: py2app now has an option to emulate the shell environment you
   get by opening a window in the Terminal.
 

@@ -5,6 +5,13 @@ def _run(*scripts):
     base = os.environ['RESOURCEPATH']
     site.addsitedir(base)
     site.addsitedir(os.path.join(base, 'Python', 'site-packages'))
+
+    # FIXME: Temporarily patch sys.path
+    # to work around issue #30
+    dn = os.path.dirname(__file__)
+    while dn in sys.path:
+        sys.path.remove(dn)
+
     if not scripts:
         import __main__
     for script in scripts:

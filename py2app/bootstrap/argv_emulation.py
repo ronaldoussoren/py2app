@@ -13,9 +13,7 @@ don't work in 64-bit mode and are also not available with python 3.x.
 """
 
 import sys
-
 import os
-sys.stderr = open('/tmp/stderr.%s.txt'%(os.getpid(),), 'w')
 
 if sys.version_info[0] == 3:
     def B(value):
@@ -38,7 +36,7 @@ def _ctypes_setup():
     cf = ctypes.CDLL('/System/Library/CoreFoundation.framework/CoreFoundation')
 
     timer_func = ctypes.CFUNCTYPE(
-            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_long)
+            None, ctypes.c_void_p, ctypes.c_long)
 
     cf.CFAbsoluteTimeGetCurrent.restype = ctypes.c_double
     cf.CFRunLoopTimerCreate.restype = ctypes.c_void_p
