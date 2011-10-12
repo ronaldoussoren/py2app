@@ -450,8 +450,8 @@ static void py2app_setPythonPath(void) {
     CFDictionaryRef options;
 
     paths = py2app_CFArrayCreateMutable(NULL, 0, py2app_kCFTypeArrayCallBacks);
-
     resDir = py2app_CFBundleCopyResourcesDirectoryURL(py2app_CFBundleGetMainBundle());
+
     resPath = pathFromURL(resDir);
     py2app_CFArrayAppendValue(paths, resPath);
     py2app_CFRelease(resPath);
@@ -504,6 +504,10 @@ static void py2app_setPythonPath(void) {
         resPath = py2app_CFStringCreateByCombiningStrings(NULL, paths, py2app_CFSTR(":"));
         setcfenv("PYTHONPATH", resPath);
         py2app_CFRelease(resPath);
+    } else {
+	 if (getenv("PYTHONPATH") != NULL) {
+	     unsetenv("PYTHONPATH");
+	 }
     }
     py2app_CFRelease(paths);
 }
@@ -990,7 +994,6 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
        memcpy(&argv_new[1], &argv[1], (argc - 1) * sizeof(char *));
     }
     py2app_PySys_SetArgv(argc, argv_new);
-
 
     mainScriptFile = fopen(c_mainScript, "r");
     rval = py2app_PyRun_SimpleFile(mainScriptFile, c_mainScript);

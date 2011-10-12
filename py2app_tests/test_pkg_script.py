@@ -117,6 +117,13 @@ class TestBasicApp (unittest.TestCase):
     def test_simple_imports(self):
         p = self.start_app()
 
+        p.stdin.write(("print(%r in sys.path)\n"%(
+            os.path.join(self.app_dir, 'dist/quot.app/Contents/Resources'),)).encode('latin1'))
+        p.stdin.flush()
+        ln = p.stdout.readline()
+        self.assertEqual(ln.strip(), B("False"))
+        
+
         # Basic module that is always present:
         p.stdin.write('import_module("os")\n'.encode('latin1'))
         p.stdin.flush()
@@ -128,6 +135,13 @@ class TestBasicApp (unittest.TestCase):
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), B("quot"))
+
+        # - verify that the right one gets loaded
+        if '--alias' not in self.py2app_args:
+            p.stdin.write('import quot;print(quot.__file__)\n'.encode('latin1'))
+            p.stdin.flush()
+            ln = p.stdout.readline()
+            self.assertTrue(B("Contents/Resources/lib") in ln.strip())
 
         p.stdin.write('import_module("quot.queue")\n'.encode('latin1'))
         p.stdin.flush()

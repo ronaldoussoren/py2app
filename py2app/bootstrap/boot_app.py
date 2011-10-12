@@ -3,14 +3,6 @@ def _run(*scripts):
     import os, sys, site
     sys.frozen = 'macosx_app'
     base = os.environ['RESOURCEPATH']
-    site.addsitedir(base)
-    site.addsitedir(os.path.join(base, 'Python', 'site-packages'))
-
-    # FIXME: Temporarily patch sys.path
-    # to work around issue #30
-    dn = os.path.dirname(__file__)
-    while dn in sys.path:
-        sys.path.remove(dn)
 
     if not scripts:
         import __main__

@@ -6,10 +6,16 @@ py2app 0.6.4
 
 py2app 0.6.4 is a bugfix release
 
+- The 'Resources' folder is no longer on the python search path,
+  it contains the scripts while Python modules and packages are located
+  in the site-packages directory. This change is related to issue #30.
+
+- The folder 'Resources/Python/site-packages' is no longer on the python
+  search path. This folder is not used by py2app itself, but might by
+  used by custom build scripts that wrap around py2app.
+
 - Issue #30: py2app bundles failed to launch properly when the scriptfile
   has the same name as a python package used by the application.
-
-  At the moment the issue has not yet been solved for alias builds.
 
 - Issue #15: py2app now has an option to emulate the shell environment you
   get by opening a window in the Terminal.

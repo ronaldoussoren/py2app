@@ -1102,6 +1102,7 @@ class py2app(Command):
 
     def initialize_prescripts(self):
         prescripts = []
+        prescripts.append('reset_sys_path')
         if 0 and sys.version_info[:2] >= (3, 2) and not self.alias:
             # Python 3.2 or later requires a more complicated
             # bootstrap
