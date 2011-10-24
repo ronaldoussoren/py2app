@@ -6,6 +6,13 @@ py2app 0.6.4
 
 py2app 0.6.4 is a bugfix release
 
+- When using the system python we now explicitly add Apple's additional packages
+  (like PyObjC and Twisted) to ``sys.path``. 
+  
+  This fixes and issue reported by Sean Robinson: py2app used to create a non-working
+  bundle when you used these packages because the packages didn't get included
+  (as intented), but were not available on ``sys.path`` either.
+
 - Fixed the recipe for sip, which in turn ensures that PyQt4 applications
   work.
 

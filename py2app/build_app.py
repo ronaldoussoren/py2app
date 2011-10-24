@@ -1111,6 +1111,9 @@ class py2app(Command):
         if self.site_packages or self.alias:
             prescripts.append('site_packages')
 
+        if is_system():
+            prescripts.append('system_path_extras')
+
         #if self.style == 'app':
         #    prescripts.append('setup_pkgresource')
 
