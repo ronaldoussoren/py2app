@@ -248,8 +248,8 @@ setup(
     classifiers=CLASSIFIERS,
     install_requires=[
         "altgraph>=0.9",
-        "modulegraph>=0.9",
-        "macholib>=1.4",
+        "modulegraph>=0.9.1",
+        "macholib>=1.4.2",
     ],
     tests_require=tests_require,
     cmdclass=dict(
