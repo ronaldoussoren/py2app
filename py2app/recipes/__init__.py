@@ -3,6 +3,7 @@ import pygame
 import pydoc
 import docutils
 import pyopengl
+import sip
 
 import numpy
 import scipy
