@@ -6,6 +6,13 @@ py2app 0.6.4
 
 py2app 0.6.4 is a bugfix release
 
+- Fixed the recipe for sip, which in turn ensures that PyQt4 applications
+  work.
+
+  As before the SIP recipe is rather crude, it will include *all* SIP-based
+  packages into your application bundle when it detects a module that uses
+  SIP. 
+
 - The 'Resources' folder is no longer on the python search path,
   it contains the scripts while Python modules and packages are located
   in the site-packages directory. This change is related to issue #30.

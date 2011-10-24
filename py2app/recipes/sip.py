@@ -4,6 +4,10 @@ for other Qt-based libraries.
 
 This will include all C modules that might be used when you import a package
 using sip because we have no way to fine-tune this.
+
+The problem with SIP is that all inter-module depedencies (for example from
+PyQt4.Qt to PyQt4.QtCore) are handled in C code and therefore cannot be 
+detected by the python code in py2app).
 """
 
 class Sip(object):
@@ -41,11 +45,18 @@ class Sip(object):
             os.environ['DYLD_LIBRARY_PATH'] = ':'.join(dyld_library_path)
 
         sipdir = cfg.default_sip_dir
-        self.packages = set([
-            fn for fn in os.listdir(sipdir)
-            if os.path.isdir(os.path.join(sipdir, fn))
-        ])
+        self.packages = set()
 
+        for fn in os.listdir(sipdir):
+            fullpath = os.path.join(sipdir, fn)
+            if os.path.isdir(fullpath):
+                self.packages.add(fn)
+                if fn == 'PyQt4':
+                    # PyQt4 has a nested structure, also import
+                    # subpackage to ensure everything get seen.
+                    for sub in os.listdir(fullpath):
+                        self.packages.add('%s.%s'%(fn, sub))
+                
         self.warn = cfg.qt_edition == 'free'
         return self.packages
 
@@ -54,6 +65,7 @@ class Sip(object):
             packages = self.config()
         except ImportError:
             return dict()
+
         for pkg in packages:
             m = mf.findNode(pkg)
             if m is not None and m.filename is not None:
