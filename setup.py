@@ -249,7 +249,7 @@ setup(
     install_requires=[
         "altgraph>=0.9",
         "modulegraph>=0.9.1",
-        "macholib>=1.4.2",
+        "macholib>=1.4.3",
     ],
     tests_require=tests_require,
     cmdclass=dict(

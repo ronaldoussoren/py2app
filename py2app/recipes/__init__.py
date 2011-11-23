@@ -10,3 +10,4 @@ import scipy
 import matplotlib
 
 import virtualenv
+import pyside
