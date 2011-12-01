@@ -227,8 +227,24 @@ class TestBasicSemiStandaloneAppUnicodePath (TestBasicAppUnicodePath):
 class TestOptimized1 (TestBasicApp):
     py2app_args = [ '-O1' ]
 
+    def testIsOptimized(self):
+        p = self.start_app()
+
+        p.stdin.write('print(__debug__)\n'.encode('latin1'))
+        p.stdin.flush()
+        ln = p.stdout.readline()
+        self.assertEqual(ln.strip(), B("False"))
+
 class TestOptimized2 (TestBasicApp):
     py2app_args = [ '-O2' ]
+
+    def testIsOptimized(self):
+        p = self.start_app()
+
+        p.stdin.write('print(__debug__)\n'.encode('latin1'))
+        p.stdin.flush()
+        ln = p.stdout.readline()
+        self.assertEqual(ln.strip(), B("False"))
 
 if __name__ == "__main__":
     unittest.main()

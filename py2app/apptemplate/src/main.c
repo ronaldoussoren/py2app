@@ -218,6 +218,7 @@ static int bind_CoreFoundation(void) {
     LOOKUP(CFStringCreateByCombiningStrings);
     LOOKUP(CFDictionaryGetValue);
     LOOKUP(CFBooleanGetValue);
+    LOOKUP(CFNumberGetValue);
     LOOKUP(CFStringCreateArrayBySeparatingStrings);
     LOOKUP(CFArrayAppendArray);
     LOOKUP(CFStringCreateByCombiningStrings);
@@ -310,8 +311,6 @@ static int report_error(const char *error) {
 			    py2app_sel_getUid("alloc")), 
 		    py2app_sel_getUid("init"));
     py2app_NSLog(py2app_CFSTR("%@"), py2app_CFSTR(error));
-
-    printf("%p\n", py2app_NSApplicationLoad);
 
     if (!py2app_NSApplicationLoad()) {
         py2app_NSLog(py2app_CFSTR("NSApplicationLoad() failed"));
@@ -502,7 +501,7 @@ static void py2app_setPythonPath(void) {
         }
 
 	optimize = py2app_CFDictionaryGetValue(
-		options, py2app_CFSTR("optimze"));
+		options, py2app_CFSTR("optimize"));
 	if (optimize) {
 		int v = 0;
 		char buf[32];
@@ -913,7 +912,7 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     if (getenv("PYOBJC_BUNDLE_ADDRESS") != NULL) {
         unsetenv("PYOBJC_BUNDLE_ADDRESS");
     }
-    sprintf(buf, "PYOBJC_BUNDLE_ADDRESS%ld", (long)getpid());
+    snprintf(buf, sizeof(buf)-1, "PYOBJC_BUNDLE_ADDRESS%ld", (long)getpid());
     if (getenv(buf) != NULL) {
         unsetenv(buf);
     }

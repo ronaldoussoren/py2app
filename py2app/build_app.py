@@ -264,6 +264,8 @@ class py2app(Command):
         self.graph = False
         self.no_zip = 0
         self.optimize = 0
+        if hasattr(sys, 'flags'):
+            self.optimize = sys.flags.optimize
         self.strip = True
         self.no_strip = False
         self.iconfile = None

@@ -10,6 +10,9 @@ py2app 0.6.4 is a bugfix release
 
   This is partially fixed in macholib (release 1.4.3)
 
+- The '-O' flag of py2app now defaults to the python optimization level
+  when using python 2.6 or later.
+
 - Issue #31: honor optimze flag at runtime.
 
   Until now an application bundle created by py2app would also run without
