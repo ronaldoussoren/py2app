@@ -9,7 +9,7 @@ from py2app.util import makedirs, mergecopy, mergetree, skipscm, make_exec
 
 def create_pluginbundle(destdir, name, extension='.plugin', module=py2app.bundletemplate,
         platform='MacOS', copy=mergecopy, mergetree=mergetree,
-        condition=skipscm, plist={}):
+        condition=skipscm, plist={}, arch=None):
     kw = module.plist_template.infoPlistDict(
         plist.get('CFBundleExecutable', name), plist)
     plugin = os.path.join(destdir, kw['CFBundleName'] + extension)
@@ -27,7 +27,7 @@ def create_pluginbundle(destdir, name, extension='.plugin', module=py2app.bundle
     for d in dirs:
         makedirs(d)
     plist.write(plistPath)
-    srcmain = module.setup.main()
+    srcmain = module.setup.main(arch=arch)
     if sys.version_info[0] == 2 and isinstance(kw['CFBundleExecutable'], unicode):
         destmain = os.path.join(platdir, kw['CFBundleExecutable'].encode('utf-8'))
     else:

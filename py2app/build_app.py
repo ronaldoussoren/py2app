@@ -235,6 +235,8 @@ class py2app(Command):
          'Drop to pdb console after the module finding phase is complete'),
         ("debug-skip-macholib", None,
          "skip macholib phase (app will not be standalone!)"),
+        ("arch=", None, "set of architectures to use (fat, fat3, universal, intel, i386, ppc, x86_64; default is the set for the current python binary)"),
+
         ]
 
     boolean_options = [
@@ -266,6 +268,7 @@ class py2app(Command):
         self.optimize = 0
         if hasattr(sys, 'flags'):
             self.optimize = sys.flags.optimize
+        self.arch = None
         self.strip = True
         self.no_strip = False
         self.iconfile = None
@@ -1191,6 +1194,7 @@ class py2app(Command):
             appname,
             plist=self.plist,
             extension=self.extension,
+            arch=self.arch,
         )
         appdir = fsencoding(appdir)
         resdir = os.path.join(appdir, 'Contents', 'Resources')
@@ -1213,6 +1217,7 @@ class py2app(Command):
             appname,
             plist=self.plist,
             extension=self.extension,
+            arch=self.arch,
         )
         appdir = fsencoding(appdir)
         resdir = os.path.join(appdir, 'Contents', 'Resources')

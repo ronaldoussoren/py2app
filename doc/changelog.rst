@@ -4,7 +4,27 @@ Release history
 py2app 0.6.4
 ------------
 
-py2app 0.6.4 is a bugfix release
+py2app 0.6.4 is a bugfix and minor feature release
+
+- Added option '--arch=VALUE' which can be used to select the set of
+  architectures for the main executable. This defaults to the set of
+  architectures supported by the python interpreter and can be used to
+  drop support for some architectures (for example when you're using a 
+  python binary that supports both 32-bit and 64-bit code and use a
+  GUI library that does not yet work in 64-bit mode).
+
+  Valid values for the argument are archectures used in the list below
+  and the following groups of architectures:
+
+  * fat:        i386, ppc
+
+  * fat3:       i386, x86_64, ppc
+
+  * univeral:   i386, x86_64, ppc, ppc64
+
+  * intel:      i386, x86_64
+
+
 
 - Issue #32: fix crash when application uses PySide
 

@@ -56,7 +56,7 @@ gPreBuildVariants = [
 ]
 
 
-def main(all=False):
+def main(all=False, arch=None):
     basepath = os.path.dirname(__file__)
     builddir = os.path.join(basepath, 'prebuilt')
     if not os.path.exists(builddir):
@@ -80,10 +80,11 @@ def main(all=False):
             break
         BASE_CFLAGS=x
 
-    arch = distutils.util.get_platform().split('-')[-1]
-    if sys.prefix.startswith('/System') and \
-            sys.version_info[:2] == (2,5):
-        arch = "fat"
+    if arch is None:
+        arch = distutils.util.get_platform().split('-')[-1]
+        if sys.prefix.startswith('/System') and \
+                sys.version_info[:2] == (2,5):
+                    arch = "fat"
 
     name = 'main-' + arch
 
