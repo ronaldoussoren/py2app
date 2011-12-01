@@ -6,6 +6,23 @@ py2app 0.6.4
 
 py2app 0.6.4 is a bugfix release
 
+- Issue #32: fix crash when application uses PySide
+
+  This is partially fixed in macholib (release 1.4.3)
+
+- Issue #31: honor optimze flag at runtime.
+
+  Until now an application bundle created by py2app would also run without
+  the "-O" flag, even when the user specified it should. This is now fixed.
+
+- Issue #33: py2app's application bundle launcher now clears the environment
+  variable ``PYOBJC_BUNDLE_ADDRESS``, avoids a crash when using PyObjC in an
+  application launched from a py2app based plugin bundle.
+
+- py2app's bundle launcher set the environment variable ``PYOBJC_BUNDLE_ADDRESS``,
+  this variable is now deprecated. Use ``PYOBJC_BUNDLE_ADDRESS<PID>`` instead
+  (replace ``<PID>`` by the process ID of the current process).
+
 - When using the system python we now explicitly add Apple's additional packages
   (like PyObjC and Twisted) to ``sys.path``. 
   

@@ -100,6 +100,7 @@ USES(CFStringGetCString);
 USES(CFStringCreateByCombiningStrings);
 USES(CFDictionaryGetValue);
 USES(CFBooleanGetValue);
+USES(CFNumberGetValue);
 USES(CFStringCreateArrayBySeparatingStrings);
 USES(CFArrayAppendArray);
 USES(CFStringCreateByCombiningStrings);
@@ -481,6 +482,7 @@ static void py2app_setPythonPath(void) {
     options = py2app_getKey("PyOptions");
     if (options) {
         CFBooleanRef use_pythonpath;
+	CFNumberRef optimize;
         use_pythonpath = py2app_CFDictionaryGetValue(
             options, py2app_CFSTR("use_pythonpath"));
         if (use_pythonpath && py2app_CFBooleanGetValue(use_pythonpath)) {
@@ -498,6 +500,16 @@ static void py2app_setPythonPath(void) {
                 }
             }
         }
+
+	optimize = py2app_CFDictionaryGetValue(
+		options, py2app_CFSTR("optimze"));
+	if (optimize) {
+		int v = 0;
+		char buf[32];
+		py2app_CFNumberGetValue(optimize, kCFNumberIntType, &v);
+		snprintf(buf, 31, "%d", v);
+		setenv("PYTHONOPTIMIZE", buf, 1);
+	}
     }
 
     if (py2app_CFArrayGetCount(paths)) {
@@ -509,6 +521,7 @@ static void py2app_setPythonPath(void) {
 	     unsetenv("PYTHONPATH");
 	 }
     }
+
     py2app_CFRelease(paths);
 }
 
@@ -856,6 +869,26 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     char* curlocale = NULL;
 
 
+    if (getenv("PYTHONOPTIMIZE") != NULL) {
+        unsetenv("PYTHONOPTIMIZE");
+    }
+    if (getenv("PYTHONDEBUG") != NULL) {
+        unsetenv("PYTHONDEBUG");
+    }
+    if (getenv("PYTHONDONTWRITEBYTECODE") != NULL) {
+        unsetenv("PYTHONDONTWRITEBYTECODE");
+    }
+    if (getenv("PYTHONIOENCODING") != NULL) {
+        unsetenv("PYTHONIOENCODING");
+    }
+    if (getenv("PYTHONDUMPREFS") != NULL) {
+        unsetenv("PYTHONDUMPREFS");
+    }
+    if (getenv("PYTHONMALLOCSTATS") != NULL) {
+        unsetenv("PYTHONMALLOCSTATS");
+    }
+
+
     if (!py2app_getApplicationName()) return report_error(ERR_NONAME);
     pyLocations = (CFArrayRef)py2app_getKey("PyRuntimeLocations");
     if (!pyLocations) return report_error(ERR_PYRUNTIMELOCATIONS);
@@ -872,6 +905,18 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     }
     py2app_setPythonPath();
     setenv("ARGVZERO", argv[0], 1);
+
+    /* Clear unwanted environment variable that could be set
+     * by a PyObjC bundle in a parent process. Not clearing causes
+     * problems in PyObjC.
+     */
+    if (getenv("PYOBJC_BUNDLE_ADDRESS") != NULL) {
+        unsetenv("PYOBJC_BUNDLE_ADDRESS");
+    }
+    sprintf(buf, "PYOBJC_BUNDLE_ADDRESS%ld", (long)getpid());
+    if (getenv(buf) != NULL) {
+        unsetenv(buf);
+    }
 
     mainScript = getMainScript();
     if (!mainScript) return report_error(ERR_NOPYTHONSCRIPT);

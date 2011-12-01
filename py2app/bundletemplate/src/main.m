@@ -288,6 +288,25 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     char* curlocale;
     NSDictionary *infoDictionary = [bundleBundle() infoDictionary];
 
+    if (getenv("PYTHONOPTIMIZE") != NULL) {
+        unsetenv("PYTHONOPTIMIZE");
+    }
+    if (getenv("PYTHONDEBUG") != NULL) {
+        unsetenv("PYTHONDEBUG");
+    }
+    if (getenv("PYTHONDONTWRITEBYTECODE") != NULL) {
+        unsetenv("PYTHONDONTWRITEBYTECODE");
+    }
+    if (getenv("PYTHONIOENCODING") != NULL) {
+        unsetenv("PYTHONIOENCODING");
+    }
+    if (getenv("PYTHONDUMPREFS") != NULL) {
+        unsetenv("PYTHONDUMPREFS");
+    }
+    if (getenv("PYTHONMALLOCSTATS") != NULL) {
+        unsetenv("PYTHONMALLOCSTATS");
+    }
+
     NSString *pyLocation = nil;
     while (NSIsSymbolNameDefined("_Py_Initialize")) {
         // Python is already in-process
@@ -432,6 +451,8 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     // Set up the environment variables to be transferred
     NSMutableDictionary *newEnviron = [NSMutableDictionary dictionary];
     [newEnviron setObject:[NSString stringWithFormat:@"%p", bundleBundle()] forKey:@"PYOBJC_BUNDLE_ADDRESS"];
+    [newEnviron setObject:[NSString stringWithFormat:@"%p", bundleBundle()] forKey:[NSString
+	 stringWithFormat:@"PYOBJC_BUNDLE_ADDRESS%ld", getpid()]];
     [newEnviron setObject:resourcePath forKey:@"RESOURCEPATH"];
     NSMutableDictionary *oldEnviron = [NSMutableDictionary dictionary];
     
