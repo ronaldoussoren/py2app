@@ -8,8 +8,8 @@ py2app 0.6.4 is a bugfix and minor feature release
 
 - Issue #28: the argv emulator crashes in 64-bit mode on OSX 10.5
 
-  This issue is not fixed, but as a partial workaround the argv emulator
-  is disabled when running in 64-bit on OSX 10.5.
+  Fixing this issue required yet another rewrite of the argv_emulator
+  code.
 
 - Added option '--arch=VALUE' which can be used to select the set of
   architectures for the main executable. This defaults to the set of

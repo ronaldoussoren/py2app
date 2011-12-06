@@ -14,6 +14,7 @@ don't work in 64-bit mode and are also not available with python 3.x.
 
 import sys
 import os
+import time
 
 if sys.version_info[0] == 3:
     def B(value):
@@ -31,32 +32,19 @@ class AEDesc (ctypes.Structure):
         ('descContent', ctypes.c_void_p),
     ]
 
+class EventTypeSpec (ctypes.Structure):
+    _fields_ = [
+        ('eventClass',      ctypes.c_int),
+        ('eventKind',       ctypes.c_uint),
+    ]
+
 def _ctypes_setup():
     carbon = ctypes.CDLL('/System/Library/Carbon.framework/Carbon')
-    cf = ctypes.CDLL('/System/Library/CoreFoundation.framework/CoreFoundation')
 
     timer_func = ctypes.CFUNCTYPE(
             None, ctypes.c_void_p, ctypes.c_long)
 
-    cf.CFAbsoluteTimeGetCurrent.restype = ctypes.c_double
-    cf.CFRunLoopTimerCreate.restype = ctypes.c_void_p
-    cf.CFRunLoopTimerCreate.argtypes = [
-            ctypes.c_void_p,
-            ctypes.c_double,
-            ctypes.c_double,
-            ctypes.c_long,
-            ctypes.c_long,
-            timer_func,
-            ctypes.c_long,
-        ]
-    cf.CFRelease.argtypes = [ctypes.c_void_p]
-    cf.CFRunLoopGetCurrent.restype = ctypes.c_void_p
-    cf.CFRunLoopAddTimer.argtypes = [
-            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
-    cf.CFRunLoopRemoveTimer.argtypes = [
-            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
-
-    ae_callback = ctypes.CFUNCTYPE(ctypes.c_short, ctypes.c_void_p, 
+    ae_callback = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p, 
         ctypes.c_void_p, ctypes.c_void_p)
     carbon.AEInstallEventHandler.argtypes = [ 
             ctypes.c_int, ctypes.c_int, ae_callback,
@@ -64,6 +52,17 @@ def _ctypes_setup():
     carbon.AERemoveEventHandler.argtypes = [ 
             ctypes.c_int, ctypes.c_int, ae_callback,
             ctypes.c_char ]
+
+    carbon.AEProcessEvent.restype = ctypes.c_int
+    carbon.AEProcessEvent.argtypes = [ctypes.c_void_p]
+
+
+    carbon.ReceiveNextEvent.restype = ctypes.c_int
+    carbon.ReceiveNextEvent.argtypes = [ 
+        ctypes.c_long,  ctypes.POINTER(EventTypeSpec),
+        ctypes.c_double, ctypes.c_char,
+        ctypes.POINTER(ctypes.c_void_p)
+    ]
 
     
     carbon.AEGetParamDesc.restype = ctypes.c_int
@@ -94,40 +93,15 @@ def _ctypes_setup():
     carbon.FSRefMakePath.restype = ctypes.c_int
     carbon.FSRefMakePath.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_uint]
 
-    return carbon, cf
+    return carbon
 
 def _run_argvemulator(timeout = 60):
-    if int(os.uname()[2].split('.')[0]) < 10 and sys.maxint > 2**32:
-        # See https://bitbucket.org/ronaldoussoren/py2app/issue/28
-        print >>sys.stderr, "argv emulator doesn't work in 64-bit on OSX < 10.6"
-        return
-    
 
     # Configure ctypes
-    carbon, cf = _ctypes_setup()
+    carbon = _ctypes_setup()
 
-    # Global variables
-    kCFRunLoopCommonModes = ctypes.c_void_p.in_dll(cf, 'kCFRunLoopCommonModes')
-
-    # Create a timer that will exit the temporary runloop when we 
-    # don't find arguments soon enough.
-    timer_func = cf.CFRunLoopTimerCreate.argtypes[5]
-
-    @timer_func
-    def delayedQuit(runloop, info):
-        carbon.QuitApplicationEventLoop()
-
-
-    qtimer = cf.CFRunLoopTimerCreate(
-        0,
-        cf.CFAbsoluteTimeGetCurrent() + timeout,
-        0, 
-        0, 
-        0,
-        delayedQuit,
-        0,
-    )
-    cf.CFRunLoopAddTimer(cf.CFRunLoopGetCurrent(), qtimer, kCFRunLoopCommonModes)
+    # Is the emulator running?
+    running = [True]
 
     # Configure AppleEvent handlers
     ae_callback = carbon.AEInstallEventHandler.argtypes[2]
@@ -142,31 +116,37 @@ def _run_argvemulator(timeout = 60):
     typeChar,           = struct.unpack('>i', B('TEXT'))
     typeFSRef,          = struct.unpack('>i', B('fsrf'))
     FALSE               = B('\0')
+    TRUE               = B('\1')
+
+    kEventClassAppleEvent, = struct.unpack('>i', B('eppc'))
+    kEventAppleEvent = 1
 
 
     @ae_callback
     def open_app_handler(message, reply, refcon):
-        carbon.QuitApplicationEventLoop()
-        return 0
+	print >>sys.stderr, "open_app"
+        running[0] = False
+	return 0
 
     carbon.AEInstallEventHandler(kCoreEventClass, kAEOpenApplication,
             open_app_handler, 0, FALSE)
 
     @ae_callback
     def open_file_handler(message, reply, refcon):
+	print >>sys.stderr, "open_file"
         listdesc = AEDesc()
         sts = carbon.AEGetParamDesc(message, keyDirectObject, typeAEList,
                 ctypes.byref(listdesc))
         if sts != 0:
             print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
-            carbon.QuitApplicationEventLoop()
+            running[0] = False
             return
 
         item_count = ctypes.c_long()
         sts = carbon.AECountItems(ctypes.byref(listdesc), ctypes.byref(item_count))
         if sts != 0:
             print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
-            carbon.QuitApplicationEventLoop()
+            running[0] = False
             return
 
         desc = AEDesc()
@@ -174,7 +154,7 @@ def _run_argvemulator(timeout = 60):
             sts = carbon.AEGetNthDesc(ctypes.byref(listdesc), i+1, typeFSRef, 0, ctypes.byref(desc))
             if sts != 0:
                 print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
-                carbon.QuitApplicationEventLoop()
+                running[0] = False
                 return
 
             sz = carbon.AEGetDescDataSize(ctypes.byref(desc))
@@ -199,27 +179,28 @@ def _run_argvemulator(timeout = 60):
             else:
                 sys.argv.append(buf.value)
 
-        carbon.QuitApplicationEventLoop()
-        return 0
+        running[0] = False
+	return 0
 
     carbon.AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments,
             open_file_handler, 0, FALSE)
 
     @ae_callback
     def open_url_handler(message, reply, refcon):
+	print >>sys.stderr, "open_url"
         listdesc = AEDesc()
         ok = carbon.AEGetParamDesc(message, keyDirectObject, typeAEList,
                 ctypes.byref(listdesc))
         if ok != 0:
             print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
-            carbon.QuitApplicationEventLoop()
+            running[0] = False
             return
 
         item_count = ctypes.c_long()
         sts = carbon.AECountItems(ctypes.byref(listdesc), ctypes.byref(item_count))
         if sts != 0:
             print >>sys.stderr, "argvemulator warning: cannot unpack open url event"
-            carbon.QuitApplicationEventLoop()
+            running[0] = False
             return
 
         desc = AEDesc()
@@ -227,7 +208,7 @@ def _run_argvemulator(timeout = 60):
             sts = carbon.AEGetNthDesc(ctypes.byref(listdesc), i+1, typeChar, 0, ctypes.byref(desc))
             if sts != 0:
                 print >>sys.stderr, "argvemulator warning: cannot unpack open URL event"
-                carbon.QuitApplicationEventLoop()
+                running[0] = False
                 return
 
             sz = carbon.AEGetDescDataSize(ctypes.byref(desc))
@@ -242,25 +223,36 @@ def _run_argvemulator(timeout = 60):
                 else:
                     sys.argv.append(buf.value)
 
-        carbon.QuitApplicationEventLoop()
-        return 0
+        running[0] = False
+	return 0
     
     carbon.AEInstallEventHandler(kAEInternetSuite, kAEISGetURL,
             open_url_handler, 0, FALSE)
 
-
-
     # Remove the funny -psn_xxx_xxx argument
     if len(sys.argv) > 1 and sys.argv[1][:4] == '-psn':
-        del sys.argv[1]
+	del sys.argv[1]
 
-    # Now run the eventloop to collect arguments
-    carbon.RunApplicationEventLoop()
+    start = time.time()
+    now = time.time()
+    eventType = EventTypeSpec()
+    eventType.eventClass = kEventClassAppleEvent
+    eventType.eventKind = kEventAppleEvent
 
-    # Clean up 
-    cf.CFRunLoopRemoveTimer(
-            cf.CFRunLoopGetCurrent(), qtimer, kCFRunLoopCommonModes)
-    cf.CFRelease(qtimer)
+    while running[0] and now - start < timeout:
+        event = ctypes.c_void_p()
+
+        sts = carbon.ReceiveNextEvent(1, ctypes.byref(eventType), 
+                start + timeout - now, TRUE, ctypes.byref(event))
+        if sts != 0:
+            print >>sys.stderr, "argvemulator warning: fetching events failed"
+            break
+
+        sts = carbon.AEProcessEvent(event)
+        if sts != 0:
+            print >>sys.stderr, "argvemulator warning: processing events failed"
+            break
+        
 
     carbon.AERemoveEventHandler(kCoreEventClass, kAEOpenApplication, 
             open_app_handler, FALSE)
