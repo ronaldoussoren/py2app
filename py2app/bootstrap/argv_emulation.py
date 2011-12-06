@@ -124,7 +124,6 @@ def _run_argvemulator(timeout = 60):
 
     @ae_callback
     def open_app_handler(message, reply, refcon):
-	print >>sys.stderr, "open_app"
         running[0] = False
 	return 0
 
@@ -133,7 +132,6 @@ def _run_argvemulator(timeout = 60):
 
     @ae_callback
     def open_file_handler(message, reply, refcon):
-	print >>sys.stderr, "open_file"
         listdesc = AEDesc()
         sts = carbon.AEGetParamDesc(message, keyDirectObject, typeAEList,
                 ctypes.byref(listdesc))
@@ -187,7 +185,6 @@ def _run_argvemulator(timeout = 60):
 
     @ae_callback
     def open_url_handler(message, reply, refcon):
-	print >>sys.stderr, "open_url"
         listdesc = AEDesc()
         ok = carbon.AEGetParamDesc(message, keyDirectObject, typeAEList,
                 ctypes.byref(listdesc))
