@@ -56,8 +56,8 @@ def _ctypes_setup():
     cf.CFRunLoopRemoveTimer.argtypes = [
             ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
 
-    ae_callback = ctypes.CFUNCTYPE(None, ctypes.c_void_p, 
-        ctypes.c_void_p, ctypes.c_long)
+    ae_callback = ctypes.CFUNCTYPE(ctypes.c_short, ctypes.c_void_p, 
+        ctypes.c_void_p, ctypes.c_void_p)
     carbon.AEInstallEventHandler.argtypes = [ 
             ctypes.c_int, ctypes.c_int, ae_callback,
             ctypes.c_void_p, ctypes.c_char ]
@@ -97,6 +97,11 @@ def _ctypes_setup():
     return carbon, cf
 
 def _run_argvemulator(timeout = 60):
+    if int(os.uname()[2].split('.')[0]) < 10 and sys.maxint > 2**32:
+        # See https://bitbucket.org/ronaldoussoren/py2app/issue/28
+        print >>sys.stderr, "argv emulator doesn't work in 64-bit on OSX < 10.6"
+        return
+    
 
     # Configure ctypes
     carbon, cf = _ctypes_setup()
@@ -142,6 +147,7 @@ def _run_argvemulator(timeout = 60):
     @ae_callback
     def open_app_handler(message, reply, refcon):
         carbon.QuitApplicationEventLoop()
+        return 0
 
     carbon.AEInstallEventHandler(kCoreEventClass, kAEOpenApplication,
             open_app_handler, 0, FALSE)
@@ -194,6 +200,7 @@ def _run_argvemulator(timeout = 60):
                 sys.argv.append(buf.value)
 
         carbon.QuitApplicationEventLoop()
+        return 0
 
     carbon.AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments,
             open_file_handler, 0, FALSE)
@@ -236,6 +243,7 @@ def _run_argvemulator(timeout = 60):
                     sys.argv.append(buf.value)
 
         carbon.QuitApplicationEventLoop()
+        return 0
     
     carbon.AEInstallEventHandler(kAEInternetSuite, kAEISGetURL,
             open_url_handler, 0, FALSE)
