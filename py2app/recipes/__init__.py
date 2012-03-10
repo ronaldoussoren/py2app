@@ -11,3 +11,4 @@ import matplotlib
 
 import virtualenv
 import pyside
+import wx

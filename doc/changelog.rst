@@ -4,7 +4,18 @@ Release history
 py2app 0.6.5
 ------------
 
-py2app 0.6.5 is a ?
+py2app 0.6.5 is a bugfix release
+
+- py2app copies data files in the directory for a package into
+  the application bundle. It also did this for directories that
+  represent subpackages, which made it impossible to exclude
+  subpackages.
+
+- added recipe for wxPython because some subpackages of wxPython
+  use ``__path__`` trickery that confuses modulegraph.
+
+- recipes can now return a list of additional entries for the
+  'includes' list.
 
 
 py2app 0.6.4

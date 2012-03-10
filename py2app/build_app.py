@@ -30,7 +30,7 @@ from distutils.errors import *
 
 from altgraph.compat import *
 
-from modulegraph.find_modules import find_modules, parse_mf_results
+from modulegraph.find_modules import find_modules, parse_mf_results, find_needed_modules
 from modulegraph.modulegraph import SourceModule, Package, Script
 from modulegraph import zipio
 
@@ -620,6 +620,9 @@ class py2app(Command):
                 newbootstraps = map(self.get_bootstrap,
                     rval.get('prescripts', ()))
 
+                if rval.get('includes'):
+                    find_needed_modules(mf, includes=rval['includes'])
+
                 for fn in newbootstraps:
                     if isinstance(fn, basestring):
                         mf.run_script(fn)
@@ -912,6 +915,15 @@ class py2app(Command):
                     else:
                         copy_tree(pth, os.path.join(target_dir, fname))
                     continue
+
+                elif zipio.isdir(pth) and (
+                        zipio.isfile(os.path.join(pth, '__init__.py'))
+                     or zipio.isfile(os.path.join(pth, '__init__.pyc'))
+                     or zipio.isfile(os.path.join(pth, '__init__.pyo'))):
+                    # Subdirectory is a python package, these will get included later on
+                    # when the subpackage itself is included, ignore for now.
+                    pass
+
                 else:
                     copy_file(pth, os.path.join(target_dir, fname))
 
