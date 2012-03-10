@@ -623,6 +623,9 @@ class py2app(Command):
                 if rval.get('includes'):
                     find_needed_modules(mf, includes=rval['includes'])
 
+                if rval.get('resources'):
+                    self.resources.extend(rval['resources'])
+
                 for fn in newbootstraps:
                     if isinstance(fn, basestring):
                         mf.run_script(fn)

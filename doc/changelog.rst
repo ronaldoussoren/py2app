@@ -17,6 +17,11 @@ py2app 0.6.5 is a bugfix release
 - recipes can now return a list of additional entries for the
   'includes' list.
 
+- rewritten the recipe for matplotlib. The recipe no longer includes
+  the entire package, but just the "mpl-data" directory. 
+
+  WARNING: This recipe has had limited testing.
+
 
 py2app 0.6.4
 ------------
