@@ -47,7 +47,7 @@ class TestBasicApp (unittest.TestCase):
             env['PYTHONPATH'] = pp + ':' + env['PYTHONPATH']
         else:
             env['PYTHONPATH'] = pp
-	
+
         if 'LANG' not in env:
             # Ensure that testing though SSH works
             env['LANG'] = 'en_US.UTF-8'

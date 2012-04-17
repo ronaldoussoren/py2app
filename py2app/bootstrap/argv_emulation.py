@@ -125,7 +125,7 @@ def _run_argvemulator(timeout = 60):
     @ae_callback
     def open_app_handler(message, reply, refcon):
         running[0] = False
-	return 0
+        return 0
 
     carbon.AEInstallEventHandler(kCoreEventClass, kAEOpenApplication,
             open_app_handler, 0, FALSE)
@@ -178,7 +178,7 @@ def _run_argvemulator(timeout = 60):
                 sys.argv.append(buf.value)
 
         running[0] = False
-	return 0
+        return 0
 
     carbon.AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments,
             open_file_handler, 0, FALSE)
@@ -221,14 +221,14 @@ def _run_argvemulator(timeout = 60):
                     sys.argv.append(buf.value)
 
         running[0] = False
-	return 0
+        return 0
     
     carbon.AEInstallEventHandler(kAEInternetSuite, kAEISGetURL,
             open_url_handler, 0, FALSE)
 
     # Remove the funny -psn_xxx_xxx argument
     if len(sys.argv) > 1 and sys.argv[1][:4] == '-psn':
-	del sys.argv[1]
+        del sys.argv[1]
 
     start = time.time()
     now = time.time()
