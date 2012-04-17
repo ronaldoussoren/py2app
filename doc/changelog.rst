@@ -22,6 +22,10 @@ py2app 0.6.5 is a bugfix release
 
   WARNING: This recipe has had limited testing.
 
+- fix mixed indentation (tabs and spaces) in argv_emulation.py,
+  which caused installation failures on python 3.x (issue #40)
+  
+
 
 py2app 0.6.4
 ------------
