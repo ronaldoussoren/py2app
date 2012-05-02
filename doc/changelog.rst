@@ -25,7 +25,9 @@ py2app 0.6.5 is a bugfix release
 - fix mixed indentation (tabs and spaces) in argv_emulation.py,
   which caused installation failures on python 3.x (issue #40)
   
-
+- Issue #43: py2app now creates a symlink named "Current" in the
+  'Versions' directory of the embedded Python framework to comply
+  with a requirement for the Mac App-store.
 
 py2app 0.6.4
 ------------

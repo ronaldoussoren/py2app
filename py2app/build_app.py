@@ -1040,6 +1040,12 @@ class py2app(Command):
         self.mkpath(os.path.join(outdir, 'Resources'))
         pydir = 'python%s'%(info['version'])
 
+        # Create a symlink "for Python.frameworks/Versions/Current". This
+        # is required for the Mac App-store.
+        os.symlink(
+                os.path.basename(outdir),
+                os.path.join(os.path.dirname(outdir), "Current"))
+
         # distutils looks for some files relative to sys.executable, which
         # means they have to be in the framework...
         self.mkpath(os.path.join(outdir, 'include'))
