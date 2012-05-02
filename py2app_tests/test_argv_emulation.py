@@ -120,7 +120,34 @@ class TestArgvEmulation (unittest.TestCase):
 
         self.assertEqual(data.strip(), repr([os.path.join(self.app_dir, 'dist/BasicApp.app/Contents/Resources/main.py'), self.open_argument]))
 
-class TestArgvEmulationWithUrL (TestArgvEmulation):
+    def test_start_with_two_args(self):
+        if not self.open_argument.startswith('/'):
+            unittest.skip("Only relevant for base class")
+
+        self.maxDiff = None
+        path = os.path.join( self.app_dir, 'dist/BasicApp.app')
+
+        p = subprocess.Popen(["/usr/bin/open",
+                '-a', path, "--args", "one", "two", "three"])
+        exit = p.wait()
+
+        self.assertEqual(exit, 0)
+
+        path = os.path.join( self.app_dir, 'dist/argv.txt')
+        for x in range(70):     # Argv emulation can take up-to 60 seconds
+            time.sleep(1)
+            if os.path.exists(path):
+                break
+
+        self.assertTrue(os.path.isfile(path))
+
+        fp = open(path, 'r')
+        data = fp.read().strip()
+        fp.close()
+
+        self.assertEqual(data.strip(), repr([os.path.join(self.app_dir, 'dist/BasicApp.app/Contents/Resources/main.py'), "one", "two", "three"]))
+
+class TestArgvEmulationWithURL (TestArgvEmulation):
     py2app_args = []
     setup_file = "setup-with-urlscheme.py"
     open_argument = 'myurl:mycommand'
