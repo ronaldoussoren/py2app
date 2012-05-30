@@ -10,6 +10,8 @@ PyQt4.Qt to PyQt4.QtCore) are handled in C code and therefore cannot be
 detected by the python code in py2app).
 """
 
+import sys
+
 class Sip(object):
     def __init__(self):
         self.packages = None
