@@ -1028,7 +1028,7 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
        argv_new[0] = (char*)py2app__Py_DecodeUTF8_surrogateescape(c_mainScript, strlen(c_mainScript));
 
        for (i = 1; i < argc; i++) {
-	  argv_new[1] = (char*)py2app__Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]));
+	  argv_new[i] = (char*)py2app__Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]));
        }
 
     } else {
