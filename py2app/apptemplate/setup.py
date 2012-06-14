@@ -102,6 +102,7 @@ def main(all=False, arch=None):
                     fp = os.popen('xcode-select -print-path', 'r')
                     root = fp.read().strip()
                     fp.close()
+                root = '/'
 
                 CC=os.path.join(root, 'usr', 'bin', entry['cc'])
                 CFLAGS = BASE_CFLAGS + ' ' + entry['cflags'].replace('@@XCODE_ROOT@@', root)

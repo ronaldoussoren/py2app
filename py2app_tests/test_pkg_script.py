@@ -19,16 +19,6 @@ import zipfile
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
-if sys.version_info[0] == 2:
-    def B(value):
-        return value
-
-else:
-    def B(value):
-        return value.encode('latin1')
-
-
-
 
 class TestBasicApp (unittest.TestCase):
     py2app_args = []
@@ -121,32 +111,32 @@ class TestBasicApp (unittest.TestCase):
             os.path.join(self.app_dir, 'dist/quot.app/Contents/Resources'),)).encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), B("False"))
+        self.assertEqual(ln.strip(), b"False")
         
 
         # Basic module that is always present:
         p.stdin.write('import_module("os")\n'.encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), B("os"))
+        self.assertEqual(ln.strip(), b"os")
 
         # Dependency of the main module:
         p.stdin.write('import_module("quot")\n'.encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), B("quot"))
+        self.assertEqual(ln.strip(), b"quot")
 
         # - verify that the right one gets loaded
         if '--alias' not in self.py2app_args:
             p.stdin.write('import quot;print(quot.__file__)\n'.encode('latin1'))
             p.stdin.flush()
             ln = p.stdout.readline()
-            self.assertTrue(B("Contents/Resources/lib") in ln.strip())
+            self.assertTrue(b"Contents/Resources/lib" in ln.strip())
 
         p.stdin.write('import_module("quot.queue")\n'.encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), B("quot.queue"))
+        self.assertEqual(ln.strip(), b"quot.queue")
 
         p.stdin.close()
         p.stdout.close()

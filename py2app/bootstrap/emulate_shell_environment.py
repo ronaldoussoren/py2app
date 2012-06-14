@@ -6,12 +6,10 @@ def _emulate_shell_environ():
 
     if sys.version_info[0] > 2:
         env = os.environb
-        split_char = '='.encode('ascii')
-        def B(x): return x.encode('utf-8')
     else:
         env = os.environ
-        split_char = '='
-        def B(x): return x
+
+    split_char = b'='
 
     # Start 'login -qf $LOGIN' in a pseudo-tty. The pseudo-tty
     # is required to get the right behavior from the shell, without
@@ -34,8 +32,8 @@ def _emulate_shell_environ():
         # Echo markers around the actual output of env, that makes it
         # easier to find the real data between other data printed
         # by the shell.
-        os.write(master, B('echo "---------";env;echo "-----------"\r\n'))
-        os.write(master, B('exit\r\n'))
+        os.write(master, b'echo "---------";env;echo "-----------"\r\n')
+        os.write(master, b'exit\r\n')
         time.sleep(1)
 
         data = []
@@ -43,17 +41,17 @@ def _emulate_shell_environ():
         while b:
             data.append(b)
             b = os.read(master, 2048)
-        data = B('').join(data)
+        data = b''.join(data)
         os.waitpid(pid, 0)
 
     in_data = False
     for ln in data.splitlines():
         if not in_data:
-            if ln.strip().startswith(B('--------')):
+            if ln.strip().startswith(b'--------'):
                 in_data = True
             continue
         
-        if ln.startswith(B('--------')):
+        if ln.startswith(b'--------'):
             break
 
         try:

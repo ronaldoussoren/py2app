@@ -17,16 +17,6 @@ import py2app
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
-if sys.version_info[0] == 2:
-    def B(value):
-        return value
-
-else:
-    def B(value):
-        return value.encode('latin1')
-
-
-
 
 class TestArgvEmulation (unittest.TestCase):
     py2app_args = []
@@ -74,6 +64,11 @@ class TestArgvEmulation (unittest.TestCase):
 
     def test_basic_start(self):
         self.maxDiff = None
+
+        path = os.path.join( self.app_dir, 'dist/argv.txt')
+        if os.path.exists(path):
+            os.unlink(path)
+
         path = os.path.join( self.app_dir, 'dist/BasicApp.app')
 
         p = subprocess.Popen(["/usr/bin/open",
@@ -98,6 +93,11 @@ class TestArgvEmulation (unittest.TestCase):
 
     def test_start_with_args(self):
         self.maxDiff = None
+
+        path = os.path.join( self.app_dir, 'dist/argv.txt')
+        if os.path.exists(path):
+            os.unlink(path)
+
         path = os.path.join( self.app_dir, 'dist/BasicApp.app')
 
         p = subprocess.Popen(["/usr/bin/open",
@@ -124,13 +124,16 @@ class TestArgvEmulation (unittest.TestCase):
         if not self.open_argument.startswith('/'):
             unittest.skip("Only relevant for base class")
 
+        path = os.path.join( self.app_dir, 'dist/argv.txt')
+        if os.path.exists(path):
+            os.unlink(path)
+
         self.maxDiff = None
         path = os.path.join( self.app_dir, 'dist/BasicApp.app')
 
         p = subprocess.Popen(["/usr/bin/open",
                 '-a', path, "--args", "one", "two", "three"])
         exit = p.wait()
-
         self.assertEqual(exit, 0)
 
         path = os.path.join( self.app_dir, 'dist/argv.txt')

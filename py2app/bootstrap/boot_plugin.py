@@ -7,4 +7,5 @@ def _run(*scripts):
     for script in scripts:
         path = os.path.join(base, script)
         __file__ = path
-        execfile(path, globals(), globals())
+        exec(compile(open(path).read(), path, 'exec'), globals(), globals())
+

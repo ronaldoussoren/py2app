@@ -1,14 +1,14 @@
-import PIL
-import pygame
-import pydoc
-import docutils
-import pyopengl
-import sip
+from . import PIL
+from . import pygame
+from . import pydoc
+from . import docutils
+from . import pyopengl
+from . import sip
 
-import numpy
-import scipy
-import matplotlib
+from . import numpy
+from . import scipy
+from . import matplotlib
 
-import virtualenv
-import pyside
-import wx
+from . import virtualenv
+from . import pyside
+from . import wx

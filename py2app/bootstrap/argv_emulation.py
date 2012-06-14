@@ -16,13 +16,6 @@ import sys
 import os
 import time
 
-if sys.version_info[0] == 3:
-    def B(value):
-        return value.encode('ascii')
-else:
-    def B(value):
-        return value
-
 import ctypes
 import struct
 
@@ -106,19 +99,19 @@ def _run_argvemulator(timeout = 60):
     # Configure AppleEvent handlers
     ae_callback = carbon.AEInstallEventHandler.argtypes[2]
 
-    kAEInternetSuite,   = struct.unpack('>i', B('GURL'))
-    kAEISGetURL,        = struct.unpack('>i', B('GURL'))
-    kCoreEventClass,    = struct.unpack('>i', B('aevt'))
-    kAEOpenApplication, = struct.unpack('>i', B('oapp'))
-    kAEOpenDocuments,   = struct.unpack('>i', B('odoc'))
-    keyDirectObject,    = struct.unpack('>i', B('----'))
-    typeAEList,         = struct.unpack('>i', B('list'))
-    typeChar,           = struct.unpack('>i', B('TEXT'))
-    typeFSRef,          = struct.unpack('>i', B('fsrf'))
-    FALSE               = B('\0')
-    TRUE               = B('\1')
+    kAEInternetSuite,   = struct.unpack('>i', b'GURL')
+    kAEISGetURL,        = struct.unpack('>i', b'GURL')
+    kCoreEventClass,    = struct.unpack('>i', b'aevt')
+    kAEOpenApplication, = struct.unpack('>i', b'oapp')
+    kAEOpenDocuments,   = struct.unpack('>i', b'odoc')
+    keyDirectObject,    = struct.unpack('>i', b'----')
+    typeAEList,         = struct.unpack('>i', b'list')
+    typeChar,           = struct.unpack('>i', b'TEXT')
+    typeFSRef,          = struct.unpack('>i', b'fsrf')
+    FALSE               = b'\0'
+    TRUE                = b'\1'
 
-    kEventClassAppleEvent, = struct.unpack('>i', B('eppc'))
+    kEventClassAppleEvent, = struct.unpack('>i', b'eppc')
     kEventAppleEvent = 1
 
 
@@ -136,14 +129,14 @@ def _run_argvemulator(timeout = 60):
         sts = carbon.AEGetParamDesc(message, keyDirectObject, typeAEList,
                 ctypes.byref(listdesc))
         if sts != 0:
-            print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
+            print("argvemulator warning: cannot unpack open document event")
             running[0] = False
             return
 
         item_count = ctypes.c_long()
         sts = carbon.AECountItems(ctypes.byref(listdesc), ctypes.byref(item_count))
         if sts != 0:
-            print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
+            print("argvemulator warning: cannot unpack open document event")
             running[0] = False
             return
 
@@ -151,7 +144,7 @@ def _run_argvemulator(timeout = 60):
         for i in range(item_count.value):
             sts = carbon.AEGetNthDesc(ctypes.byref(listdesc), i+1, typeFSRef, 0, ctypes.byref(desc))
             if sts != 0:
-                print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
+                print("argvemulator warning: cannot unpack open document event")
                 running[0] = False
                 return
 
@@ -159,7 +152,7 @@ def _run_argvemulator(timeout = 60):
             buf = ctypes.create_string_buffer(sz)
             sts = carbon.AEGetDescData(ctypes.byref(desc), buf, sz)
             if sts != 0:
-                print >>sys.stderr, "argvemulator warning: cannot extract open document event"
+                print("argvemulator warning: cannot extract open document event")
                 continue
 
             fsref = buf
@@ -167,10 +160,10 @@ def _run_argvemulator(timeout = 60):
             buf = ctypes.create_string_buffer(1024)
             sts = carbon.FSRefMakePath(ctypes.byref(fsref), buf, 1023)
             if sts != 0:
-                print >>sys.stderr, "argvemulator warning: cannot extract open document event"
+                print("argvemulator warning: cannot extract open document event")
                 continue
 
-            print >>sys.stderr, "Adding: %s"%(repr(buf.value.decode('utf-8')),)
+            print("Adding: %s"%(repr(buf.value.decode('utf-8')),))
 
             if sys.version_info[0] > 2:
                 sys.argv.append(buf.value.decode('utf-8'))
@@ -189,14 +182,14 @@ def _run_argvemulator(timeout = 60):
         ok = carbon.AEGetParamDesc(message, keyDirectObject, typeAEList,
                 ctypes.byref(listdesc))
         if ok != 0:
-            print >>sys.stderr, "argvemulator warning: cannot unpack open document event"
+            print("argvemulator warning: cannot unpack open document event")
             running[0] = False
             return
 
         item_count = ctypes.c_long()
         sts = carbon.AECountItems(ctypes.byref(listdesc), ctypes.byref(item_count))
         if sts != 0:
-            print >>sys.stderr, "argvemulator warning: cannot unpack open url event"
+            print("argvemulator warning: cannot unpack open url event")
             running[0] = False
             return
 
@@ -204,7 +197,7 @@ def _run_argvemulator(timeout = 60):
         for i in range(item_count.value):
             sts = carbon.AEGetNthDesc(ctypes.byref(listdesc), i+1, typeChar, 0, ctypes.byref(desc))
             if sts != 0:
-                print >>sys.stderr, "argvemulator warning: cannot unpack open URL event"
+                print("argvemulator warning: cannot unpack open URL event")
                 running[0] = False
                 return
 
@@ -212,7 +205,7 @@ def _run_argvemulator(timeout = 60):
             buf = ctypes.create_string_buffer(sz)
             sts = carbon.AEGetDescData(ctypes.byref(desc), buf, sz)
             if sts != 0:
-                print >>sys.stderr, "argvemulator warning: cannot extract open URL event"
+                print("argvemulator warning: cannot extract open URL event")
 
             else:
                 if sys.version_info[0] > 2:
@@ -242,12 +235,12 @@ def _run_argvemulator(timeout = 60):
         sts = carbon.ReceiveNextEvent(1, ctypes.byref(eventType), 
                 start + timeout - now, TRUE, ctypes.byref(event))
         if sts != 0:
-            print >>sys.stderr, "argvemulator warning: fetching events failed"
+            print("argvemulator warning: fetching events failed")
             break
 
         sts = carbon.AEProcessEvent(event)
         if sts != 0:
-            print >>sys.stderr, "argvemulator warning: processing events failed"
+            print("argvemulator warning: processing events failed")
             break
         
 

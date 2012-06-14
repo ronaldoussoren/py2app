@@ -3,44 +3,44 @@ import py2app
 __all__ = ['infoPlistDict']
 
 def infoPlistDict(CFBundleExecutable, plist={}):
-    CFBundleExecutable = unicode(CFBundleExecutable)
+    CFBundleExecutable = CFBundleExecutable
     version = sys.version[:3]
     pdict = dict(
-        CFBundleDevelopmentRegion=u'English',
+        CFBundleDevelopmentRegion='English',
         CFBundleDisplayName=plist.get('CFBundleName', CFBundleExecutable),
         CFBundleExecutable=CFBundleExecutable,
         CFBundleIconFile=CFBundleExecutable,
-        CFBundleIdentifier=u'org.pythonmac.unspecified.%s' % (u''.join(CFBundleExecutable.split()),),
-        CFBundleInfoDictionaryVersion=u'6.0',
+        CFBundleIdentifier='org.pythonmac.unspecified.%s' % (''.join(CFBundleExecutable.split()),),
+        CFBundleInfoDictionaryVersion='6.0',
         CFBundleName=CFBundleExecutable,
-        CFBundlePackageType=u'APPL',
-        CFBundleShortVersionString=plist.get('CFBundleVersion', u'0.0'),
-        CFBundleSignature=u'????',
-        CFBundleVersion=u'0.0',
+        CFBundlePackageType='APPL',
+        CFBundleShortVersionString=plist.get('CFBundleVersion', '0.0'),
+        CFBundleSignature='????',
+        CFBundleVersion='0.0',
         LSHasLocalizedDisplayName=False,
         NSAppleScriptEnabled=False,
-        NSHumanReadableCopyright=u'Copyright not specified',
-        NSMainNibFile=u'MainMenu',
-        NSPrincipalClass=u'NSApplication',
-        PyMainFileNames=[u'__boot__'],
+        NSHumanReadableCopyright='Copyright not specified',
+        NSMainNibFile='MainMenu',
+        NSPrincipalClass='NSApplication',
+        PyMainFileNames=['__boot__'],
         PyResourcePackages=[],
         PyRuntimeLocations=[(s % version) for s in [
-            u'@executable_path/../Frameworks/Python.framework/Versions/%s/Python',
-            u'~/Library/Frameworks/Python.framework/Versions/%s/Python',
-            u'/Library/Frameworks/Python.framework/Versions/%s/Python',
-            u'/Network/Library/Frameworks/Python.framework/Versions/%s/Python',
-            u'/System/Library/Frameworks/Python.framework/Versions/%s/Python',
+            '@executable_path/../Frameworks/Python.framework/Versions/%s/Python',
+            '~/Library/Frameworks/Python.framework/Versions/%s/Python',
+            '/Library/Frameworks/Python.framework/Versions/%s/Python',
+            '/Network/Library/Frameworks/Python.framework/Versions/%s/Python',
+            '/System/Library/Frameworks/Python.framework/Versions/%s/Python',
         ]],
     )
     pdict.update(plist)
-    pythonInfo = pdict.setdefault(u'PythonInfoDict', {})
+    pythonInfo = pdict.setdefault('PythonInfoDict', {})
     pythonInfo.update(dict(
-        PythonLongVersion=unicode(sys.version),
-        PythonShortVersion=unicode(sys.version[:3]),
-        PythonExecutable=unicode(sys.executable),
+        PythonLongVersion=sys.version,
+        PythonShortVersion=sys.version[:3],
+        PythonExecutable=sys.executable,
     ))
-    py2appInfo = pythonInfo.setdefault(u'py2app', {}).update(dict(
-        version=unicode(py2app.__version__),
-        template=u'app',
+    py2appInfo = pythonInfo.setdefault('py2app', {}).update(dict(
+        version=py2app.__version__,
+        template='app',
     ))
     return pdict

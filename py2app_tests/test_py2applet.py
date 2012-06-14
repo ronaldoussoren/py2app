@@ -37,7 +37,7 @@ class TestPy2Applet (unittest.TestCase):
 
         xit = p.wait()
         if xit != 0:
-            sys.stdout.write(data)
+            sys.stdout.write(data.decode('latin1'))
             self.fail("Running py2applet %s failed"%(" ".join(args),))
 
 

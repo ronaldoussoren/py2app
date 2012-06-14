@@ -5,6 +5,7 @@ You can drag in packages, Info.plist files, icons, etc.
 
 It's expected that only one Python script is dragged in.
 """
+from __future__ import print_function
 
 import os, sys
 from distutils.core import setup
@@ -66,7 +67,7 @@ def get_cmd_options():
  
 def main():
     if not sys.argv[1:]:
-        print HELP_TEXT
+        print(HELP_TEXT)
         return
     
     scripts = []
@@ -125,7 +126,7 @@ def main():
         iconfile=iconfile,
         argv_emulation=True,
     )
-    for k,v in options.items():
+    for k,v in list(options.items()):
         if not v:
             del options[k]
     if is_make_setup:
@@ -156,14 +157,14 @@ def make_setup(args, scripts, data_files, options):
             if not res:
                 break
         if res == 'n':
-            print 'aborted!'
+            print('aborted!')
             return
     f = open('setup.py', 'w')
     tvars = tuple(map(pprint.pformat, (scripts, data_files, options)))
     f.write(SETUP_TEMPLATE % tvars)
     f.flush()
     f.close()
-    print 'Wrote setup.py'
+    print('Wrote setup.py')
 
 def build(args, scripts, data_files, options):
     old_argv = sys.argv

@@ -17,8 +17,17 @@ except ImportError:
     PyPIRCCommand = None
     from distutils.core import Command
 
-LONG_DESCRIPTION = open('README.txt').read()
-LONG_DESCRIPTION += '\n' + open('doc/changelog.rst').read()
+fp = open('README.txt')
+try:
+    LONG_DESCRIPTION = fp.read()
+finally:
+    fp.close()
+
+fp = open('doc/changelog.rst')
+try:
+    LONG_DESCRIPTION += '\n' + fp.read()
+finally:
+    fp.close()
 
 CLASSIFIERS = [
         'Development Status :: 4 - Beta',
@@ -36,11 +45,6 @@ CLASSIFIERS = [
         'Topic :: Software Development :: User Interfaces',
         'Topic :: Software Development :: Build Tools',
 ]
-
-if sys.version_info[0] == 3:
-    extra_args = dict(use_2to3=True)
-else:
-    extra_args = dict()
 
 
 if sys.version_info[0] == 3 or (sys.version_info[:2] >= (2,7)):
@@ -234,10 +238,10 @@ else:
 setup(
     # metadata
     name='py2app',
-    version='0.6.5',
+    version='0.7',
     description='Create standalone Mac OS X applications with Python',
-    author='Bob Ippolito',
-    author_email='bob@redivi.com',
+    #author='Bob Ippolito',
+    #author_email='bob@redivi.com',
     maintainer='Ronald Oussoren',
     maintainer_email="ronaldoussoren@mac.com",
     url='http://bitbucket.org/ronaldoussoren/py2app',
@@ -247,9 +251,9 @@ setup(
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
     install_requires=[
-        "altgraph>=0.9",
-        "modulegraph>=0.9.1",
-        "macholib>=1.4.3",
+        "altgraph>=0.10",
+        "modulegraph>=0.10",
+        "macholib>=1.5",
     ],
     tests_require=tests_require,
     cmdclass=dict(
@@ -289,7 +293,7 @@ setup(
             "py2app = py2app.build_app:py2app",
         ],
         'distutils.setup_keywords': [
-            "app = py2app.build_app:validate_target",
+            "app =    py2app.build_app:validate_target",
             "plugin = py2app.build_app:validate_target",
         ],
         'console_scripts': [
@@ -306,5 +310,4 @@ setup(
     zip_safe=False,
     dependency_links=[], # workaround for setuptools 0.6b4 bug
     test_suite='__main__.test_loader',
-    **extra_args
 )

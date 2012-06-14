@@ -80,12 +80,12 @@ class Sip(object):
         for pkg in packages:
             mf.import_hook(pkg, m)
         if self.warn:
-            print ''
-            print '== PyQt Free Edition GPL warning =='
-            print 'Your application is including PyQt Free Edition!'
-            print 'Please read the terms of the GPL license before'
-            print 'distributing this application!'
-            print ''
+            print ('')
+            print ('== PyQt Free Edition GPL warning ==')
+            print ('Your application is including PyQt Free Edition!')
+            print ('Please read the terms of the GPL license before')
+            print ('distributing this application!')
+            print ('')
         return dict()
 
 check = Sip().check

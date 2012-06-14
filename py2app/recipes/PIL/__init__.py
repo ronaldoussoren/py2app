@@ -1,6 +1,10 @@
 from py2app.util import imp_find_module
 import os, sys, glob
-from cStringIO import StringIO
+
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 try:
     set

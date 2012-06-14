@@ -31,17 +31,6 @@ import py2app
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
-if sys.version_info[0] == 2:
-    def B(value):
-        return value
-
-else:
-    def B(value):
-        return value.encode('latin1')
-
-
-
-
 class TestBasicApp (unittest.TestCase):
     py2app_args = []
     python_args = []
@@ -133,13 +122,13 @@ class TestBasicApp (unittest.TestCase):
         p.stdin.write('import_module("os")\n'.encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), B("os"))
+        self.assertEqual(ln.strip(), b"os")
 
         # Dependency of the main module:
         p.stdin.write('import_module("decimal")\n'.encode('latin1'))
         p.stdin.flush()
         ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), B("decimal"))
+        self.assertEqual(ln.strip(), b"decimal")
 
         can_import_stdlib = False
         if '--alias' in self.py2app_args:
@@ -162,14 +151,14 @@ class TestBasicApp (unittest.TestCase):
             p.stdin.write('import_module("xdrlib")\n'.encode('latin1'))
             p.stdin.flush()
             ln = p.stdout.readline()
-            self.assertEqual(ln.strip(), B("xdrlib"))
+            self.assertEqual(ln.strip(), b"xdrlib")
 
         if sys.prefix.startswith('/System'):
             # py2app is included as part of the system install
             p.stdin.write('import_module("py2app")\n'.encode('latin1'))
             p.stdin.flush()
             ln = p.stdout.readline().decode('utf-8')
-            self.assertEqual(ln.strip(), B("py2app"))
+            self.assertEqual(ln.strip(), b"py2app")
 
 
         else:
@@ -230,10 +219,15 @@ class TestOptimized1 (TestBasicApp):
     def testIsOptimized(self):
         p = self.start_app()
 
-        p.stdin.write('print(__debug__)\n'.encode('latin1'))
-        p.stdin.flush()
-        ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), B("False"))
+        try:
+            p.stdin.write('print(__debug__)\n'.encode('latin1'))
+            p.stdin.flush()
+            ln = p.stdout.readline()
+            self.assertEqual(ln.strip(), b"False")
+
+        finally:
+            p.stdin.close()
+            p.stdout.close()
 
 class TestOptimized2 (TestBasicApp):
     py2app_args = [ '-O2' ]
@@ -241,10 +235,15 @@ class TestOptimized2 (TestBasicApp):
     def testIsOptimized(self):
         p = self.start_app()
 
-        p.stdin.write('print(__debug__)\n'.encode('latin1'))
-        p.stdin.flush()
-        ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), B("False"))
+        try:
+            p.stdin.write('print(__debug__)\n'.encode('latin1'))
+            p.stdin.flush()
+            ln = p.stdout.readline()
+            self.assertEqual(ln.strip(), b"False")
+
+        finally:
+            p.stdin.close()
+            p.stdout.close()
 
 if __name__ == "__main__":
     unittest.main()

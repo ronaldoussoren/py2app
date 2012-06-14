@@ -1,11 +1,9 @@
-from pkg_resources import require
-require("modulegraph", "altgraph", "macholib")
+from __future__ import print_function
 
 import os, sys, imp, time
 from modulegraph.find_modules import PY_SUFFIXES, C_SUFFIXES
 from modulegraph.util import *
 from modulegraph import zipio
-from altgraph.compat import *
 import macholib.util
 import warnings
 
@@ -90,7 +88,7 @@ def find_converter(source):
         for ep in pkg_resources.iter_entry_points('py2app.converter'):
             function = ep.load()
             if not hasattr(function, "py2app_suffix"):
-                print "WARNING: %s does not have 'py2app_suffix' attribute"%(function)
+                print("WARNING: %s does not have 'py2app_suffix' attribute"%(function))
                 continue
             gConverterTab[function.py2app_suffix] = function
 
@@ -168,10 +166,10 @@ def find_version(fn):
     from compiler.ast import Module, Stmt, Assign, AssName, Const
     ast = compiler.parseFile(fn)
     if not isinstance(ast, Module):
-        raise ValueError, "expecting Module"
+        raise ValueError("expecting Module")
     statements = ast.getChildNodes()
     if not (len(statements) == 1 and isinstance(statements[0], Stmt)):
-        raise ValueError, "expecting one Stmt"
+        raise ValueError("expecting one Stmt")
     for node in statements[0].getChildNodes():
         if not isinstance(node, Assign):
             continue
@@ -187,7 +185,7 @@ def find_version(fn):
             continue
         return node.expr.value
     else:
-        raise ValueError, "Version not found"
+        raise ValueError("Version not found")
 
 def in_system_path(filename):
     """
@@ -205,7 +203,7 @@ else:
 def make_exec(path):
     mask = os.umask(0)
     os.umask(mask)
-    os.chmod(path, os.stat(path).st_mode | (0111 & ~mask))
+    os.chmod(path, os.stat(path).st_mode | (0o111 & ~mask))
 
 def makedirs(path):
     path = fsencoding(path)
@@ -275,7 +273,7 @@ def __load():
             continue
         ext = os.path.join(path, ext)
         if os.path.exists(ext):
-            #print "py2app extension module", __name__, "->", ext
+            #print("py2app extension module", __name__, "->", ext)
             mod = imp.load_dynamic(__name__, ext)
             #mod.frozen = 1
             break
@@ -304,7 +302,7 @@ def byte_compile(py_files, optimize=0, force=0,
         from distutils.util import execute, spawn
         script_name = mktemp(".py")
         if verbose:
-            print "writing byte-compilation script '%s'" % script_name
+            print("writing byte-compilation script '%s'" % script_name)
         if not dry_run:
             script = open(script_name, "w")
             script.write("""
@@ -366,7 +364,7 @@ byte_compile(files, optimize=%r, force=%r,
 
             if force or newer(mod.filename, cfile):
                 if verbose:
-                    print "byte-compiling %s to %s" % (mod.filename, dfile)
+                    print("byte-compiling %s to %s" % (mod.filename, dfile))
                     
                 if not dry_run:
                     mkpath(os.path.dirname(cfile))
@@ -395,8 +393,8 @@ byte_compile(files, optimize=%r, force=%r,
                               ("Don't know how to handle %r" % mod.filename)
             else:
                 if verbose:
-                    print "skipping byte-compilation of %s to %s" % \
-                          (mod.filename, dfile)
+                    print("skipping byte-compilation of %s to %s" % 
+                          (mod.filename, dfile))
 
 SCMDIRS = ['CVS', '.svn']
 def skipscm(ofn):
@@ -506,16 +504,17 @@ def copy_tree(src, dst,
         condition = skipscm
 
     if not dry_run and not os.path.isdir(src):
-        raise DistutilsFileError, \
-              "cannot copy tree '%s': not a directory" % src
+        raise DistutilsFileError(
+              "cannot copy tree '%s': not a directory" % src)
     try:
         names = zipio.listdir(src)
-    except os.error, (errno, errstr):
+    except os.error as exc:
+        (errno, errstr) = exc.args
         if dry_run:
             names = []
         else:
-            raise DistutilsFileError, \
-                  "error listing files in '%s': %s" % (src, errstr)
+            raise DistutilsFileError(
+                  "error listing files in '%s': %s" % (src, errstr))
 
     if not dry_run:
         mkpath(dst)

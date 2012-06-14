@@ -39,7 +39,7 @@ def retry_import(mf, m):
     try:
         fp, pathname, stuff = fmod(partname,
                         parent and parent.packagepath, parent)
-    except ImportError, e:
+    except ImportError as e:
         return
 
     if stuff[-1] == imp.PKG_DIRECTORY:

@@ -15,15 +15,6 @@ import py2app
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
-if sys.version_info[0] == 2:
-    def B(value):
-        return value
-
-else:
-    def B(value):
-        return value.encode('latin1')
-
-
 
 
 class TestBasicApp (unittest.TestCase):

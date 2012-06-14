@@ -16,6 +16,8 @@ def somefunc():
     print ("sys.argv: %s"%(sys.argv,))
     print ("os.getcwd(): %s"%(os.getcwd(),))
     pprint.pprint(dict(os.environ))
+    import subprocess
+    subprocess.call(["/usr/bin/say", "hello"])
 
 if __name__ == '__main__':
     somefunc()

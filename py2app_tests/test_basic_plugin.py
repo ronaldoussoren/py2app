@@ -18,15 +18,6 @@ import py2app
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
-if sys.version_info[0] == 2:
-    def B(value):
-        return value
-
-else:
-    def B(value):
-        return value.encode('latin1')
-
-
 
 class TestBasicPlugin (unittest.TestCase):
     plugin_dir = os.path.join(DIR_NAME, 'basic_plugin')
@@ -146,13 +137,13 @@ class TestBasicPlugin (unittest.TestCase):
         p = self.start_app()
         v = p.stdout.readline()
 
-        self.assertFalse(v.startswith(B('** Cannot load bundle')))
+        self.assertFalse(v.startswith(b'** Cannot load bundle'))
 
         p.stdin.write('BasicPlugin.bundle:test startup\n'.encode('latin1'))
         p.stdin.flush()
 
         v = p.stdout.readline()
-        self.assertEqual(v.strip(), B('+ test startup'))
+        self.assertEqual(v.strip(), b'+ test startup')
 
         p.stdin.close()
         p.stdout.close()

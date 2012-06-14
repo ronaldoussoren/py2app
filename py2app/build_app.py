@@ -3,8 +3,7 @@ Mac OS X .app build command for distutils
 
 Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 """
-from pkg_resources import require
-require("altgraph", "modulegraph", "macholib")
+from __future__ import print_function
 
 import imp
 import sys
@@ -18,9 +17,13 @@ try:
     import sysconfig
 except ImportError:
     sysconfig = None
-from cStringIO import StringIO
 
-from itertools import chain, imap
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
+
+from itertools import chain
 
 
 from setuptools import Command
@@ -28,7 +31,6 @@ from distutils.util import convert_path
 from distutils import log
 from distutils.errors import *
 
-from altgraph.compat import *
 
 from modulegraph.find_modules import find_modules, parse_mf_results, find_needed_modules
 from modulegraph.modulegraph import SourceModule, Package, Script
@@ -50,6 +52,11 @@ from py2app import recipes
 
 from distutils.sysconfig import get_config_var
 PYTHONFRAMEWORK=get_config_var('PYTHONFRAMEWORK')
+
+try:
+    basestring
+except NameError:
+    basestring = str
 
 
 def get_zipfile(dist):
@@ -357,7 +364,7 @@ class py2app(Command):
         if self.semi_standalone:
             self.filters.append(not_stdlib_filter)
 
-        if self.iconfile is None and u'CFBundleIconFile' not in self.plist:
+        if self.iconfile is None and 'CFBundleIconFile' not in self.plist:
             # Default is the generic applet icon in the framework
             iconfile = os.path.join(sys.prefix, 'Resources', 'Python.app',
                 'Contents', 'Resources', 'PythonApplet.icns')
@@ -369,10 +376,10 @@ class py2app(Command):
 
 
         if self.datamodels:
-            print "WARNING: the datamodels option is deprecated, add model files to the list of resources"
+            print("WARNING: the datamodels option is deprecated, add model files to the list of resources")
 
         if self.mappingmodels:
-            print "WARNING: the mappingmodels option is deprecated, add model files to the list of resources"
+            print("WARNING: the mappingmodels option is deprecated, add model files to the list of resources")
 
 
     def get_default_plist(self):
@@ -387,7 +394,7 @@ class py2app(Command):
             except ValueError:
                 pass
 
-        if not isinstance(version, (str, unicode)):
+        if not isinstance(version, basestring):
             raise DistutilsOptionError("Version must be a string")
 
         if sys.version_info[0] > 2 and isinstance(version, type('a'.encode('ascii'))):
@@ -483,7 +490,7 @@ class py2app(Command):
 
 
     def iter_datamodels(self, resdir):
-        for (path, files) in imap(normalize_data_file, self.datamodels or ()):
+        for (path, files) in (normalize_data_file(fn) for fn in (self.datamodels or ())):
             path = fsencoding(path)
             for fn in files:
                 fn = fsencoding(fn)
@@ -496,12 +503,12 @@ class py2app(Command):
 
     def compile_datamodels(self, resdir):
         for src, dest in self.iter_datamodels(resdir):
-            print "compile datamodel", src, "->", dest
+            print("compile datamodel", src, "->", dest)
             self.mkpath(os.path.dirname(dest))
             momc(src, dest)
 
     def iter_mappingmodels(self, resdir):
-        for (path, files) in imap(normalize_data_file, self.mappingmodels or ()):
+        for (path, files) in (normalize_data_file(fn) for fn in (self.mappingmodels or ())):
             path = fsencoding(path)
             for fn in files:
                 fn = fsencoding(fn)
@@ -520,7 +527,7 @@ class py2app(Command):
     def iter_data_files(self):
         dist = self.distribution
         allres = chain(getattr(dist, 'data_files', ()) or (), self.resources)
-        for (path, files) in imap(normalize_data_file, allres):
+        for (path, files) in (normalize_data_file(fn) for fn in allres):
             path = fsencoding(path)
             for fn in files:
                 fn = fsencoding(fn)
@@ -568,9 +575,9 @@ class py2app(Command):
                 raise DistutilsOptionError("icon file must exist: %r"
                     % (self.iconfile,))
             self.resources.append(iconfile)
-            plist[u'CFBundleIconFile'] = os.path.basename(iconfile)
+            plist['CFBundleIconFile'] = os.path.basename(iconfile)
         if self.prefer_ppc:
-            plist[u'LSPrefersPPC'] = True
+            plist['LSPrefersPPC'] = True
 
         self.plist = plist
         return plist
@@ -603,13 +610,13 @@ class py2app(Command):
     def process_recipes(self, mf, filters, flatpackages, loader_files):
         rdict = self.collect_recipedict()
         while True:
-            for name, check in rdict.iteritems():
+            for name, check in rdict.items():
                 rval = check(self, mf)
                 if rval is None:
                     continue
                 # we can pull this off so long as we stop the iter
                 del rdict[name]
-                print '*** using recipe: %s ***' % (name,)
+                print('*** using recipe: %s ***' % (name,))
                 self.packages.update(rval.get('packages', ()))
                 for pkg in rval.get('flatpackages', ()):
                     if isinstance(pkg, basestring):
@@ -650,12 +657,12 @@ class py2app(Command):
             pdb.post_mortem(sys.exc_info()[2])
 
     def filter_dependencies(self, mf, filters):
-        print "*** filtering dependencies ***"
+        print("*** filtering dependencies ***")
         nodes_seen, nodes_removed, nodes_orphaned = mf.filterStack(filters)
-        print '%d total' % (nodes_seen,)
-        print '%d filtered' % (nodes_removed,)
-        print '%d orphaned' % (nodes_orphaned,)
-        print '%d remaining' % (nodes_seen - nodes_removed,)
+        print('%d total' % (nodes_seen,))
+        print('%d filtered' % (nodes_removed,))
+        print('%d orphaned' % (nodes_orphaned,))
+        print('%d remaining' % (nodes_seen - nodes_removed,))
 
     def get_appname(self):
         return self.plist['CFBundleName']
@@ -666,7 +673,7 @@ class py2app(Command):
             appdir = os.path.join(self.dist_dir, os.path.dirname(base))
             appname = self.get_appname()
             dgraph = os.path.join(appdir, appname + '.html')
-            print ("*** creating dependency html: %s ***"
+            print("*** creating dependency html: %s ***"
                 % (os.path.basename(dgraph),))
             mf.create_xref(open(dgraph, 'w'))
 
@@ -676,7 +683,7 @@ class py2app(Command):
             appdir = os.path.join(self.dist_dir, os.path.dirname(base))
             appname = self.get_appname()
             dgraph = os.path.join(appdir, appname + '.dot')
-            print ("*** creating dependency graph: %s ***"
+            print("*** creating dependency graph: %s ***"
                 % (os.path.basename(dgraph),))
             mf.graphreport(open(dgraph, 'w'), flatpackages=flatpackages)
 
@@ -703,10 +710,10 @@ class py2app(Command):
         return py_files, extensions
 
     def collect_packagedirs(self):
-        return filter(os.path.exists, [
+        return list(filter(os.path.exists, [
             os.path.join(os.path.realpath(self.get_bootstrap(pkg)), '')
             for pkg in self.packages
-        ])
+        ]))
 
     def run_normal(self):
         mf = self.get_modulefinder()
@@ -765,7 +772,7 @@ class py2app(Command):
         self.mkpath(self.framework_dir)
 
     def create_binaries(self, py_files, pkgdirs, extensions, loader_files):
-        print "*** create binaries ***"
+        print("*** create binaries ***")
         dist = self.distribution
         pkgexts = []
         copyexts = []
@@ -779,7 +786,7 @@ class py2app(Command):
                     return None
             return fn
         if pkgdirs:
-            py_files = filter(packagefilter, py_files)
+            py_files = list(filter(packagefilter, py_files))
         for ext in extensions:
             fn = packagefilter(ext)
             if fn is None:
@@ -792,7 +799,7 @@ class py2app(Command):
             extmap[fn] = ext
 
         # byte compile the python modules into the target directory
-        print "*** byte compile python files ***"
+        print("*** byte compile python files ***")
         byte_compile(py_files,
                      target_dir=self.collect_dir,
                      optimize=self.optimize,
@@ -898,7 +905,7 @@ class py2app(Command):
 
         target_dir = os.path.join(target_dir, *(package.identifier.split('.')))
         for dname in package.packagepath:
-            filenames = filter(datafilter, zipio.listdir(dname))
+            filenames = list(filter(datafilter, zipio.listdir(dname)))
             for fname in filenames:
                 if fname in ('.svn', 'CVS'):
                     # Scrub revision manager junk
@@ -943,20 +950,20 @@ class py2app(Command):
         for dirpath, dnames, fnames in os.walk(self.appdir):
             for nm in list(dnames):
                 if nm.endswith('.dSYM'):
-                    print "removing debug info: %s/%s"%(dirpath, nm)
+                    print("removing debug info: %s/%s"%(dirpath, nm))
                     shutil.rmtree(os.path.join(dirpath, nm))
                     dnames.remove(nm)
         return [file for file in platfiles if '.dSYM' not in file]
 
     def strip_files(self, files):
-        unstripped = 0L
+        unstripped = 0
         stripfiles = []
         for fn in files:
             unstripped += os.stat(fn).st_size
             stripfiles.append(fn)
             log.info('stripping %s', os.path.basename(fn))
         strip_files(stripfiles, dry_run=self.dry_run, verbose=self.verbose)
-        stripped = 0L
+        stripped = 0
         for fn in stripfiles:
             stripped += os.stat(fn).st_size
         log.info('stripping saved %d bytes (%d / %d)',
@@ -1148,15 +1155,15 @@ class py2app(Command):
 
         if self.argv_emulation and self.style == 'app':
             prescripts.append('argv_emulation')
-            if u'CFBundleDocumentTypes' not in self.plist:
-                self.plist[u'CFBundleDocumentTypes'] = [
+            if 'CFBundleDocumentTypes' not in self.plist:
+                self.plist['CFBundleDocumentTypes'] = [
                     {
-                        u'CFBundleTypeOSTypes' : [
-                            u'****',
-                            u'fold',
-                            u'disk',
+                        'CFBundleTypeOSTypes' : [
+                            '****',
+                            'fold',
+                            'disk',
                         ],
-                        u'CFBundleTypeRole': u'Viewer'
+                        'CFBundleTypeRole': 'Viewer'
                     },
                 ]
 
@@ -1206,7 +1213,7 @@ class py2app(Command):
         base = target.get_dest_base()
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
-        print "*** creating plugin bundle: %s ***" % (appname,)
+        print("*** creating plugin bundle: %s ***" % (appname,))
         if self.runtime_preferences and use_runtime_preference:
             self.plist.setdefault(
                 'PyRuntimeLocations', self.runtime_preferences)
@@ -1225,12 +1232,12 @@ class py2app(Command):
         base = target.get_dest_base()
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
-        print "*** creating application bundle: %s ***" % (appname,)
+        print("*** creating application bundle: %s ***" % (appname,))
         if self.runtime_preferences and use_runtime_preference:
             self.plist.setdefault(
                 'PyRuntimeLocations', self.runtime_preferences)
-        pythonInfo = self.plist.setdefault(u'PythonInfoDict', {})
-        py2appInfo = pythonInfo.setdefault(u'py2app', {}).update(dict(
+        pythonInfo = self.plist.setdefault('PythonInfoDict', {})
+        py2appInfo = pythonInfo.setdefault('py2app', {}).update(dict(
             alias=bool(self.alias),
         ))
         appdir, plist = create_appbundle(
@@ -1455,13 +1462,13 @@ class py2app(Command):
         pathname = os.path.join(self.temp_dir, "%s.py" % slashname)
         if os.path.exists(pathname):
             if self.verbose:
-                print ("skipping python loader for extension %r"
+                print("skipping python loader for extension %r"
                     % (item.identifier,))
         else:
             self.mkpath(os.path.dirname(pathname))
             # and what about dry_run?
             if self.verbose:
-                print ("creating python loader for extension %r"
+                print("creating python loader for extension %r"
                     % (item.identifier,))
 
             fname = slashname + os.path.splitext(item.filename)[1]
