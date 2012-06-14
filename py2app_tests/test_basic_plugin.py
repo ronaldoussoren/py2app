@@ -15,6 +15,7 @@ import os
 import signal
 from distutils.sysconfig import get_config_var
 import py2app
+import platform
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -73,9 +74,13 @@ class TestBasicPlugin (unittest.TestCase):
             if sys.version_info[0] != 2:
                 root = root.decode('utf-8')
 
-            cc = get_config_var('CC')
+            if platform.mac_ver()[0] < '10.6.':
+                cc = ['gcc-4.2']
+            else:
+                cc = ['xcrun', 'clang']
 
-            p = subprocess.Popen([os.path.join(root, 'usr', 'bin', cc) ] 
+
+            p = subprocess.Popen(cc
                 +  get_config_var('LDFLAGS').split() + [ 
                     '-o', 'bundle_loader', os.path.join(DIR_NAME, 'bundle_loader.m'), 
                     '-framework', 'Foundation'],
