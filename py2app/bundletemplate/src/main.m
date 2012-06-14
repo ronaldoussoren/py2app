@@ -70,6 +70,8 @@ typedef PyObject *(*PyModule_AddStringConstantPtr)(PyObject *, char *, char *);
 typedef PyObject *(*PyModule_AddObjectPtr)(PyObject *, char *, PyObject *);
 typedef PyObject *(*PyModule_GetDictPtr)(PyObject *);
 typedef void (*PyObject_SetItemPtr)(PyObject *, PyObject *, PyObject *);
+typedef wchar_t* (*_Py_DecodeUTF8_surrogateescapePtr)(const char *s, ssize_t size);
+
 
 //
 // Signatures
@@ -370,6 +372,9 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
         return report_linkEdit_error(#NAME); \
     LOOKUP_DEFINE(NAME)
 
+#define OPT_LOOKUP(NAME) \
+	NAME ## Ptr py2app_ ## NAME = (NAME ## Ptr)dlsym(py_dylib, #NAME); 
+
     LOOKUP_SYMBOL(Py_DecRef);
     LOOKUP_DEFINEADDRESS(Py_DecRef, (tmpSymbol ? NSAddressOfSymbol(tmpSymbol) : &DefaultDecRef));
     LOOKUP(Py_SetProgramName);
@@ -396,6 +401,8 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(PyModule_AddObject);
     LOOKUP(PyModule_GetDict);
     LOOKUP(PyThreadState_Swap);
+    OPT_LOOKUP(_Py_DecodeUTF8_surrogateescape);
+
     
     /* PyBytes / PyString lookups depend of if we're on py3k or not */
     PyBytes_AsStringPtr PyBytes_AsString = NULL;
@@ -561,11 +568,24 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
         goto cleanup;
     }
     if (!was_initialized) {
-        NSMutableData *data_argv = [NSMutableData dataWithCapacity:(sizeof(char *) * argc)];
-        char **argv_new = [data_argv mutableBytes];
-        argv_new[0] = c_mainPyPath;
-        memcpy(&argv_new[1], &argv[1], (argc - 1) * sizeof(char *));
-        PySys_SetArgv(argc, argv_new);
+	int i;
+	NSMutableData *data_argv = [NSMutableData dataWithCapacity:(sizeof(char *) * argc)];
+	char **argv_new = [data_argv mutableBytes];
+	if (isPy3k) {
+		argv_new[0] = (char*)_Py_DecodeUTF8_surrogateescape(c_mainPyPath);
+	} else  {
+		argv_new[0] = c_mainPyPath;
+	}
+	for (i = 1; i < argc; i++) {
+		if (isPy3k) {
+			argv_new[i] = _Py_DecodeUTF8_surrogateescape(argv[i]);
+		} else {
+			argv_new[i] = argv[i];
+		}
+	}
+	argv_new[argc] = NULL
+	memcpy(&argv_new[1], &argv[1], (argc - 1) * sizeof(char *));
+	PySys_SetArgv(argc, argv_new);
     }
 
     // create a unique moduleName by CFBundleIdentifier replacing . with _ and prepending __main__

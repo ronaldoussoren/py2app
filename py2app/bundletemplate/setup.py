@@ -21,7 +21,7 @@ gPreBuildVariants = [
         'name': 'main-x86_64',
         'target': '10.5',
         'cflags': '-isysroot / -arch x86_64',
-        'cc': 'gcc-4.2',
+        'cc': 'clang',
     },
     {
         'name': 'main-fat3',
@@ -33,13 +33,13 @@ gPreBuildVariants = [
         'name': 'main-intel',
         'target': '10.5',
         'cflags': '-isysroot / -arch i386 -arch x86_64',
-        'cc': 'gcc-4.2',
+        'cc': 'clang',
     },
     {
         'name': 'main-i386',
         'target': '10.3',
         'cflags': '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.4u.sdk -arch i386',
-        'cc': 'gcc-4.0',
+        'cc': 'clang',
     },
     {
         'name': 'main-ppc',
