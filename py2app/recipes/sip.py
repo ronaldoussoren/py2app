@@ -10,6 +10,8 @@ PyQt4.Qt to PyQt4.QtCore) are handled in C code and therefore cannot be
 detected by the python code in py2app).
 """
 
+import sys
+
 class Sip(object):
     def __init__(self):
         self.packages = None
@@ -44,7 +46,7 @@ class Sip(object):
             dyld_library_path.insert(0, qtdir)
             os.environ['DYLD_LIBRARY_PATH'] = ':'.join(dyld_library_path)
 
-        sipdir = cfg.default_sip_dir
+        sipdir = os.path.dirname(cfg.pyqt_mod_dir)
         self.packages = set()
 
         for fn in os.listdir(sipdir):
@@ -55,8 +57,15 @@ class Sip(object):
                     # PyQt4 has a nested structure, also import
                     # subpackage to ensure everything get seen.
                     for sub in os.listdir(fullpath):
-                        self.packages.add('%s.%s'%(fn, sub))
-                
+                        if ".py" not in sub:
+                            self.packages.add('%s.%s'%(fn, sub.replace(".so","")))                            
+
+        # Causes a python3-related syntax error (metaclass keyword),
+        # and you probably don't need it:
+        if "PyQt4.uic" in self.packages and sys.version_info.major != 3:
+            print "WARNING: PyQt uic module found."
+            print "avoid python3 metaclass syntax errors by adding 'PyQt4.uic' to your excludes option."
+
         self.warn = cfg.qt_edition == 'free'
         return self.packages
 
