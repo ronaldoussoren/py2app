@@ -10,12 +10,13 @@ import sys, os
 from setuptools import setup, find_packages
 from distutils.errors  import DistutilsError
 from distutils import log
-from setuptools.command import test
+from distutils.core import Command
+from fnmatch import fnmatch
+
 try:
     from distutils.core import PyPIRCCommand
 except ImportError:
     PyPIRCCommand = None
-    from distutils.core import Command
 
 fp = open('README.txt')
 try:
@@ -235,6 +236,156 @@ else:
                 print (r.read())
                 print ('-'*75)
 
+
+def recursiveGlob(root, pathPattern):
+    """
+    Recursively look for files matching 'pathPattern'. Return a list
+    of matching files/directories.
+    """
+    result = []
+
+    for rootpath, dirnames, filenames in os.walk(root):
+        for fn in filenames:
+            if fnmatch(fn, pathPattern):
+                result.append(os.path.join(rootpath, fn))
+    return result
+        
+
+def importExternalTestCases(unittest, 
+        pathPattern="test_*.py", root=".", package=None):
+    """
+    Import all unittests in the PyObjC tree starting at 'root'
+    """
+
+    testFiles = recursiveGlob(root, pathPattern)
+    testModules = map(lambda x:x[len(root)+1:-3].replace('/', '.'), testFiles)
+    if package is not None:
+        testModules = [(package + '.' + m) for m in testModules]
+
+    suites = []
+   
+    for modName in testModules:
+        try:
+            module = __import__(modName)
+        except ImportError:
+            print("SKIP %s: %s"%(modName, sys.exc_info()[1]))
+            continue
+
+        if '.' in modName:
+            for elem in modName.split('.')[1:]:
+                module = getattr(module, elem)
+
+        s = unittest.defaultTestLoader.loadTestsFromModule(module)
+        suites.append(s)
+
+    return unittest.TestSuite(suites)
+
+
+class test (Command):
+    description = "run test suite"
+    user_options = [
+        ('verbosity=', None, "print what tests are run"),
+    ]
+
+    def initialize_options(self):
+        self.verbosity='1'
+
+    def finalize_options(self):
+        if isinstance(self.verbosity, str):
+            self.verbosity = int(self.verbosity)
+
+
+    def cleanup_environment(self):
+        ei_cmd = self.get_finalized_command('egg_info')
+        egg_name = ei_cmd.egg_name.replace('-', '_')
+
+        to_remove =  []
+        for dirname in sys.path:
+            bn = os.path.basename(dirname)
+            if bn.startswith(egg_name + "-"):
+                to_remove.append(dirname)
+
+        for dirname in to_remove:
+            log.info("removing installed %r from sys.path before testing"%(
+                dirname,))
+            sys.path.remove(dirname)
+
+    def add_project_to_sys_path(self):
+        from pkg_resources import normalize_path, add_activation_listener
+        from pkg_resources import working_set, require
+
+        self.reinitialize_command('egg_info')
+        self.run_command('egg_info')
+        self.reinitialize_command('build_ext', inplace=1)
+        self.run_command('build_ext')
+
+
+        # Check if this distribution is already on sys.path
+        # and remove that version, this ensures that the right
+        # copy of the package gets tested.
+
+        self.__old_path = sys.path[:]
+        self.__old_modules = sys.modules.copy()
+
+
+        ei_cmd = self.get_finalized_command('egg_info')
+        sys.path.insert(0, normalize_path(ei_cmd.egg_base))
+        sys.path.insert(1, os.path.dirname(__file__))
+
+        # Strip the namespace packages defined in this distribution
+        # from sys.modules, needed to reset the search path for
+        # those modules.
+
+        nspkgs = getattr(self.distribution, 'namespace_packages')
+        if nspkgs is not None:
+            for nm in nspkgs:
+                del sys.modules[nm]
+        
+        # Reset pkg_resources state:
+        add_activation_listener(lambda dist: dist.activate())
+        working_set.__init__()
+        require('%s==%s'%(ei_cmd.egg_name, ei_cmd.egg_version))
+
+    def remove_from_sys_path(self):
+        from pkg_resources import working_set
+        sys.path[:] = self.__old_path
+        sys.modules.clear()
+        sys.modules.update(self.__old_modules)
+        working_set.__init__()
+
+
+    def run(self):
+        import unittest
+
+        # Ensure that build directory is on sys.path (py3k)
+
+        self.cleanup_environment()
+        self.add_project_to_sys_path()
+
+        try:
+            meta = self.distribution.metadata
+            name = meta.get_name()
+            test_pkg = name + "_tests"
+            suite = importExternalTestCases(unittest, 
+                    "test_*.py", test_pkg, test_pkg)
+
+            runner = unittest.TextTestRunner(verbosity=self.verbosity)
+            result = runner.run(suite)
+
+            # Print out summary. This is a structured format that
+            # should make it easy to use this information in scripts.
+            summary = dict(
+                count=result.testsRun,
+                fails=len(result.failures),
+                errors=len(result.errors),
+                xfails=len(getattr(result, 'expectedFailures', [])),
+                xpass=len(getattr(result, 'expectedSuccesses', [])),
+                skip=len(getattr(result, 'skipped', [])),
+            )
+            print("SUMMARY: %s"%(summary,))
+
+        finally:
+            self.remove_from_sys_path()
 setup(
     # metadata
     name='py2app',
@@ -258,6 +409,7 @@ setup(
     tests_require=tests_require,
     cmdclass=dict(
         upload_docs=upload_docs,
+        test=test,
     ),
     packages=find_packages(exclude=['py2app_tests']),
     package_data={
@@ -309,5 +461,4 @@ setup(
     },
     zip_safe=False,
     dependency_links=[], # workaround for setuptools 0.6b4 bug
-    test_suite='__main__.test_loader',
 )
