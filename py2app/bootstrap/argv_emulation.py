@@ -96,6 +96,8 @@ def _run_argvemulator(timeout = 60):
     # Is the emulator running?
     running = [True]
 
+    timeout = [timeout]
+
     # Configure AppleEvent handlers
     ae_callback = carbon.AEInstallEventHandler.argtypes[2]
 
@@ -117,7 +119,15 @@ def _run_argvemulator(timeout = 60):
 
     @ae_callback
     def open_app_handler(message, reply, refcon):
-        running[0] = False
+        # Got a kAEOpenApplication event, which means we can
+        # start up. On some OSX versions this event is even
+        # sent when an kAEOpenDocuments or kAEOpenURLs event
+        # is sent later on.
+        #
+        # Therefore don't set running to false, but reduce the
+        # timeout to at most two seconds beyond the current time.
+        timeout[0] = min(timeout[0], time.time() - start + 2)
+        #running[0] = False
         return 0
 
     carbon.AEInstallEventHandler(kCoreEventClass, kAEOpenApplication,
@@ -229,11 +239,11 @@ def _run_argvemulator(timeout = 60):
     eventType.eventClass = kEventClassAppleEvent
     eventType.eventKind = kEventAppleEvent
 
-    while running[0] and now - start < timeout:
+    while running[0] and now - start < timeout[0]:
         event = ctypes.c_void_p()
 
         sts = carbon.ReceiveNextEvent(1, ctypes.byref(eventType), 
-                start + timeout - now, TRUE, ctypes.byref(event))
+                start + timeout[0] - now, TRUE, ctypes.byref(event))
         if sts != 0:
             print("argvemulator warning: fetching events failed")
             break

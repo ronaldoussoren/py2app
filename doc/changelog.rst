@@ -29,6 +29,10 @@ py2app 0.6.5 is a bugfix release
   'Versions' directory of the embedded Python framework to comply
   with a requirement for the Mac App-store.
 
+- on some OSX releases the application receives both the
+  "open application" and "open documents" Apple Events during startup,
+  which broke an assumption in argv_emulation.py.
+
 py2app 0.6.4
 ------------
 

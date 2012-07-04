@@ -107,7 +107,7 @@ class TestArgvEmulation (unittest.TestCase):
         self.assertEqual(exit, 0)
 
         path = os.path.join( self.app_dir, 'dist/argv.txt')
-        for x in range(70):     # Argv emulation can take up-to 60 seconds
+        for x in range(90):     # Argv emulation can take up-to 60 seconds
             time.sleep(1)
             if os.path.exists(path):
                 break

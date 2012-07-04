@@ -283,7 +283,7 @@ static CFStringRef py2app_getErrorTitle(CFStringRef applicationName) {
     if (!applicationName) return py2app_CFSTR(ERR_REALLYBADTITLE);
     res = py2app_CFStringCreateWithFormat(
         NULL, NULL, py2app_CFSTR(ERR_TITLEFORMAT), applicationName);
-    AUTORELEASE(res);
+    (void)AUTORELEASE(res);
     return res;
 }
 
@@ -813,7 +813,7 @@ static int report_script_error(const char *msg) {
 
     title = py2app_CFArrayGetValueAtIndex(lines, 0);
     py2app_CFRetain(title);
-    AUTORELEASE(title);
+    (void)AUTORELEASE(title);
     lineCount -= 1;
     py2app_CFArrayRemoveValueAtIndex(lines, lineCount);
     py2app_NSLog(py2app_CFSTR("%@"), title);
@@ -821,7 +821,7 @@ static int report_script_error(const char *msg) {
         CFStringRef showerr;
         errmsg = py2app_CFStringCreateByCombiningStrings(
             NULL, lines, py2app_CFSTR("\r"));
-        AUTORELEASE(errmsg);
+        (void)AUTORELEASE(errmsg);
         showerr = ((id(*)(id, SEL, id))py2app_objc_msgSend)(
             ((id(*)(id, SEL, id))py2app_objc_msgSend)(errmsg, py2app_sel_getUid("componentsSeparatedByString:"), py2app_CFSTR("\r")),
             py2app_sel_getUid("componentsJoinedByString:"), py2app_CFSTR("\n"));
