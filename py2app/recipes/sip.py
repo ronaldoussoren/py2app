@@ -63,8 +63,8 @@ class Sip(object):
         # Causes a python3-related syntax error (metaclass keyword),
         # and you probably don't need it:
         if "PyQt4.uic" in self.packages and sys.version_info.major != 3:
-            print "WARNING: PyQt uic module found."
-            print "avoid python3 metaclass syntax errors by adding 'PyQt4.uic' to your excludes option."
+            print("WARNING: PyQt uic module found.")
+            print("avoid python3 metaclass syntax errors by adding 'PyQt4.uic' to your excludes option.")
 
         self.warn = cfg.qt_edition == 'free'
         return self.packages
@@ -89,12 +89,12 @@ class Sip(object):
         for pkg in packages:
             mf.import_hook(pkg, m)
         if self.warn:
-            print ('')
-            print ('== PyQt Free Edition GPL warning ==')
-            print ('Your application is including PyQt Free Edition!')
-            print ('Please read the terms of the GPL license before')
-            print ('distributing this application!')
-            print ('')
+            print('')
+            print('== PyQt Free Edition GPL warning ==')
+            print('Your application is including PyQt Free Edition!')
+            print('Please read the terms of the GPL license before')
+            print('distributing this application!')
+            print('')
         return dict()
 
 check = Sip().check
