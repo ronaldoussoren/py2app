@@ -61,7 +61,8 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-    contents = open(m.filename, 'rU').read()
+    with open(m.filename, 'rU') as fp:
+        contents = fp.read()
     if 'virtualenv' in contents:
         # This is the virtualenv version
         mos = mf.findNode('os')
@@ -69,7 +70,9 @@ def check(cmd, mf):
             raise ValueError("Where is those os module")
 
         m.filename = os.path.join(os.path.dirname(mos.filename), 'distutils', '__init__.py')
-        m.code = co = compile(open(m.filename).read() + '\n', m.filename, 'exec')
+        with open(m.filename) as fp:
+            source = fp.read() + '\n'
+        m.code = co = compile(source, m.filename, 'exec')
         m.packagepath = [os.path.dirname(m.filename)]
 
         if mf.replace_paths:

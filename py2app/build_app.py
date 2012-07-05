@@ -59,9 +59,12 @@ except NameError:
     basestring = str
 
 
-def get_zipfile(dist):
+def get_zipfile(dist, semi_standalone=False):
     if sys.version_info[0] == 3:
-        return "python%d%d.zip"%(sys.version_info[:2])
+        if semi_standalone:
+            return "site-packages.zip"%(sys.version_info[:2])
+        else:
+            return "python%d%d.zip"%(sys.version_info[:2])
     return getattr(dist, "zipfile", None) or "site-packages.zip"
 
 def framework_copy_condition(src):
@@ -423,7 +426,8 @@ class py2app(Command):
             # We're in a virtualenv environment, locate the real prefix
             fn = os.path.join(prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
             if os.path.exists(fn):
-                prefix = open(fn, 'rU').read().strip()
+                with open(fn, 'rU') as fp:
+                    prefix = fp.read().strip()
 
         try:
             fmwk = macholib.dyld.framework_find(prefix)
@@ -762,7 +766,7 @@ class py2app(Command):
         self.mkpath(self.dist_dir)
 
         self.lib_dir = os.path.join(self.bdist_dir,
-            os.path.dirname(get_zipfile(self.distribution)))
+            os.path.dirname(get_zipfile(self.distribution, self.semi_standalone)))
         self.mkpath(self.lib_dir)
 
         self.ext_dir = os.path.join(self.lib_dir, 'lib-dynload')
@@ -816,7 +820,7 @@ class py2app(Command):
 
         # create the shared zipfile containing all Python modules
         archive_name = os.path.join(self.lib_dir,
-                                    os.path.basename(get_zipfile(dist)))
+                                    os.path.basename(get_zipfile(dist, self.semi_standalone)))
 
         for path, files in loader_files:
             dest = os.path.join(self.collect_dir, path)
@@ -847,7 +851,8 @@ class py2app(Command):
                 if os.path.exists(os.path.join(sys.prefix, ".Python")):
                     fn = os.path.join(sys.prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
                     if os.path.exists(fn):
-                        prefix = open(fn, 'rU').read().strip()
+                        with open(fn, 'rU') as fp:
+                            prefix = fp.read().strip()
 
                     rest_path = os.path.normpath(sys.executable)[len(os.path.normpath(sys.prefix))+1:]
                     if rest_path.startswith('.'):
@@ -1207,7 +1212,8 @@ class py2app(Command):
         if not isinstance(bootstrap, basestring):
             return bootstrap.getvalue()
         else:
-            return open(bootstrap, 'rU').read()
+            with open(bootstrap, 'rU') as fp:
+                return fp.read()
 
     def create_pluginbundle(self, target, script, use_runtime_preference=True):
         base = target.get_dest_base()

@@ -32,9 +32,11 @@ def create_appbundle(destdir, name, extension='.app', module=py2app.apptemplate,
         destmain = os.path.join(platdir, kw['CFBundleExecutable'].encode('utf-8'))
     else:
         destmain = os.path.join(platdir, kw['CFBundleExecutable'])
-    open(os.path.join(contents, 'PkgInfo'), 'w').write(
-        kw['CFBundlePackageType'] + kw['CFBundleSignature']
-    )
+
+    with open(os.path.join(contents, 'PkgInfo'), 'w') as fp:
+        fp.write(
+            kw['CFBundlePackageType'] + kw['CFBundleSignature']
+        )
     copy(srcmain, destmain)
     make_exec(destmain)
     mergetree(

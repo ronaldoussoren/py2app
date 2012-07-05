@@ -9,5 +9,7 @@ def _run(*scripts):
     for script in scripts:
         path = os.path.join(base, script)
         sys.argv[0] = __file__ = path
-        exec(compile(open(path).read(), path, 'exec'), globals(), globals())
+        with open(path) as fp:
+            source = fp.read() + "\n"
+        exec(compile(source, path, 'exec'), globals(), globals())
 

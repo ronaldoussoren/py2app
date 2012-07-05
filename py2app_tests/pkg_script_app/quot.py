@@ -8,8 +8,8 @@ def import_module(name):
     try:
         exec("import %s"%(name,))
         m = eval(name)
-    except ImportError:
-        print("* import failed")
+    except ImportError as exc:
+        print("* import failed: %s path: %s"%(exc, sys.path))
 
     else:
         print(m.__name__)

@@ -33,6 +33,11 @@ py2app 0.6.5 is a bugfix release
   "open application" and "open documents" Apple Events during startup,
   which broke an assumption in argv_emulation.py.
 
+- py2app is more strict w.r.t. explictly closing files, this avoids
+  ResourceWarnings for unclosed files.
+
+- fix test issue with semi-standalone builds on Python 3.2
+
 py2app 0.6.4
 ------------
 

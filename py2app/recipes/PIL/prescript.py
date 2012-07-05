@@ -13,8 +13,7 @@ def _recipes_pil_prescript(plugins):
                 __import__(plugin, globals(), locals(), [])
             except ImportError:
                 if Image.DEBUG:
-                    print 'Image: failed to import'
-                    print f, ':', sys.exc_info()[1]
+                    print('Image: failed to import')
         if Image.OPEN or Image.SAVE:
             Image._initialized = 2
     Image.init = init

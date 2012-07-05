@@ -32,9 +32,10 @@ def create_pluginbundle(destdir, name, extension='.plugin', module=py2app.bundle
         destmain = os.path.join(platdir, kw['CFBundleExecutable'].encode('utf-8'))
     else:
         destmain = os.path.join(platdir, kw['CFBundleExecutable'])
-    open(os.path.join(contents, 'PkgInfo'), 'w').write(
-        kw['CFBundlePackageType'] + kw['CFBundleSignature']
-    )
+    with open(os.path.join(contents, 'PkgInfo'), 'w') as fp:
+        fp.write(
+            kw['CFBundlePackageType'] + kw['CFBundleSignature']
+        )
     copy(srcmain, destmain)
     make_exec(destmain)
     mergetree(
