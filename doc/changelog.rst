@@ -38,6 +38,8 @@ py2app 0.6.5 is a bugfix release
 
 - fix test issue with semi-standalone builds on Python 3.2
 
+- added recipe for pyzmq
+
 py2app 0.6.4
 ------------
 

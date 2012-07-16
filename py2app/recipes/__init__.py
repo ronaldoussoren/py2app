@@ -12,3 +12,4 @@ from . import matplotlib
 from . import virtualenv
 from . import pyside
 from . import wx
+from . import pyzmq
