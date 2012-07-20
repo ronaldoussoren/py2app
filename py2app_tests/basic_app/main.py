@@ -12,8 +12,8 @@ def import_module(name):
         print ("* import failed")
 
     else:
-        for k in name.split('.')[1:]:
-            m = getattr(m, k)
+        #for k in name.split('.')[1:]:
+        #    m = getattr(m, k)
         print (m.__name__)
 
 def print_path():
