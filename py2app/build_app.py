@@ -1050,7 +1050,7 @@ class py2app(Command):
         indir = os.path.dirname(os.path.join(info['location'], info['name']))
         outdir = os.path.dirname(os.path.join(dst, info['name']))
         self.mkpath(os.path.join(outdir, 'Resources'))
-        pydir = 'python%s'%(info['version'])
+        pydir = 'python%s.%s'%(sys.version_info[:2])
 
         # Create a symlink "for Python.frameworks/Versions/Current". This
         # is required for the Mac App-store.
@@ -1373,7 +1373,7 @@ class py2app(Command):
         bootfile.close()
 
         self.copy_file(script, resdir)
-        pydir = os.path.join(resdir, 'lib', 'python' + sys.version[:3])
+        pydir = os.path.join(resdir, 'lib', 'python%s.%s'%(sys.version_info[:2]))
         if sys.version_info[0] == 2:
             arcdir = os.path.join(resdir, 'lib', 'python' + sys.version[:3])
         else:

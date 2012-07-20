@@ -40,6 +40,9 @@ py2app 0.6.5 is a bugfix release
 
 - added recipe for pyzmq
 
+- Don't use the version information from Python.framework's Info.plist,
+  but use ``sys.version_info``. This fixes a build problem with EPD.
+
 py2app 0.6.4
 ------------
 
