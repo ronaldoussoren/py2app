@@ -1,7 +1,7 @@
 """
 Testcase that tests a python package that contains data files
 
-See also issue #52 on the py2app tracker
+See also issue #53 on the py2app tracker
 """
 import sys
 if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2,7)) or \
