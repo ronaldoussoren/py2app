@@ -921,14 +921,20 @@ class py2app(Command):
                 pth = os.path.join(dname, fname)
 
                 # Check if we have found a package, exclude those
-                if zipio.isdir(pth) and not pth.endswith('.zip'):
+                if zipio.isdir(pth):
                     # XXX: the 'and not' part is wrong, need to fix zipio.isdir
                     for p in zipio.listdir(pth):
                         if p.startswith('__init__.') and p[8:] in exts:
                             break
 
                     else:
-                        copy_tree(pth, os.path.join(target_dir, fname))
+                        if os.path.isfile(pth):
+                            # Avoid extracting a resource file that happens
+                            # to be zipfile.
+                            # XXX: Need API in zipio for nicer code.
+                            copy_file(pth, os.path.join(target_dir, fname))
+                        else:
+                            copy_tree(pth, os.path.join(target_dir, fname))
                     continue
 
                 elif zipio.isdir(pth) and (

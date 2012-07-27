@@ -130,7 +130,10 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
 
 
 
-def copy_file(source, destination, dry_run=0):
+
+def copy_file(source, destination, preserve_mode=False, preserve_times=False, update=False, dry_run=0):
+    from distutils import log
+    log.info("copying file %s -> %s", source, destination)
     fp_in = zipio.open(source, 'rb')
     fp_out = None
     try:
@@ -138,11 +141,19 @@ def copy_file(source, destination, dry_run=0):
             fp_out = open(destination, 'wb')
             fp_out.write(fp_in.read())
 
+            if preserve_mode:
+                # XXX: copy current mode
+                pass
+
+            if preserve_times:
+                # XXX: copy current times
+                pass
+
+
     finally:
         fp_in.close()
         if fp_out is not None:
             fp_out.close()
-
 
 
 
@@ -492,7 +503,6 @@ def copy_tree(src, dst,
 
 
     from distutils.dir_util import mkpath
-    from distutils.file_util import copy_file
     from distutils.dep_util import newer
     from distutils.errors import DistutilsFileError
     from distutils import log
@@ -503,7 +513,7 @@ def copy_tree(src, dst,
     if condition is None:
         condition = skipscm
 
-    if not dry_run and not os.path.isdir(src):
+    if not dry_run and not zipio.isdir(src):
         raise DistutilsFileError(
               "cannot copy tree '%s': not a directory" % src)
     try:
@@ -539,12 +549,16 @@ def copy_tree(src, dst,
                     os.symlink(link_dest, dst_name)
             outputs.append(dst_name)
 
-        elif os.path.isdir(src_name):
+        elif zipio.isdir(src_name) and not os.path.isfile(src_name):
+            # ^^^ this odd tests ensures that resource files that
+            # happen to be a zipfile won't get extracted.
+            # XXX: need API in zipio to clean up this code
             outputs.extend(
                 copy_tree(src_name, dst_name, preserve_mode,
                           preserve_times, preserve_symlinks, update,
                           dry_run=dry_run, condition=condition))
         else:
+            print("xCopy %s using %r"%(src_name, copy_file))
             copy_file(src_name, dst_name, preserve_mode,
                       preserve_times, update, dry_run=dry_run)
             outputs.append(dst_name)

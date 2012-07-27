@@ -6,6 +6,9 @@ py2app 0.6.5
 
 py2app 0.6.5 is a bugfix release
 
+- Fix issue #53: py2app would crash if a data file happened to
+  be a zipfile.
+
 - py2app copies data files in the directory for a package into
   the application bundle. It also did this for directories that
   represent subpackages, which made it impossible to exclude

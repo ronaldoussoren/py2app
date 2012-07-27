@@ -16,6 +16,7 @@ import time
 import os
 import signal
 import py2app
+from modulegraph import zipio
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -93,6 +94,26 @@ class TestExplicitIncludes (unittest.TestCase):
     # End of setup code
     # 
 
+    def test_package_data(self):
+        p = self.start_app()
+        p.stdin.write('import_module("package2.sub")\n'.encode('latin1'))
+        p.stdin.flush()
+        ln = p.stdout.readline()
+        self.assertEqual(ln.strip(), b"package2.sub")
+
+        p.stdin.write('import package2.sub\n'.encode('latin1'))
+        p.stdin.write('print(package2.sub.__file__)\n'.encode('latin1'))
+        p.stdin.flush()
+        ln = p.stdout.readline()
+        path = ln.decode('utf-8')[:-1]
+
+        
+        self.assertTrue(os.path.basename(path) in ['__init__.py', '__init__.pyc', '__init__.pyo'])
+        self.assertTrue(zipio.isfile(path))
+
+        path = os.path.join(os.path.dirname(path), 'data.dat')
+        self.assertTrue(zipio.isfile(path) or os.path.isfile(path))
+
 
     def test_simple_imports(self):
         p = self.start_app()
@@ -102,6 +123,9 @@ class TestExplicitIncludes (unittest.TestCase):
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"package2.sub")
+
+class TestExplicitIncludesWithPackage (TestExplicitIncludes):
+    py2app_args = [ '--packages=package2' ]
 
 if __name__ == "__main__":
     unittest.main()
