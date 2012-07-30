@@ -63,7 +63,7 @@ except NameError:
 def get_zipfile(dist, semi_standalone=False):
     if sys.version_info[0] == 3:
         if semi_standalone:
-            return "site-packages.zip"%(sys.version_info[:2])
+            return "python%d.%d/site-packages.zip"%(sys.version_info[:2])
         else:
             return "python%d%d.zip"%(sys.version_info[:2])
     return getattr(dist, "zipfile", None) or "site-packages.zip"
@@ -821,7 +821,7 @@ class py2app(Command):
 
         # create the shared zipfile containing all Python modules
         archive_name = os.path.join(self.lib_dir,
-                                    os.path.basename(get_zipfile(dist, self.semi_standalone)))
+                                    get_zipfile(dist, self.semi_standalone))
 
         for path, files in loader_files:
             dest = os.path.join(self.collect_dir, path)
@@ -1381,7 +1381,7 @@ class py2app(Command):
 
         self.copy_file(script, resdir)
         pydir = os.path.join(resdir, 'lib', 'python%s.%s'%(sys.version_info[:2]))
-        if sys.version_info[0] == 2:
+        if sys.version_info[0] == 2 or self.semi_standalone:
             arcdir = os.path.join(resdir, 'lib', 'python' + sys.version[:3])
         else:
             arcdir = os.path.join(resdir, 'lib')

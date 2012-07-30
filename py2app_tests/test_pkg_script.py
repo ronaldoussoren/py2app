@@ -151,6 +151,8 @@ class TestBasicApp (unittest.TestCase):
         if not os.path.exists(zfpath):
             zfpath = os.path.join(dirpath, 'Resources/lib/python%d.%d/site-packages.zip'%(
                 sys.version_info[:2]))
+        if not os.path.exists(zfpath):
+            zfpath = os.path.join(dirpath, 'Resources/lib/site-packages.zip')
 
         if not os.path.exists(zfpath):
             self.fail("Cannot locate embedded zipfile")

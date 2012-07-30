@@ -89,24 +89,24 @@ def addpackage(sitedir, name):
         reset = 0
     fullname = os.path.join(sitedir, name)
     try:
-        f = open(fullname)
+        with open(fullname) as f:
+            while 1:
+                dir = f.readline()
+                if not dir:
+                    break
+                if dir[0] == '#':
+                    continue
+                if dir.startswith("import"):
+                    exec(dir)
+                    continue
+                if dir[-1] == '\n':
+                    dir = dir[:-1]
+                dir, dircase = makepath(sitedir, dir)
+                if not dircase in _dirs_in_sys_path and os.path.exists(dir):
+                    sys.path.append(dir)
+                    _dirs_in_sys_path[dircase] = 1
     except IOError:
         return
-    while 1:
-        dir = f.readline()
-        if not dir:
-            break
-        if dir[0] == '#':
-            continue
-        if dir.startswith("import"):
-            exec(dir)
-            continue
-        if dir[-1] == '\n':
-            dir = dir[:-1]
-        dir, dircase = makepath(sitedir, dir)
-        if not dircase in _dirs_in_sys_path and os.path.exists(dir):
-            sys.path.append(dir)
-            _dirs_in_sys_path[dircase] = 1
     if reset:
         _dirs_in_sys_path = None
 
