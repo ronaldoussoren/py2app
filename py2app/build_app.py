@@ -12,6 +12,7 @@ import zipfile
 import plistlib
 import shlex
 import shutil
+import pkg_resources
 
 try:
     import sysconfig
@@ -328,7 +329,7 @@ class py2app(Command):
         self.excludes.add('site')
         if getattr(self.distribution, 'install_requires', None):
             self.includes.add('pkg_resources')
-            self.eggs = require(self.distribution.install_requires)
+            self.eggs = pkg_resources.require(self.distribution.install_requires)
         dylib_excludes = fancy_split(self.dylib_excludes)
         self.dylib_excludes = []
         for fn in dylib_excludes:
