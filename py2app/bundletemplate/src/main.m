@@ -373,7 +373,11 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP_DEFINE(NAME)
 
 #define OPT_LOOKUP(NAME) \
-	NAME ## Ptr py2app_ ## NAME = (NAME ## Ptr)dlsym(py_dylib, #NAME); 
+    	LOOKUP_SYMBOL(NAME); \
+	NAME ## Ptr NAME = NULL; \
+        if (tmpSymbol) { \
+	   NAME = (NAME ## Ptr)NSAddressOfSymbol(tmpSymbol); \
+	} 
 
     LOOKUP_SYMBOL(Py_DecRef);
     LOOKUP_DEFINEADDRESS(Py_DecRef, (tmpSymbol ? NSAddressOfSymbol(tmpSymbol) : &DefaultDecRef));
@@ -459,7 +463,7 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     NSMutableDictionary *newEnviron = [NSMutableDictionary dictionary];
     [newEnviron setObject:[NSString stringWithFormat:@"%p", bundleBundle()] forKey:@"PYOBJC_BUNDLE_ADDRESS"];
     [newEnviron setObject:[NSString stringWithFormat:@"%p", bundleBundle()] forKey:[NSString
-	 stringWithFormat:@"PYOBJC_BUNDLE_ADDRESS%ld", getpid()]];
+	 stringWithFormat:@"PYOBJC_BUNDLE_ADDRESS%ld", (long)getpid()]];
     [newEnviron setObject:resourcePath forKey:@"RESOURCEPATH"];
     NSMutableDictionary *oldEnviron = [NSMutableDictionary dictionary];
     
@@ -572,19 +576,18 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
 	NSMutableData *data_argv = [NSMutableData dataWithCapacity:(sizeof(char *) * argc)];
 	char **argv_new = [data_argv mutableBytes];
 	if (isPy3k) {
-		argv_new[0] = (char*)_Py_DecodeUTF8_surrogateescape(c_mainPyPath);
+		argv_new[0] = (char*)_Py_DecodeUTF8_surrogateescape(c_mainPyPath, strlen(c_mainPyPath));
 	} else  {
 		argv_new[0] = c_mainPyPath;
 	}
 	for (i = 1; i < argc; i++) {
 		if (isPy3k) {
-			argv_new[i] = _Py_DecodeUTF8_surrogateescape(argv[i]);
+			argv_new[i] = _Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]));
 		} else {
 			argv_new[i] = argv[i];
 		}
 	}
-	argv_new[argc] = NULL
-	memcpy(&argv_new[1], &argv[1], (argc - 1) * sizeof(char *));
+	argv_new[argc] = NULL;
 	PySys_SetArgv(argc, argv_new);
     }
 

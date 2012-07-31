@@ -38,7 +38,8 @@ gPreBuildVariants = [
     {
         'name': 'main-i386',
         'target': '10.3',
-        'cflags': '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.4u.sdk -arch i386',
+        #'cflags': '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.4u.sdk -arch i386',
+        'cflags': '-arch i386',
         'cc': 'clang',
     },
     {
@@ -103,7 +104,8 @@ def main(all=False, arch=None):
                     root = fp.read().strip()
                     fp.close()
 
-                CC=os.path.join(root, 'usr', 'bin', entry['cc'])
+                #CC=os.path.join(root, 'usr', 'bin', entry['cc'])
+                CC=entry['cc']
                 CFLAGS = BASE_CFLAGS + ' ' + entry['cflags'].replace('@@XCODE_ROOT@@', root)
                 os.environ['MACOSX_DEPLOYMENT_TARGET'] = entry['target']
                 os.system('"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s' % locals())
