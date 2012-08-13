@@ -75,15 +75,19 @@ class TestBasicPlugin (unittest.TestCase):
                 root = root.decode('utf-8')
 
             if platform.mac_ver()[0] < '10.6.':
-                cc = ['gcc-4.2']
+                cc = ['gcc']
+                env = dict(os.environ)
+                env['MACOSX_DEPLOYMENT_TARGET'] = get_config_var('MACOSX_DEPLOYMENT_TARGET')
             else:
                 cc = ['xcrun', 'clang']
+                env = dict(os.environ)
 
 
             p = subprocess.Popen(cc
                 +  get_config_var('LDFLAGS').split() + [ 
                     '-o', 'bundle_loader', os.path.join(DIR_NAME, 'bundle_loader.m'), 
                     '-framework', 'Foundation'],
+                env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 close_fds=True)
