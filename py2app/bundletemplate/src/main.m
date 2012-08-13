@@ -582,7 +582,7 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
 	}
 	for (i = 1; i < argc; i++) {
 		if (isPy3k) {
-			argv_new[i] = _Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]));
+			argv_new[i] = (char*)_Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]));
 		} else {
 			argv_new[i] = argv[i];
 		}

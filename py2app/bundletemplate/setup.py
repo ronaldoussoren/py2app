@@ -21,7 +21,7 @@ gPreBuildVariants = [
         'name': 'main-x86_64',
         'target': '10.5',
         'cflags': '-isysroot / -arch x86_64',
-        'cc': 'clang',
+        'cc': 'gcc-4.2',
     },
     {
         'name': 'main-fat3',
@@ -33,14 +33,14 @@ gPreBuildVariants = [
         'name': 'main-intel',
         'target': '10.5',
         'cflags': '-isysroot / -arch i386 -arch x86_64',
-        'cc': 'clang',
+        'cc': 'gcc-4.2',
     },
     {
         'name': 'main-i386',
         'target': '10.3',
         #'cflags': '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.4u.sdk -arch i386',
         'cflags': '-arch i386',
-        'cc': 'clang',
+        'cc': 'gcc-4.2',
     },
     {
         'name': 'main-ppc',
@@ -103,6 +103,8 @@ def main(all=False, arch=None):
                     fp = os.popen('xcode-select -print-path', 'r')
                     root = fp.read().strip()
                     fp.close()
+
+                print ("rebuilding %s"%(entry['name']))
 
                 #CC=os.path.join(root, 'usr', 'bin', entry['cc'])
                 CC=entry['cc']
