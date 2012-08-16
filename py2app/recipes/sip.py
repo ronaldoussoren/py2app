@@ -87,7 +87,11 @@ class Sip(object):
         # naive inclusion of ALL sip packages
         # stupid C modules.. hate hate hate
         for pkg in packages:
-            mf.import_hook(pkg, m)
+            try:
+                mf.import_hook(pkg, m)
+            except ImportError, exc:
+                print("WARNING: ImportError in sip recipe ignored: %s"%(exc,))
+
         if self.warn:
             print('')
             print('== PyQt Free Edition GPL warning ==')
