@@ -14,7 +14,7 @@ gPreBuildVariants = [
     {
         'name': 'main-ppc64',
         'target': '10.5',
-        'cflags': '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.5.sdk -arch x86_64',
+        'cflags': '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.5.sdk -arch ppc64',
         'cc': 'gcc-4.2',
     },
     {
