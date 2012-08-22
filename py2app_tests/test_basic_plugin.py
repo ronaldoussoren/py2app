@@ -84,7 +84,7 @@ class TestBasicPlugin (unittest.TestCase):
 
 
             p = subprocess.Popen(cc
-                +  get_config_var('LDFLAGS').split() + [ 
+                +  get_config_var('LDFLAGS').split() + get_config_var('CFLAGS').split() + [ 
                     '-o', 'bundle_loader', os.path.join(DIR_NAME, 'bundle_loader.m'), 
                     '-framework', 'Foundation'],
                 env=env,
