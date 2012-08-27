@@ -89,7 +89,7 @@ class Sip(object):
         for pkg in packages:
             try:
                 mf.import_hook(pkg, m)
-            except ImportError, exc:
+            except ImportError as exc:
                 print("WARNING: ImportError in sip recipe ignored: %s"%(exc,))
 
         if self.warn:
