@@ -46,6 +46,12 @@ py2app 0.6.5 is a bugfix release
 - Don't use the version information from Python.framework's Info.plist,
   but use ``sys.version_info``. This fixes a build problem with EPD.
 
+- Ignore some more files when copying package data:
+
+  - VIM swap files (``.foo.py.swp``)
+
+  - Backup files for a number of tools: ``foo.orig`` and ``foo~``
+
 py2app 0.6.4
 ------------
 

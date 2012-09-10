@@ -919,6 +919,12 @@ class py2app(Command):
                 if fname in ('__pycache__',):
                     # Ignore PEP 3147 bytecode cache
                     continue
+                if fname.startswith('.') and fname.endswith('.swp'):
+                    # Ignore vim(1) temporary files
+                    continue
+                if fname.endswith('~') or fname.endswith('.orig'):
+                    # Ignore backup files for common tools (hg, emacs, ...)
+                    continue
                 pth = os.path.join(dname, fname)
 
                 # Check if we have found a package, exclude those
