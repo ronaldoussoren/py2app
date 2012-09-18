@@ -1,7 +1,8 @@
 """TinyTinyEdit -- A minimal Document-based Cocoa application."""
 
-from Cocoa import *
+from Cocoa import NSDocument
 from PyObjCTools import AppHelper
+import objc
 import sys
 
 class TinyTinyDocument(NSDocument):
