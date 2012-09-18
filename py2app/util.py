@@ -134,12 +134,11 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
 def copy_file(source, destination, preserve_mode=False, preserve_times=False, update=False, dry_run=0):
     from distutils import log
     log.info("copying file %s -> %s", source, destination)
-    fp_in = zipio.open(source, 'rb')
-    fp_out = None
-    try:
+    with zipio.open(source, 'rb') as fp_in:
         if not dry_run:
-            fp_out = open(destination, 'wb')
-            fp_out.write(fp_in.read())
+            with open(destination, 'wb') as fp_out:
+                data = fp_in.read()
+                fp_out.write(data)
 
             if preserve_mode:
                 # XXX: copy current mode
@@ -148,14 +147,6 @@ def copy_file(source, destination, preserve_mode=False, preserve_times=False, up
             if preserve_times:
                 # XXX: copy current times
                 pass
-
-
-    finally:
-        fp_in.close()
-        if fp_out is not None:
-            fp_out.close()
-
-
 
 
 def newer(source, target):
@@ -315,24 +306,22 @@ def byte_compile(py_files, optimize=0, force=0,
         if verbose:
             print("writing byte-compilation script '%s'" % script_name)
         if not dry_run:
-            script = open(script_name, "w")
-            script.write("""
+            with open(script_name, "w") as script:
+                script.write("""
 from py2app.util import byte_compile
 from modulegraph.modulegraph import *
 files = [
 """)
 
-            for f in py_files:
-                script.write(repr(f) + ",\n")
-            script.write("]\n")
-            script.write("""
+                for f in py_files:
+                    script.write(repr(f) + ",\n")
+                script.write("]\n")
+                script.write("""
 byte_compile(files, optimize=%r, force=%r,
              target_dir=%r,
              verbose=%r, dry_run=0,
              direct=1)
 """ % (optimize, force, target_dir, verbose))
-
-            script.close()
 
         # Ensure that py2app is on PYTHONPATH, this ensures that
         # py2app.util can be found even when we're running from
@@ -384,11 +373,9 @@ byte_compile(files, optimize=%r, force=%r,
                     if suffix in ('.py', '.pyw'):
                         fn = cfile + '.py'
 
-                        fp_in = zipio.open(mod.filename, 'rb')
-                        fp_out = open(fn, 'wb')
-                        fp_out.write(fp_in.read())
-                        fp_in.close()
-                        fp_out.close()
+                        with zipio.open(mod.filename, 'rb') as fp_in:
+                            with open(fn, 'wb') as fp_out:
+                                fp_out.write(fp_in.read())
 
                         compile(fn, cfile, dfile)
                         os.unlink(fn)

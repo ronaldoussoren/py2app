@@ -680,7 +680,8 @@ class py2app(Command):
             dgraph = os.path.join(appdir, appname + '.html')
             print("*** creating dependency html: %s ***"
                 % (os.path.basename(dgraph),))
-            mf.create_xref(open(dgraph, 'w'))
+            with open(dgraph, 'w') as fp:
+                mf.create_xref(fp)
 
     def build_graph(self, mf, flatpackages):
         for target in self.targets:
@@ -690,7 +691,8 @@ class py2app(Command):
             dgraph = os.path.join(appdir, appname + '.dot')
             print("*** creating dependency graph: %s ***"
                 % (os.path.basename(dgraph),))
-            mf.graphreport(open(dgraph, 'w'), flatpackages=flatpackages)
+            with open(dgraph, 'w') as fp:
+                mf.graphreport(fp, flatpackages=flatpackages)
 
     def finalize_modulefinder(self, mf):
         for item in mf.flatten():
@@ -700,8 +702,8 @@ class py2app(Command):
                     dn = os.path.dirname(fn)
                     if not os.path.exists(dn):
                         os.makedirs(dn)
-                    fp = open(fn, 'w')
-                    fp.close()
+                    with open(fn, 'w') as fp:
+                        pass
 
                 item.filename = fn
 
@@ -1493,7 +1495,8 @@ class py2app(Command):
             fname = slashname + os.path.splitext(item.filename)[1]
             source = make_loader(fname)
             if not self.dry_run:
-                open(pathname, "w").write(source)
+                with open(pathname, "w") as fp:
+                    fp.write(source)
             else:
                 return
         return SourceModule(item.identifier, pathname)
