@@ -171,6 +171,19 @@ class TestBasicApp (unittest.TestCase):
         p.stdin.close()
         p.stdout.close()
 
+    def testIsOptimized(self):
+        p = self.start_app()
+
+        try:
+            p.stdin.write('print(__debug__)\n'.encode('latin1'))
+            p.stdin.flush()
+            ln = p.stdout.readline()
+            self.assertEqual(ln.strip(), b"True")
+
+        finally:
+            p.stdin.close()
+            p.stdout.close()
+
 class TestBasicAliasApp (TestBasicApp):
     py2app_args = [ '--alias', ]
 
