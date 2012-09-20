@@ -551,7 +551,7 @@ class py2app(Command):
         return scripts
 
     def get_plist_options(self):
-        return dict(
+        result = dict(
             PyOptions=dict(
                 use_pythonpath=bool(self.use_pythonpath),
                 site_packages=bool(self.site_packages),
@@ -559,10 +559,12 @@ class py2app(Command):
                 argv_emulation=bool(self.argv_emulation),
                 emulate_shell_environment=bool(self.emulate_shell_environment),
                 no_chdir=bool(self.no_chdir),
-                optimize=self.optimize,
                 prefer_ppc=self.prefer_ppc,
             ),
         )
+        if self.optimize:
+            result['PyOptions']['optimize'] = self.optimize
+        return result
 
     
     def initialize_plist(self):

@@ -40,8 +40,8 @@ class TinyTinyDocument(NSDocument):
                 maxint = sys.maxsize
                 maxint_label = 'maxsize'
 
-            self.textView.setString_("Welcome to TinyTinyEdit in Python\nVersion: %s\nsys.%s: %d\nbyteorder: %s"%(
-                sys.version, maxint_label, maxint, sys.byteorder))
+            self.textView.setString_("Welcome to TinyTinyEdit in Python\nVersion: %s\nsys.%s: %d\nbyteorder: %s\nflags: %s"%(
+                sys.version, maxint_label, maxint, sys.byteorder, sys.flags))
 
     def readFromUTF8(self, path):
         f = file(path)

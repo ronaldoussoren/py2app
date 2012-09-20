@@ -6,6 +6,9 @@ py2app 0.6.5
 
 py2app 0.6.5 is a bugfix release
 
+- Generated bundles always started with python optimization active
+  (that is, as if running as 'python -O').
+
 - Fix issue #53: py2app would crash if a data file happened to
   be a zipfile.
 
