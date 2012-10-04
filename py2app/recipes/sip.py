@@ -15,7 +15,6 @@ import sys
 class Sip(object):
     def __init__(self):
         self.packages = None
-        self.warn = None
 
     def config(self):
         if self.packages is not None:
@@ -66,7 +65,6 @@ class Sip(object):
             print("WARNING: PyQt uic module found.")
             print("avoid python3 metaclass syntax errors by adding 'PyQt4.uic' to your excludes option.")
 
-        self.warn = cfg.qt_edition == 'free'
         return self.packages
 
     def check(self, cmd, mf):
@@ -92,13 +90,6 @@ class Sip(object):
             except ImportError as exc:
                 print("WARNING: ImportError in sip recipe ignored: %s"%(exc,))
 
-        if self.warn:
-            print('')
-            print('== PyQt Free Edition GPL warning ==')
-            print('Your application is including PyQt Free Edition!')
-            print('Please read the terms of the GPL license before')
-            print('distributing this application!')
-            print('')
         return dict()
 
 check = Sip().check
