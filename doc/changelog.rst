@@ -6,9 +6,10 @@ py2app 0.6.5
 
 py2app 0.6.5 is a bugfix release
 
-- py2app no longer warns about the Qt license. We don't warn about
+- issue #46: py2app no longer warns about the Qt license. We don't warn about
   other possibly GPL licensed software either and py2app is not
   a license-enforcement tool.
+  
 
 - Generated bundles always started with python optimization active
   (that is, as if running as 'python -O').
