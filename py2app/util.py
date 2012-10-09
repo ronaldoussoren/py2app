@@ -1,11 +1,12 @@
 from __future__ import print_function
 
-import os, sys, imp, time
+import os, sys, imp, time, errno
 from modulegraph.find_modules import PY_SUFFIXES, C_SUFFIXES
 from modulegraph.util import *
 from modulegraph import zipio
 import macholib.util
 import warnings
+from distutils import log
 
 import pkg_resources
 import subprocess
@@ -131,9 +132,19 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
 
 
 
-
 def copy_file(source, destination, preserve_mode=False, preserve_times=False, update=False, dry_run=0):
-    from distutils import log
+    while True:
+        try:
+            _copy_file(source, destination, preserve_mode, preserve_times, update, dry_run)
+            return
+        except IOError as exc:
+            if exc.errno != errno.EAGAIN:
+                raise
+
+            log.info("copying file %s failed due to spurious EAGAIN, retrying in 2 seconds", source)
+            time.sleep(2)
+
+def _copy_file(source, destination, preserve_mode=False, preserve_times=False, update=False, dry_run=0):
     log.info("copying file %s -> %s", source, destination)
     with zipio.open(source, 'rb') as fp_in:
         if not dry_run:
