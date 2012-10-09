@@ -8,6 +8,7 @@ import macholib.util
 import warnings
 
 import pkg_resources
+import subprocess
 
 # Deprecated functionality
 def os_path_islink(path):
@@ -545,7 +546,6 @@ def copy_tree(src, dst,
                           preserve_times, preserve_symlinks, update,
                           dry_run=dry_run, condition=condition))
         else:
-            print("xCopy %s using %r"%(src_name, copy_file))
             copy_file(src_name, dst_name, preserve_mode,
                       preserve_times, update, dry_run=dry_run)
             outputs.append(dst_name)
@@ -570,17 +570,24 @@ def find_app(app):
             return dpath
     return None
 
-MOMC = '/Library/Application Support/Apple/Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc'
-if not os.path.exists(MOMC):
-    MOMC = '/Developer/Library/Xcode/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc'
-if not os.path.exists(MOMC):
-    MOMC = '/Developer/usr/bin/momc'
+if os.path.exists('/usr/bin/xcrun'):
+    MOMC=subprocess.check_output(['/usr/bin/xcrun', '-find', 'momc'])[:-1]
+else:
+    MOMC = '/Library/Application Support/Apple/Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc'
+    if not os.path.exists(MOMC):
+        MOMC = '/Developer/Library/Xcode/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc'
+    if not os.path.exists(MOMC):
+        MOMC = '/Developer/usr/bin/momc'
 
 def momc(src, dst):
-    os.spawnv(os.P_WAIT, MOMC, [MOMC, src, dst])
+    subprocess.check_call([MOMC, src, dst])
 
-MAPC = '/Developer/Library/Xcode/Plug-ins/XDMappingModel.xdplugin/Contents/Resources/mapc'
-if not os.path.exists(MAPC):
-    MAPC = '/Developer/usr/bin/mapc'
+if os.path.exists('/usr/bin/xcrun'):
+    MAPC=subprocess.check_output(['/usr/bin/xcrun', '-find', 'mapc'])[:-1]
+else:
+    MAPC = '/Developer/Library/Xcode/Plug-ins/XDMappingModel.xdplugin/Contents/Resources/mapc'
+    if not os.path.exists(MAPC):
+        MAPC = '/Developer/usr/bin/mapc'
+
 def mapc(src, dst):
-    os.spawnv(os.P_WAIT, MAPC, [MAPC, src, dst])
+    subprocess.check_call([MAPC, src, dst])
