@@ -79,3 +79,5 @@ Options for 'py2app' command::
                           is complete
   --debug-skip-macholib   skip macholib phase (app will not be standalone!)
   --emulate-shell-environment emulate the shell environment in a Terminal window
+  --qt-plugins            comma-seperated list of Qt plugins to include in a
+                          application using PyQt4.
