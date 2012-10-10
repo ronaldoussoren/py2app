@@ -581,8 +581,19 @@ def find_app(app):
             return dpath
     return None
 
+def check_output(command_line):
+    p = subprocess.Popen(command_line,
+            stdout=subprocess.PIPE)
+    stdout, _ = p.communicate()
+    xit = p.wait()
+    if xit != 0:
+        raise subprocess.CalledProcessError(xit, command_line)
+
+    return stdout
+
+
 if os.path.exists('/usr/bin/xcrun'):
-    MOMC=subprocess.check_output(['/usr/bin/xcrun', '-find', 'momc'])[:-1]
+    MOMC=check_output(['/usr/bin/xcrun', '-find', 'momc'])[:-1]
 else:
     MOMC = '/Library/Application Support/Apple/Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc'
     if not os.path.exists(MOMC):
@@ -594,7 +605,7 @@ def momc(src, dst):
     subprocess.check_call([MOMC, src, dst])
 
 if os.path.exists('/usr/bin/xcrun'):
-    MAPC=subprocess.check_output(['/usr/bin/xcrun', '-find', 'mapc'])[:-1]
+    MAPC=check_output(['/usr/bin/xcrun', '-find', 'mapc'])[:-1]
 else:
     MAPC = '/Developer/Library/Xcode/Plug-ins/XDMappingModel.xdplugin/Contents/Resources/mapc'
     if not os.path.exists(MAPC):

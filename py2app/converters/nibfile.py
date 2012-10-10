@@ -4,6 +4,7 @@ Automatic compilation of XIB files
 from __future__ import print_function
 import subprocess, os
 from py2app.decorators import converts
+from py2app.util import check_output
 import time
 
 # XXX: _run_nibtool is an experiment while researching an odd
@@ -33,7 +34,7 @@ def _get_ibtool():
     global gTool
     if gTool is None:
         if os.path.exists('/usr/bin/xcrun'):
-            gTool = subprocess.check_output(['/usr/bin/xcrun', '-find', 'ibtool'])[:-1]
+            gTool = check_output(['/usr/bin/xcrun', '-find', 'ibtool'])[:-1]
         else:
             gTool = 'ibtool'
 
