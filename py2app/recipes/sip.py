@@ -11,11 +11,14 @@ detected by the python code in py2app).
 """
 
 import sys
+import glob
+import os
 import pkg_resources
 
 class Sip(object):
     def __init__(self):
         self.packages = None
+        self.plugin_dir = None
 
     def config(self):
         if self.packages is not None:
@@ -48,6 +51,7 @@ class Sip(object):
 
         sipdir = os.path.dirname(cfg.pyqt_mod_dir)
         self.packages = set()
+        self.plugin_dir = os.path.join(cfg.qt_dir, 'plugins')
 
         for fn in os.listdir(sipdir):
             fullpath = os.path.join(sipdir, fn)
@@ -72,6 +76,8 @@ class Sip(object):
         try:
             packages = self.config()
         except ImportError:
+            if cmd.qt_plugins:
+                print("WARNING: Qt plugins specified while not using Qt, ignoring option")
             return dict()
 
         if 'PyQt4.uic' in packages:
@@ -105,7 +111,23 @@ class Sip(object):
                 print("WARNING: ImportError in sip recipe ignored: %s"%(exc,))
 
         if mf.findNode('PyQt4') is not None:
-            return dict(resources=[pkg_resources.resource_filename('py2app', 'recipes/qt.conf')])
+            resources = [pkg_resources.resource_filename('py2app', 'recipes/qt.conf')]
+
+            for item in cmd.qt_plugins:
+                if '/' not in item:
+                    item = item + '/*'
+
+                if '*' in item:
+                    for path in glob.glob(os.path.join(self.plugin_dir, item)):
+                        resources.append((os.path.dirname('qt_plugins' + path[len(self.plugin_dir):]), [path]))
+                else:
+                    resources.append((os.path.dirname(os.path.join('qt_plugins', item)), os.path.join(self.plugin_dir, item)))
+
+            return dict(resources=resources)
+
+        else:
+            if cmd.qt_plugins:
+                print("WARNING: Qt plugins specified while not using Qt, ignoring option")
 
         return dict()
 

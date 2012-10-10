@@ -6,6 +6,27 @@ py2app 0.6.5
 
 py2app 0.6.5 is a bugfix release
 
+- issue #18: improved PyQt support.
+
+  Py2app now has a new option named "--qt_plugins" (or "qt_plugins" in setup.py),
+  this option specify a list of plugins that should be included in the
+  application bundle. The items of the list can have a number of forms:
+
+  * "plugintype/libplugin.dylib"
+
+    Specify one particular plugin
+
+  * "plugintype/\*foo\*"
+
+    Specify one or more plugins using a glob pattern
+
+  * "plugintype"
+
+    Include all plugins of a type, equivalent to "plugintype/\*".
+
+  The plugins are copied into "Resources/qt_plugins" and py2app adds a "qt.conf"
+  file that points to that location for plugins.
+
 - issue #49: package data that is a zipfile is now correctly copied into
   the bundle instead of extracting the archive.
 

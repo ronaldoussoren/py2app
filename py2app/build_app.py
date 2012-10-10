@@ -247,7 +247,7 @@ class py2app(Command):
         ("debug-skip-macholib", None,
          "skip macholib phase (app will not be standalone!)"),
         ("arch=", None, "set of architectures to use (fat, fat3, universal, intel, i386, ppc, x86_64; default is the set for the current python binary)"),
-
+        ("qt-plugins=", None, "set of Qt plugins to include in the application bundle (default None)"),
         ]
 
     boolean_options = [
@@ -308,6 +308,7 @@ class py2app(Command):
         self.prefer_ppc = False
         self.filters = []
         self.eggs = []
+        self.qt_plugins = None
 
     def finalize_options (self):
         if not self.strip:
@@ -377,6 +378,8 @@ class py2app(Command):
 
 
         self.runtime_preferences = list(self.get_runtime_preferences())
+
+        self.qt_plugins = fancy_split(self.qt_plugins)
 
 
         if self.datamodels:
