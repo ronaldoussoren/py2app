@@ -6,7 +6,7 @@ py2app 0.6.5
 
 py2app 0.6.5 is a bugfix release
 
-- issue #18: improved PyQt support.
+- issue #18: improved PyQt and PySide support.
 
   Py2app now has a new option named "--qt_plugins" (or "qt_plugins" in setup.py),
   this option specify a list of plugins that should be included in the

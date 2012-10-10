@@ -76,8 +76,6 @@ class Sip(object):
         try:
             packages = self.config()
         except ImportError:
-            if cmd.qt_plugins:
-                print("WARNING: Qt plugins specified while not using Qt, ignoring option")
             return dict()
 
         if 'PyQt4.uic' in packages:
@@ -124,10 +122,6 @@ class Sip(object):
                     resources.append((os.path.dirname(os.path.join('qt_plugins', item)), os.path.join(self.plugin_dir, item)))
 
             return dict(resources=resources)
-
-        else:
-            if cmd.qt_plugins:
-                print("WARNING: Qt plugins specified while not using Qt, ignoring option")
 
         return dict()
 
