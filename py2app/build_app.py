@@ -1078,6 +1078,12 @@ class py2app(Command):
                 os.path.basename(outdir),
                 os.path.join(os.path.dirname(outdir), "Current"))
 
+        # Experiment for issue 57
+        if not os.path.exists(os.path.join(indir, 'include')):
+            alt = os.path.join(indir, 'Versions/Current')
+            if os.path.exists(os.path.join(alt, 'include')):
+                indir = alt
+
         # distutils looks for some files relative to sys.executable, which
         # means they have to be in the framework...
         self.mkpath(os.path.join(outdir, 'include'))
