@@ -11,6 +11,7 @@ detected by the python code in py2app).
 """
 
 import sys
+import pkg_resources
 
 class Sip(object):
     def __init__(self):
@@ -103,6 +104,8 @@ class Sip(object):
             except ImportError as exc:
                 print("WARNING: ImportError in sip recipe ignored: %s"%(exc,))
 
+        if mf.findNode('PyQt4') is not None:
+            return dict(resources=[pkg_resources.resource_filename('py2app', 'recipes/qt.conf')])
 
         return dict()
 
