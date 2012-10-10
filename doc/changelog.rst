@@ -6,6 +6,9 @@ py2app 0.6.5
 
 py2app 0.6.5 is a bugfix release
 
+- issue #49: package data that is a zipfile is now correctly copied into
+  the bundle instead of extracting the archive.
+
 - issue #59: compile site.py to ensure that the generated bundle doesn't
   change on first run.
 
