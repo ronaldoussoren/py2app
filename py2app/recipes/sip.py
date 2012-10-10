@@ -61,9 +61,9 @@ class Sip(object):
 
         # Causes a python3-related syntax error (metaclass keyword),
         # and you probably don't need it:
-        if "PyQt4.uic" in self.packages and sys.version_info.major != 3:
-            print("WARNING: PyQt uic module found.")
-            print("avoid python3 metaclass syntax errors by adding 'PyQt4.uic' to your excludes option.")
+        #if "PyQt4.uic" in self.packages and sys.version_info.major != 3:
+        #    print("WARNING: PyQt uic module found.")
+        #    print("avoid python3 metaclass syntax errors by adding 'PyQt4.uic' to your excludes option.")
 
         return self.packages
 
@@ -72,6 +72,19 @@ class Sip(object):
             packages = self.config()
         except ImportError:
             return dict()
+
+        if 'PyQt4.uic' in packages:
+            # PyQt4.uic contains subpackages with python 2 and python 3
+            # support. Exclude the variant that won't be ussed, this avoids
+            # compilation errors on Python 2 (because some of the Python 3
+            # code is not valid Python 2 code)
+            if sys.version_info[0] == 2:
+                ref = 'PyQt4.uic.port_v3'
+            else:
+                ref = 'PyQt4.uic.port_v2'
+
+            # Exclude...
+            mf.lazynodes[ref] = None
 
         for pkg in packages:
             m = mf.findNode(pkg)
@@ -89,6 +102,7 @@ class Sip(object):
                 mf.import_hook(pkg, m)
             except ImportError as exc:
                 print("WARNING: ImportError in sip recipe ignored: %s"%(exc,))
+
 
         return dict()
 
