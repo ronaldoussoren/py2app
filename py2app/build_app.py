@@ -1308,7 +1308,10 @@ class py2app(Command):
         pyhome = os.path.join(resdir, 'lib', 'python' + sys.version[:3])
         realhome = os.path.join(sys.prefix, 'lib', 'python' + sys.version[:3])
         makedirs(pyhome)
-        self.symlink('../../site.py', os.path.join(pyhome, 'site.py'))
+        if self.optimize:
+            self.symlink('../../site.pyo', os.path.join(pyhome, 'site.pyo'))
+        else:
+            self.symlink('../../site.pyc', os.path.join(pyhome, 'site.pyc'))
         self.symlink(
             os.path.join(realhome, 'config'),
             os.path.join(pyhome, 'config'))
@@ -1361,6 +1364,19 @@ class py2app(Command):
         self.resdir = resdir
         self.plist = plist
 
+        site_path = os.path.join(resdir, 'site.py')
+        byte_compile([
+            SourceModule('site', site_path),
+            ],
+            target_dir=resdir,
+            optimize=self.optimize,
+            force=self.force,
+            verbose=self.verbose,
+            dry_run=self.dry_run)
+        if not self.dry_run:
+            os.unlink(site_path)
+
+
         includedir = None
         configdir = None
         if sysconfig is not None:
@@ -1397,7 +1413,11 @@ class py2app(Command):
             arcdir = os.path.join(resdir, 'lib')
         realhome = os.path.join(sys.prefix, 'lib', 'python' + sys.version[:3])
         self.mkpath(pydir)
-        self.symlink('../../site.py', os.path.join(pydir, 'site.py'))
+
+        if self.optimize:
+            self.symlink('../../site.pyo', os.path.join(pydir, 'site.pyo'))
+        else:
+            self.symlink('../../site.pyc', os.path.join(pydir, 'site.pyc'))
         cfgdir = os.path.join(pydir, configdir)
         realcfg = os.path.join(realhome, configdir)
         real_include = os.path.join(sys.prefix, 'include')

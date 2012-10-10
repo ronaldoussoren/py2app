@@ -16,9 +16,32 @@ import time
 import os
 import signal
 import py2app
+import hashlib
 from modulegraph import zipio
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
+
+
+def make_checksums(path):
+    result = {}
+    for root, dnames, fnames in os.walk(path):
+        for dn in dnames:
+            result[os.path.join(root, dn)] = None
+
+        for fn in fnames:
+            h = hashlib.sha1()
+            p = os.path.join(root, fn)
+            if os.path.islink(p):
+                result[p] = os.readlink(p)
+
+            else:
+                with open(p, 'rb') as fp:
+                    block = fp.read(10240)
+                    while block:
+                        h.update(block)
+                        block = fp.read(10240)
+
+                result[p] = h.hexdigest()
 
 class TestExplicitIncludes (unittest.TestCase):
     py2app_args = [ '--includes=package2.sub' ]
@@ -55,6 +78,14 @@ class TestExplicitIncludes (unittest.TestCase):
         if p.wait() != 0:
             print (lines)
             raise AssertionError("Creating basic_app bundle failed")
+
+        cls.checksums = make_checksums(
+                os.path.join(cls.app_dir, 'dist/BasicApp.app'))
+
+    def assertChecksumsSame(self):
+        self.assertEqual(self.checksums,
+            make_checksums(
+                os.path.join(self.app_dir, 'dist/BasicApp.app')))
 
     @classmethod
     def tearDownClass(cls):
@@ -114,6 +145,8 @@ class TestExplicitIncludes (unittest.TestCase):
         path = os.path.join(os.path.dirname(path), 'data.dat')
         self.assertTrue(zipio.isfile(path) or os.path.isfile(path))
 
+        self.assertChecksumsSame()
+
 
     def test_simple_imports(self):
         p = self.start_app()
@@ -123,6 +156,8 @@ class TestExplicitIncludes (unittest.TestCase):
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"package2.sub")
+
+        self.assertChecksumsSame()
 
 class TestExplicitIncludesWithPackage (TestExplicitIncludes):
     py2app_args = [ '--packages=package2' ]

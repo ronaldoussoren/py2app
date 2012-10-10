@@ -28,8 +28,31 @@ import time
 import os
 import signal
 import py2app
+import hashlib
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
+
+def make_checksums(path):
+    result = {}
+    for root, dnames, fnames in os.walk(path):
+        for dn in dnames:
+            result[os.path.join(root, dn)] = None
+
+        for fn in fnames:
+            h = hashlib.sha1()
+            p = os.path.join(root, fn)
+            if os.path.islink(p):
+                result[p] = os.readlink(p)
+
+            else:
+                with open(p, 'rb') as fp:
+                    block = fp.read(10240)
+                    while block:
+                        h.update(block)
+                        block = fp.read(10240)
+
+                result[p] = h.hexdigest()
+
 
 class TestBasicApp (unittest.TestCase):
     py2app_args = []
@@ -66,6 +89,14 @@ class TestBasicApp (unittest.TestCase):
         if p.wait() != 0:
             print (lines)
             raise AssertionError("Creating basic_app bundle failed")
+
+        cls.checksums = make_checksums(
+                os.path.join(cls.app_dir, 'dist/BasicApp.app'))
+
+    def assertChecksumsSame(self):
+        self.assertEqual(self.checksums,
+            make_checksums(
+                os.path.join(self.app_dir, 'dist/BasicApp.app')))
 
     @classmethod
     def tearDownClass(cls):
@@ -114,6 +145,8 @@ class TestBasicApp (unittest.TestCase):
         self.assertEqual(exit, 0)
 
         p.stdout.close()
+
+        self.assertChecksumsSame()
 
     def test_simple_imports(self):
         p = self.start_app()
@@ -170,6 +203,7 @@ class TestBasicApp (unittest.TestCase):
 
         p.stdin.close()
         p.stdout.close()
+        self.assertChecksumsSame()
 
     def testIsOptimized(self):
         p = self.start_app()
@@ -183,6 +217,7 @@ class TestBasicApp (unittest.TestCase):
         finally:
             p.stdin.close()
             p.stdout.close()
+        self.assertChecksumsSame()
 
 class TestBasicAliasApp (TestBasicApp):
     py2app_args = [ '--alias', ]
@@ -242,6 +277,8 @@ class TestOptimized1 (TestBasicApp):
             p.stdin.close()
             p.stdout.close()
 
+        self.assertChecksumsSame()
+
 class TestOptimized2 (TestBasicApp):
     py2app_args = [ '-O2' ]
 
@@ -257,6 +294,8 @@ class TestOptimized2 (TestBasicApp):
         finally:
             p.stdin.close()
             p.stdout.close()
+
+        self.assertChecksumsSame()
 
 if __name__ == "__main__":
     unittest.main()

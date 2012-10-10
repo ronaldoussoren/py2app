@@ -6,12 +6,23 @@ py2app 0.6.5
 
 py2app 0.6.5 is a bugfix release
 
+- issue #59: compile site.py to ensure that the generated bundle doesn't
+  change on first run.
+
+  This is nice to have in general, and essential when using code signing
+  because the signature will break when a new file is added after signing.
+
+  Reported by Michael McCracken.
+
 - issue #60: recipe for "email" package was not loaded
+
+  Reported by Chris Beaumont
 
 - issue #46: py2app no longer warns about the Qt license. We don't warn about
   other possibly GPL licensed software either and py2app is not
   a license-enforcement tool.
-  
+
+  Reported by briank_in_la.
 
 - Generated bundles always started with python optimization active
   (that is, as if running as 'python -O').
