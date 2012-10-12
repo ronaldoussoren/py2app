@@ -413,6 +413,9 @@ setup(
     ),
     packages=find_packages(exclude=['py2app_tests']),
     package_data={
+        'py2app.recipes': [
+            'qt.conf',
+        ],
         'py2app.apptemplate': [
             'prebuilt/main-i386',
             'prebuilt/main-ppc',
