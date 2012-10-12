@@ -6,6 +6,11 @@ py2app 0.6.5
 
 py2app 0.6.5 is a bugfix release
 
+- Fix virtualenv support: alias builds in a virtual environment failed to work.
+
+  (There are still issues with semi-standalone and alias plugin bundles in
+  a virtualenv environment).
+
 - issue #18: improved PyQt and PySide support.
 
   Py2app now has a new option named "--qt_plugins" (or "qt_plugins" in setup.py),

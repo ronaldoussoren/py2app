@@ -4,8 +4,6 @@ def _run(*scripts):
     sys.frozen = 'macosx_app'
     base = os.environ['RESOURCEPATH']
 
-    if not scripts:
-        import __main__
     for script in scripts:
         path = os.path.join(base, script)
         sys.argv[0] = __file__ = path

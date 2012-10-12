@@ -12,6 +12,7 @@ import zipfile
 import plistlib
 import shlex
 import shutil
+import textwrap
 import pkg_resources
 
 try:
@@ -1172,7 +1173,23 @@ class py2app(Command):
             # bootstrap
             prescripts.append('import_encodings')
 
-        if self.site_packages or self.alias:
+        if os.path.exists(os.path.join(sys.prefix, ".Python")):
+            # We're in a virtualenv, which means sys.path
+            # will be broken in alias builds unless we fix
+            # it.
+            if self.alias or self.semi_standalone:
+                prescripts.append("virtualenv")
+                prescripts.append(StringIO('_fixup_virtualenv(%r)' % (sys.real_prefix,)))
+
+            if self.site_packages or self.alias:
+                import site
+                global_site_packages = not os.path.exists(
+                        os.path.join(os.path.dirname(site.__file__), 'no-global-site-packages.txt'))
+                prescripts.append('virtualenv_site_packages')
+                prescripts.append(StringIO('_site_packages(%r, %r, %d)' % (
+                    sys.prefix, sys.real_prefix, global_site_packages)))
+
+        elif self.site_packages or self.alias:
             prescripts.append('site_packages')
 
         if is_system():
