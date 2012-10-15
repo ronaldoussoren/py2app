@@ -74,14 +74,13 @@ class TestBasicPlugin (unittest.TestCase):
             if sys.version_info[0] != 2:
                 root = root.decode('utf-8')
 
-            if platform.mac_ver()[0] < '10.6.':
-                cc = ['gcc']
+            if platform.mac_ver()[0] < '10.7.':
+                cc = [get_config_var('CC')]
                 env = dict(os.environ)
                 env['MACOSX_DEPLOYMENT_TARGET'] = get_config_var('MACOSX_DEPLOYMENT_TARGET')
             else:
                 cc = ['xcrun', 'clang']
                 env = dict(os.environ)
-
 
             p = subprocess.Popen(cc
                 +  get_config_var('LDFLAGS').split() + get_config_var('CFLAGS').split() + [ 

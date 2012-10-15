@@ -34,7 +34,10 @@ def _get_ibtool():
     global gTool
     if gTool is None:
         if os.path.exists('/usr/bin/xcrun'):
-            gTool = check_output(['/usr/bin/xcrun', '-find', 'ibtool'])[:-1]
+            try:
+                gTool = check_output(['/usr/bin/xcrun', '-find', 'ibtool'])[:-1]
+            except subprocess.CalledProcessError:
+                raise IOError("Tool 'ibtool' not found")
         else:
             gTool = 'ibtool'
 

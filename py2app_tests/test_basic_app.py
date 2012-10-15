@@ -205,7 +205,7 @@ class TestBasicApp (unittest.TestCase):
         p.stdout.close()
         self.assertChecksumsSame()
 
-    def testIsOptimized(self):
+    def test_is_optimized(self):
         p = self.start_app()
 
         try:
@@ -264,7 +264,7 @@ class TestBasicSemiStandaloneAppUnicodePath (TestBasicAppUnicodePath):
 class TestOptimized1 (TestBasicApp):
     py2app_args = [ '-O1' ]
 
-    def testIsOptimized(self):
+    def test_is_optimized(self):
         p = self.start_app()
 
         try:
@@ -282,7 +282,7 @@ class TestOptimized1 (TestBasicApp):
 class TestOptimized2 (TestBasicApp):
     py2app_args = [ '-O2' ]
 
-    def testIsOptimized(self):
+    def test_is_optimized(self):
         p = self.start_app()
 
         try:
