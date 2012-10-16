@@ -15,6 +15,10 @@ import shutil
 import textwrap
 import pkg_resources
 
+from py2app.apptemplate.setup import main as script_executable
+from py2app.util import mergecopy
+
+
 try:
     import sysconfig
 except ImportError:
@@ -250,6 +254,7 @@ class py2app(Command):
         ("arch=", None, "set of architectures to use (fat, fat3, universal, intel, i386, ppc, x86_64; default is the set for the current python binary)"),
         ("qt-plugins=", None, "set of Qt plugins to include in the application bundle (default None)"),
         ("matplotlib-backends=", None, "set of matplotlib backends to include (default: include entire package)"),
+        ("extra-scripts=", None, "set of scripts to include in the application bundle, next to the main application script"),
         ]
 
     boolean_options = [
@@ -312,6 +317,7 @@ class py2app(Command):
         self.eggs = []
         self.qt_plugins = None
         self.matplotlib_backends = None
+        self.extra_scripts = None
 
     def finalize_options (self):
         if not self.strip:
@@ -384,6 +390,7 @@ class py2app(Command):
 
         self.qt_plugins = fancy_split(self.qt_plugins)
         self.matplotlib_backends = fancy_split(self.matplotlib_backends)
+        self.extra_scripts = fancy_split(self.extra_scripts)
 
 
         if self.datamodels:
@@ -554,7 +561,10 @@ class py2app(Command):
             scripts.update([
                 k for k in target.prescripts if isinstance(k, basestring)
             ])
+            if hasattr(target, 'extra_scripts'):
+                scripts.update(target.extra_scripts)
 
+        scripts.update(self.extra_scripts)
         return scripts
 
     def get_plist_options(self):
@@ -599,8 +609,23 @@ class py2app(Command):
     def run_alias(self):
         self.app_files = []
         for target in self.targets:
-            dst = self.build_alias_executable(target, target.script)
+
+            extra_scripts = list(self.extra_scripts)
+            if hasattr(target, 'extra_scripts'):
+                extra_scripts.update(extra_scripts)
+
+            dst = self.build_alias_executable(target, target.script, extra_scripts)
             self.app_files.append(dst)
+
+            for fn in extra_scripts:
+                if fn.endswith('.py'):
+                    fn = fn[:-3]
+                elif fn.endswith('.pyw'):
+                    fn = fn[:-4]
+
+                src_fn = script_executable(arch=self.arch)
+                tgt_fn = os.path.join(target.appdir, 'Contents', 'MacOS', fn)
+                mergecopy(src_fn, tgt_fn)
 
     def collect_recipedict(self):
         return dict(iterRecipes())
@@ -857,8 +882,11 @@ class py2app(Command):
 
         # build the executables
         for target in self.targets:
+            extra_scripts = list(self.extra_scripts)
+            if hasattr(target, 'extra_scripts'):
+                extra_scripts.extend(target.extra_scripts)
             dst = self.build_executable(
-                target, arcname, pkgexts, copyexts, target.script)
+                target, arcname, pkgexts, copyexts, target.script, extra_scripts)
             exp = os.path.join(dst, 'Contents', 'MacOS')
             execdst = os.path.join(exp, 'python')
             if self.semi_standalone:
@@ -1324,7 +1352,7 @@ class py2app(Command):
                 basename = fmwk['shortname'] + '.framework'
                 yield os.path.join(fmwk['location'], basename)
     
-    def build_alias_executable(self, target, script):
+    def build_alias_executable(self, target, script, extra_scripts):
         # Build an alias executable for the target
         appdir, resdir, plist = self.create_bundle(target, script)
 
@@ -1381,8 +1409,21 @@ class py2app(Command):
         for fn in target.prescripts:
             bootfile.write(self.get_bootstrap_data(fn))
             bootfile.write('\n\n')
+        bootfile.write("DEFAULT_SCRIPT=%r\n"%(os.path.realpath(script),))
+        script_map = {}
+        for fn in extra_scripts:
+            tgt = os.path.realpath(fn)
+            fn = os.path.basename(fn)
+            if fn.endswith('.py'):
+                script_map[fn[:-3]] = tgt
+            elif fn.endswith('.py'):
+                script_map[fn[:-4]] = tgt
+            else:
+                script_map[fn] = tgt
+
+        bootfile.write("SCRIPT_MAP=%r\n"%(script_map,))
         bootfile.write('try:\n')
-        bootfile.write('    _run(%r)\n' % os.path.realpath(script))
+        bootfile.write('    _run()\n')
         bootfile.write('except KeyboardInterrupt:\n')
         bootfile.write('    pass\n')
         bootfile.close()
@@ -1390,12 +1431,24 @@ class py2app(Command):
         target.appdir = appdir
         return appdir
 
-    def build_executable(self, target, arcname, pkgexts, copyexts, script):
+
+    def build_executable(self, target, arcname, pkgexts, copyexts, script, extra_scripts):
         # Build an executable for the target
         appdir, resdir, plist = self.create_bundle(target, script)
         self.appdir = appdir
         self.resdir = resdir
         self.plist = plist
+
+        for fn in extra_scripts:
+            if fn.endswith('.py'):
+                fn = fn[:-3]
+            elif fn.endswith('.pyw'):
+                fn = fn[:-4]
+
+            src_fn = script_executable(arch=self.arch)
+            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', fn)
+            mergecopy(src_fn, tgt_fn)
+
 
         site_path = os.path.join(resdir, 'site.py')
         byte_compile([
@@ -1435,10 +1488,161 @@ class py2app(Command):
         for fn in target.prescripts:
             bootfile.write(self.get_bootstrap_data(fn))
             bootfile.write('\n\n')
-        bootfile.write('_run(%r)\n' % (os.path.basename(script),))
+
+        bootfile.write("DEFAULT_SCRIPT=%r\n"%(os.path.basename(script),))
+        bootfile.write('try:\n')
+        bootfile.write('    _run()\n' % os.path.realpath(script))
+        bootfile.write('except KeyboardInterrupt:\n')
+        bootfile.write('    pass\n')
+        bootfile.close()
+
+        target.appdir = appdir
+        return appdir
+
+    def build_executable(self, target, arcname, pkgexts, copyexts, script, extra_scripts):
+        # Build an executable for the target
+        appdir, resdir, plist = self.create_bundle(target, script)
+        self.appdir = appdir
+        self.resdir = resdir
+        self.plist = plist
+
+        for fn in extra_scripts:
+            if fn.endswith('.py'):
+                fn = fn[:-3]
+            elif fn.endswith('.pyw'):
+                fn = fn[:-4]
+
+            src_fn = script_executable(arch=self.arch)
+            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', fn)
+            mergecopy(src_fn, tgt_fn)
+
+
+        site_path = os.path.join(resdir, 'site.py')
+        byte_compile([
+            SourceModule('site', site_path),
+            ],
+            target_dir=resdir,
+            optimize=self.optimize,
+            force=self.force,
+            verbose=self.verbose,
+            dry_run=self.dry_run)
+        if not self.dry_run:
+            os.unlink(site_path)
+
+
+        includedir = None
+        configdir = None
+        if sysconfig is not None:
+            includedir = sysconfig.get_config_var('CONFINCLUDEPY')
+            configdir = sysconfig.get_config_var('LIBPL')
+
+
+        if includedir is None:
+            includedir = 'python%d.%d'%(sys.version_info[:2])
+        else:
+            includedir = os.path.basename(includedir)
+
+        if configdir is None:
+            configdir = 'config'
+        else:
+            configdir = os.path.basename(configdir)
+
+        self.compile_datamodels(resdir)
+        self.compile_mappingmodels(resdir)
+
+        bootfn = '__boot__'
+        bootfile = open(os.path.join(resdir, bootfn + '.py'), 'w')
+        for fn in target.prescripts:
+            bootfile.write(self.get_bootstrap_data(fn))
+            bootfile.write('\n\n')
+
+        bootfile.write("DEFAULT_SCRIPT=%r\n"%(os.path.basename(script),))
+        bootfile.write('try:\n')
+        bootfile.write('    _run()\n' % os.path.realpath(script))
+        bootfile.write('except KeyboardInterrupt:\n')
+        bootfile.write('    pass\n')
+        bootfile.close()
+
+        target.appdir = appdir
+        return appdir
+
+    def build_executable(self, target, arcname, pkgexts, copyexts, script, extra_scripts):
+        # Build an executable for the target
+        appdir, resdir, plist = self.create_bundle(target, script)
+        self.appdir = appdir
+        self.resdir = resdir
+        self.plist = plist
+
+        for fn in extra_scripts:
+            if fn.endswith('.py'):
+                fn = fn[:-3]
+            elif fn.endswith('.pyw'):
+                fn = fn[:-4]
+
+            src_fn = script_executable(arch=self.arch)
+            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', fn)
+            mergecopy(src_fn, tgt_fn)
+
+
+        site_path = os.path.join(resdir, 'site.py')
+        byte_compile([
+            SourceModule('site', site_path),
+            ],
+            target_dir=resdir,
+            optimize=self.optimize,
+            force=self.force,
+            verbose=self.verbose,
+            dry_run=self.dry_run)
+        if not self.dry_run:
+            os.unlink(site_path)
+
+
+        includedir = None
+        configdir = None
+        if sysconfig is not None:
+            includedir = sysconfig.get_config_var('CONFINCLUDEPY')
+            configdir = sysconfig.get_config_var('LIBPL')
+
+
+        if includedir is None:
+            includedir = 'python%d.%d'%(sys.version_info[:2])
+        else:
+            includedir = os.path.basename(includedir)
+
+        if configdir is None:
+            configdir = 'config'
+        else:
+            configdir = os.path.basename(configdir)
+
+        self.compile_datamodels(resdir)
+        self.compile_mappingmodels(resdir)
+
+        bootfn = '__boot__'
+        bootfile = open(os.path.join(resdir, bootfn + '.py'), 'w')
+        for fn in target.prescripts:
+            bootfile.write(self.get_bootstrap_data(fn))
+            bootfile.write('\n\n')
+
+        bootfile.write("DEFAULT_SCRIPT=%r\n"%(os.path.basename(script),))
+
+        script_map = {}
+        for fn in extra_scripts:
+            fn = os.path.basename(fn)
+            if fn.endswith('.py'):
+                script_map[fn[:-3]] = fn
+            elif fn.endswith('.py'):
+                script_map[fn[:-4]] = fn
+            else:
+                script_map[fn] = fn
+
+        bootfile.write("SCRIPT_MAP=%r\n"%(script_map,))
+        bootfile.write('_run()\n')
         bootfile.close()
 
         self.copy_file(script, resdir)
+        for fn in extra_scripts:
+            self.copy_file(fn, resdir)
+
         pydir = os.path.join(resdir, 'lib', 'python%s.%s'%(sys.version_info[:2]))
         if sys.version_info[0] == 2 or self.semi_standalone:
             arcdir = os.path.join(resdir, 'lib', 'python' + sys.version[:3])

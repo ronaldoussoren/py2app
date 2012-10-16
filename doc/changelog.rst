@@ -6,6 +6,12 @@ py2app 0.6.5
 
 py2app 0.6.5 is a bugfix release
 
+- Issue #13: It is now possible to add helper scripts to a bundle, for
+  example for creating a GUI that starts a helper script in the background.
+
+  This can be done by using the option "--extra-scripts", the value of which is a list
+  of script files (".py" or ".pyw" files).
+
 - Smarter matplotlib recipe, it is now possible to specify which backends should
   be included. Issue #44, reported by Adam Kovics.
 

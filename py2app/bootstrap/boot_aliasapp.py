@@ -1,10 +1,14 @@
-def _run(scriptpath):
+def _run():
     global __file__
     import os, sys, site
     sys.frozen = 'macosx_app'
-    sys.argv[0] = __file__ = scriptpath
-    with open(scriptpath) as fp:
-        source = fp.read()
 
-    exec(compile(source, scriptpath, 'exec'), globals(), globals())
+    argv0 = os.path.basename(os.environ['ARGVZERO'])
+    script = SCRIPT_MAP.get(argv0, DEFAULT_SCRIPT)
+
+    sys.argv[0] = __file__ = script
+    with open(script) as fp:
+        source = fp.read() + "\n"
+
+    exec(compile(source, script, 'exec'), globals(), globals())
 

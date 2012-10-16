@@ -71,7 +71,7 @@ class TestShellEnvironment (unittest.TestCase):
         self.assertEqual(exit, 0)
 
         path = os.path.join( self.app_dir, 'dist/env.txt')
-        for x in range(15):
+        for x in range(25):
             time.sleep(1)
             if os.path.exists(path):
                 break

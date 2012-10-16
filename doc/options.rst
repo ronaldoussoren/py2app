@@ -79,10 +79,12 @@ Options for 'py2app' command::
                           is complete
   --debug-skip-macholib   skip macholib phase (app will not be standalone!)
   --emulate-shell-environment emulate the shell environment in a Terminal window
-  --qt-plugins            comma-seperated list of Qt plugins to include in a
+  --qt-plugins            comma-separated list of Qt plugins to include in a
                           application using PyQt4.
-  --matplotlib-backends   comma-seperated list of matplotlib backends to include
+  --matplotlib-backends   comma-separated list of matplotlib backends to include
                           in an application using that library. The default is
                           to include all of matplotlib. Use '*' to include all
                           backends, and '-' to only include backends that are
                           explicitly imported.
+  --extra-scripts         comma-separated list of additional scripts to include
+                          in an application or plugin.
