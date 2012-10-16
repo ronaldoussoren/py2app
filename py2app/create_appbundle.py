@@ -2,7 +2,6 @@ import os
 import plistlib
 import shutil
 import sys
-# XXX - plugins, prefpane, etc?
 from pkg_resources import resource_filename
 import py2app.apptemplate
 from py2app.util import makedirs, mergecopy, mergetree, skipscm, make_exec
