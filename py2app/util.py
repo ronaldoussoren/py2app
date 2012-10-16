@@ -592,24 +592,41 @@ def check_output(command_line):
     return stdout
 
 
-if os.path.exists('/usr/bin/xcrun'):
-    MOMC=check_output(['/usr/bin/xcrun', '-find', 'momc'])[:-1]
-else:
-    MOMC = '/Library/Application Support/Apple/Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc'
-    if not os.path.exists(MOMC):
-        MOMC = '/Developer/Library/Xcode/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc'
-    if not os.path.exists(MOMC):
-        MOMC = '/Developer/usr/bin/momc'
+_tools = {}
+def _get_tool(toolname):
+    if toolname not in _tools:
+        if os.path.exists('/usr/bin/xcrun'):
+            try:
+                _tools[toolname] = check_output(['/usr/bin/xcrun', '-find', 'momc'])[:-1]
+            except subprocess.CalledProcessError:
+                raise IOError("Tool %r not found"%(toolname,))
+
+        else:
+            # Support for Xcode 3.x and earlier
+            if toolname == 'momc':
+                choices = [
+    	            '/Library/Application Support/Apple/Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc',
+                    '/Developer/Library/Xcode/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc',
+                    '/Developer/usr/bin/momc',
+                ]
+            elif toolname == 'mapc':
+                choices = [
+                    '/Developer/Library/Xcode/Plug-ins/XDMappingModel.xdplugin/Contents/Resources/mapc'
+                    '/Developer/usr/bin/mapc'
+                ]
+            else:
+                raise IOError("Tool %r not found"%(toolname,))
+
+            for fn in choices:
+                if os.path.exists(fn):
+                    _tools[toolname] = fn
+                    break 
+            else:
+                raise IOError("Tool %r not found"%(toolname,))
+
 
 def momc(src, dst):
-    subprocess.check_call([MOMC, src, dst])
-
-if os.path.exists('/usr/bin/xcrun'):
-    MAPC=check_output(['/usr/bin/xcrun', '-find', 'mapc'])[:-1]
-else:
-    MAPC = '/Developer/Library/Xcode/Plug-ins/XDMappingModel.xdplugin/Contents/Resources/mapc'
-    if not os.path.exists(MAPC):
-        MAPC = '/Developer/usr/bin/mapc'
+    subprocess.check_call([_get_tool('momc'), src, dst])
 
 def mapc(src, dst):
-    subprocess.check_call([MAPC, src, dst])
+    subprocess.check_call([_get_tool('mapc'), src, dst])

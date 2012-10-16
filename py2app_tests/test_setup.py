@@ -22,7 +22,7 @@ class TestSetupArguments (unittest.TestCase):
 
         return cmd
 
-    def testVersion(self):
+    def test_version(self):
         # Explicit version
         cmd = self.create_cmd(
             name='py2app_test',

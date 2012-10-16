@@ -141,7 +141,7 @@ class TestBasicApp (unittest.TestCase):
         p.stdin.close()
         p.stdout.close()
 
-    def testZipContents(self):
+    def test_zip_contents(self):
         if '--alias' in self.py2app_args:
             raise unittest.SkipTest("Not relevant for Alias builds")
 
