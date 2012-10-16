@@ -465,6 +465,9 @@ setup(
         'py2app.recipe': [
         ]
     },
-    zip_safe=False,
+
+    # py2app/build_app.py uses imp.find_module, and that won't work
+    # with a zipped egg.
+    #zip_safe=False,
     dependency_links=[], # workaround for setuptools 0.6b4 bug
 )

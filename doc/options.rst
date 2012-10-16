@@ -81,3 +81,8 @@ Options for 'py2app' command::
   --emulate-shell-environment emulate the shell environment in a Terminal window
   --qt-plugins            comma-seperated list of Qt plugins to include in a
                           application using PyQt4.
+  --matplotlib-backends   comma-seperated list of matplotlib backends to include
+                          in an application using that library. The default is
+                          to include all of matplotlib. Use '*' to include all
+                          backends, and '-' to only include backends that are
+                          explicitly imported.

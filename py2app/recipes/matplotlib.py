@@ -4,17 +4,24 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
+    if cmd.matplotlib_backends:
+        backends = {}
+        for backend in cmd.matplotlib_backends:
+            if backend == '-':
+                pass
+
+            elif backend == '*':
+                mf.import_hook('matplotlib.backends', m, ['*'])
+
+            else:
+                mf.import_hook('matplotlib.backends.backend_%s'%(backend,), m)
+
+    else:
+        backends = {'packages': ['matplotlib']}
+
+
     return dict(
         prescripts=['py2app.recipes.matplotlib_prescript'],
         resources=[os.path.join(os.path.dirname(m.filename), 'mpl-data')],
-    )
-
-    return None
-
-    # XXX: unclear why this is needed and according
-    # to mail on pythonmac-sig this breaks with
-    # current versions of matplatlib and pytz.
-    #mf.import_hook('pytz.zoneinfo', m, ['UTC'])
-    return dict(
-        packages = ['matplotlib']
+        **backends
     )

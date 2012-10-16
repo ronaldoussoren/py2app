@@ -249,6 +249,7 @@ class py2app(Command):
          "skip macholib phase (app will not be standalone!)"),
         ("arch=", None, "set of architectures to use (fat, fat3, universal, intel, i386, ppc, x86_64; default is the set for the current python binary)"),
         ("qt-plugins=", None, "set of Qt plugins to include in the application bundle (default None)"),
+        ("matplotlib-backends=", None, "set of matplotlib backends to include (default: include entire package)"),
         ]
 
     boolean_options = [
@@ -310,6 +311,7 @@ class py2app(Command):
         self.filters = []
         self.eggs = []
         self.qt_plugins = None
+        self.matplotlib_backends = None
 
     def finalize_options (self):
         if not self.strip:
@@ -381,6 +383,7 @@ class py2app(Command):
         self.runtime_preferences = list(self.get_runtime_preferences())
 
         self.qt_plugins = fancy_split(self.qt_plugins)
+        self.matplotlib_backends = fancy_split(self.matplotlib_backends)
 
 
         if self.datamodels:
@@ -628,7 +631,11 @@ class py2app(Command):
                 # we can pull this off so long as we stop the iter
                 del rdict[name]
                 print('*** using recipe: %s ***' % (name,))
-                self.packages.update(rval.get('packages', ()))
+
+                if rval.get('packages'):
+                    self.packages.update(rval['packages'])
+                    find_needed_modules(mf, packages=rval['packages'])
+
                 for pkg in rval.get('flatpackages', ()):
                     if isinstance(pkg, basestring):
                         pkg = (os.path.basename(pkg), pkg)

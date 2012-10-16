@@ -6,6 +6,22 @@ py2app 0.6.5
 
 py2app 0.6.5 is a bugfix release
 
+- Smarter matplotlib recipe, it is now possible to specify which backends should
+  be included. Issue #44, reported by Adam Kovics.
+
+  The argument to ``--matplotlib-plugins`` (or 'matplotlib_plugins' in setup.py)
+  is a list of plugins to include. Use '-' to not include backends other than those
+  found by the import statement analysis, and '*' to include all backends (without
+  necessarily including all of matplotlib)
+
+  As an example, use ``--matplotlib-plugins=wxagg`` to include just the wxagg
+  backend.
+
+  Default is to include the entire matplotlib package.
+
+- The packages included by a py2app recipe weren't processed by modulegraph and
+  hence their dependencies were not always included.
+
 - Fix virtualenv support: alias builds in a virtual environment failed to work.
 
   (There are still issues with semi-standalone and alias plugin bundles in
@@ -13,7 +29,7 @@ py2app 0.6.5 is a bugfix release
 
 - issue #18: improved PyQt and PySide support.
 
-  Py2app now has a new option named "--qt_plugins" (or "qt_plugins" in setup.py),
+  Py2app now has a new option named "--qt-plugins" (or "qt_plugins" in setup.py),
   this option specify a list of plugins that should be included in the
   application bundle. The items of the list can have a number of forms:
 
