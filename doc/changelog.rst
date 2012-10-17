@@ -6,6 +6,15 @@ py2app 0.6.5
 
 py2app 0.6.5 is a bugfix release
 
+- Issue #65: generated bundle would crash when two libraries linked to the
+  same library using different names (one refering to the real name, the other
+  to a symlink).
+
+  An example if this is an application using wxWidgets when wxWidgets is installed
+  using homebrew.
+
+  Reported by "Bouke".
+
 - Issue #13: It is now possible to add helper scripts to a bundle, for
   example for creating a GUI that starts a helper script in the background.
 

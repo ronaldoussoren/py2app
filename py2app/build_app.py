@@ -84,6 +84,10 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
 
     def copy_dylib(self, src):
         dest = os.path.join(self.dest, os.path.basename(src))
+        if os.path.islink(src):
+            dest = os.path.join(self.dest, os.path.basename(os.path.realpath(src)))
+        else:
+            dest = os.path.join(self.dest, os.path.basename(src))
         return self.appbuilder.copy_dylib(src, dest)
 
     def copy_framework(self, info):
