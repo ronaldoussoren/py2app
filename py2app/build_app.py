@@ -16,7 +16,7 @@ import textwrap
 import pkg_resources
 
 from py2app.apptemplate.setup import main as script_executable
-from py2app.util import mergecopy
+from py2app.util import mergecopy, make_exec
 
 
 try:
@@ -630,6 +630,7 @@ class py2app(Command):
                 src_fn = script_executable(arch=self.arch)
                 tgt_fn = os.path.join(target.appdir, 'Contents', 'MacOS', fn)
                 mergecopy(src_fn, tgt_fn)
+                make_exec(tgt_fn)
 
     def collect_recipedict(self):
         return dict(iterRecipes())
