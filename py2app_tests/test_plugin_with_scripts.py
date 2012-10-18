@@ -156,14 +156,14 @@ class TestBasicPlugin (unittest.TestCase):
         lines = p.communicate()[0]
         p.wait()
 
-        self.assertEqual(lines, 'Helper 1\n')
+        self.assertEqual(lines, b'Helper 1\n')
 
     def test_helper2(self):
         p = self.run_script('helper2')
         lines = p.communicate()[0]
         p.wait()
 
-        self.assertEqual(lines, 'Helper 2\n')
+        self.assertEqual(lines, b'Helper 2\n')
 
     def test_basic_start(self):
         p = self.start_app()

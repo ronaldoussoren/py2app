@@ -39,5 +39,4 @@ def check(cmd, mf):
         if add:
             NOT_SYSTEM_FILES.append(os.path.join('/usr/lib', fn)) 
 
-    print "resources", resources
     return dict(resources=resources)
