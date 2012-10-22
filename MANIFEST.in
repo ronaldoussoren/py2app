@@ -9,5 +9,8 @@ graft examples
 global-exclude .DS_Store
 global-exclude *.pyc
 global-exclude *.so
+global-exclude *.dSYM
+global-exclude *__pycache__*
 prune py2app/apptemplate/prebuilt/main*.dSYM
 prune py2app/bundletemplate/prebuilt/main*.dSYM
+prune py2app_tests/*.dSYM
