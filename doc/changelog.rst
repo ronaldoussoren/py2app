@@ -1,10 +1,10 @@
 Release history
 ===============
 
-py2app 0.6.5
+py2app 0.7
 ------------
 
-py2app 0.6.5 is a bugfix release
+py2app 0.7 is a bugfix release
 
 - Issue #65: generated bundle would crash when two libraries linked to the
   same library using different names (one refering to the real name, the other
