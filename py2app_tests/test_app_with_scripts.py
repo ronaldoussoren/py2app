@@ -65,6 +65,9 @@ class TestBasicApp (unittest.TestCase):
     # a base-class.
     @classmethod
     def setUpClass(cls):
+        # Ensure build is clean:
+        cls.class_cleanup()
+
         env=os.environ.copy()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
         if 'PYTHONPATH' in env:
@@ -75,6 +78,20 @@ class TestBasicApp (unittest.TestCase):
         if 'LANG' not in env:
             # Ensure that testing though SSH works
             env['LANG'] = 'en_US.UTF-8'
+
+        p = subprocess.Popen([
+                sys.executable ] + cls.python_args + [
+                    'presetup.py', 'build_ext'],
+            cwd = cls.app_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+            env=env
+            )
+        lines = p.communicate()[0]
+        if p.wait() != 0:
+            print (lines)
+            raise AssertionError("Creating basic_app extension failed")
 
         p = subprocess.Popen([
                 sys.executable ] + cls.python_args + [
@@ -100,11 +117,18 @@ class TestBasicApp (unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls.class_cleanup()
+
+    @classmethod
+    def class_cleanup(cls):
         if os.path.exists(os.path.join(cls.app_dir, 'build')):
             shutil.rmtree(os.path.join(cls.app_dir, 'build'))
 
         if os.path.exists(os.path.join(cls.app_dir, 'dist')):
             shutil.rmtree(os.path.join(cls.app_dir, 'dist'))
+
+        if os.path.exists(os.path.join(cls.app_dir, 'foo.so')):
+            os.unlink(os.path.join(cls.app_dir, 'foo.so'))
 
     def start_app(self):
         # Start the test app, return a subprocess object where
@@ -154,14 +178,14 @@ class TestBasicApp (unittest.TestCase):
         lines = p.communicate()[0]
         p.wait()
 
-        self.assertEqual(lines, b'Helper 1\n')
+        self.assertEqual(lines, b'Helper 1: curses\n')
 
     def test_helper2(self):
         p = self.run_script('helper2')
         lines = p.communicate()[0]
         p.wait()
 
-        self.assertEqual(lines, b'Helper 2\n')
+        self.assertEqual(lines, b'Helper 2: 4\n')
 
     def test_basic_start(self):
         p = self.start_app()
@@ -189,6 +213,17 @@ class TestBasicApp (unittest.TestCase):
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"decimal")
+
+        # Dependency of 'helper1':
+        p.stdin.write('import_module("curses")\n'.encode('latin1'))
+        p.stdin.flush()
+        ln = p.stdout.readline()
+        self.assertEqual(ln.strip(), b"curses")
+
+        p.stdin.write('import_module("_curses")\n'.encode('latin1'))
+        p.stdin.flush()
+        ln = p.stdout.readline()
+        self.assertEqual(ln.strip(), b"_curses")
 
         can_import_stdlib = False
         if '--alias' in self.py2app_args:

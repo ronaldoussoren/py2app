@@ -628,7 +628,7 @@ class py2app(Command):
                     fn = fn[:-4]
 
                 src_fn = script_executable(arch=self.arch)
-                tgt_fn = os.path.join(target.appdir, 'Contents', 'MacOS', fn)
+                tgt_fn = os.path.join(target.appdir, 'Contents', 'MacOS', os.path.basename(fn))
                 mergecopy(src_fn, tgt_fn)
                 make_exec(tgt_fn)
 
@@ -1208,6 +1208,9 @@ class py2app(Command):
     def initialize_prescripts(self):
         prescripts = []
         prescripts.append('reset_sys_path')
+        if self.semi_standalone:
+            prescripts.append('semi_standalone_path')
+
         if 0 and sys.version_info[:2] >= (3, 2) and not self.alias:
             # Python 3.2 or later requires a more complicated
             # bootstrap
@@ -1451,7 +1454,7 @@ class py2app(Command):
                 fn = fn[:-4]
 
             src_fn = script_executable(arch=self.arch)
-            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', fn)
+            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', os.path.basename(fn))
             mergecopy(src_fn, tgt_fn)
             make_exec(tgt_fn)
 
@@ -1519,7 +1522,7 @@ class py2app(Command):
                 fn = fn[:-4]
 
             src_fn = script_executable(arch=self.arch)
-            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', fn)
+            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', os.path.basename(fn))
             mergecopy(src_fn, tgt_fn)
             make_exec(tgt_fn)
 
@@ -1587,7 +1590,7 @@ class py2app(Command):
                 fn = fn[:-4]
 
             src_fn = script_executable(arch=self.arch)
-            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', fn)
+            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', os.path.basename(fn))
             mergecopy(src_fn, tgt_fn)
             make_exec(tgt_fn)
 

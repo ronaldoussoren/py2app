@@ -5,7 +5,7 @@ setup(
     app=['main.py'],
     options = {
         'py2app': {
-            'extra_scripts': ['helper1.py', 'helper2.py']
+            'extra_scripts': ['helper1.py', 'subdir/helper2.py']
         }
     }
 )

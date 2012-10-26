@@ -1,6 +1,24 @@
 Release history
 ===============
 
+py2app 0.7.1
+------------
+
+py2app 0.7.1 is a bugfix release
+
+- Issue #67: py2applet didn't work with python 3 due to the use of 'raw_input'
+
+  Reported by Andrew Barnert.
+
+- Issue #68: the "extra-scripts" feature introduced in 0.7 couldn't copy scripts
+  that aren't in the same directory as "setup.py".
+
+  Reported by Andrew Barnert.
+
+- For semi-standalone applications the "lib-dynload" directory inside the
+  application was not on "sys.path", which resulted in launch failures
+  when using an extension that is not in the stdlib.
+
 py2app 0.7
 ------------
 
