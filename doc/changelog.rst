@@ -1,6 +1,13 @@
 Release history
 ===============
 
+py2app 0.8
+-----------
+
+py2app 0.8 is a feature release
+
+
+
 py2app 0.7.1
 ------------
 
