@@ -1,2 +1,3 @@
 import code
-print("Helper 2")
+import foo
+print("Helper 2: %s"%(foo.sq_2,))

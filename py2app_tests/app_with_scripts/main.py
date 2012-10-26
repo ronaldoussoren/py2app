@@ -1,6 +1,5 @@
 import sys
 
-
 def function():
     import decimal
 
