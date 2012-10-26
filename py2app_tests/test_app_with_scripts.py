@@ -154,7 +154,7 @@ class TestBasicApp (unittest.TestCase):
         lines = p.communicate()[0]
         p.wait()
 
-        self.assertEqual(lines, b'Helper 1\n')
+        self.assertEqual(lines, b'Helper 1: curses\n')
 
     def test_helper2(self):
         p = self.run_script('helper2')
@@ -189,6 +189,17 @@ class TestBasicApp (unittest.TestCase):
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"decimal")
+
+        # Dependency of 'helper1':
+        p.stdin.write('import_module("curses")\n'.encode('latin1'))
+        p.stdin.flush()
+        ln = p.stdout.readline()
+        self.assertEqual(ln.strip(), b"curses")
+
+        p.stdin.write('import_module("_curses")\n'.encode('latin1'))
+        p.stdin.flush()
+        ln = p.stdout.readline()
+        self.assertEqual(ln.strip(), b"_curses")
 
         can_import_stdlib = False
         if '--alias' in self.py2app_args:
