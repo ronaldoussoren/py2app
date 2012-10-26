@@ -28,7 +28,7 @@ class build_dylib (Command):
         return result
 
     def run(self):
-        print "running build_dylib"
+        print("running build_dylib")
         bdir = 'build/libdir'
         if os.path.exists(bdir):
             shutil.rmtree(bdir)

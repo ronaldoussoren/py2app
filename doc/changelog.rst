@@ -15,6 +15,10 @@ py2app 0.7.1 is a bugfix release
 
   Reported by Andrew Barnert.
 
+- For semi-standalone applications the "lib-dynload" directory inside the
+  application was not on "sys.path", which resulted in launch failures
+  when using an extension that is not in the stdlib.
+
 py2app 0.7
 ------------
 
