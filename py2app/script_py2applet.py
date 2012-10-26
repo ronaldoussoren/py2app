@@ -22,6 +22,9 @@ try:
 except NameError:
     from sets import Set as set
 
+if sys.version_info[0] == 3:
+    raw_input = input
+
 HELP_TEXT = """
 usage: py2applet --make-setup [options...] script.py [data files...]
    or: py2applet [options...] script.py [data files...]

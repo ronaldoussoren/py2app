@@ -1,6 +1,15 @@
 Release history
 ===============
 
+py2app 0.7.1
+------------
+
+py2app 0.7.1 is a bugfix release
+
+- Issue #67: py2applet didn't work with python 3 due to the use of 'raw_input'
+
+  Reported by Andrew Barnert.
+
 py2app 0.7
 ------------
 
