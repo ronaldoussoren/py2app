@@ -405,9 +405,9 @@ setup(
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
     install_requires=[
-        "altgraph>=0.11",
-        "modulegraph>=0.11",
-        "macholib>=1.6",
+        "altgraph>=0.10",
+        "modulegraph>=0.10",
+        "macholib>=1.5",
     ],
     tests_require=tests_require,
     cmdclass=dict(
