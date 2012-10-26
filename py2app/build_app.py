@@ -628,7 +628,7 @@ class py2app(Command):
                     fn = fn[:-4]
 
                 src_fn = script_executable(arch=self.arch)
-                tgt_fn = os.path.join(target.appdir, 'Contents', 'MacOS', fn)
+                tgt_fn = os.path.join(target.appdir, 'Contents', 'MacOS', os.path.basename(fn))
                 mergecopy(src_fn, tgt_fn)
                 make_exec(tgt_fn)
 
@@ -1451,7 +1451,7 @@ class py2app(Command):
                 fn = fn[:-4]
 
             src_fn = script_executable(arch=self.arch)
-            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', fn)
+            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', os.path.basename(fn))
             mergecopy(src_fn, tgt_fn)
             make_exec(tgt_fn)
 
@@ -1519,7 +1519,7 @@ class py2app(Command):
                 fn = fn[:-4]
 
             src_fn = script_executable(arch=self.arch)
-            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', fn)
+            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', os.path.basename(fn))
             mergecopy(src_fn, tgt_fn)
             make_exec(tgt_fn)
 
@@ -1587,7 +1587,7 @@ class py2app(Command):
                 fn = fn[:-4]
 
             src_fn = script_executable(arch=self.arch)
-            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', fn)
+            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', os.path.basename(fn))
             mergecopy(src_fn, tgt_fn)
             make_exec(tgt_fn)
 

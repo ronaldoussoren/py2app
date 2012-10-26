@@ -10,6 +10,11 @@ py2app 0.7.1 is a bugfix release
 
   Reported by Andrew Barnert.
 
+- Issue #68: the "extra-scripts" feature introduced in 0.7 couldn't copy scripts
+  that aren't in the same directory as "setup.py".
+
+  Reported by Andrew Barnert.
+
 py2app 0.7
 ------------
 
