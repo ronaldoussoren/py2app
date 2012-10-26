@@ -6,7 +6,15 @@ py2app 0.8
 
 py2app 0.8 is a feature release
 
+- Issue #37: Add recipe for pyEnchant
 
+  ..note::
+
+    The recipe only works for installations of pyEnchant
+    where pyEnchant is stored in the installation (such
+    as the binary eggs on PyPI), not for installations
+    that either use the "PYENCHANT_LIBRARY_PATH" environment
+    variable or MacPorts.
 
 py2app 0.7.1
 ------------
