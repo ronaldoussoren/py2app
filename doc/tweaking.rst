@@ -84,6 +84,8 @@ Or you may use a hybrid approach using the standard library plistlib module::
 Universal Binaries
 ------------------
 
+.. note:: the documentation about universal binaries is outdated!
+
 py2app is currently fully compatible with Universal Binaries, however
 it does not try and detect which architectures your application will
 correctly run on.
