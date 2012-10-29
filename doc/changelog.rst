@@ -34,6 +34,10 @@ py2app 0.7.1 is a bugfix release
   application was not on "sys.path", which resulted in launch failures
   when using an extension that is not in the stdlib.
 
+- Issue #70: application fails to launch when script uses Windows line endings
+
+  Reported by Luc Jean.
+
 py2app 0.7
 ------------
 

@@ -225,6 +225,52 @@ class TestBasicAliasApp (TestBasicApp):
 class TestBasicSemiStandaloneApp (TestBasicApp):
     py2app_args = [ '--semi-standalone', ]
 
+class TestBasicAppWindowsLineEnd (TestBasicApp):
+    app_dir = os.path.join(DIR_NAME, 'basic_app_winle')
+
+    @classmethod
+    def setUpClass(cls):
+        try:
+            if os.path.exists(cls.app_dir):
+                shutil.rmtree(cls.app_dir)
+
+            assert not os.path.exists(cls.app_dir)
+            shutil.copytree(TestBasicApp.app_dir, cls.app_dir)
+
+            # Convert python files to Windows line endings
+            for fn in os.listdir(cls.app_dir):
+                if not fn.endswith('.py'): continue
+
+                path = os.path.join(cls.app_dir, fn)
+                with open(path, 'rb') as fp:
+                    data_in = fp.read()
+
+                data_out = data_in.replace(b'\n', b'\r\n')
+                if data_out == data_in:
+                    raise AssertionError("Data not changed")
+                with open(path, 'wb') as fp:
+                    fp.write(data_out)
+
+            super(TestBasicAppWindowsLineEnd, cls).setUpClass()
+
+        except:
+            if os.path.exists(cls.app_dir):
+                shutil.rmtree(cls.app_dir)
+
+            raise
+
+    @classmethod
+    def tearDownClass(cls):
+        if os.path.exists(cls.app_dir):
+            shutil.rmtree(cls.app_dir)
+
+class TestBasicAliasAppWindowsLineEnd (TestBasicAppWindowsLineEnd):
+    py2app_args = [ '--alias', ]
+
+class TestBasicSemiStandaloneAppWindowsLineEnd (TestBasicAppWindowsLineEnd):
+    py2app_args = [ '--semi-standalone', ]
+
+
 
 class TestBasicAppUnicodePath (TestBasicApp):
     if sys.version_info[0] == 2:
