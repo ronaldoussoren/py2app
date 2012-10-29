@@ -7,7 +7,7 @@ def _run():
     script = SCRIPT_MAP.get(argv0, DEFAULT_SCRIPT)
 
     sys.argv[0] = __file__ = script
-    with open(script) as fp:
+    with open(script, 'rU') as fp:
         source = fp.read() + "\n"
 
     exec(compile(source, script, 'exec'), globals(), globals())
