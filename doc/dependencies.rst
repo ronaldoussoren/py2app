@@ -4,10 +4,12 @@ Dependencies
 Note that these dependencies should automatically be satisfied by the
 installation procedure and do not need to be acquired separately.
 
-setuptools:
-   `setuptools`_ provides enhancements to `distutils`_, as well as the
-   mechanisms for creating and working with `Python Eggs`_. py2app
-   is distributed only as a `Python Egg`_.
+setuptools or distribute:
+   `setuptools`_ and `distribute`_ provide enhancements to `distutils`_, 
+   as well as the mechanisms for creating and working with `Python Eggs`_. 
+
+   `Distribute`_ is a fork of `setuptools`_ that amongst others adds
+   support for python 3. All testing of py2app is done using `distribute`_.
 
 macholib:
     `macholib`_ reads and writes the Mach-O object file format. 
@@ -32,12 +34,12 @@ altgraph:
     graphlib.
 
 .. _`setuptools`: http://pypi.python.org/pypi/setuptools/
+.. _`distribute`: http://pypi.python.org/pypi/distribute/
 .. _`distutils`: http://docs.python.org/lib/module-distutils.html
 .. _`Python Eggs`: http://peak.telecommunity.com/DevCenter/PythonEggs
 .. _`Python Egg`: http://peak.telecommunity.com/DevCenter/PythonEggs
 .. _`macholib`: http://pypi.python.org/pypi/macholib/
 .. _`altgraph`: http://pypi.python.org/pypi/altgraph/
-.. _`bdist_mpkg`: http://pypi.python.org/pypi/bdist_mpkg/
 .. _`modulegraph`: http://pypi.python.org/pypi/modulegraph/
 .. _`install_name_tool`: x-man-page://1/install_name_tool
 .. _`GraphViz`: http://www.research.att.com/sw/tools/graphviz/
