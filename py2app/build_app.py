@@ -344,6 +344,12 @@ class py2app(Command):
         if getattr(self.distribution, 'install_requires', None):
             self.includes.add('pkg_resources')
             self.eggs = pkg_resources.require(self.distribution.install_requires)
+
+        # Setuptools/distribute style namespace packages uses
+        # __import__('pkg_resources'), and that import isn't detected at the
+        # moment. Forcefully include pkg_resources.
+        self.includes.add('pkg_resources')
+
         dylib_excludes = fancy_split(self.dylib_excludes)
         self.dylib_excludes = []
         for fn in dylib_excludes:
