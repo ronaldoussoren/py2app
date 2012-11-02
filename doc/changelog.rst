@@ -6,6 +6,11 @@ py2app 0.7.1
 
 py2app 0.7.1 is a bugfix release
 
+- Always include 'pkg_resources', this is needed to correctly work with
+  setuptools namespace packages, the __init__.py files of those contain
+  ``__import__('pkg_resources')`` and that call isn't recognized as an import
+  by the bytecode scanner.
+
 - Issue #67: py2applet didn't work with python 3 due to the use of 'raw_input'
 
   Reported by Andrew Barnert.
