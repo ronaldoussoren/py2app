@@ -12,6 +12,10 @@ def create_appbundle(destdir, name, extension='.app', module=py2app.apptemplate,
     kw = module.plist_template.infoPlistDict(
         plist.get('CFBundleExecutable', name), plist)
     app = os.path.join(destdir, kw['CFBundleName'] + extension)
+    if os.path.exists(app):
+        # Remove any existing build artifacts to ensure that
+        # we're getting a clean build
+        shutil.rmtree(app)
     contents = os.path.join(app, 'Contents')
     resources = os.path.join(contents, 'Resources')
     platdir = os.path.join(contents, platform)
