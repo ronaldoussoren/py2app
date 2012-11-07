@@ -16,6 +16,20 @@ py2app 0.8 is a feature release
     that either use the "PYENCHANT_LIBRARY_PATH" environment
     variable or MacPorts.
 
+
+py2app 0.7.2
+------------
+
+py2app 0.7.2 is a bugfix release
+
+- Issue #75: Don't remove ``--dist-dir``, but only remove the old version
+  of the objects we're trying to build (if that exists). 
+
+  This once again makes it possible to have a number of setup.py files that
+  build plugins into the same target folder (such as the plugins folder
+  of an application)
+
+
 py2app 0.7.1
 ------------
 

@@ -813,8 +813,6 @@ class py2app(Command):
         self.mkpath(self.temp_dir)
 
         self.dist_dir = os.path.abspath(self.dist_dir)
-        if os.path.exists(self.dist_dir):
-            shutil.rmtree(self.dist_dir)
         self.mkpath(self.dist_dir)
 
         self.lib_dir = os.path.join(self.bdist_dir,

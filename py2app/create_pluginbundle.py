@@ -13,6 +13,10 @@ def create_pluginbundle(destdir, name, extension='.plugin', module=py2app.bundle
     kw = module.plist_template.infoPlistDict(
         plist.get('CFBundleExecutable', name), plist)
     plugin = os.path.join(destdir, kw['CFBundleName'] + extension)
+    if os.path.exists(plugin):
+        # Remove any existing build artifacts to ensure
+        # we're getting a clean build
+        shutil.rmtree(plugin)
     contents = os.path.join(plugin, 'Contents')
     resources = os.path.join(contents, 'Resources')
     platdir = os.path.join(contents, platform)
