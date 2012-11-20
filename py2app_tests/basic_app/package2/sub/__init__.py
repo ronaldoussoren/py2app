@@ -1,1 +1,1 @@
-""" package2.sub """
+foo = 42

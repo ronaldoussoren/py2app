@@ -337,9 +337,6 @@ class py2app(Command):
         #    self.includes.add('pkgutil')
         #    self.includes.add('imp')
         self.packages = set(fancy_split(self.packages))
-        for pkg in self.packages:
-            if "." in pkg:
-                raise DistutilsOptionError("Cannot include subpackages using the 'packages' option")
 
         self.excludes = set(fancy_split(self.excludes))
         self.excludes.add('readline')
@@ -1249,6 +1246,12 @@ class py2app(Command):
         #if self.style == 'app':
         #    prescripts.append('setup_pkgresource')
 
+        included_subpkg = [pkg for pkg in self.packages if '.' in pkg]
+        if included_subpkg:
+            prescripts.append('setup_included_subpackages')
+            prescripts.append(StringIO('_path_hooks = %r'%(
+                included_subpkg)))
+
         if self.emulate_shell_environment:
             prescripts.append('emulate_shell_environment')
 
@@ -1704,10 +1707,11 @@ class py2app(Command):
             os.path.join(appdir, 'Contents', 'Frameworks'),
             preserve_symlinks=True)
         for pkg in self.packages:
-            pkg = self.get_bootstrap(pkg)
-            dst = os.path.join(pydir, os.path.basename(pkg))
+            pkg_path = self.get_bootstrap(pkg)
+            dst = os.path.join(pydir, pkg)
             self.mkpath(dst)
-            self.copy_tree(pkg, dst)
+            self.copy_tree(pkg_path, dst)
+
         for copyext in copyexts:
             fn = os.path.join(ext_dir,
                 (copyext.identifier.replace('.', os.sep) +

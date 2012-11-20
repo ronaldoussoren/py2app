@@ -165,5 +165,11 @@ class TestExplicitIncludesWithPackage (TestExplicitIncludes):
 class TestExplicitIncludesWithPackageSemiStandalone (TestExplicitIncludes):
     py2app_args = [ '--packages=package2', '--semi-standalone' ]
 
+class TestExplicitIncludesWithSubPackage (TestExplicitIncludes):
+    py2app_args = [ '--packages=package2.sub', ]
+
+class TestExplicitIncludesWithSubPackageSemiStandalone (TestExplicitIncludes):
+    py2app_args = [ '--packages=package2.sub', '--semi-standalone' ]
+
 if __name__ == "__main__":
     unittest.main()
