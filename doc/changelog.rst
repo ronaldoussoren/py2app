@@ -43,6 +43,13 @@ py2app 0.7.2 is a bugfix release
 
   Patch by Dan Horner.
 
+- It is currently not possible to use a subpackage ("foo.bar") in the list
+  of packages for the "packages" option. Py2app now explicitly checks for this
+  and prints an error message instead of building an application that doesn't
+  work.
+
+  Issue: #39 
+
 
 py2app 0.7.1
 ------------

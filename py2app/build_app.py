@@ -337,6 +337,10 @@ class py2app(Command):
         #    self.includes.add('pkgutil')
         #    self.includes.add('imp')
         self.packages = set(fancy_split(self.packages))
+        for pkg in self.packages:
+            if "." in pkg:
+                raise DistutilsOptionError("Cannot include subpackages using the 'packages' option")
+
         self.excludes = set(fancy_split(self.excludes))
         self.excludes.add('readline')
         # included by apptemplate
