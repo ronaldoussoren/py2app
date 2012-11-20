@@ -18,6 +18,16 @@ py2app 0.7.2 is a bugfix release
 
   Reported by Steve Strassmann
 
+- Issue #76: Semi-standalone packages using extensions modules coudn't use
+  extensions unless they also used the ``--site-packages`` option (and
+  the extensions are in the site-packages directory).
+
+  Fixes some problems with PyQt and wxWidgets when using the system installation
+  of Python.
+
+  Patch by Dan Horner.
+
+
 py2app 0.7.1
 ------------
 
