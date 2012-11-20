@@ -13,6 +13,10 @@ py2app 0.7.2 is a bugfix release
   build plugins into the same target folder (such as the plugins folder
   of an application)
 
+- Issue #78: Packages added using the ``--packages`` option didn't end up
+  on ``sys.path`` for semi-standalone applications.
+
+  Reported by Steve Strassmann
 
 py2app 0.7.1
 ------------
