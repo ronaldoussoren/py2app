@@ -1,6 +1,13 @@
 Release history
 ===============
 
+py2app 0.7.3
+------------
+
+py2app 0.7.2 is a bugfix release
+
+- ...
+
 py2app 0.7.2
 ------------
 
