@@ -14,3 +14,9 @@ global-exclude *__pycache__*
 prune py2app/apptemplate/prebuilt/main*.dSYM
 prune py2app/bundletemplate/prebuilt/main*.dSYM
 prune py2app_tests/*.dSYM
+prune examples/*/build
+prune examples/*/dist
+prune examples/*/*/build
+prune examples/*/*/dist
+prune examples/*/*/*/build
+prune examples/*/*/*/dist
