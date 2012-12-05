@@ -1,6 +1,7 @@
 Release history
 ===============
 
+
 py2app 0.8
 -----------
 
@@ -19,6 +20,12 @@ py2app 0.8 is a feature release
     that either use the "PYENCHANT_LIBRARY_PATH" environment
     variable or MacPorts.
 
+py2app 0.7.3
+------------
+
+py2app 0.7.2 is a bugfix release
+
+- ...
 
 py2app 0.7.2
 ------------
