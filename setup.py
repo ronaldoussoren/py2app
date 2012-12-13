@@ -389,6 +389,37 @@ class test (Command):
 
         finally:
             self.remove_from_sys_path()
+
+
+cmdclass = dict(
+    upload_docs=upload_docs,
+    test=test,
+)
+if sys.platform != 'darwinx':
+    msg = "This distribution is only supported on MacOSX"
+    from distutils.command import build, install
+    from setuptools.command import develop, build_ext, install_lib, build_py
+    from distutils.errors import DistutilsPlatformError
+
+
+    def create_command_subclass(base_class):
+        class subcommand (base_class):
+            def run(self):
+                raise DistutilsPlatformError(msg)
+        return subcommand
+
+    class no_test (test):
+        def run(self):
+            print("WARNING: %s\n"%(msg,))
+            print("SUMMARY: {'count': 0, 'fails': 0, 'errors': 0, 'xfails': 0, 'skip': 65, 'xpass': 0, 'message': msg }\n")
+
+    cmdclass['build'] = create_command_subclass(build.build)
+    cmdclass['test'] = no_test
+    cmdclass['install'] = create_command_subclass(install.install)
+    cmdclass['install_lib'] = create_command_subclass(install_lib.install_lib)
+    cmdclass['develop'] = create_command_subclass(develop.develop)
+    cmdclass['build_py'] = create_command_subclass(build_py.build_py)
+
 setup(
     # metadata
     name='py2app',
@@ -410,10 +441,7 @@ setup(
         "macholib>=1.5",
     ],
     tests_require=tests_require,
-    cmdclass=dict(
-        upload_docs=upload_docs,
-        test=test,
-    ),
+    cmdclass=cmdclass,
     packages=find_packages(exclude=['py2app_tests']),
     package_data={
         'py2app.recipes': [

@@ -7,6 +7,12 @@ py2app 0.8
 
 py2app 0.8 is a feature release
 
+- Issue #83: Setup.py now refuses to install when the current
+  platform is not Mac OS X. 
+  
+  This makes it clear that the package is only supported on OSX and 
+  avoids confusing errors later on.
+
 - Issue #39: It is now possible to have subpackages on
   in the "packages" option of py2app.
 
