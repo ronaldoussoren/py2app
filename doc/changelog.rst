@@ -6,7 +6,8 @@ py2app 0.7.3
 
 py2app 0.7.3 is a bugfix release
 
-- ...
+- Issue #82: Remove debug print statement from py2app.util.LOADER that
+  caused problems with Python 3.
 
 py2app 0.7.2
 ------------
