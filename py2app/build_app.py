@@ -234,7 +234,7 @@ class py2app(Command):
         ("alias", 'A',
          "Use an alias to current source file (for development only!)"),
         ("argv-emulation", 'a',
-         "Use argv emulation [disabled for plugins]. Does not work with python 3.x"),
+         "Use argv emulation [disabled for plugins]."),
         ("argv-inject=", None,
          "Inject some commands into the argv"),
         ("emulate-shell-environment", None,
