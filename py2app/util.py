@@ -59,7 +59,7 @@ def path_to_zip(path):
             raise DistutilsFileError("File doesn't exist: %s"%(orig_path,))
 
         try:
-           zf = zipfile.ZipFile(path)
+            zf = zipfile.ZipFile(path)
         except zipfile.BadZipfile:
             raise DistutilsFileError("File doesn't exist: %s"%(orig_path,))
 
@@ -117,7 +117,7 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
             if not os.path.exists(destination):
                 os.mkdir(destination)
         for fn in zipio.listdir(source):
-            copy_resource(os.path.join(source, fn), 
+            copy_resource(os.path.join(source, fn),
                     os.path.join(destination, fn), dry_run=dry_run, symlink=symlink)
 
     else:
@@ -373,7 +373,7 @@ byte_compile(files, optimize=%r, force=%r,
             if force or newer(mod.filename, cfile):
                 if verbose:
                     print("byte-compiling %s to %s" % (mod.filename, dfile))
-                    
+
                 if not dry_run:
                     mkpath(os.path.dirname(cfile))
                     suffix = os.path.splitext(mod.filename)[1]
@@ -399,7 +399,7 @@ byte_compile(files, optimize=%r, force=%r,
                               ("Don't know how to handle %r" % mod.filename)
             else:
                 if verbose:
-                    print("skipping byte-compilation of %s to %s" % 
+                    print("skipping byte-compilation of %s to %s" %
                           (mod.filename, dfile))
 
 SCMDIRS = ['CVS', '.svn']
@@ -601,7 +601,7 @@ def _get_tool(toolname):
             # Support for Xcode 3.x and earlier
             if toolname == 'momc':
                 choices = [
-    	            '/Library/Application Support/Apple/Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc',
+                    '/Library/Application Support/Apple/Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc',
                     '/Developer/Library/Xcode/Plug-ins/XDCoreDataModel.xdplugin/Contents/Resources/momc',
                     '/Developer/usr/bin/momc',
                 ]
@@ -616,7 +616,7 @@ def _get_tool(toolname):
             for fn in choices:
                 if os.path.exists(fn):
                     _tools[toolname] = fn
-                    break 
+                    break
             else:
                 raise IOError("Tool %r not found"%(toolname,))
 

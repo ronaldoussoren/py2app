@@ -25,4 +25,4 @@ def check(cmd, mf):
 
     # Include the entire package outside of site-packages.zip,
     # mostly to avoid trying to extract the C code from the package
-    return dict(packages=['enchant']) 
+    return dict(packages=['enchant'])

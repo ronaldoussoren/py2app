@@ -15,4 +15,3 @@ def _run():
     with open(path, 'rU') as fp:
         source = fp.read()
     exec(compile(source, path, 'exec'), globals(), globals())
-

@@ -1,9 +1,9 @@
 """
-virtualenv installs a wrapper for the real distutils into the 
+virtualenv installs a wrapper for the real distutils into the
 virtual environment. Ignore that wrapper, but go for the real
 distutils instead
 
-This recipe is rather compilicated and definitely not a 
+This recipe is rather compilicated and definitely not a
 good model for other recipes!!!
 """
 import sys, os, imp
@@ -79,7 +79,7 @@ def check(cmd, mf):
             co = mf.replace_paths_in_code(co)
         mf.scan_code(co, m)
 
-        # That's not all there is to this, we need to look for 
+        # That's not all there is to this, we need to look for
         # MissingModules in the distutils namespace as well and
         # try to import these again.
         for m in mf.flatten():

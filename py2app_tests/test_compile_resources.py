@@ -68,7 +68,7 @@ class TestBasicApp (unittest.TestCase):
 
 
     def test_resources(self):
-        resource_dir = os.path.join(self.app_dir, 'dist', 'Resources.app', 
+        resource_dir = os.path.join(self.app_dir, 'dist', 'Resources.app',
             'Contents', 'Resources')
 
         self.assertFalse(os.path.exists(os.path.join(resource_dir, 'MainMenu.xib')))
@@ -87,4 +87,3 @@ class TestBasicSemiStandaloneApp (TestBasicApp):
 
 if __name__ == "__main__":
     unittest.main()
-

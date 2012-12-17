@@ -61,7 +61,7 @@ class TestArgvEmulation (unittest.TestCase):
 
     #
     # End of setup code
-    # 
+    #
 
     def test_basic_start(self):
         self.maxDiff = None
@@ -161,4 +161,3 @@ class TestArgvEmulationWithURL (TestArgvEmulation):
 
 if __name__ == "__main__":
     unittest.main()
-

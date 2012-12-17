@@ -13,7 +13,7 @@ class Loader (object):
         pkg_dir = os.path.join(os.environ['RESOURCEPATH'],
             'lib', 'python%d.%d'%(sys.version_info[:2]))
         return imp.load_module(
-                fullname, None, 
+                fullname, None,
                 os.path.join(pkg_dir, fullname), ('', '', imp.PKG_DIRECTORY))
 
 import sys

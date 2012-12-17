@@ -86,7 +86,7 @@ class TestExplicitIncludes (unittest.TestCase):
 
     #
     # End of setup code
-    # 
+    #
 
 
     def test_simple_imports(self):

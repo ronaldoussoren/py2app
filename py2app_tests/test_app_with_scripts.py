@@ -171,7 +171,7 @@ class TestBasicApp (unittest.TestCase):
 
     #
     # End of setup code
-    # 
+    #
 
     def test_helper1(self):
         p = self.run_script('helper1')
@@ -361,4 +361,3 @@ class TestOptimized2 (TestBasicApp):
 
 if __name__ == "__main__":
     unittest.main()
-

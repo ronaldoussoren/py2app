@@ -58,7 +58,7 @@ class TestShellEnvironment (unittest.TestCase):
 
     #
     # End of setup code
-    # 
+    #
 
     def test_shell_environment(self):
         self.maxDiff = None
@@ -84,9 +84,9 @@ class TestShellEnvironment (unittest.TestCase):
 
         env = eval(data)
         path = env['PATH']
-        
+
         self.assertNotEqual(path, '/usr/bin:/bin')
-        
+
         elems = path.split(':')
         self.assertIn('/usr/bin', elems)
 

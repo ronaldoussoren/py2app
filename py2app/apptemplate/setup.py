@@ -83,7 +83,7 @@ def main(all=False, arch=None):
         arch = distutils.util.get_platform().split('-')[-1]
         if sys.prefix.startswith('/System') and \
             sys.version_info[:2] == (2,5):
-                arch = "fat"
+            arch = "fat"
 
     name = 'main-' + arch
 

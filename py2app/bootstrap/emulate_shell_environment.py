@@ -63,7 +63,7 @@ def _emulate_shell_environ():
                 if ln.strip().startswith(b'--------'):
                     in_data = True
                 continue
-            
+
             if ln.startswith(b'--------'):
                 break
 
@@ -74,6 +74,6 @@ def _emulate_shell_environ():
 
             else:
                 env[key] = value
-        
+
 
 _emulate_shell_environ()

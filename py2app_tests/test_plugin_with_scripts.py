@@ -46,7 +46,7 @@ class TestBasicPlugin (unittest.TestCase):
             if 'LANG' not in env:
                 env['LANG'] = 'en_US.UTF-8'
 
-            
+
             p = subprocess.Popen(
                 cmd,
                 cwd = cls.plugin_dir,
@@ -80,8 +80,8 @@ class TestBasicPlugin (unittest.TestCase):
                 env = dict(os.environ)
 
             p = subprocess.Popen(cc
-                +  get_config_var('LDFLAGS').split() + get_config_var('CFLAGS').split() + [ 
-                    '-o', 'bundle_loader', os.path.join(DIR_NAME, 'bundle_loader.m'), 
+                +  get_config_var('LDFLAGS').split() + get_config_var('CFLAGS').split() + [
+                    '-o', 'bundle_loader', os.path.join(DIR_NAME, 'bundle_loader.m'),
                     '-framework', 'Foundation'],
                 env=env,
                 stdout=subprocess.PIPE,
@@ -148,7 +148,7 @@ class TestBasicPlugin (unittest.TestCase):
         return p
     #
     # End of setup code
-    # 
+    #
 
 
     def test_helper1(self):
@@ -228,4 +228,3 @@ class TestBasicSemiStandalonePluginUnicodePath (TestBasicPluginUnicodePath):
 
 if __name__ == "__main__":
     unittest.main()
-

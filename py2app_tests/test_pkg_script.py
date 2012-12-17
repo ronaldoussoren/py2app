@@ -92,7 +92,7 @@ class TestBasicApp (unittest.TestCase):
 
     #
     # End of setup code
-    # 
+    #
 
     def test_basic_start(self):
         p = self.start_app()
@@ -112,7 +112,7 @@ class TestBasicApp (unittest.TestCase):
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"False")
-        
+
 
         # Basic module that is always present:
         p.stdin.write('import_module("os")\n'.encode('latin1'))
@@ -174,5 +174,3 @@ class TestBasicSemiStandaloneApp (TestBasicApp):
 
 if __name__ == "__main__":
     unittest.main()
-
-

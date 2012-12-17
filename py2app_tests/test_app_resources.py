@@ -66,7 +66,7 @@ class TestBasicApp (unittest.TestCase):
 
 
     def test_icon_file(self):
-        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app', 
+        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app',
             'Contents', 'Resources')
 
         pl = plistlib.readPlist(os.path.join(
@@ -85,7 +85,7 @@ class TestBasicApp (unittest.TestCase):
 
 
     def test_resources(self):
-        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app', 
+        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app',
             'Contents', 'Resources')
 
         src_file = os.path.join(self.app_dir, 'data3', 'source.c')
@@ -99,7 +99,7 @@ class TestBasicApp (unittest.TestCase):
             self.assertTrue(os.path.islink(dst_file))
 
     def test_data_files(self):
-        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app', 
+        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app',
             'Contents', 'Resources')
 
         for src_path, dst_path, chk_link in [
@@ -131,4 +131,3 @@ class TestBasicSemiStandaloneApp (TestBasicApp):
 
 if __name__ == "__main__":
     unittest.main()
-

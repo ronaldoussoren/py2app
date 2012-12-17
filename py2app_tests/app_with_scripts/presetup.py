@@ -46,7 +46,7 @@ class build_dylib (Command):
             '-dynamic', '-o', os.path.join(bdir, 'libfoo.dylib'),
             '-install_name', os.path.abspath(os.path.join(bdir, 'libfoo.dylib')),
             os.path.join(os.path.join(bdir, 'libfoo.o'))])
-        
+
 setup(
     cmdclass = {
         'build_dylib': build_dylib,

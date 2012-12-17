@@ -42,6 +42,6 @@ def main():
     while os.path.exists(name):
         time.sleep(0.1)
     log('done')
-    
+
 if __name__ == '__main__':
     main()

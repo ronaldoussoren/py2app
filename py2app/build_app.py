@@ -553,7 +553,7 @@ class py2app(Command):
         for src, dest in self.iter_mappingmodels(resdir):
             self.mkpath(os.path.dirname(dest))
             mapc(src, dest)
-        
+
     def iter_data_files(self):
         dist = self.distribution
         allres = chain(getattr(dist, 'data_files', ()) or (), self.resources)
@@ -594,7 +594,7 @@ class py2app(Command):
             result['PyOptions']['optimize'] = self.optimize
         return result
 
-    
+
     def initialize_plist(self):
         plist = self.get_default_plist()
         for target in self.targets:
@@ -805,7 +805,7 @@ class py2app(Command):
 
         if os.path.exists(self.bdist_dir):
             shutil.rmtree(self.bdist_dir)
-        
+
         self.collect_dir = os.path.abspath(
             os.path.join(self.bdist_dir, "collect"))
         self.mkpath(self.collect_dir)
@@ -1370,7 +1370,7 @@ class py2app(Command):
             else:
                 basename = fmwk['shortname'] + '.framework'
                 yield os.path.join(fmwk['location'], basename)
-    
+
     def build_alias_executable(self, target, script, extra_scripts):
         # Build an alias executable for the target
         appdir, resdir, plist = self.create_bundle(target, script)
@@ -1395,8 +1395,8 @@ class py2app(Command):
         self.symlink(
             os.path.join(realhome, 'config'),
             os.path.join(pyhome, 'config'))
-            
-        
+
+
         # symlink data files
         # XXX: fixme: need to integrate automatic data conversion
         for src, dest in self.iter_data_files():
@@ -1700,7 +1700,7 @@ class py2app(Command):
         if sys.version_info[0] != 2:
             import zlib
             self.copy_file(zlib.__file__, os.path.dirname(arcdir))
-        
+
         ext_dir = os.path.join(pydir, os.path.basename(self.ext_dir))
         self.copy_tree(self.ext_dir, ext_dir, preserve_symlinks=True)
         self.copy_tree(self.framework_dir,

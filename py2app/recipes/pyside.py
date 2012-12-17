@@ -37,6 +37,6 @@ def check(cmd, mf):
         elif fn.startswith('libshiboken-python'):
             add=True
         if add:
-            NOT_SYSTEM_FILES.append(os.path.join('/usr/lib', fn)) 
+            NOT_SYSTEM_FILES.append(os.path.join('/usr/lib', fn))
 
     return dict(resources=resources)

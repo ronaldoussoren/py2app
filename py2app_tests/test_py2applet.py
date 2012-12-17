@@ -24,7 +24,7 @@ class TestPy2Applet (unittest.TestCase):
         scriptfn = script_py2applet.__file__
         if scriptfn.endswith('.pyc'):
             scriptfn = scriptfn[:-1]
-            
+
         p = subprocess.Popen([
             sys.executable, scriptfn ] + list(args),
             cwd = self.testdir,
@@ -55,6 +55,3 @@ class TestPy2Applet (unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-        

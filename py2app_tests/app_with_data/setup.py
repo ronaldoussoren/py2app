@@ -15,6 +15,6 @@ setup(
     )),
     data_files = [
         ( 'sub1', [ 'data1/file1.txt', 'data1/file2.txt' ]),
-        'data2' 
+        'data2'
     ]
 )

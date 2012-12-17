@@ -11,4 +11,3 @@ def _run():
         source = fp.read() + "\n"
 
     exec(compile(source, script, 'exec'), globals(), globals())
-

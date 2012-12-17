@@ -123,7 +123,7 @@ class TestExplicitIncludes (unittest.TestCase):
 
     #
     # End of setup code
-    # 
+    #
 
     def test_package_data(self):
         p = self.start_app()
@@ -138,7 +138,7 @@ class TestExplicitIncludes (unittest.TestCase):
         ln = p.stdout.readline()
         path = ln.decode('utf-8')[:-1]
 
-        
+
         self.assertTrue(os.path.basename(path) in ['__init__.py', '__init__.pyc', '__init__.pyo'])
         self.assertTrue(zipio.isfile(path))
 

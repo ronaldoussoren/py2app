@@ -7,7 +7,7 @@ def _fixup_virtualenv(real_prefix):
     # for platforms that aren't supported by py2app)
 
     paths = [os.path.join(sys.real_prefix, 'lib', 'python'+sys.version[:3])]
-    hardcoded_relative_dirs = paths[:] 
+    hardcoded_relative_dirs = paths[:]
     plat_path = os.path.join(sys.real_prefix, 'lib', 'python'+sys.version[:3],
          'plat-%s' % sys.platform)
     if os.path.exists(plat_path):

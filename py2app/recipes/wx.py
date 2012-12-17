@@ -1,5 +1,5 @@
 def check(cmd, mf):
-    # wx.lib.pubsub tries to be too smart w.r.t. 
+    # wx.lib.pubsub tries to be too smart w.r.t.
     # the __path__ it uses, include all of it when
     # found.
     m = mf.findNode('wx.lib.pubsub')
