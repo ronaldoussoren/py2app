@@ -7,6 +7,26 @@ py2app 0.8
 
 py2app 0.8 is a feature release
 
+- Issue #80: Add support for copying system plugins into the application
+  bundle.
+ 
+  Py2app now supports a new option *include_plugins*. The value of this
+  is a list of paths to plugins that should be copied into the application
+  bundle. 
+
+  Items in the list are either paths, or a tuple with the plugin type
+  and the path::
+
+      include_plugins=[
+        "MyPlugins/MyDocument.qlgenerator",
+        ("SystemConfiguration", "MyPlugins/MyConfig.plugin"),
+      ]
+
+  Py2app currently knows about the following plugin suffixes: 
+  ``.qlgenerator``, ``.mdimporter``, ``.xpc``, ``.service``, 
+  ``.prefPane``, ``.iaplugin`` and ``.action``. These plugins
+  can be added without specifying the plugin type.
+
 - Issue #83: Setup.py now refuses to install when the current
   platform is not Mac OS X. 
   

@@ -62,7 +62,7 @@ Options for 'py2app' command::
   --semi-standalone (-s)  depend on an existing installation of Python
   --alias (-A)            Use an alias to current source file (for development
                           only!)
-  --argv-emulation (-a)   Use argv emulation [disabled for plugins]. Does not work with python 3.x
+  --argv-emulation (-a)   Use argv emulation [disabled for plugins]. 
   --argv-inject           Inject some commands into the argv
   --use-pythonpath        Allow PYTHONPATH to effect the interpreter's
                           environment
@@ -88,3 +88,5 @@ Options for 'py2app' command::
                           explicitly imported.
   --extra-scripts         comma-separated list of additional scripts to include
                           in an application or plugin.
+  --include-plugins       comma-seperated list of additional plugins to include
+                          in an application

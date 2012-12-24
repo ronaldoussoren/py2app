@@ -395,7 +395,7 @@ cmdclass = dict(
     upload_docs=upload_docs,
     test=test,
 )
-if sys.platform != 'darwinx':
+if sys.platform != 'darwin':
     msg = "This distribution is only supported on MacOSX"
     from distutils.command import build, install
     from setuptools.command import develop, build_ext, install_lib, build_py

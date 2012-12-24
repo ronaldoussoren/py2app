@@ -59,6 +59,17 @@ from py2app import recipes
 from distutils.sysconfig import get_config_var
 PYTHONFRAMEWORK=get_config_var('PYTHONFRAMEWORK')
 
+
+PLUGIN_SUFFIXES = {
+        '.qlgenerator':    'QuickLook',
+        '.mdimporter':     'Spotlight',
+        '.xpc':            'XPCServices',
+        '.service':        'Services',
+        '.prefPane':       'PreferencePanes',
+        '.iaplugin':       'InternetAccounts',
+        '.action':         'Automator',
+}
+
 try:
     basestring
 except NameError:
@@ -259,6 +270,7 @@ class py2app(Command):
         ("qt-plugins=", None, "set of Qt plugins to include in the application bundle (default None)"),
         ("matplotlib-backends=", None, "set of matplotlib backends to include (default: include entire package)"),
         ("extra-scripts=", None, "set of scripts to include in the application bundle, next to the main application script"),
+        ("include-plugins=", None, "List of plugins to include"),
         ]
 
     boolean_options = [
@@ -322,6 +334,7 @@ class py2app(Command):
         self.qt_plugins = None
         self.matplotlib_backends = None
         self.extra_scripts = None
+        self.include_plugins = None
 
     def finalize_options (self):
         if not self.strip:
@@ -402,6 +415,7 @@ class py2app(Command):
         self.qt_plugins = fancy_split(self.qt_plugins)
         self.matplotlib_backends = fancy_split(self.matplotlib_backends)
         self.extra_scripts = fancy_split(self.extra_scripts)
+        self.include_plugins = fancy_split(self.include_plugins)
 
 
         if self.datamodels:
@@ -553,6 +567,21 @@ class py2app(Command):
         for src, dest in self.iter_mappingmodels(resdir):
             self.mkpath(os.path.dirname(dest))
             mapc(src, dest)
+
+    def iter_extra_plugins(self):
+        for item in self.include_plugins:
+            if isinstance(item, (list, tuple)):
+                subdir, path = item
+
+            else:
+                ext = os.path.splitext(item)[1]
+                try:
+                    subdir = PLUGIN_SUFFIXES[ext]
+                    path = item
+                except KeyError:
+                    raise DistutilsOptionError("Cannot determine subdirectory for plugin %s"%(item,))
+
+            yield path, os.path.join(subdir, os.path.basename(path))
 
     def iter_data_files(self):
         dist = self.distribution
@@ -1411,6 +1440,20 @@ class py2app(Command):
                 traceback.print_exc()
                 raise
 
+        plugindir = os.path.join(appdir, 'Contents', 'Library')
+        for src, dest in self.iter_extra_plugins():
+            dest = os.path.join(plugindir, dest)
+            if src == dest:
+                continue
+
+            makedirs(os.path.dirname(dest))
+            try:
+                copy_resource(src, dest, dry_run=self.dry_run)
+            except:
+                import traceback
+                traceback.print_exc()
+                raise
+
         # symlink frameworks
         for src in self.iter_frameworks():
             dest = os.path.join(
@@ -1752,6 +1795,15 @@ class py2app(Command):
             dest = os.path.join(resdir, dest)
             if src == dest:
                 continue
+            makedirs(os.path.dirname(dest))
+            copy_resource(src, dest, dry_run=self.dry_run)
+
+        plugindir = os.path.join(appdir, 'Contents', 'Library')
+        for src, dest in self.iter_extra_plugins():
+            dest = os.path.join(plugindir, dest)
+            if src == dest:
+                continue
+
             makedirs(os.path.dirname(dest))
             copy_resource(src, dest, dry_run=self.dry_run)
 

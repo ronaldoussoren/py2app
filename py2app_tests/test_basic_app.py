@@ -225,6 +225,15 @@ class TestBasicAliasApp (TestBasicApp):
 class TestBasicSemiStandaloneApp (TestBasicApp):
     py2app_args = [ '--semi-standalone', ]
 
+class TestBasicAppScriptName (unittest.TestCase):
+    app_dir = os.path.join(DIR_NAME, 'basic_app2')
+
+class TestBasicAliasAppScriptName (TestBasicAppScriptName):
+    py2app_args = [ '--alias', ]
+
+class TestBasicSemiStandaloneAppScriptName (TestBasicAppScriptName):
+    py2app_args = [ '--semi-standalone', ]
+
 class TestBasicAppWindowsLineEnd (TestBasicApp):
     app_dir = os.path.join(DIR_NAME, 'basic_app_winle')
 
