@@ -402,7 +402,7 @@ byte_compile(files, optimize=%r, force=%r,
                     print("skipping byte-compilation of %s to %s" % 
                           (mod.filename, dfile))
 
-SCMDIRS = ['CVS', '.svn']
+SCMDIRS = ['CVS', '.svn', '.hg', '.git']
 def skipscm(ofn):
     ofn = fsencoding(ofn)
     fn = os.path.basename(ofn)

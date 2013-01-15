@@ -9,6 +9,21 @@ py2app 0.7.3 is a bugfix release
 - Issue #82: Remove debug print statement from py2app.util.LOADER that
   caused problems with Python 3.
 
+- Issue #..: Py2app now fails with an error when trying to build a bundle
+  for a unix-style shared library build of Python (``--enable-shared``) unless 
+  you are using a recent enough patchlevel of python (2.7.4, 3.2.3, 3.3.1, 3.4.0, 
+  all of them are not released at the point in time).
+
+  The build failure was added to avoid a very confusing error when trying
+  to start the generated application due to a bug in the way python reads 
+  the environment (for shared library builds on Mac OS X).
+
+- Py2app will also give an error message when the python binary does not
+  have a shared library (or framework) at all.
+
+- Issue #87: Ignore '.git' and '.hg' directories while copying package data
+  ('.svn' and 'CVS' were already ignored).
+
 py2app 0.7.2
 ------------
 

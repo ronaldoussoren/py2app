@@ -487,6 +487,27 @@ class py2app(Command):
             yield runtime
 
     def run(self):
+        if sysconfig.get_config_var('PYTHONFRAMEWORK') is None:
+            if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
+                raise DistutilsPlatformError("This python does not have a shared library or framework")
+
+            else:
+                # Issue .. in py2app's tracker, and issue .. in python's tracker: a unix-style shared 
+                # library build did not read the application environment correctly. The collection of
+                # if statements below gives a clean error message when py2app is started, instead of
+                # building a bundle that will give a confusing error message when started.
+                msg = "py2app is not supported for a shared library build with this version of python"
+                if sys.version_info[:2] < (2,7):
+                    raise DistutilsPlatformError(msg)
+                elif sys.version_info[:2] == (2,7) and sys.version[3] < 4:
+                    raise DistutilsPlatformError(msg)
+                elif sys.version_info[0] == 3 and sys.version_info[1] < 2:
+                    raise DistutilsPlatformError(msg)
+                elif sys.version_info[0] == 3 and sys.version_info[1] == 2 and sys.version_info[3] < 3:
+                    raise DistutilsPlatformError(msg)
+                elif sys.version_info[0] == 3 and sys.version_info[1] == 3 and sys.version_info[3] < 1:
+                    raise DistutilsPlatformError(msg)
+
         if hasattr(self.distribution, "install_requires") \
                 and self.distribution.install_requires:
 
@@ -969,7 +990,7 @@ class py2app(Command):
         for dname in package.packagepath:
             filenames = list(filter(datafilter, zipio.listdir(dname)))
             for fname in filenames:
-                if fname in ('.svn', 'CVS'):
+                if fname in ('.svn', 'CVS', '.hg', '.git'):
                     # Scrub revision manager junk
                     continue
                 if fname in ('__pycache__',):
