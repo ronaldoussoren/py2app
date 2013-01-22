@@ -86,6 +86,12 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
         dest = os.path.join(self.dest, os.path.basename(src))
         if os.path.islink(src):
             dest = os.path.join(self.dest, os.path.basename(os.path.realpath(src)))
+
+            # Ensure that the orginal name also exists, avoids problems when
+            # the filename is used from Python (see issue #65)
+            link_dest = os.path.join(self.dest, os.path.basename(src))
+            os.symlink(os.path.basename(dest), link_dest)
+
         else:
             dest = os.path.join(self.dest, os.path.basename(src))
         return self.appbuilder.copy_dylib(src, dest)

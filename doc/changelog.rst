@@ -24,6 +24,11 @@ py2app 0.7.3 is a bugfix release
 - Issue #87: Ignore '.git' and '.hg' directories while copying package data
   ('.svn' and 'CVS' were already ignored).
 
+- Issue #65: the fix in 0.7 to avoid copying a symlinked library twice caused
+  problems for some users because only one of the file names ended up in the
+  application bundle. This release ensures that both names exist (one as a
+  symbolic name to the other).
+
 py2app 0.7.2
 ------------
 
