@@ -119,6 +119,11 @@ class TestBasicAppWithExtension (unittest.TestCase):
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"81")
 
+        p.stdin.write('print(half(16))\n'.encode('latin1'))
+        p.stdin.flush()
+        ln = p.stdout.readline()
+        self.assertEqual(ln.strip(), b"8")
+
     def test_simple_imports(self):
         p = self.start_app()
 
@@ -181,11 +186,13 @@ class TestBasicAppWithExtension (unittest.TestCase):
         if '--alias' in self.py2app_args:
             self.assertFalse(os.path.exists(os.path.join(path, 'Contents', 'Frameworks', 'libshared.1.dylib')))
             self.assertFalse(os.path.exists(os.path.join(path, 'Contents', 'Frameworks', 'libshared.dylib')))
+            self.assertFalse(os.path.exists(os.path.join(path, 'Contents', 'Frameworks', 'libhalf.dylib')))
 
         else:
             self.assertTrue(os.path.isfile(os.path.join(path, 'Contents', 'Frameworks', 'libshared.1.dylib')))
             self.assertTrue(os.path.islink(os.path.join(path, 'Contents', 'Frameworks', 'libshared.dylib')))
             self.assertEqual(os.readlink(os.path.join(path, 'Contents', 'Frameworks', 'libshared.dylib')), 'libshared.1.dylib')
+            self.assertTrue(os.path.isfile(os.path.join(path, 'Contents', 'Frameworks', 'libhalf.dylib')))
 
 
 

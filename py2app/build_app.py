@@ -89,8 +89,14 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
 
             # Ensure that the orginal name also exists, avoids problems when
             # the filename is used from Python (see issue #65)
+            # 
+            # NOTE: The if statement checks that the target link won't 
+            #       point to itself, needed for systems like homebrew that
+            #       store symlinks in "public" locations that point to
+            #       files of the same name in a per-package install location.
             link_dest = os.path.join(self.dest, os.path.basename(src))
-            os.symlink(os.path.basename(dest), link_dest)
+            if os.path.basename(link_dest) != os.path.basename(dest):
+                os.symlink(os.path.basename(dest), link_dest)
 
         else:
             dest = os.path.join(self.dest, os.path.basename(src))

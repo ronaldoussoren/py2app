@@ -9,3 +9,8 @@ int doubled(int x)
 {
 	return x+x;
 }
+
+int half(int x)
+{
+	return x/2;
+}
