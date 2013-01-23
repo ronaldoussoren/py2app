@@ -38,6 +38,18 @@ class sharedlib (Command):
             os.unlink('lib/libshared.dylib')
         os.symlink('libshared.1.dylib', 'lib/libshared.dylib')
 
+        if not os.path.exists('lib/stash'):
+            os.makedirs('lib/stash')
+
+        if os.path.exists('lib/libhalf.dylib'):
+            os.unlink('lib/libhalf.dylib')
+
+        cmd = cc + arch_flags + root_flags + ['-dynamiclib', '-o', os.path.abspath('lib/libhalf.dylib'), 'src/sharedlib.c']
+        subprocess.check_call(cmd)
+
+        os.rename('lib/libhalf.dylib', 'lib/stash/libhalf.dylib')
+        os.symlink('stash/libhalf.dylib', 'lib/libhalf.dylib')
+
 
 class cleanup (Command):
     description = "cleanup build stuff"
@@ -85,6 +97,9 @@ setup(
         Extension("square", [ "mod.c" ], 
             extra_compile_args=["-Isrc", '-DNAME=square', '-DFUNC_NAME=squared', '-DINITFUNC=initsquare'],
             extra_link_args=["-Llib", "-lshared.1"]),
+        Extension("half", [ "mod.c" ], 
+            extra_compile_args=["-Isrc", '-DNAME=half', '-DFUNC_NAME=half', '-DINITFUNC=inithalf'],
+            extra_link_args=["-Llib", "-lhalf"]),
     ],
     options=dict(
         build_ext=dict(

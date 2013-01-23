@@ -1,6 +1,7 @@
 import sys
 from square import square
 from double import double
+from half import half
 
 
 def function():
