@@ -34,16 +34,16 @@ py2app 0.7.3 is a bugfix release
   exposed lib directory contains symlinks to a cellar, while tye install_name
   does mention the "public" lib directory::
 
-  $ ls -l /opt/homebrew/lib
-  ...
-  libglib-2.0.0.dylib -> ../Cellar/glib/2.32.4/lib/libglib-2.0.0.dylib
-  ...
+     $ ls -l /opt/homebrew/lib
+     ...
+     libglib-2.0.0.dylib -> ../Cellar/glib/2.32.4/lib/libglib-2.0.0.dylib
+     ...
 
-  $ otool -vL /opt/homebrew/lib/libglib-2.0.0.dylib
-  /opt/homebrew/lib/libglib-2.0.0.dylib:
+     $ otool -vL /opt/homebrew/lib/libglib-2.0.0.dylib
+     /opt/homebrew/lib/libglib-2.0.0.dylib:
         /opt/homebrew/lib/libglib-2.0.0.dylib (compatibility version 3201.0.0, current version 3201.4.0)
         time stamp 1 Thu Jan  1 01:00:01 1970
-  ...
+     ...
 
 
 
