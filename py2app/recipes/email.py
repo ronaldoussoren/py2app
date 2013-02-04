@@ -10,6 +10,11 @@ def check(cmd, mf):
     if sys.version_info[:2] < (2, 5):
         return None
 
+    if sys.version_info[0] >= 3:
+        # The older names are not present in Python 3.x, 
+        # and therefore the workaround isn't needed there.
+        return None
+
     m = mf.findNode('email')
     if m is None or m.filename is None:
         return None

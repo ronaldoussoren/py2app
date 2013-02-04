@@ -9,6 +9,8 @@ from . import numpy
 from . import scipy
 from . import matplotlib
 from . import pyenchant
+from . import lxml
+
 from . import virtualenv
 from . import pyside
 from . import wx
