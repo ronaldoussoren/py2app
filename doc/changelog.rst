@@ -4,7 +4,12 @@ Release history
 py2app 0.7.4
 ------------
 
-- ...
+- Disabled the 'email' recipe for python 3.x as it isn't needed there.
+
+- Issue #91: Added a recipe for `lxml <http://lxml.de/>`, needed because 
+  lxml performs a number of imports from an extension and those cannot
+  be detected automaticly by modulegraph.
+
 
 py2app 0.7.3
 ------------
