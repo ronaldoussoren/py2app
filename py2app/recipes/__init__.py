@@ -4,7 +4,6 @@ from . import pydoc
 from . import docutils
 from . import pyopengl
 from . import sip
-from . import email
 from . import numpy
 from . import scipy
 from . import matplotlib

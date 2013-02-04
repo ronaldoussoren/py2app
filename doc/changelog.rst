@@ -45,6 +45,10 @@ py2app 0.8 is a feature release
     that either use the "PYENCHANT_LIBRARY_PATH" environment
     variable or MacPorts.
 
+- Issue #90: Removed the 'email' recipe, but require a new enough version
+  of modulegraph instead. Because of this py2app now requires modulegraph
+  0.11 or later.
+
 py2app 0.7.4
 ------------
 
