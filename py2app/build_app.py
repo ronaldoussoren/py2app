@@ -1749,6 +1749,13 @@ class py2app(Command):
         realhome = os.path.join(sys.prefix, 'lib', 'python' + sys.version[:3])
         self.mkpath(pydir)
 
+        # The site.py file needs to be a two locations 
+        # 1) in lib/pythonX.Y, to be found during normal startup and
+        #    by the 'python' executable
+        # 2) in the resources directory next to the script for 
+        #    semistandalone builds (the lib/pythonX.Y directory is too
+        #    late on sys.path to be found in that case).
+        #
         if self.optimize:
             self.symlink('../../site.pyo', os.path.join(pydir, 'site.pyo'))
         else:
