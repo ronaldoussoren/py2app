@@ -6,12 +6,19 @@ py2app 0.8
 
 py2app 0.8 is a feature release
 
+- Issue #92: Add option '--force-system-tk' which ensures that the _tkinter
+  extension (used by Tkinter) is linked against the Apple build of Tcl/Tk,
+  even when it is linked to another framework in Python's std. library.
+
+  This will cause a build error when tkinter is linked with a major version of
+  Tcl/Tk that is not present in /System/Library/Frameworks.
+
 - Issue #80: Add support for copying system plugins into the application
   bundle.
- 
+
   Py2app now supports a new option *include_plugins*. The value of this
   is a list of paths to plugins that should be copied into the application
-  bundle. 
+  bundle.
 
   Items in the list are either paths, or a tuple with the plugin type
   and the path::
@@ -21,15 +28,15 @@ py2app 0.8 is a feature release
         ("SystemConfiguration", "MyPlugins/MyConfig.plugin"),
       ]
 
-  Py2app currently knows about the following plugin suffixes: 
-  ``.qlgenerator``, ``.mdimporter``, ``.xpc``, ``.service``, 
+  Py2app currently knows about the following plugin suffixes:
+  ``.qlgenerator``, ``.mdimporter``, ``.xpc``, ``.service``,
   ``.prefPane``, ``.iaplugin`` and ``.action``. These plugins
   can be added without specifying the plugin type.
 
 - Issue #83: Setup.py now refuses to install when the current
-  platform is not Mac OS X. 
-  
-  This makes it clear that the package is only supported on OSX and 
+  platform is not Mac OS X.
+
+  This makes it clear that the package is only supported on OSX and
   avoids confusing errors later on.
 
 - Issue #39: It is now possible to have subpackages on
@@ -54,7 +61,7 @@ py2app 0.7.4
 
 - Disabled the 'email' recipe for python 3.x as it isn't needed there.
 
-- Issue #91: Added a recipe for `lxml <http://lxml.de/>`, needed because 
+- Issue #91: Added a recipe for `lxml <http://lxml.de/>`, needed because
   lxml performs a number of imports from an extension and those cannot
   be detected automaticly by modulegraph.
 
@@ -68,12 +75,12 @@ py2app 0.7.3 is a bugfix release
   caused problems with Python 3.
 
 - Issue #81: Py2app now fails with an error when trying to build a bundle
-  for a unix-style shared library build of Python (``--enable-shared``) unless 
-  you are using a recent enough patchlevel of python (2.7.4, 3.2.3, 3.3.1, 
+  for a unix-style shared library build of Python (``--enable-shared``) unless
+  you are using a recent enough patchlevel of python (2.7.4, 3.2.3, 3.3.1,
   3.4.0, all of them are not released yet).
 
   The build failure was added to avoid a very confusing error when trying
-  to start the generated application due to a bug in the way python reads 
+  to start the generated application due to a bug in the way python reads
   the environment (for shared library builds on Mac OS X).
 
 - Py2app will also give an error message when the python binary does not
@@ -88,7 +95,7 @@ py2app 0.7.3 is a bugfix release
   symbolic name to the other).
 
 - Issue #88: Ensure that the fix for #65 won't try to create a symlink that
-  points to itself. This could for example occur with homebrew, where the 
+  points to itself. This could for example occur with homebrew, where the
   exposed lib directory contains symlinks to a cellar, while tye install_name
   does mention the "public" lib directory::
 
@@ -111,7 +118,7 @@ py2app 0.7.2
 py2app 0.7.2 is a bugfix release
 
 - Issue #75: Don't remove ``--dist-dir``, but only remove the old version
-  of the objects we're trying to build (if that exists). 
+  of the objects we're trying to build (if that exists).
 
   This once again makes it possible to have a number of setup.py files that
   build plugins into the same target folder (such as the plugins folder
@@ -136,7 +143,7 @@ py2app 0.7.2 is a bugfix release
   and prints an error message instead of building an application that doesn't
   work.
 
-  Issue: #39 
+  Issue: #39
 
 
 py2app 0.7.1
@@ -267,13 +274,13 @@ py2app 0.7 is a bugfix release
   'includes' list.
 
 - rewritten the recipe for matplotlib. The recipe no longer includes
-  the entire package, but just the "mpl-data" directory. 
+  the entire package, but just the "mpl-data" directory.
 
   WARNING: This recipe has had limited testing.
 
 - fix mixed indentation (tabs and spaces) in argv_emulation.py,
   which caused installation failures on python 3.x (issue #40)
-  
+
 - Issue #43: py2app now creates a symlink named "Current" in the
   'Versions' directory of the embedded Python framework to comply
   with a requirement for the Mac App-store.
@@ -311,7 +318,7 @@ py2app 0.6.4 is a bugfix and minor feature release
 - Added option '--arch=VALUE' which can be used to select the set of
   architectures for the main executable. This defaults to the set of
   architectures supported by the python interpreter and can be used to
-  drop support for some architectures (for example when you're using a 
+  drop support for some architectures (for example when you're using a
   python binary that supports both 32-bit and 64-bit code and use a
   GUI library that does not yet work in 64-bit mode).
 
@@ -349,8 +356,8 @@ py2app 0.6.4 is a bugfix and minor feature release
   (replace ``<PID>`` by the process ID of the current process).
 
 - When using the system python we now explicitly add Apple's additional packages
-  (like PyObjC and Twisted) to ``sys.path``. 
-  
+  (like PyObjC and Twisted) to ``sys.path``.
+
   This fixes and issue reported by Sean Robinson: py2app used to create a non-working
   bundle when you used these packages because the packages didn't get included
   (as intented), but were not available on ``sys.path`` either.
@@ -360,7 +367,7 @@ py2app 0.6.4 is a bugfix and minor feature release
 
   As before the SIP recipe is rather crude, it will include *all* SIP-based
   packages into your application bundle when it detects a module that uses
-  SIP. 
+  SIP.
 
 - The 'Resources' folder is no longer on the python search path,
   it contains the scripts while Python modules and packages are located
@@ -398,7 +405,7 @@ py2app 0.6.4 is a bugfix and minor feature release
 - Issue #23: py2app failed to work when an .egg directory was implictly added
   to ``sys.path`` by setuptools and the "-O" option was used (for example
   ``python setup.py py2app -O2``)
-  
+
 - Issue #26: py2app copied the wrong executable into the application bundle
   when using virtualenv with a framework build of Python.
 
@@ -431,7 +438,7 @@ py2app 0.6.2 is a bugfix release
 
   Report and fix by Erik van Zijst.
 
-- Ensure that the 'examples' directory is included in the source 
+- Ensure that the 'examples' directory is included in the source
   archive
 
 py2app 0.6.1
@@ -448,7 +455,7 @@ Bugfixes:
   workaround (the issue is fixed when the filename ends with '.zip').
 
 - The code that recreates the stub executables when they are
-  older than the source code now uses ``xcode-select`` to 
+  older than the source code now uses ``xcode-select`` to
   find the root of SDKs.
 
   This makes it possible to recreate these executables on machines
@@ -461,7 +468,7 @@ Bugfixes:
   stub executables, in particular not those that have support
   for the PPC architecture.
 
-- Don't rebuild the stub executables automaticly, that's 
+- Don't rebuild the stub executables automaticly, that's
   unsafe with Xcode 4 and could trigger accidently when
   files are installed in a different order than expected.
 
@@ -480,7 +487,7 @@ py2app 0.6 is a minor feature release
 Features:
 
 - it is now possible to specify which python distributions must
-  be availble when building the bundle by using the 
+  be availble when building the bundle by using the
   "install_requires" argument of the ``setup()`` function::
 
      setup(
@@ -502,13 +509,13 @@ Features:
   supported with python3 as well (patch by Virgil Dupras)
 
 - argv emulation doesn't work in python 3, this release
-  will tell you abou this instead of silently failing to 
+  will tell you abou this instead of silently failing to
   build a working bundle.
 
 - add support for custom URLs to the argv emulation code
-  (patch by Brendan Simon). 
-  
-  You will have to add a "CFBundleURLTypes" key to your Info.plist to 
+  (patch by Brendan Simon).
+
+  You will have to add a "CFBundleURLTypes" key to your Info.plist to
   use this, the argv emulation code will ensure that the URL
   to open will end up in ``sys.argv``.
 
@@ -534,7 +541,7 @@ Bug fixes:
 - Avoid copying the __pycache__ directory in python versions
   that implement PEP 3147 (Python 3.2 and later)
 
-- App bundles with Python 3 now work when the application is 
+- App bundles with Python 3 now work when the application is
   stored in a directory with non-ASCII characters in the full
   name.
 
@@ -554,14 +561,14 @@ Bug fixes:
   command subclasses)
 
 - The source distribution didn't include all files that needed to be
-  it ever since switching to mercurial, I've added a MANIFEST.in 
+  it ever since switching to mercurial, I've added a MANIFEST.in
   file rather than relying on setuptool's autoguessing of files to include.
 
 - Bundle template works again with semi-standalone builds (such as
   when using a system python), this rewrites the fix for issue #10
   mentioned earlier.
 
-- Ensure py2app works correctly when the sources are located in a 
+- Ensure py2app works correctly when the sources are located in a
   directory with non-ascii characters in its name.
 
 
@@ -601,7 +608,7 @@ Features:
 
 - Add support for various build flavours of Python (32bit, 3-way, ...)
 
-- py2app now actually works for me (ronaldoussoren@mac.com) with a 
+- py2app now actually works for me (ronaldoussoren@mac.com) with a
   python interpreter in a virtualenv environment.
 
 - Experimental support for python 3
@@ -613,7 +620,7 @@ Bug fixes:
 
 - Use modern API's in the alias-build bootstrap code, without
   this 'py2app -A' will result in broken bundles on a 64-bit build
-  of Python. 
+  of Python.
   (Patch contributed by James R Eagan)
 
 - Try both 'import Image' and 'from PIL import Image' in the PIL
@@ -643,14 +650,14 @@ py2app 0.4.2 is a minor feature release
 
 Features:
 
-- When the '--strip' option is specified we now also remove '.dSYM' 
+- When the '--strip' option is specified we now also remove '.dSYM'
   directories from the bundle.
 
 - Remove dependency on a 'version.plist' file in the python framework
 
 - A new recipe for `PyQt`_ 4.x. This recipe was donated by Kevin Walzer.
 
-- A new recipe for `virtualenv`_, this allows you to use py2app from 
+- A new recipe for `virtualenv`_, this allows you to use py2app from
   a virtual environment.
 
 .. _`virtualenv`: http://pypi.python.org/pypi/virtualenv
@@ -658,7 +665,7 @@ Features:
 - Adds support for converting ``.xib`` files (NIB files for
   Interface Builder 3)
 
-- Introduces an experimental plugin API for data converters. 
+- Introduces an experimental plugin API for data converters.
 
   A conversion plugin should be defined as an entry-point in the
   ``py2app.converter`` group::
@@ -688,7 +695,7 @@ Features:
 
 Buf fixes:
 
-- This fixes an issue with copying a different version of Python over 
+- This fixes an issue with copying a different version of Python over
   to an app/plugin bundle than the one used to run py2app with.
 
 
@@ -702,7 +709,7 @@ Features:
 - Support for CoreData mapping models (introduced in Mac OS X 10.5)
 
 - Support for python packages that are stored in zipfiles (such as ``zip_safe``
-  python eggs). 
+  python eggs).
 
 Bug fixes:
 
@@ -962,7 +969,7 @@ New features:
   etc.
 
 - An embedded Python interpreter is now included in the executable
-  bundle (``sys.executable`` points to it), this currently only 
+  bundle (``sys.executable`` points to it), this currently only
   works for framework builds of Python
 
 - New ``macho_standalone`` tool
@@ -1024,7 +1031,7 @@ py2app 0.1.7
 py2app 0.1.6
 ------------
 
-Since I have been slacking and the last announcement was for 0.1.4, here are the 
+Since I have been slacking and the last announcement was for 0.1.4, here are the
 changes for the soft-launched releases 0.1.5 and 0.1.6:
 
 `py2app`_ 0.1.6 was a major feature enhancements release:
@@ -1085,7 +1092,7 @@ py2app 0.1.5
 
 `py2app`_ 0.1.5 is a major feature enhancements release:
 
-- Added a ``bdist_mpkg`` distutils extension, for creating Installer 
+- Added a ``bdist_mpkg`` distutils extension, for creating Installer
   an metapackage from any distutils script.
 
   - Includes PackageInstaller tool
@@ -1110,7 +1117,7 @@ py2app 0.1.5
 - Should now correctly handle paths (and application names) with unicode characters
   in them.
 
-- New ``--strip`` option for ``py2app`` build command, strips all Mach-O files 
+- New ``--strip`` option for ``py2app`` build command, strips all Mach-O files
   in output application bundle.
 
 - New ``--bdist-base=`` option for ``py2app`` build command, allows an alternate
@@ -1139,7 +1146,7 @@ py2app 0.1.4
 
 `py2app`_ 0.1.4 is a minor bugfix release:
 
-- The ``altgraph`` from 0.1.3 had a pretty nasty bug in it that prevented 
+- The ``altgraph`` from 0.1.3 had a pretty nasty bug in it that prevented
   filtering from working properly, so I fixed it and bumped to 0.1.4.
 
 py2app 0.1.3
@@ -1160,10 +1167,10 @@ py2app 0.1.3
 - Fixed a bug that may have been in 0.1.2 where explicitly included packages
   would not be scanned by ``macholib``
 
-- ``py2app.apptemplate`` now contains a stripped down ``site`` module as 
+- ``py2app.apptemplate`` now contains a stripped down ``site`` module as
   opposed to a ``sitecustomize``
 
-- Alias builds are now the only ones that contain the system and user 
+- Alias builds are now the only ones that contain the system and user
   ``site-packages`` directory in ``sys.path``
 
 - The ``pydoc`` recipe has been beefed up to also exclude ``BaseHTTPServer``,
@@ -1211,15 +1218,15 @@ py2app 0.1.2
 - The ``Command`` instance is now passed to recipes instead of the
   ``Distribution`` instance (though no recipes currently use either)
 
-- The post-filtering of modules and extensions is now generalized into a 
+- The post-filtering of modules and extensions is now generalized into a
   stack and can be modified by recipes
 
-- A `wxPython`_ example demonstrating how to package `wxGlade`_ has been 
+- A `wxPython`_ example demonstrating how to package `wxGlade`_ has been
   added (this is a good example of how to write your own recipe, and how to
   deal with complex applications that mix code and data files)
 
 - ``PyRuntimeLocations`` is now set to (only) the location of the current
-  interpreter's ``Python.framework`` for alias and semi-standalone build 
+  interpreter's ``Python.framework`` for alias and semi-standalone build
   modes (enhances compatibility with extensions built with an unpatched
   Makefile with Mac OS X 10.3's Python 2.3.0)
 
@@ -1236,7 +1243,7 @@ py2app 0.1.1
 
 `py2app`_ 0.1.1 is primarily a bugfix release:
 
-- Several problems related to Mac OS X 10.2 compatibility and standalone 
+- Several problems related to Mac OS X 10.2 compatibility and standalone
    building have been resolved
 
 - Scripts that are not in the same directory as setup.py now work
@@ -1245,12 +1252,12 @@ py2app 0.1.1
 
 - A recipe has been added for `py2app`_ itself
 
-- a `wxPython`_ example (superdoodle) has been added.  
-  Demonstrates not only how easy it is (finally!) to bundle 
-  `wxPython`_ applications, but also how one setup.py can 
+- a `wxPython`_ example (superdoodle) has been added.
+  Demonstrates not only how easy it is (finally!) to bundle
+  `wxPython`_ applications, but also how one setup.py can
   deal with both `py2exe`_ and `py2app`_.
 
-- A new experimental tool, py2applet, has been added.  
+- A new experimental tool, py2applet, has been added.
   Once you've built it (``python setup.py py2app``, of course), you should
   be able to build simple applications simply by dragging your main script
   and optionally any packages, data files, Info.plist and icon it needs.
@@ -1258,12 +1265,12 @@ py2app 0.1.1
 Known issues:
 
 - Includes *all* files from packages, it should be smart enough to strip
-  unused .py/.pyc/.pyo files (to save space, depending on which 
+  unused .py/.pyc/.pyo files (to save space, depending on which
   optimization flag is used).
 
 - The default ``PyRuntimeLocations`` can cause problems on machines that
   have a /Library/Frameworks/Python.framework installed.  Workaround is
-  to set a plist that has the following key: 
+  to set a plist that has the following key:
   ``PyRuntimeLocations=['/System/Library/Frameworks/Python.framework/Versions/2.3/Python']``
   (this will be resolved soon)
 
