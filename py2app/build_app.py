@@ -89,8 +89,8 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
 
             # Ensure that the orginal name also exists, avoids problems when
             # the filename is used from Python (see issue #65)
-            # 
-            # NOTE: The if statement checks that the target link won't 
+            #
+            # NOTE: The if statement checks that the target link won't
             #       point to itself, needed for systems like homebrew that
             #       store symlinks in "public" locations that point to
             #       files of the same name in a per-package install location.
@@ -504,7 +504,7 @@ class py2app(Command):
                 raise DistutilsPlatformError("This python does not have a shared library or framework")
 
             else:
-                # Issue .. in py2app's tracker, and issue .. in python's tracker: a unix-style shared 
+                # Issue .. in py2app's tracker, and issue .. in python's tracker: a unix-style shared
                 # library build did not read the application environment correctly. The collection of
                 # if statements below gives a clean error message when py2app is started, instead of
                 # building a bundle that will give a confusing error message when started.
@@ -589,7 +589,7 @@ class py2app(Command):
         for src, dest in self.iter_mappingmodels(resdir):
             self.mkpath(os.path.dirname(dest))
             mapc(src, dest)
-        
+
     def iter_data_files(self):
         dist = self.distribution
         allres = chain(getattr(dist, 'data_files', ()) or (), self.resources)
@@ -630,7 +630,7 @@ class py2app(Command):
             result['PyOptions']['optimize'] = self.optimize
         return result
 
-    
+
     def initialize_plist(self):
         plist = self.get_default_plist()
         for target in self.targets:
@@ -783,15 +783,16 @@ class py2app(Command):
     def finalize_modulefinder(self, mf):
         for item in mf.flatten():
             if isinstance(item, Package) and item.filename == '-':
-                fn = os.path.join(self.temp_dir, 'empty_package', '__init__.py')
-                if not os.path.exists(fn):
-                    dn = os.path.dirname(fn)
-                    if not os.path.exists(dn):
-                        os.makedirs(dn)
-                    with open(fn, 'w') as fp:
-                        pass
+                if sys.version_info[:2] <= (3,3):
+                    fn = os.path.join(self.temp_dir, 'empty_package', '__init__.py')
+                    if not os.path.exists(fn):
+                        dn = os.path.dirname(fn)
+                        if not os.path.exists(dn):
+                            os.makedirs(dn)
+                        with open(fn, 'w') as fp:
+                            pass
 
-                item.filename = fn
+                    item.filename = fn
 
         py_files, extensions = parse_mf_results(mf)
 
@@ -841,7 +842,7 @@ class py2app(Command):
 
         if os.path.exists(self.bdist_dir):
             shutil.rmtree(self.bdist_dir)
-        
+
         self.collect_dir = os.path.abspath(
             os.path.join(self.bdist_dir, "collect"))
         self.mkpath(self.collect_dir)
@@ -1400,7 +1401,7 @@ class py2app(Command):
             else:
                 basename = fmwk['shortname'] + '.framework'
                 yield os.path.join(fmwk['location'], basename)
-    
+
     def build_alias_executable(self, target, script, extra_scripts):
         # Build an alias executable for the target
         appdir, resdir, plist = self.create_bundle(target, script)
@@ -1425,8 +1426,8 @@ class py2app(Command):
         self.symlink(
             os.path.join(realhome, 'config'),
             os.path.join(pyhome, 'config'))
-            
-        
+
+
         # symlink data files
         # XXX: fixme: need to integrate automatic data conversion
         for src, dest in self.iter_data_files():
@@ -1730,7 +1731,7 @@ class py2app(Command):
         if sys.version_info[0] != 2:
             import zlib
             self.copy_file(zlib.__file__, os.path.dirname(arcdir))
-        
+
         ext_dir = os.path.join(pydir, os.path.basename(self.ext_dir))
         self.copy_tree(self.ext_dir, ext_dir, preserve_symlinks=True)
         self.copy_tree(self.framework_dir,
@@ -1831,10 +1832,21 @@ class py2app(Command):
             save_cwd = os.getcwd()
             os.chdir(base_dir)
             for dirpath, dirnames, filenames in os.walk('.'):
+                if filenames:
+                    # Ensure that there are directory entries for
+                    # all directories in the zipfile. This is a
+                    # workaround for <http://bugs.python.org/issue14905>:
+                    # zipimport won't consider 'pkg/foo.py' to be in
+                    # namespace package 'pkg' unless there is an
+                    # entry for the directory (or there is a
+                    # pkg/__init__.py file as well)
+                    z.write(dirpath, dirpath)
+
                 for fn in filenames:
                     path = os.path.normpath(os.path.join(dirpath, fn))
                     if os.path.isfile(path):
                         z.write(path, path)
+
             os.chdir(save_cwd)
             z.close()
 
