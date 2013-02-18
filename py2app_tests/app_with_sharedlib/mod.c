@@ -42,8 +42,6 @@ static struct PyModuleDef mod_module = {
 #define INITERROR() return NULL
 #define INITDONE() return m
 
-#define INITFUNC PyInt_ ## NAME
-
 PyObject* INITFUNC(void);
 
 PyObject*

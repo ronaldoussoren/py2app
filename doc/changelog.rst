@@ -65,6 +65,12 @@ py2app 0.7.4
   lxml performs a number of imports from an extension and those cannot
   be detected automaticly by modulegraph.
 
+- Issue #94: The site-packages zipfile in the application bundle now contains
+  zipfile entries for directories as well. This is needed to work around
+  a bug in the zipimporter for Python 3.3: it won't consider 'pkg/foo.py' to be
+  in namespace package 'pkg' unless there is a zipfile entry for the 'pkg'
+  folder (or there is a 'pkg/__init__.py' entry).
+
 
 py2app 0.7.3
 ------------

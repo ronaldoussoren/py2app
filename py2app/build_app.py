@@ -883,15 +883,16 @@ class py2app(Command):
     def finalize_modulefinder(self, mf):
         for item in mf.flatten():
             if isinstance(item, Package) and item.filename == '-':
-                fn = os.path.join(self.temp_dir, 'empty_package', '__init__.py')
-                if not os.path.exists(fn):
-                    dn = os.path.dirname(fn)
-                    if not os.path.exists(dn):
-                        os.makedirs(dn)
-                    with open(fn, 'w') as fp:
-                        pass
+                if sys.version_info[:2] <= (3,3):
+                    fn = os.path.join(self.temp_dir, 'empty_package', '__init__.py')
+                    if not os.path.exists(fn):
+                        dn = os.path.dirname(fn)
+                        if not os.path.exists(dn):
+                            os.makedirs(dn)
+                        with open(fn, 'w') as fp:
+                            pass
 
-                item.filename = fn
+                    item.filename = fn
 
         py_files, extensions = parse_mf_results(mf)
 
@@ -1816,10 +1817,21 @@ class py2app(Command):
             save_cwd = os.getcwd()
             os.chdir(base_dir)
             for dirpath, dirnames, filenames in os.walk('.'):
+                if filenames:
+                    # Ensure that there are directory entries for
+                    # all directories in the zipfile. This is a
+                    # workaround for <http://bugs.python.org/issue14905>:
+                    # zipimport won't consider 'pkg/foo.py' to be in
+                    # namespace package 'pkg' unless there is an
+                    # entry for the directory (or there is a
+                    # pkg/__init__.py file as well)
+                    z.write(dirpath, dirpath)
+
                 for fn in filenames:
                     path = os.path.normpath(os.path.join(dirpath, fn))
                     if os.path.isfile(path):
                         z.write(path, path)
+
             os.chdir(save_cwd)
             z.close()
 
