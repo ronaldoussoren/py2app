@@ -8,6 +8,7 @@ import shutil
 import platform
 import shlex
 import re
+import sys
 
 class sharedlib (Command):
     description = "build a shared library"
@@ -74,9 +75,9 @@ class my_build_ext (mod_build_ext.build_ext):
 
 
         mod_build_ext.build_ext.run(self)
-        
+
         subprocess.check_call([
-            'install_name_tool', '-change', 
+            'install_name_tool', '-change',
                os.path.abspath('lib/libshared.1.dylib'),
                os.path.abspath('lib/libshared.dylib'),
                'square.so'
@@ -91,14 +92,14 @@ setup(
         build_ext=my_build_ext
     ),
     ext_modules=[
-        Extension("double", [ "mod.c" ], 
-            extra_compile_args=["-Isrc", '-DNAME=double', '-DFUNC_NAME=doubled', '-DINITFUNC=initdouble'],
+        Extension("double", [ "mod.c" ],
+            extra_compile_args=["-Isrc", '-DNAME=double', '-DFUNC_NAME=doubled', ('-DINITFUNC=initdouble' if sys.maxsize == 2 else '-DINITFUNC=PyInit_double')],
             extra_link_args=["-Llib", "-lshared"]),
-        Extension("square", [ "mod.c" ], 
-            extra_compile_args=["-Isrc", '-DNAME=square', '-DFUNC_NAME=squared', '-DINITFUNC=initsquare'],
+        Extension("square", [ "mod.c" ],
+            extra_compile_args=["-Isrc", '-DNAME=square', '-DFUNC_NAME=squared', ('-DINITFUNC=initsquare' if sys.maxsize == 2 else '-DINITFUNC=PyInit_square')],
             extra_link_args=["-Llib", "-lshared.1"]),
-        Extension("half", [ "mod.c" ], 
-            extra_compile_args=["-Isrc", '-DNAME=half', '-DFUNC_NAME=half', '-DINITFUNC=inithalf'],
+        Extension("half", [ "mod.c" ],
+            extra_compile_args=["-Isrc", '-DNAME=half', '-DFUNC_NAME=half', ('-DINITFUNC=inithalf' if sys.maxsize == 2 else '-DINITFUNC=PyInit_half')],
             extra_link_args=["-Llib", "-lhalf"]),
     ],
     options=dict(
