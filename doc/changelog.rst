@@ -16,6 +16,8 @@ py2app 0.7.4
   in namespace package 'pkg' unless there is a zipfile entry for the 'pkg'
   folder (or there is a 'pkg/__init__.py' entry).
 
+- Issue #97: Fixes a problem with the pyside and sip recipes when the 'qt_plugins'
+  option is used for 'image_plugins'.
 
 py2app 0.7.3
 ------------
