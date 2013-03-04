@@ -19,6 +19,9 @@ py2app 0.7.4
 - Issue #97: Fixes a problem with the pyside and sip recipes when the 'qt_plugins'
   option is used for 'image_plugins'.
 
+- Issue #96: py2app should work with python 2.6 again (previous releases didn't
+  work due to using the sysconfig module introduced in python 2.7)
+
 py2app 0.7.3
 ------------
 

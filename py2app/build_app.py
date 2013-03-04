@@ -18,12 +18,6 @@ import pkg_resources
 from py2app.apptemplate.setup import main as script_executable
 from py2app.util import mergecopy, make_exec
 
-
-try:
-    import sysconfig
-except ImportError:
-    sysconfig = None
-
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -499,8 +493,8 @@ class py2app(Command):
             yield runtime
 
     def run(self):
-        if sysconfig.get_config_var('PYTHONFRAMEWORK') is None:
-            if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
+        if get_config_var('PYTHONFRAMEWORK') is None:
+            if not get_config_var('Py_ENABLE_SHARED'):
                 raise DistutilsPlatformError("This python does not have a shared library or framework")
 
             else:
@@ -1132,11 +1126,8 @@ class py2app(Command):
         # XXX - In this particular case we know exactly what we can
         #       get away with.. should this be extended to the general
         #       case?  Per-framework recipes?
-        includedir = None
-        configdir = None
-        if sysconfig is not None:
-            includedir = sysconfig.get_config_var('CONFINCLUDEPY')
-            configdir = sysconfig.get_config_var('LIBPL')
+        includedir = get_config_var('CONFINCLUDEPY')
+        configdir = get_config_var('LIBPL')
 
 
         if includedir is None:
@@ -1516,9 +1507,8 @@ class py2app(Command):
 
         includedir = None
         configdir = None
-        if sysconfig is not None:
-            includedir = sysconfig.get_config_var('CONFINCLUDEPY')
-            configdir = sysconfig.get_config_var('LIBPL')
+        includedir = get_config_var('CONFINCLUDEPY')
+        configdir = get_config_var('LIBPL')
 
 
         if includedir is None:
@@ -1582,11 +1572,8 @@ class py2app(Command):
             os.unlink(site_path)
 
 
-        includedir = None
-        configdir = None
-        if sysconfig is not None:
-            includedir = sysconfig.get_config_var('CONFINCLUDEPY')
-            configdir = sysconfig.get_config_var('LIBPL')
+        includedir = get_config_var('CONFINCLUDEPY')
+        configdir = get_config_var('LIBPL')
 
 
         if includedir is None:
@@ -1650,11 +1637,8 @@ class py2app(Command):
             os.unlink(site_path)
 
 
-        includedir = None
-        configdir = None
-        if sysconfig is not None:
-            includedir = sysconfig.get_config_var('CONFINCLUDEPY')
-            configdir = sysconfig.get_config_var('LIBPL')
+        includedir = get_config_var('CONFINCLUDEPY')
+        configdir = get_config_var('LIBPL')
 
 
         if includedir is None:
