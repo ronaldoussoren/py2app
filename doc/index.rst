@@ -47,9 +47,10 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-   
+
    install
    dependencies
+   faq
    tutorial
    tweaking
    examples
