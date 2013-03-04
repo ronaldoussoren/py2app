@@ -119,7 +119,7 @@ class Sip(object):
                     for path in glob.glob(os.path.join(self.plugin_dir, item)):
                         resources.append((os.path.dirname('qt_plugins' + path[len(self.plugin_dir):]), [path]))
                 else:
-                    resources.append((os.path.dirname(os.path.join('qt_plugins', item)), os.path.join(self.plugin_dir, item)))
+                    resources.append((os.path.dirname(os.path.join('qt_plugins', item)), [os.path.join(self.plugin_dir, item)]))
 
             return dict(resources=resources)
 

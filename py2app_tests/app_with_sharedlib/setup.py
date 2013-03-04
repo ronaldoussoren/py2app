@@ -93,13 +93,13 @@ setup(
     ),
     ext_modules=[
         Extension("double", [ "mod.c" ],
-            extra_compile_args=["-Isrc", '-DNAME=double', '-DFUNC_NAME=doubled', ('-DINITFUNC=initdouble' if sys.maxsize == 2 else '-DINITFUNC=PyInit_double')],
+            extra_compile_args=["-Isrc", '-DNAME=double', '-DFUNC_NAME=doubled', ('-DINITFUNC=initdouble' if sys.version_info[0] == 2 else '-DINITFUNC=PyInit_double')],
             extra_link_args=["-Llib", "-lshared"]),
         Extension("square", [ "mod.c" ],
-            extra_compile_args=["-Isrc", '-DNAME=square', '-DFUNC_NAME=squared', ('-DINITFUNC=initsquare' if sys.maxsize == 2 else '-DINITFUNC=PyInit_square')],
+            extra_compile_args=["-Isrc", '-DNAME=square', '-DFUNC_NAME=squared', ('-DINITFUNC=initsquare' if sys.version_info[0] == 2 else '-DINITFUNC=PyInit_square')],
             extra_link_args=["-Llib", "-lshared.1"]),
         Extension("half", [ "mod.c" ],
-            extra_compile_args=["-Isrc", '-DNAME=half', '-DFUNC_NAME=half', ('-DINITFUNC=inithalf' if sys.maxsize == 2 else '-DINITFUNC=PyInit_half')],
+            extra_compile_args=["-Isrc", '-DNAME=half', '-DFUNC_NAME=half', ('-DINITFUNC=inithalf' if sys.version_info[0] == 2 else '-DINITFUNC=PyInit_half')],
             extra_link_args=["-Llib", "-lhalf"]),
     ],
     options=dict(
