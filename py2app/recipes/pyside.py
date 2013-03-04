@@ -20,7 +20,7 @@ def check(cmd, mf):
             for path in glob.glob(os.path.join(plugin_dir, item)):
                 resources.append((os.path.dirname('qt_plugins' + path[len(plugin_dir):]), [path]))
             else:
-                resources.append((os.path.dirname(os.path.join('qt_plugins', item)), os.path.join(plugin_dir, item)))
+                resources.append((os.path.dirname(os.path.join('qt_plugins', item)), [os.path.join(plugin_dir, item)]))
 
     # PySide dumps some of its shared files
     # into /usr/lib, which is a system location
@@ -37,6 +37,6 @@ def check(cmd, mf):
         elif fn.startswith('libshiboken-python'):
             add=True
         if add:
-            NOT_SYSTEM_FILES.append(os.path.join('/usr/lib', fn)) 
+            NOT_SYSTEM_FILES.append(os.path.join('/usr/lib', fn))
 
     return dict(resources=resources)

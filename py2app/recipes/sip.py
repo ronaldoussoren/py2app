@@ -6,7 +6,7 @@ This will include all C modules that might be used when you import a package
 using sip because we have no way to fine-tune this.
 
 The problem with SIP is that all inter-module depedencies (for example from
-PyQt4.Qt to PyQt4.QtCore) are handled in C code and therefore cannot be 
+PyQt4.Qt to PyQt4.QtCore) are handled in C code and therefore cannot be
 detected by the python code in py2app).
 """
 
@@ -62,7 +62,7 @@ class Sip(object):
                     # subpackage to ensure everything get seen.
                     for sub in os.listdir(fullpath):
                         if ".py" not in sub:
-                            self.packages.add('%s.%s'%(fn, sub.replace(".so","")))                            
+                            self.packages.add('%s.%s'%(fn, sub.replace(".so","")))
 
         # Causes a python3-related syntax error (metaclass keyword),
         # and you probably don't need it:
@@ -119,7 +119,7 @@ class Sip(object):
                     for path in glob.glob(os.path.join(self.plugin_dir, item)):
                         resources.append((os.path.dirname('qt_plugins' + path[len(self.plugin_dir):]), [path]))
                 else:
-                    resources.append((os.path.dirname(os.path.join('qt_plugins', item)), os.path.join(self.plugin_dir, item)))
+                    resources.append((os.path.dirname(os.path.join('qt_plugins', item)), [os.path.join(self.plugin_dir, item)]))
 
             return dict(resources=resources)
 
