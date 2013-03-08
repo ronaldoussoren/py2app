@@ -1152,6 +1152,15 @@ class py2app(Command):
                 os.path.basename(outdir),
                 os.path.join(os.path.dirname(outdir), "Current"))
 
+        # Likewise for two links in the root of the framework:
+        os.symlink(
+            'Versions/Current/Resources',
+            os.path.join(os.path.dirname(os.path.dirname(outdir)), 'Resources'))
+        os.symlink(
+            os.path.join('Versions/Current', PYTHONFRAMEWORK),
+            os.path.join(os.path.dirname(os.path.dirname(outdir)), PYTHONFRAMEWORK))
+
+
         # Experiment for issue 57
         if not os.path.exists(os.path.join(indir, 'include')):
             alt = os.path.join(indir, 'Versions/Current')

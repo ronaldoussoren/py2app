@@ -22,6 +22,12 @@ py2app 0.7.4
 - Issue #96: py2app should work with python 2.6 again (previous releases didn't
   work due to using the sysconfig module introduced in python 2.7)
 
+- Issue #99: appstore requires a number of symlinks in embedded frameworks.
+
+  (Version 0.7 already added a link Python.frameworks/Versions/Current, this
+  versions also adds Python.framework/Python and Python.framework/Resources with
+  the value required by the appstore upload tool).
+
 py2app 0.7.3
 ------------
 
