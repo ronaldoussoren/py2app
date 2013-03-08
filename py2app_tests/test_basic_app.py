@@ -29,6 +29,7 @@ import os
 import signal
 import py2app
 import hashlib
+from distutils.sysconfig import get_config_var
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -218,6 +219,23 @@ class TestBasicApp (unittest.TestCase):
             p.stdin.close()
             p.stdout.close()
         self.assertChecksumsSame()
+
+
+    def test_framework_versions(self):
+        fwk = get_config_var('PYTHONFRAMEWORK')
+        path = os.path.join(
+                self.app_dir,
+            'dist/BasicApp.app/Contents/Frameworks/%s.framework'%(fwk,))
+        if not os.path.exists(path):
+            return
+
+        names = set(os.listdir(os.path.join(path, 'Versions')))
+        ver_str = '%d.%d' % sys.version_info[:2]
+        self.assertEqual(names, { 'Current', ver_str })
+        self.assertEqual(os.readlink(os.path.join(path, 'Versions', 'Current')), ver_str)
+
+        self.assertEquals(os.readlink(os.path.join(path, fwk)), os.path.join('Versions', 'Current', fwk))
+        self.assertEquals(os.readlink(os.path.join(path, 'Resources')), os.path.join('Versions', 'Current', 'Resources'))
 
 class TestBasicAliasApp (TestBasicApp):
     py2app_args = [ '--alias', ]
