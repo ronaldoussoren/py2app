@@ -16,9 +16,10 @@ Contents
 
 .. toctree::
    :maxdepth: 2
-   
+
    install
    dependencies
+   faq
    tutorial
    tweaking
    examples
@@ -57,7 +58,6 @@ licenses.
 Copyright (c) 2004-2006 Bob Ippolito <bob at redivi.com>.
 
 Copyright (c) 2010-2012 Ronald Oussoren <ronaldoussoren at mac.com>.
-
 
 .. _`setuptools`: http://pypi.python.org/pypi/setuptools/
 .. _`py2exe`: http://pypi.python.org/pypi/py2exe/
