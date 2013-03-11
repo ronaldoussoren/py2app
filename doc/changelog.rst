@@ -28,6 +28,16 @@ py2app 0.7.4
   versions also adds Python.framework/Python and Python.framework/Resources with
   the value required by the appstore upload tool).
 
+- Py2app copied stdlib packages into the app bundle for semi-standalone builds
+  when they are mentioned in the '--packages' option (either explicitly or
+  by a recipe). This was unintentional, semi-standlone builds should rely on
+  the external Python framework for the stdlib.
+
+  .. note::
+
+     Because of this bug parts of the stdlib of ``/usr/bin/python`` could be
+     copied into app bundles created with py2app.
+
 py2app 0.7.3
 ------------
 

@@ -243,6 +243,13 @@ class TestBasicAliasApp (TestBasicApp):
 class TestBasicSemiStandaloneApp (TestBasicApp):
     py2app_args = [ '--semi-standalone', ]
 
+    def test_email_not_included(self):
+        path = os.path.join(
+                self.app_dir, 'dist/BasicApp.app/Contents/Resources/lib/python%d.%d' % sys.version_info[:2])
+        if os.path.exists(os.path.join(path, 'email')):
+            self.fail("'email' package copied into a semi-standalone build")
+
+
 class TestBasicAppWindowsLineEnd (TestBasicApp):
     app_dir = os.path.join(DIR_NAME, 'basic_app_winle')
 
