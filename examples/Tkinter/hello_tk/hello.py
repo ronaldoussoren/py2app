@@ -1,8 +1,12 @@
-from Tkinter import *
+import sys
+if sys.version_info[0] == 2:
+    from Tkinter import *
+else:
+    from tkinter import *
 
 class Application(Frame):
     def say_hi(self):
-        print "hi there, everyone!"
+        print("hi there, everyone!")
 
     def createWidgets(self):
         self.QUIT = Button(self)
