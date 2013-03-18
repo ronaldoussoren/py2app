@@ -4,6 +4,12 @@ Release history
 py2app 0.7.4
 ------------
 
+- "python setup.py install" now fails unless the machine is running Mac OS X.
+
+  I've seen a number of reports of users that try to use py2app on Windows
+  or Linux to build OSX applications. That doesn't work, py2app now fails
+  during installation do make this clear.
+
 - Disabled the 'email' recipe for python 3.x as it isn't needed there.
 
 - Issue #91: Added a recipe for `lxml <http://lxml.de/>`, needed because

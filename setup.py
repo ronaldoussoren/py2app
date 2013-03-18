@@ -143,7 +143,7 @@ else:
             # Collect sphinx output
             if not os.path.exists('dist'):
                 os.mkdir('dist')
-            zf = zipfile.ZipFile('dist/%s-docs.zip'%(name,), 'w', 
+            zf = zipfile.ZipFile('dist/%s-docs.zip'%(name,), 'w',
                     compression=zipfile.ZIP_DEFLATED)
 
             for toplevel, dirs, files in os.walk('doc/_build/html'):
@@ -160,7 +160,7 @@ else:
             # Upload the results, this code is based on the distutils
             # 'upload' command.
             content = open('dist/%s-docs.zip'%(name,), 'rb').read()
-            
+
             data = {
                 ':action': 'doc_upload',
                 'name': name,
@@ -232,7 +232,7 @@ else:
                 self.announce('Upload failed (%s): %s' % (r.status, r.reason),
                     log.ERROR)
 
-                print ('-'*75) 
+                print ('-'*75)
                 print (r.read())
                 print ('-'*75)
 
@@ -249,9 +249,9 @@ def recursiveGlob(root, pathPattern):
             if fnmatch(fn, pathPattern):
                 result.append(os.path.join(rootpath, fn))
     return result
-        
 
-def importExternalTestCases(unittest, 
+
+def importExternalTestCases(unittest,
         pathPattern="test_*.py", root=".", package=None):
     """
     Import all unittests in the PyObjC tree starting at 'root'
@@ -263,7 +263,7 @@ def importExternalTestCases(unittest,
         testModules = [(package + '.' + m) for m in testModules]
 
     suites = []
-   
+
     for modName in testModules:
         try:
             module = __import__(modName)
@@ -340,7 +340,7 @@ class test (Command):
         if nspkgs is not None:
             for nm in nspkgs:
                 del sys.modules[nm]
-        
+
         # Reset pkg_resources state:
         add_activation_listener(lambda dist: dist.activate())
         working_set.__init__()
@@ -369,7 +369,7 @@ class test (Command):
             meta = self.distribution.metadata
             name = meta.get_name()
             test_pkg = name + "_tests"
-            suite = importExternalTestCases(unittest, 
+            suite = importExternalTestCases(unittest,
                     "test_*.py", test_pkg, test_pkg)
 
             runner = unittest.TextTestRunner(verbosity=self.verbosity)
@@ -389,6 +389,16 @@ class test (Command):
 
         finally:
             self.remove_from_sys_path()
+
+from setuptools.command import build_py
+
+class my_build_py (build_py.build_py):
+    def run(self):
+        if sys.platform != 'darwin':
+            raise DistutilsError("Py2app can only be used on Mac OS X")
+
+        build_py.build_py.run(self)
+
 setup(
     # metadata
     name='py2app',
@@ -411,6 +421,7 @@ setup(
     ],
     tests_require=tests_require,
     cmdclass=dict(
+        build_py=my_build_py,
         upload_docs=upload_docs,
         test=test,
     ),
