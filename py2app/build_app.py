@@ -1737,9 +1737,18 @@ class py2app(Command):
         self.copy_tree(self.framework_dir,
             os.path.join(appdir, 'Contents', 'Frameworks'),
             preserve_symlinks=True)
-        for pkg in self.packages:
-            pkg_path = self.get_bootstrap(pkg)
-            dst = os.path.join(pydir, pkg)
+        for pkg_name in self.packages:
+            pkg = self.get_bootstrap(pkg_name)
+
+            if self.semi_standalone:
+                # For semi-standalone builds don't copy packages
+                # from the stdlib into the app bundle, even when
+                # they are mentioned in self.packages.
+                p = Package(pkg_name, pkg)
+                if not not_stdlib_filter(p):
+                    continue
+
+            dst = os.path.join(pydir, os.path.basename(pkg))
             self.mkpath(dst)
             self.copy_tree(pkg_path, dst)
 

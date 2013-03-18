@@ -59,6 +59,12 @@ py2app 0.8 is a feature release
 py2app 0.7.4
 ------------
 
+- "python setup.py install" now fails unless the machine is running Mac OS X.
+
+  I've seen a number of reports of users that try to use py2app on Windows
+  or Linux to build OSX applications. That doesn't work, py2app now fails
+  during installation do make this clear.
+
 - Disabled the 'email' recipe for python 3.x as it isn't needed there.
 
 - Issue #91: Added a recipe for `lxml <http://lxml.de/>`, needed because
@@ -82,6 +88,16 @@ py2app 0.7.4
   (Version 0.7 already added a link Python.frameworks/Versions/Current, this
   versions also adds Python.framework/Python and Python.framework/Resources with
   the value required by the appstore upload tool).
+
+- Py2app copied stdlib packages into the app bundle for semi-standalone builds
+  when they are mentioned in the '--packages' option (either explicitly or
+  by a recipe). This was unintentional, semi-standlone builds should rely on
+  the external Python framework for the stdlib.
+
+  .. note::
+
+     Because of this bug parts of the stdlib of ``/usr/bin/python`` could be
+     copied into app bundles created with py2app.
 
 py2app 0.7.3
 ------------
