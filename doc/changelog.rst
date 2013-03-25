@@ -4,6 +4,9 @@ Release history
 py2app 0.7.4
 ------------
 
+- Issue #106: Ensure that the PIL recipe works on Python 3. PIL itself isn't
+  ported yet, but Pillow does work with Python 3.
+
 - "python setup.py install" now fails unless the machine is running Mac OS X.
 
   I've seen a number of reports of users that try to use py2app on Windows
