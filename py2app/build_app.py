@@ -1744,6 +1744,7 @@ class py2app(Command):
             dst = os.path.join(pydir, os.path.basename(pkg))
             self.mkpath(dst)
             self.copy_tree(pkg, dst)
+
         for copyext in copyexts:
             fn = os.path.join(ext_dir,
                 (copyext.identifier.replace('.', os.sep) +
