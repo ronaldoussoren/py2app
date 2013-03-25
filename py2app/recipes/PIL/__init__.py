@@ -11,6 +11,12 @@ try:
 except NameError:
     from sets import Set as set
 
+try:
+    basestring
+except NameError:
+    basestring = str
+
+
 def check(cmd, mf):
     m = mf.findNode('Image') or mf.findNode('PIL.Image')
     if m is None or m.filename is None:
