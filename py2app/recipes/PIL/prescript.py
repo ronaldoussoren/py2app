@@ -11,6 +11,13 @@ def _recipes_pil_prescript(plugins):
         if Image._initialized >= 2:
             return
 
+        if have_PIL:
+            try:
+                import PIL.JpegPresets
+                sys.modules['JpegPresets'] = PIL.JpegPresets
+            except ImportError:
+                pass
+
         for plugin in plugins:
             try:
                 if have_PIL:
@@ -31,4 +38,6 @@ def _recipes_pil_prescript(plugins):
 
         if Image.OPEN or Image.SAVE:
             Image._initialized = 2
+            return 1
+
     Image.init = init
