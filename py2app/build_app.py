@@ -709,8 +709,8 @@ class py2app(Command):
                     flatpackages[pkg[0]] = pkg[1]
                 filters.extend(rval.get('filters', ()))
                 loader_files.extend(rval.get('loader_files', ()))
-                newbootstraps = map(self.get_bootstrap,
-                    rval.get('prescripts', ()))
+                newbootstraps = list(map(self.get_bootstrap,
+                    rval.get('prescripts', ())))
 
                 if rval.get('includes'):
                     find_needed_modules(mf, includes=rval['includes'])
@@ -721,6 +721,7 @@ class py2app(Command):
                 for fn in newbootstraps:
                     if isinstance(fn, basestring):
                         mf.run_script(fn)
+
                 for target in self.targets:
                     target.prescripts.extend(newbootstraps)
                 break

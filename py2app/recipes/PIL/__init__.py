@@ -22,6 +22,11 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
+    if mf.findNode('PIL.Image'):
+        have_PIL = True
+    else:
+        have_PIL = False
+
     plugins = set()
     visited = set()
     for folder in sys.path:
@@ -35,15 +40,20 @@ def check(cmd, mf):
                 continue
             mod, ext = os.path.splitext(fn)
             try:
+                sys.path.insert(0, folder)
                 imp_find_module(mod)
-            except ImportError:
+                del sys.path[0]
+            except ImportError as exc:
                 pass
             else:
                 plugins.add(mod)
         visited.add(folder)
     s = StringIO('_recipes_pil_prescript(%r)\n' % list(plugins))
     for plugin in plugins:
-        mf.implyNodeReference(m, plugin)
+        if have_PIL:
+            mf.implyNodeReference(m, plugin)
+        else:
+            mf.implyNodeReference(m, 'PIL.' + plugin)
     mf.removeReference(m, 'FixTk')
     # Since Imaging-1.1.5, SpiderImagePlugin imports ImageTk conditionally.
     # This is not ever used unless the user is explicitly using Tk elsewhere.
@@ -53,5 +63,6 @@ def check(cmd, mf):
 
     return dict(
         prescripts = ['py2app.recipes.PIL.prescript', s],
+        include = "PIL.JpegPresets", # Dodgy import from PIL.JpegPlugin in Pillow 2.0
         flatpackages = [os.path.dirname(m.filename)],
     )
