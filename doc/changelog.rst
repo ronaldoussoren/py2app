@@ -59,6 +59,9 @@ py2app 0.8 is a feature release
 py2app 0.7.4
 ------------
 
+- Issue #105: py2app can now create app and plugin bundles when the main script
+  has an encoding other than ASCII, in particular for Python 3.
+
 - Issue #106: Ensure that the PIL recipe works on Python 3. PIL itself isn't
   ported yet, but Pillow does work with Python 3.
 

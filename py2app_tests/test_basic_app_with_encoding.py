@@ -55,10 +55,10 @@ def make_checksums(path):
                 result[p] = h.hexdigest()
 
 
-class TestBasicApp (unittest.TestCase):
+class TestBasicAppWithEncoding (unittest.TestCase):
     py2app_args = []
     python_args = []
-    app_dir = os.path.join(DIR_NAME, 'basic_app')
+    app_dir = os.path.join(DIR_NAME, 'basic_app_with_encoding')
 
     # Basic setup code
     #
@@ -237,143 +237,18 @@ class TestBasicApp (unittest.TestCase):
         self.assertEqual(os.readlink(os.path.join(path, fwk)), os.path.join('Versions', 'Current', fwk))
         self.assertEqual(os.readlink(os.path.join(path, 'Resources')), os.path.join('Versions', 'Current', 'Resources'))
 
-class TestBasicAliasApp (TestBasicApp):
+class TestBasicAliasAppWithEncoding (TestBasicAppWithEncoding):
     py2app_args = [ '--alias', ]
 
-class TestBasicSemiStandaloneApp (TestBasicApp):
+class TestBasicSemiStandaloneAppWithEncoding (TestBasicAppWithEncoding):
     py2app_args = [ '--semi-standalone', ]
 
-class TestBasicAppScriptName (unittest.TestCase):
-    app_dir = os.path.join(DIR_NAME, 'basic_app2')
     def test_email_not_included(self):
         path = os.path.join(
                 self.app_dir, 'dist/BasicApp.app/Contents/Resources/lib/python%d.%d' % sys.version_info[:2])
         if os.path.exists(os.path.join(path, 'email')):
             self.fail("'email' package copied into a semi-standalone build")
 
-class TestBasicAliasAppScriptName (TestBasicAppScriptName):
-    py2app_args = [ '--alias', ]
-
-class TestBasicSemiStandaloneAppScriptName (TestBasicAppScriptName):
-    py2app_args = [ '--semi-standalone', ]
-
-class TestBasicAppWindowsLineEnd (TestBasicApp):
-    app_dir = os.path.join(DIR_NAME, 'basic_app_winle')
-
-    @classmethod
-    def setUpClass(cls):
-        try:
-            if os.path.exists(cls.app_dir):
-                shutil.rmtree(cls.app_dir)
-
-            assert not os.path.exists(cls.app_dir)
-            shutil.copytree(TestBasicApp.app_dir, cls.app_dir)
-
-            # Convert python files to Windows line endings
-            for fn in os.listdir(cls.app_dir):
-                if not fn.endswith('.py'): continue
-
-                path = os.path.join(cls.app_dir, fn)
-                with open(path, 'rb') as fp:
-                    data_in = fp.read()
-
-                data_out = data_in.replace(b'\n', b'\r\n')
-                if data_out == data_in:
-                    raise AssertionError("Data not changed")
-                with open(path, 'wb') as fp:
-                    fp.write(data_out)
-
-            super(TestBasicAppWindowsLineEnd, cls).setUpClass()
-
-        except:
-            if os.path.exists(cls.app_dir):
-                shutil.rmtree(cls.app_dir)
-
-            raise
-
-    @classmethod
-    def tearDownClass(cls):
-        if os.path.exists(cls.app_dir):
-            shutil.rmtree(cls.app_dir)
-
-class TestBasicAliasAppWindowsLineEnd (TestBasicAppWindowsLineEnd):
-    py2app_args = [ '--alias', ]
-
-class TestBasicSemiStandaloneAppWindowsLineEnd (TestBasicAppWindowsLineEnd):
-    py2app_args = [ '--semi-standalone', ]
-
-
-
-class TestBasicAppUnicodePath (TestBasicApp):
-    if sys.version_info[0] == 2:
-        app_dir = os.path.join(DIR_NAME, 'basic_app ' + unichr(2744).encode('utf-8'))
-    else:
-        app_dir = os.path.join(DIR_NAME, 'basic_app ' + chr(2744))
-
-
-    @classmethod
-    def setUpClass(cls):
-        try:
-            if os.path.exists(cls.app_dir):
-                shutil.rmtree(cls.app_dir)
-
-            assert not os.path.exists(cls.app_dir)
-            shutil.copytree(TestBasicApp.app_dir, cls.app_dir)
-
-            super(TestBasicAppUnicodePath, cls).setUpClass()
-
-        except:
-            if os.path.exists(cls.app_dir):
-                shutil.rmtree(cls.app_dir)
-
-            raise
-
-    @classmethod
-    def tearDownClass(cls):
-        if os.path.exists(cls.app_dir):
-            shutil.rmtree(cls.app_dir)
-
-class TestBasicAliasAppUnicodePath (TestBasicAppUnicodePath):
-    py2app_args = [ '--alias', ]
-
-class TestBasicSemiStandaloneAppUnicodePath (TestBasicAppUnicodePath):
-    py2app_args = [ '--semi-standalone', ]
-
-class TestOptimized1 (TestBasicApp):
-    py2app_args = [ '-O1' ]
-
-    def test_is_optimized(self):
-        p = self.start_app()
-
-        try:
-            p.stdin.write('print(__debug__)\n'.encode('latin1'))
-            p.stdin.flush()
-            ln = p.stdout.readline()
-            self.assertEqual(ln.strip(), b"False")
-
-        finally:
-            p.stdin.close()
-            p.stdout.close()
-
-        self.assertChecksumsSame()
-
-class TestOptimized2 (TestBasicApp):
-    py2app_args = [ '-O2' ]
-
-    def test_is_optimized(self):
-        p = self.start_app()
-
-        try:
-            p.stdin.write('print(__debug__)\n'.encode('latin1'))
-            p.stdin.flush()
-            ln = p.stdout.readline()
-            self.assertEqual(ln.strip(), b"False")
-
-        finally:
-            p.stdin.close()
-            p.stdout.close()
-
-        self.assertChecksumsSame()
-
 if __name__ == "__main__":
     unittest.main()
+
