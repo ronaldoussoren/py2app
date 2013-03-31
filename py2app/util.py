@@ -117,7 +117,7 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
             if not os.path.exists(destination):
                 os.mkdir(destination)
         for fn in zipio.listdir(source):
-            copy_resource(os.path.join(source, fn), 
+            copy_resource(os.path.join(source, fn),
                     os.path.join(destination, fn), dry_run=dry_run, symlink=symlink)
 
     else:
@@ -157,8 +157,8 @@ def _copy_file(source, destination, preserve_mode=False, preserve_times=False, u
                 pass
 
             if preserve_times:
-                # XXX: copy current times
-                pass
+                mtime = zipio.getmtime(source)
+                os.utime(destination, (mtime, mtime))
 
 
 def newer(source, target):
@@ -373,7 +373,7 @@ byte_compile(files, optimize=%r, force=%r,
             if force or newer(mod.filename, cfile):
                 if verbose:
                     print("byte-compiling %s to %s" % (mod.filename, dfile))
-                    
+
                 if not dry_run:
                     mkpath(os.path.dirname(cfile))
                     suffix = os.path.splitext(mod.filename)[1]
@@ -399,7 +399,7 @@ byte_compile(files, optimize=%r, force=%r,
                               ("Don't know how to handle %r" % mod.filename)
             else:
                 if verbose:
-                    print("skipping byte-compilation of %s to %s" % 
+                    print("skipping byte-compilation of %s to %s" %
                           (mod.filename, dfile))
 
 SCMDIRS = ['CVS', '.svn', '.hg', '.git']
@@ -616,7 +616,7 @@ def _get_tool(toolname):
             for fn in choices:
                 if os.path.exists(fn):
                     _tools[toolname] = fn
-                    break 
+                    break
             else:
                 raise IOError("Tool %r not found"%(toolname,))
 
