@@ -20,7 +20,7 @@ typedef void (*Py_SetPathPtr)(const wchar_t*);
 #endif
 typedef int (*PySys_SetObjectPtr)(const char*, PyObject*);
 typedef void (*Py_SetProgramNamePtr)(const char *);
-typedef void (*Py_InitializePtr)(void); 
+typedef void (*Py_InitializePtr)(void);
 typedef int (*PyRun_SimpleFilePtr)(FILE *, const char *);
 typedef void (*Py_FinalizePtr)(void);
 typedef PyObject *(*PySys_GetObjectPtr)(const char *);
@@ -170,7 +170,7 @@ static int bind_objc_Cocoa_ApplicationServices(void) {
 #undef LOOKUP
     return 0;
 }
-    
+
 static int bind_CoreFoundation(void) {
     static Boolean bound = false;
     void *cf_dylib;
@@ -239,7 +239,7 @@ static int bind_CoreFoundation(void) {
     py2app_CFArrayAppendValue(py2app_pool, (const void *)obj), \
     py2app_CFRelease(obj), \
     obj))
-    
+
 #define py2app_CFSTR(s) AUTORELEASE( \
     py2app_CFStringCreateWithCString(NULL, s, kCFStringEncodingUTF8))
 
@@ -307,8 +307,8 @@ static int report_error(const char *error) {
     }
     releasePool = ((id(*)(id, SEL))py2app_objc_msgSend)(
 		    ((id(*)(id, SEL))py2app_objc_msgSend)(
-			    py2app_objc_getClass("NSAutoreleasePool"), 
-			    py2app_sel_getUid("alloc")), 
+			    py2app_objc_getClass("NSAutoreleasePool"),
+			    py2app_sel_getUid("alloc")),
 		    py2app_sel_getUid("init"));
     py2app_NSLog(py2app_CFSTR("%@"), py2app_CFSTR(error));
 
@@ -401,7 +401,7 @@ static CFStringRef tildeExpand(CFStringRef path) {
     char tmp;
     char *dir = NULL;
 
-    
+
     py2app_CFStringGetCString(path, buf, sizeof(buf), kCFStringEncodingUTF8);
 
     int i;
@@ -658,7 +658,7 @@ static CFStringRef getErrorScript(void) {
     }
     py2app_CFRelease(errorScripts);
     return path;
- 
+
 }
 
 static CFMutableArrayRef get_trimmed_lines(CFStringRef output) {
@@ -710,13 +710,13 @@ static int report_script_error(const char *msg) {
         CFMutableArrayRef argv;
         releasePool = ((id(*)(id, SEL))py2app_objc_msgSend)(
 		    ((id(*)(id, SEL))py2app_objc_msgSend)(
-			    py2app_objc_getClass("NSAutoreleasePool"), 
-			    py2app_sel_getUid("alloc")), 
+			    py2app_objc_getClass("NSAutoreleasePool"),
+			    py2app_sel_getUid("alloc")),
 		    py2app_sel_getUid("init"));
         task = ((id(*)(id, SEL))py2app_objc_msgSend)(
 		    ((id(*)(id, SEL))py2app_objc_msgSend)(
-			    py2app_objc_getClass("NSTask"), 
-			    py2app_sel_getUid("alloc")), 
+			    py2app_objc_getClass("NSTask"),
+			    py2app_sel_getUid("alloc")),
 		    py2app_sel_getUid("init"));
         stdoutPipe = ((id(*)(id, SEL))py2app_objc_msgSend)(py2app_objc_getClass("NSPipe"), py2app_sel_getUid("pipe"));
         ((void(*)(id, SEL, id))py2app_objc_msgSend)(task, py2app_sel_getUid("setLaunchPath:"), py2app_CFSTR("/bin/sh"));
@@ -798,7 +798,7 @@ static int report_script_error(const char *msg) {
             if (!buttonString) buttonString = py2app_CFSTR(ERR_DEFAULTURLTITLE);
         }
         py2app_CFRelease(buttonArr);
-        
+
     }
     if (lineCount <= 0 || errBinding) {
         py2app_CFRelease(lines);
@@ -807,8 +807,8 @@ static int report_script_error(const char *msg) {
 
     releasePool = ((id(*)(id, SEL))py2app_objc_msgSend)(
 		    ((id(*)(id, SEL))py2app_objc_msgSend)(
-			    py2app_objc_getClass("NSAutoreleasePool"), 
-			    py2app_sel_getUid("alloc")), 
+			    py2app_objc_getClass("NSAutoreleasePool"),
+			    py2app_sel_getUid("alloc")),
 		    py2app_sel_getUid("init"));
 
     title = py2app_CFArrayGetValueAtIndex(lines, 0);
@@ -887,6 +887,14 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
         unsetenv("PYTHONMALLOCSTATS");
     }
 
+    /* Ensure that the interpreter won't try to write bytecode files
+     * Two reasons:
+     * - Apps are often read-only for users
+     * - Writing byte-code will be blocked by the sandbox
+     *   when running a sandboxed application.
+     */
+    setenv("PYTHONDONTWRITEBYTECODE", "1", 1);
+
 
     if (!py2app_getApplicationName()) return report_error(ERR_NONAME);
     pyLocations = (CFArrayRef)py2app_getKey("PyRuntimeLocations");
@@ -939,11 +947,11 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
 	    NAME ## Ptr py2app_ ## NAME = (NAME ## Ptr)dlsym(py_dylib, #NAME); \
 	    if (!py2app_ ## NAME) { \
 		return report_linkEdit_error(); \
-	    } 
+	    }
 
 #define OPT_LOOKUP(NAME) \
-	    NAME ## Ptr py2app_ ## NAME = (NAME ## Ptr)dlsym(py_dylib, #NAME); 
-    
+	    NAME ## Ptr py2app_ ## NAME = (NAME ## Ptr)dlsym(py_dylib, #NAME);
+
     LOOKUP(Py_SetProgramName);
     LOOKUP(Py_Initialize);
     LOOKUP(PyRun_SimpleFile);
@@ -963,13 +971,13 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
 
 #undef OPT_LOOKUP
 #undef LOOKUP
-	
+
     /*
      * When apps are started from the Finder (or anywhere
      * except from the terminal), the LANG and LC_* variables
      * aren't set in the environment. This confuses Py_Initialize
-     * when it tries to import the codec for UTF-8, 
-     * therefore explicitly set the locale. 
+     * when it tries to import the codec for UTF-8,
+     * therefore explicitly set the locale.
      *
      * Also set the LC_CTYPE environment variable because Py_Initialize
      * resets the locale information using the environment :-(
@@ -986,7 +994,10 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
 
     curenv = getenv("LC_CTYPE");
     if (curenv) {
-	    curenv = strdup(curenv);
+	curenv = strdup(curenv);
+	if (!curenv) {
+	    (void)report_error("cannot save LC_CTYPE");
+	}
     }
     setenv("LC_CTYPE", "en_US.UTF-8", 1);
 
@@ -1005,15 +1016,15 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     /*
      * Reset the environment and locale information
      */
-    setlocale(LC_CTYPE, curlocale);
-    free(curlocale);
-
     if (curenv) {
 	    setenv("LC_CTYPE", curenv, 1);
 	    free(curenv);
     } else {
 	    unsetenv("LC_CTYPE");
     }
+
+    setlocale(LC_CTYPE, curlocale);
+    free(curlocale);
 
     py2app_CFStringGetCString(
         mainScript, c_mainScript,
@@ -1042,7 +1053,7 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     mainScriptFile = fopen(c_mainScript, "r");
     rval = py2app_PyRun_SimpleFile(mainScriptFile, c_mainScript);
     fclose(mainScriptFile);
-    
+
     if (rval) {
         rval = report_script_error(ERR_PYTHONEXCEPTION);
     }

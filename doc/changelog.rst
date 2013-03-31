@@ -4,6 +4,17 @@ Release history
 py2app 0.7.4
 ------------
 
+- Py2app didn't preserve timestamps for files copied into application bundles,
+  and this can cause a bytecompiled file to appear older than the corresponding
+  source file (for packages copied in the bundle using the 'packages' option).
+
+  Related to issue #101
+
+- Issue #101: Set "PYTHONDONTWRITEBYTECODE" in the environment before
+  calling Py_Initialize to ensure that the interpreter won't try to
+  write bytecode files (which can cause problems when using sandboxed
+  applications).
+
 - Issue #105: py2app can now create app and plugin bundles when the main script
   has an encoding other than ASCII, in particular for Python 3.
 

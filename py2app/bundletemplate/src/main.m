@@ -199,10 +199,10 @@ NSString *getErrorTitle(NSString *bundleName) {
 static
 NSString *getPythonLocation(NSArray *pyLocations) {
     // get the runtime locations from the Info.plist
-    
+
     //  *does not* inspect DYLD environment variables for overrides, fallbacks, suffixes, etc.
     //  I don't really consider that a very bad thing, as it makes this search extremely deterministic.
-    //  Note that I use the env variables when the image is actually linked, so what you find here 
+    //  Note that I use the env variables when the image is actually linked, so what you find here
     //  may not be what gets linked.  If this is the case, you deserve it :)
 
     // find a Python runtime
@@ -265,7 +265,7 @@ NSString *getMainPyPath(NSDictionary *infoDictionary) {
     NSString *nextFileName = nil;
     NSString *nextExtension = nil;
     NSArray *extensions = [NSArray arrayWithObjects:@".py", @".pyc", @".pyo", @"", nil];
-    
+
     NSMutableArray *runtimeAttempts = [NSMutableArray array];
     while ((nextFileName = [possibleMainsEnumerator nextObject])) {
         NSEnumerator *nextExtensionEnumerator = [extensions objectEnumerator];
@@ -308,6 +308,9 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     if (getenv("PYTHONMALLOCSTATS") != NULL) {
         unsetenv("PYTHONMALLOCSTATS");
     }
+
+    /* Disable writing of bytecode files */
+    setenv("PYTHONDONTWRITEBYTECODE", "1", 1);
 
     NSString *pyLocation = nil;
     while (NSIsSymbolNameDefined("_Py_Initialize")) {
@@ -352,7 +355,7 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
 
     // Load the Python dylib (may have already been loaded, that is OK)
     const struct mach_header *py_dylib = NSAddImage([pyLocation fileSystemRepresentation], PYMACAPP_NSIMAGEFLAGS);
-    if (!py_dylib) { 
+    if (!py_dylib) {
         return report_linkEdit_error([pyLocation fileSystemRepresentation]);
     }
 
@@ -377,7 +380,7 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
 	NAME ## Ptr NAME = NULL; \
         if (tmpSymbol) { \
 	   NAME = (NAME ## Ptr)NSAddressOfSymbol(tmpSymbol); \
-	} 
+	}
 
     LOOKUP_SYMBOL(Py_DecRef);
     LOOKUP_DEFINEADDRESS(Py_DecRef, (tmpSymbol ? NSAddressOfSymbol(tmpSymbol) : &DefaultDecRef));
@@ -407,7 +410,7 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(PyThreadState_Swap);
     OPT_LOOKUP(_Py_DecodeUTF8_surrogateescape);
 
-    
+
     /* PyBytes / PyString lookups depend of if we're on py3k or not */
     PyBytes_AsStringPtr PyBytes_AsString = NULL;
     PyBytes_FromStringPtr PyBytes_FromString = NULL;
@@ -436,8 +439,8 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
      * When apps are started from the Finder (or anywhere
      * except from the terminal), the LANG and LC_* variables
      * aren't set in the environment. This confuses Py_Initialize
-     * when it tries to import the codec for UTF-8, 
-     * therefore explicitly set the locale. 
+     * when it tries to import the codec for UTF-8,
+     * therefore explicitly set the locale.
      *
      * Also set the LC_CTYPE environment variable because Py_Initialize
      * reset the locale information using the environment :-(
@@ -458,7 +461,7 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     }
 
 
-    
+
     // Set up the environment variables to be transferred
     NSMutableDictionary *newEnviron = [NSMutableDictionary dictionary];
     [newEnviron setObject:[NSString stringWithFormat:@"%p", bundleBundle()] forKey:@"PYOBJC_BUNDLE_ADDRESS"];
@@ -466,7 +469,7 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
 	 stringWithFormat:@"PYOBJC_BUNDLE_ADDRESS%ld", (long)getpid()]];
     [newEnviron setObject:resourcePath forKey:@"RESOURCEPATH"];
     NSMutableDictionary *oldEnviron = [NSMutableDictionary dictionary];
-    
+
     // bootstrap Python with information about how to find what it needs
     // if it is not already initialized
     if (!was_initialized) {
@@ -482,14 +485,14 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
 	} else {
             setenv("PYTHONHOME", [resourcePath fileSystemRepresentation], 1);
         }
-        
+
         NSString *pyExecutableName = [infoDictionary objectForKey:@"PyExecutableName"];
         if ( !pyExecutableName ) {
             pyExecutableName = @"python";
         }
-    
+
         pythonProgramName = [[pythonProgramName stringByAppendingPathComponent:@"bin"] stringByAppendingPathComponent:pyExecutableName];
-        
+
         wchar_t wPythonName[PATH_MAX+1];
         if (isPy3k) {
             mbstowcs(wPythonName, [pythonProgramName fileSystemRepresentation], PATH_MAX+1);
@@ -500,7 +503,7 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
         }
         Py_SetProgramName(wPythonName);
     }
-    
+
     // Set new environment variables and save older ones (for nested plugin loading)
     NSEnumerator *envEnumerator = [newEnviron keyEnumerator];
     NSString *envKey;

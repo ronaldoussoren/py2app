@@ -1746,6 +1746,9 @@ class py2app(Command):
             self.mkpath(dst)
             self.copy_tree(pkg, dst)
 
+            # FIXME: The python files should be bytecompiled
+            #        here (see issue 101)
+
         for copyext in copyexts:
             fn = os.path.join(ext_dir,
                 (copyext.identifier.replace('.', os.sep) +

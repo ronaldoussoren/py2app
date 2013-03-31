@@ -86,9 +86,7 @@ def main(all=False, arch=None):
                 arch = "fat"
 
     name = 'main-' + arch
-
     root = None
-
 
     if all:
         for entry in gPreBuildVariants:
