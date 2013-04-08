@@ -66,7 +66,7 @@ class TestBasicApp (unittest.TestCase):
 
 
     def test_icon_file(self):
-        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app', 
+        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app',
             'Contents', 'Resources')
 
         pl = plistlib.readPlist(os.path.join(
@@ -85,7 +85,7 @@ class TestBasicApp (unittest.TestCase):
 
 
     def test_resources(self):
-        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app', 
+        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app',
             'Contents', 'Resources')
 
         src_file = os.path.join(self.app_dir, 'data3', 'source.c')
@@ -98,13 +98,26 @@ class TestBasicApp (unittest.TestCase):
         if '--alias' in self.py2app_args:
             self.assertTrue(os.path.islink(dst_file))
 
+    def test_executable_resource(self):
+        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app',
+            'Contents', 'Resources')
+        src_file = os.path.join(self.app_dir, 'data1', 'file3.sh')
+        dst_file = os.path.join(resource_dir, 'sub1', 'file3.sh')
+
+        src_st = os.stat(src_file)
+        dst_st = os.stat(dst_file)
+
+        self.assertEqual(src_st.st_mode, dst_st.st_mode,
+                '%o != %o'%(src_st.st_mode, dst_st.st_mode))
+
     def test_data_files(self):
-        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app', 
+        resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app',
             'Contents', 'Resources')
 
         for src_path, dst_path, chk_link in [
                     ( 'data1/file1.txt', 'sub1/file1.txt', True),
                     ( 'data1/file2.txt', 'sub1/file2.txt', True),
+                    ( 'data1/file3.sh', 'sub1/file3.sh', True),
                     ( 'data2/source.c', 'data2/source.c', False),
                 ]:
             src_file = os.path.join(self.app_dir, src_path)

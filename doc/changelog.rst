@@ -10,6 +10,10 @@ py2app 0.7.4
 
   Related to issue #101
 
+- Py2app also didn't copy file permissions for files copied into application
+  bundles, which isn't a problem in general but did cause binaries to lose
+  there executable permissions (as noted on Stackoverflow)
+
 - Issue #101: Set "PYTHONDONTWRITEBYTECODE" in the environment before
   calling Py_Initialize to ensure that the interpreter won't try to
   write bytecode files (which can cause problems when using sandboxed

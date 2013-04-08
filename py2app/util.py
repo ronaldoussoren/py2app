@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import os, sys, imp, time, errno
+import os, sys, imp, time, errno, stat
 from modulegraph.find_modules import PY_SUFFIXES, C_SUFFIXES
 from modulegraph.util import *
 from modulegraph import zipio
@@ -128,7 +128,7 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
                 os.symlink(os.path.abspath(source), destination)
 
         else:
-            copy_file(source, destination, dry_run=dry_run)
+            copy_file(source, destination, dry_run=dry_run, preserve_mode=True)
 
 
 
@@ -153,8 +153,15 @@ def _copy_file(source, destination, preserve_mode=False, preserve_times=False, u
                 fp_out.write(data)
 
             if preserve_mode:
-                # XXX: copy current mode
-                pass
+                mode = None
+                if hasattr(zipio, 'getmode'):
+                    mode = zipio.getmode(source)
+
+                elif os.path.isfile(source):
+                    mode = os.stat(source).st_mode
+
+                if mode is not None:
+                    os.chmod(destination, mode)
 
             if preserve_times:
                 mtime = zipio.getmtime(source)
@@ -392,7 +399,7 @@ byte_compile(files, optimize=%r, force=%r,
                         # Minor problem: This will happily copy a file
                         # <mod>.pyo to <mod>.pyc or <mod>.pyc to
                         # <mod>.pyo, but it does seem to work.
-                        copy_file(mod.filename, cfile)
+                        copy_file(mod.filename, cfile, preserve_times=True)
 
                     else:
                         raise RuntimeError \
