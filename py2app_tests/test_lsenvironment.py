@@ -93,7 +93,7 @@ class TestLSEnvironment (unittest.TestCase):
         self.assertEqual(env['KNIGHT'], 'ni!')
         self.assertEqual(env['EXTRA_VAR'], 'hello world')
         self.assertEqual(env['LANG'], 'nl_NL.latin1')
-        self.assertEqual(env['LC_CTYPE'], 'nl_NL.utf-8')
+        self.assertEqual(env['LC_CTYPE'], 'nl_NL.UTF-8')
 
 if __name__ == "__main__":
     unittest.main()

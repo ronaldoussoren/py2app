@@ -445,21 +445,22 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
      * Also set the LC_CTYPE environment variable because Py_Initialize
      * reset the locale information using the environment :-(
      */
-    curlocale = setlocale(LC_ALL, NULL);
-    if (curlocale != NULL) {
-	curlocale = strdup(curlocale);
-	if (curlocale == NULL) {
-		(void)report_error(ERR_CANNOT_SAVE_LOCALE);
-		return -1;
-	}
-    }
-    setlocale(LC_ALL, "en_US.UTF-8");
+    if (isPy3k) {
+        curlocale = setlocale(LC_ALL, NULL);
+        if (curlocale != NULL) {
+            curlocale = strdup(curlocale);
+            if (curlocale == NULL) {
+                    (void)report_error(ERR_CANNOT_SAVE_LOCALE);
+                    return -1;
+            }
+        }
+        setlocale(LC_ALL, "en_US.UTF-8");
 
-    curenv = getenv("LC_CTYPE");
-    if (curenv) {
-            curenv = strdup(curenv);
+        curenv = getenv("LC_CTYPE");
+        if (!curenv) {
+            setenv("LC_CTYPE", "en_US.UTF-8", 1);
+        }
     }
-
 
 
     // Set up the environment variables to be transferred
@@ -522,17 +523,16 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     Py_Initialize();
     PyEval_InitThreads();
 
-    /*
-     * Reset the environment and locale information
-     */
-    setlocale(LC_CTYPE, curlocale);
-    free(curlocale);
+    if (isPy3k) {
+        /*
+         * Reset the environment and locale information
+         */
+        setlocale(LC_CTYPE, curlocale);
+        free(curlocale);
 
-    if (curenv) {
-	setenv("LC_CTYPE", curenv, 1);
-        free(curenv);
-    } else {
-        unsetenv("LC_CTYPE");
+        if (!curenv) {
+            unsetenv("LC_CTYPE");
+        }
     }
 
 

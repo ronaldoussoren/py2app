@@ -972,39 +972,35 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
 #undef OPT_LOOKUP
 #undef LOOKUP
 
-    /*
-     * When apps are started from the Finder (or anywhere
-     * except from the terminal), the LANG and LC_* variables
-     * aren't set in the environment. This confuses Py_Initialize
-     * when it tries to import the codec for UTF-8,
-     * therefore explicitly set the locale.
-     *
-     * Also set the LC_CTYPE environment variable because Py_Initialize
-     * resets the locale information using the environment :-(
-     */
-    curlocale = setlocale(LC_ALL, NULL);
-    if (curlocale != NULL) {
-      curlocale = strdup(curlocale);
-      if (curlocale == NULL) {
-        (void)report_error("cannot save locale information");
-	return -1;
-      }
-    }
-    setlocale(LC_ALL, "en_US.UTF-8");
-
-    curenv = getenv("LC_CTYPE");
-    if (curenv) {
-	curenv = strdup(curenv);
-	if (!curenv) {
-	    (void)report_error("cannot save LC_CTYPE");
-	}
-    }
-    setenv("LC_CTYPE", "en_US.UTF-8", 1);
-
     if (isPy3K) {
-    	wchar_t w_pythonInterpreter[PATH_MAX+1];
-    	mbstowcs(w_pythonInterpreter, c_pythonInterpreter, PATH_MAX+1);
-    	py2app_Py_SetProgramName((char*)w_pythonInterpreter);
+	    /*
+	     * When apps are started from the Finder (or anywhere
+	     * except from the terminal), the LANG and LC_* variables
+	     * aren't set in the environment. This confuses Py_Initialize
+	     * when it tries to import the codec for UTF-8,
+	     * therefore explicitly set the locale.
+	     *
+	     * Also set the LC_CTYPE environment variable because Py_Initialize
+	     * resets the locale information using the environment :-(
+	     */
+	    curlocale = setlocale(LC_ALL, NULL);
+	    if (curlocale != NULL) {
+	      curlocale = strdup(curlocale);
+	      if (curlocale == NULL) {
+		(void)report_error("cannot save locale information");
+		return -1;
+	      }
+	    }
+	    setlocale(LC_ALL, "en_US.UTF-8");
+
+	    curenv = getenv("LC_CTYPE");
+	    if (curenv == NULL) {
+		setenv("LC_CTYPE", "en_US.UTF-8", 1);
+	    }
+
+	    wchar_t w_pythonInterpreter[PATH_MAX+1];
+    	    mbstowcs(w_pythonInterpreter, c_pythonInterpreter, PATH_MAX+1);
+    	    py2app_Py_SetProgramName((char*)w_pythonInterpreter);
 
 
     } else {
@@ -1016,15 +1012,14 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     /*
      * Reset the environment and locale information
      */
-    if (curenv) {
-	    setenv("LC_CTYPE", curenv, 1);
-	    free(curenv);
-    } else {
-	    unsetenv("LC_CTYPE");
-    }
+    if (isPy3K) {
+	    if (curenv == NULL) {
+		unsetenv("LC_CTYPE");
+	    }
 
-    setlocale(LC_CTYPE, curlocale);
-    free(curlocale);
+	    setlocale(LC_CTYPE, curlocale);
+	    free(curlocale);
+    }
 
     py2app_CFStringGetCString(
         mainScript, c_mainScript,
