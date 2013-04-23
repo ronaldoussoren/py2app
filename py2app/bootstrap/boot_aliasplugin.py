@@ -19,6 +19,7 @@ def _run():
     global __file__
     import os, site
     sys.frozen = 'macosx_plugin'
+    base = os.environ['RESOURCEPATH']
 
     if 'ARGVZERO' in os.environ:
         argv0 = os.path.basename(os.environ['ARGVZERO'])
@@ -26,15 +27,15 @@ def _run():
         argv0 = None
     script = SCRIPT_MAP.get(argv0, DEFAULT_SCRIPT)
 
-    sys.argv[0] = __file__ = script
+    sys.argv[0] = __file__ = path = os.path.join(base, script)
     if sys.version_info[0] == 2:
-        with open(script, 'rU') as fp:
+        with open(path, 'rU') as fp:
             source = fp.read() + "\n"
     else:
-        with open(script, 'rb') as fp:
+        with open(path, 'rb') as fp:
             encoding = guess_encoding(fp)
 
-        with open(script, 'r', encoding=encoding) as fp:
+        with open(path, 'r', encoding=encoding) as fp:
             source = fp.read() + '\n'
 
     exec(compile(source, script, 'exec'), globals(), globals())
