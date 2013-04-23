@@ -17,6 +17,8 @@ sys.path.append(_parent + '/site-packages.zip')
 # add the uncompressed site-packages to the path to compensate for that.
 sys.path.append(_parent + '/site-packages')
 
+USER_SITE=None
+
 import os
 try:
     basestring
