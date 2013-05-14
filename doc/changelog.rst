@@ -12,8 +12,8 @@ py2app 0.7.4
   and stderr streams to the ASL logging subsystem with the options needed to
   end up in the default view of Console.app.
 
-  FIXME: This can break interactive use, futher work is needed to only redirect
-  the streams when the application is started by the Finder.
+  NOTE: The stdout and stderr streams of plugin bundles are not redirected, as it
+  is rather bad form to change the global environment of the host application.
 
 - The i386, x86_64 and intel stub binaries are now compiled with clang on OSX 10.8,
   instead of an older version of GCC. The other stub versions still are compiled

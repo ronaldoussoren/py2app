@@ -1139,20 +1139,41 @@ setup_asl(const char* appname)
 	do_asl_log_descriptor(cl, msg, 4 /* ASL_LEVEL_NOTICE */, 2, 2 /* ASL_LOG_DESCRIPTOR_WRITE */);
 }
 
+static int
+have_psn_arg(int argc, char* const * argv)
+{
+	int i;
+	for (i = 0; i < argc; i++) {
+		if (strncmp(argv[i], "-psn_", 5) == 0) {
+			if (isdigit(argv[i][5])) {
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+
 int
 main(int argc, char * const *argv, char * const *envp)
 {
     int rval;
     const char *bname;
 
-    bname = strrchr(argv[0], '/');
-    if (bname == NULL) {
-	    bname = argv[0];
-    } else {
-	    bname++;
-    }
+    if (have_psn_arg(argc, argv)) {
+	    /* Running as a GUI app started by launch
+	     * services, try to redirect stdout/stderr
+	     * to ASL.
+	     */
+	    bname = strrchr(argv[0], '/');
+	    if (bname == NULL) {
+		    bname = argv[0];
+	    } else {
+		    bname++;
+	    }
 
-    setup_asl(bname);
+	    setup_asl(bname);
+    }
 
     if (bind_CoreFoundation()) {
         fprintf(stderr, "CoreFoundation not found or functions missing\n");
