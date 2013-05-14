@@ -4,6 +4,17 @@ Release history
 py2app 0.7.4
 ------------
 
+- Issue #77: the stdout/stderr streams of application and plugin bundles did not
+  end up in Console.app on OSX 10.8 (as they do on earlier releases of OSX). This
+  is due to a change in OSX.
+
+  With this version the application executable converts writes to the stdout
+  and stderr streams to the ASL logging subsystem with the options needed to
+  end up in the default view of Console.app.
+
+  FIXME: This can break interactive use, futher work is needed to only redirect
+  the streams when the application is started by the Finder.
+
 - The i386, x86_64 and intel stub binaries are now compiled with clang on OSX 10.8,
   instead of an older version of GCC. The other stub versions still are compiled
   on OSX 10.6.
