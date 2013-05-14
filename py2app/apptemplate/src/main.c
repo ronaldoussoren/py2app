@@ -1058,9 +1058,123 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     return rval;
 }
 
-int main(int argc, char * const *argv, char * const *envp)
+void
+setup_asl(const char* appname)
+{
+	/*
+	 * On Mac OS X 10.8 or later the contents of stdout and stderr
+	 * do not end up in de Console.app log (neither in de default
+	 * view or some other view).
+	 *
+	 * This function detects if "asl_log_descriptor" is available
+	 * (introduced in 10.8), and if it is configures ASL to redirect
+	 * all writes to stdout/stderr to the ASL in such a way that
+	 * log lines end up in the default view of Console.app.
+	 */
+
+	/* Function definitions, don't use the ASL header because that
+	 * doesn't contain all definitions when building the binaries
+	 * with PPC support.
+	 */
+	typedef void* aslclient;
+	typedef void* aslmsg;
+
+	aslclient (*do_asl_open)(const char*, const char*, int);
+	int (*do_asl_add_log_file)(aslclient, int);
+	int (*do_asl_log_descriptor)(aslclient, aslmsg, int, int, uint32_t);
+	int (*do_asl_set)(aslmsg, const char*, const char*);
+	aslmsg (*do_asl_new)(int);
+
+	/*
+	 * Try to resolve the ASL function's we're using.
+	 */
+        void* sys_dylib;
+        sys_dylib = dlopen("/usr/lib/libSystem.dylib", RTLD_LAZY);
+
+	do_asl_open = dlsym(sys_dylib, "asl_open");
+	do_asl_add_log_file = dlsym(sys_dylib, "asl_add_log_file");
+	do_asl_log_descriptor = dlsym(sys_dylib, "asl_log_descriptor");
+	do_asl_set = dlsym(sys_dylib, "asl_set");
+	do_asl_new = dlsym(sys_dylib, "asl_new");
+
+	if (do_asl_log_descriptor == NULL) {
+		/* asl_log_descriptor is not available: running on OSX 10.7
+		 * or earlier, which means we can't set up ASL and don't have to
+		 */
+		return;
+	}
+
+	aslclient cl;
+	aslmsg msg;
+	int fd2;
+	char uidbuf[64];
+
+	cl = do_asl_open(appname, "com.apple.console", 2 /* ASL_OPT_NO_DELAY */);
+	if (cl == NULL) {
+		return;
+	}
+
+	/* Tell ASL to write all log lines to STDERR as well, use a dup-ed file
+	 * descriptor because we'll later replace the original one by a file descriptor
+	 * from ASL.
+	 */
+	fd2 = dup(2);
+	do_asl_add_log_file(cl, fd2);
+
+	/*
+	 * Create an ASL template message for the STDOUT/STDERR redirection.
+	 * All keys are required to get log messages into the default view of Console.app
+	 * for normal users.
+	 */
+	snprintf(uidbuf, sizeof(uidbuf), "%d", getuid());
+	msg = do_asl_new(0 /* ASL_TYPE_MSG */);
+	do_asl_set(msg, "Facility" /* ASL_KEY_FACILITY */, "com.apple.console");
+	do_asl_set(msg, "Level" /* ASL_KEY_LEVEL */, "Notice" /* ASL_STRING_NOTICE */);
+	do_asl_set(msg, "ReadUID" /* ASL_KEY_READ_UID */, uidbuf /* or "-1" for "All users" */);
+
+	/*
+	 * Finally: redirect the STDOUT/STDERR file descriptors to ASL.
+	 */
+	do_asl_log_descriptor(cl, msg, 4 /* ASL_LEVEL_NOTICE */, 1, 2 /* ASL_LOG_DESCRIPTOR_WRITE */);
+	do_asl_log_descriptor(cl, msg, 4 /* ASL_LEVEL_NOTICE */, 2, 2 /* ASL_LOG_DESCRIPTOR_WRITE */);
+}
+
+static int
+have_psn_arg(int argc, char* const * argv)
+{
+	int i;
+	for (i = 0; i < argc; i++) {
+		if (strncmp(argv[i], "-psn_", 5) == 0) {
+			if (isdigit(argv[i][5])) {
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+
+int
+main(int argc, char * const *argv, char * const *envp)
 {
     int rval;
+    const char *bname;
+
+    if (have_psn_arg(argc, argv)) {
+	    /* Running as a GUI app started by launch
+	     * services, try to redirect stdout/stderr
+	     * to ASL.
+	     */
+	    bname = strrchr(argv[0], '/');
+	    if (bname == NULL) {
+		    bname = argv[0];
+	    } else {
+		    bname++;
+	    }
+
+	    setup_asl(bname);
+    }
+
     if (bind_CoreFoundation()) {
         fprintf(stderr, "CoreFoundation not found or functions missing\n");
         return -1;
