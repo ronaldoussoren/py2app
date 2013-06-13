@@ -280,7 +280,7 @@ class py2app(Command):
         ("app=", None,
          "application bundle to be built"),
         ("plugin=", None,
-         "puglin bundle to be built"),
+         "plugin bundle to be built"),
         ('optimize=', 'O',
          "optimization level: -O1 for \"python -O\", "
          "-O2 for \"python -OO\", and -O0 to disable [default: -O0]"),
