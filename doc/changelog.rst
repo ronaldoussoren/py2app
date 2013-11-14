@@ -6,6 +6,15 @@ py2app 0.8
 
 py2app 0.8 is a feature release
 
+- Fix some issues with virtualenv support:
+
+  * detection of system installs of Python didn't work properly when using
+    a virtualenv. Because of this py2app did not create a "semi-standalone"
+    bundle when using a virtualenv created with /usr/bin/python.
+
+  * "semi-standalone" bundles created from a virtualenv included more files
+    when they should (in particular bits of the stdlib)
+
 - Issue #92: Add option '--force-system-tk' which ensures that the _tkinter
   extension (used by Tkinter) is linked against the Apple build of Tcl/Tk,
   even when it is linked to another framework in Python's std. library.
@@ -269,12 +278,12 @@ py2app 0.7 is a bugfix release
 - Smarter matplotlib recipe, it is now possible to specify which backends should
   be included. Issue #44, reported by Adam Kovics.
 
-  The argument to ``--matplotlib-plugins`` (or 'matplotlib_plugins' in setup.py)
+  The argument to ``--matplotlib-backends`` (or 'matplotlib_backends' in setup.py)
   is a list of plugins to include. Use '-' to not include backends other than those
   found by the import statement analysis, and '*' to include all backends (without
   necessarily including all of matplotlib)
 
-  As an example, use ``--matplotlib-plugins=wxagg`` to include just the wxagg
+  As an example, use ``--matplotlib-backends=wxagg`` to include just the wxagg
   backend.
 
   Default is to include the entire matplotlib package.

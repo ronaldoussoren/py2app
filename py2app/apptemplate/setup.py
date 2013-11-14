@@ -32,7 +32,7 @@ gPreBuildVariants = [
     {
         'name': 'main-intel',
         'target': '10.5',
-        'cflags': '-g -isysroot / -arch i386 -arch x86_64',
+        'cflags': '-g -isysroot / -arch i386 -arch x86_64 -fexceptions',
         'cc': '/usr/bin/clang',
     },
     {

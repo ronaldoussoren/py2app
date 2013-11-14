@@ -258,15 +258,21 @@ def normalize_data_file(fn):
         return ('', [fn])
     return fn
 
-def is_system(executable=None):
-    if executable is None:
-        executable = sys.executable
-    return in_system_path(executable)
+def is_system():
+    prefix = sys.prefix
+    if os.path.exists(os.path.join(prefix, ".Python")):
+        fn = os.path.join(prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
+        if os.path.exists(fn):
+            with open(fn, 'rU') as fp:
+                prefix = fp.read().strip()
+    
+    return in_system_path(prefix)
 
-def installation_info(executable=None, version=None):
+def installation_info(version=None):
     if version is None:
         version = sys.version
-    if is_system(executable):
+
+    if is_system():
         return version[:3] + " (FORCED: Using vendor Python)"
     else:
         return version[:3]
@@ -563,6 +569,7 @@ class py2app(Command):
         else:
             dylib = 'libpython%s.dylib' % (sys.version[:3],)
             runtime = os.path.join(prefix, 'lib', dylib)
+
         return dylib, runtime
 
     def symlink(self, src, dst):
