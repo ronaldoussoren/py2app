@@ -1301,8 +1301,12 @@ class py2app(Command):
             os.path.basename(info['name']),
             'Resources/Info.plist',
             'include/%s/pyconfig.h'%(includedir),
-            'lib/%s/%s/Makefile'%(pydir, configdir)
         ]
+        if '_sysconfigdata' not in sys.modules:
+            fwkfiles.append(
+               'lib/%s/%s/Makefile'%(pydir, configdir)
+            )
+
         for fn in fmwkfiles:
             self.copy_file(
                 os.path.join(indir, fn),
@@ -1724,10 +1728,15 @@ class py2app(Command):
             self.symlink(real_include, os.path.join(resdir, 'include'))
         else:
             self.mkpath(cfgdir)
-            for fn in 'Makefile', 'Setup', 'Setup.local', 'Setup.config':
-                rfn = os.path.join(realcfg, fn)
-                if os.path.exists(rfn):
-                    self.copy_file(rfn, os.path.join(cfgdir, fn))
+            if '_sysconfigdata' not in sys.modules:
+                # Recent enough versions of Python 2.7 and 3.x have
+                # an _sysconfigdata module and don't need the Makefile 
+                # to provide the sysconfig data interface. Don't copy
+                # them.
+                for fn in 'Makefile', 'Setup', 'Setup.local', 'Setup.config':
+                    rfn = os.path.join(realcfg, fn)
+                    if os.path.exists(rfn):
+                       self.copy_file(rfn, os.path.join(cfgdir, fn))
 
             inc_dir = os.path.join(resdir, 'include', includedir)
             self.mkpath(inc_dir)

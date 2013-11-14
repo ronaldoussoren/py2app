@@ -6,6 +6,10 @@ py2app 0.8
 
 py2app 0.8 is a feature release
 
+- Don't copy Python's Makefile, Setup file and the like into a bundle when
+  sysconfig and distutils.sysconfig don't need these files (basicly, when
+  using any recent python version).
+
 - Fix some issues with virtualenv support:
 
   * detection of system installs of Python didn't work properly when using
