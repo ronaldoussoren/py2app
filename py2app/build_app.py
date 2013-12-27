@@ -265,7 +265,7 @@ def is_system():
         if os.path.exists(fn):
             with open(fn, 'rU') as fp:
                 prefix = fp.read().strip()
-    
+
     return in_system_path(prefix)
 
 def installation_info(version=None):
@@ -336,6 +336,10 @@ class py2app(Command):
          "Emulate the shell environment you get in a Terminal window"),
         ("use-pythonpath", None,
          "Allow PYTHONPATH to effect the interpreter's environment"),
+        ("use-faulthandler", None,
+         "Enable the faulthandler in the generated bundle (Python 3.3 or later)"),
+        ("verbose-interpreter", None,
+         "Start python in verbose mode"),
         ('bdist-base=', 'b',
          'base directory for build library (default is build)'),
         ('dist-dir=', 'd',
@@ -356,7 +360,7 @@ class py2app(Command):
         ("extra-scripts=", None, "set of scripts to include in the application bundle, next to the main application script"),
         ("include-plugins=", None, "List of plugins to include"),
         ("force-system-tk", None, "Ensure that Tkinter is linked against Apple's build of Tcl/Tk"),
-        ]
+    ]
 
     boolean_options = [
         #"compressed",
@@ -369,6 +373,8 @@ class py2app(Command):
         "argv-emulation",
         #"no-zip",
         "use-pythonpath",
+        "use-faulthandler",
+        "verbose-interpreter",
         "no-chdir",
         "debug-modulegraph",
         "debug-skip-macholib",
@@ -400,6 +406,8 @@ class py2app(Command):
         self.no_chdir = 0
         self.site_packages = False
         self.use_pythonpath = False
+        self.use_faulthandler = False
+        self.verbose_interpreter = False
         self.includes = None
         self.packages = None
         self.excludes = None
@@ -433,6 +441,9 @@ class py2app(Command):
             self.argv_inject = shlex.split(self.argv_inject)
         self.includes = set(fancy_split(self.includes))
         self.includes.add('encodings.*')
+
+        if self.use_faulthandler:
+            self.includes.add('faulthandler')
         #if sys.version_info[:2] >= (3, 2):
         #    self.includes.add('pkgutil')
         #    self.includes.add('imp')
@@ -726,6 +737,8 @@ class py2app(Command):
                 emulate_shell_environment=bool(self.emulate_shell_environment),
                 no_chdir=bool(self.no_chdir),
                 prefer_ppc=self.prefer_ppc,
+                verbose=self.verbose_interpreter,
+                use_faulthandler=self.use_faulthandler,
             ),
         )
         if self.optimize:
@@ -1730,7 +1743,7 @@ class py2app(Command):
             self.mkpath(cfgdir)
             if '_sysconfigdata' not in sys.modules:
                 # Recent enough versions of Python 2.7 and 3.x have
-                # an _sysconfigdata module and don't need the Makefile 
+                # an _sysconfigdata module and don't need the Makefile
                 # to provide the sysconfig data interface. Don't copy
                 # them.
                 for fn in 'Makefile', 'Setup', 'Setup.local', 'Setup.config':
@@ -1756,6 +1769,7 @@ class py2app(Command):
             preserve_symlinks=True)
         for pkg_name in self.packages:
             pkg = self.get_bootstrap(pkg_name)
+            print('XXXX', pkg_name, pkg)
 
             if self.semi_standalone:
                 # For semi-standalone builds don't copy packages
@@ -1765,7 +1779,7 @@ class py2app(Command):
                 if not not_stdlib_filter(p):
                     continue
 
-            dst = os.path.join(pydir, os.path.basename(pkg))
+            dst = os.path.join(pydir, pkg_name)
             self.mkpath(dst)
             self.copy_tree(pkg, dst)
 

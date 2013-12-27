@@ -20,7 +20,7 @@ gPreBuildVariants = [
     {
         'name': 'main-x86_64',
         'target': '10.5',
-        'cflags': '-g -isysroot / -arch x86_64',
+        'cflags': '-g -arch x86_64',
         'cc': '/usr/bin/clang',
     },
     {
@@ -32,13 +32,13 @@ gPreBuildVariants = [
     {
         'name': 'main-intel',
         'target': '10.5',
-        'cflags': '-g -isysroot / -arch i386 -arch x86_64 -fexceptions',
+        'cflags': '-g -arch i386 -arch x86_64 -fexceptions',
         'cc': '/usr/bin/clang',
     },
     {
         'name': 'main-i386',
         'target': '10.4',
-        'cflags': '-g -isysroot / -arch i386',
+        'cflags': '-g -arch i386',
         'cc': '/usr/bin/clang',
     },
     {
@@ -106,7 +106,7 @@ def main(all=False, arch=None):
                 CC=os.path.join(root, 'usr', 'bin', entry['cc'])
                 CFLAGS = BASE_CFLAGS + ' ' + entry['cflags'].replace('@@XCODE_ROOT@@', root)
                 os.environ['MACOSX_DEPLOYMENT_TARGET'] = entry['target']
-                os.system('"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s' % locals())
+                os.system('"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s -framework Cocoa' % locals())
 
     dest = os.path.join(
             builddir,

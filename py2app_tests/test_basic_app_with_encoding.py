@@ -187,11 +187,11 @@ class TestBasicAppWithEncoding (unittest.TestCase):
             ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"xdrlib")
 
-        if sys.prefix.startswith('/System'):
+        if sys.prefix.startswith('/System') or '--alias' in self.py2app_args:
             # py2app is included as part of the system install
             p.stdin.write('import_module("py2app")\n'.encode('latin1'))
             p.stdin.flush()
-            ln = p.stdout.readline().decode('utf-8')
+            ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"py2app")
 
 

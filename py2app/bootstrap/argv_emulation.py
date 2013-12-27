@@ -173,8 +173,6 @@ def _run_argvemulator(timeout = 60):
                 print("argvemulator warning: cannot extract open document event")
                 continue
 
-            print("Adding: %s"%(repr(buf.value.decode('utf-8')),))
-
             if sys.version_info[0] > 2:
                 sys.argv.append(buf.value.decode('utf-8'))
             else:
@@ -262,10 +260,8 @@ def _run_argvemulator(timeout = 60):
             open_url_handler, FALSE)
 
 def _argv_emulation():
-    import sys
+    import sys, os
     # only use if started by LaunchServices
-    for arg in sys.argv[1:]:
-        if arg.startswith('-psn'):
-            _run_argvemulator()
-            break
+    if os.environ.get('_PY2APP_LAUNCHED_'):
+        _run_argvemulator()
 _argv_emulation()

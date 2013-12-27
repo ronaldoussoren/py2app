@@ -48,6 +48,8 @@ class TestExplicitIncludes (unittest.TestCase):
     python_args = []
     app_dir = os.path.join(DIR_NAME, 'basic_app')
 
+    maxDiff = None
+
     # Basic setup code
     #
     # The code in this block needs to be moved to

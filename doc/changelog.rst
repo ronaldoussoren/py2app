@@ -6,6 +6,15 @@ py2app 0.8
 
 py2app 0.8 is a feature release
 
+
+- Fixed argv emulator on OSX 10.9, the way the code detected that the application
+  was launched through the Finder didn't work on that OSX release.
+
+- The launcher binary is now linked with Cocoa, that should avoid some problems
+  with sandboxed applications (in particular: standard open panels don't seem
+  to work properly in a sandboxed application when the main binary is not
+  linked to AppKit)
+
 - Don't copy Python's Makefile, Setup file and the like into a bundle when
   sysconfig and distutils.sysconfig don't need these files (basicly, when
   using any recent python version).

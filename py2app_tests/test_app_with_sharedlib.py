@@ -38,6 +38,20 @@ class TestBasicAppWithExtension (unittest.TestCase):
             env['LANG'] = 'en_US.UTF-8'
 
         p = subprocess.Popen([
+                sys.executable] + cls.python_args + [
+                    'setup.py', 'build_ext'],
+                cwd = cls.app_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+            env=env
+            )
+        lines = p.communicate()[0]
+        if p.wait() != 0:
+            print (lines)
+            raise AssertionError("Running build_ext failed")
+
+        p = subprocess.Popen([
                 sys.executable ] + cls.python_args + [
                     'setup.py', 'py2app'] + cls.py2app_args,
             cwd = cls.app_dir,
@@ -94,7 +108,7 @@ class TestBasicAppWithExtension (unittest.TestCase):
 
     #
     # End of setup code
-    # 
+    #
 
     def test_basic_start(self):
         p = self.start_app()
@@ -162,11 +176,11 @@ class TestBasicAppWithExtension (unittest.TestCase):
             ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"xdrlib")
 
-        if sys.prefix.startswith('/System'):
+        if sys.prefix.startswith('/System') or '--alias' in self.py2app_args:
             # py2app is included as part of the system install
             p.stdin.write('import_module("py2app")\n'.encode('latin1'))
             p.stdin.flush()
-            ln = p.stdout.readline().decode('utf-8')
+            ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"py2app")
 
 

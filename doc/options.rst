@@ -60,12 +60,14 @@ Options for 'py2app' command::
   --no-chdir (-C)         do not change to the data directory
                           (Contents/Resources) [forced for plugins]
   --semi-standalone (-s)  depend on an existing installation of Python
-  --alias (-A)            Use an alias to current source file (for development
+  --alias (-A)            use an alias to current source file (for development
                           only!)
-  --argv-emulation (-a)   Use argv emulation [disabled for plugins]. 
-  --argv-inject           Inject some commands into the argv
-  --use-pythonpath        Allow PYTHONPATH to effect the interpreter's
+  --argv-emulation (-a)   use argv emulation [disabled for plugins].
+  --argv-inject           inject some commands into the argv
+  --use-pythonpath        allow PYTHONPATH to effect the interpreter's
                           environment
+  --use-faulthandler      enable the faulthandler (with python 3.3 or later)
+  --verbose-interpreter   Start python in verbose mode
   --bdist-base (-b)       base directory for build library (default is build)
   --dist-dir (-d)         directory to put final built distributions in
                           (default is dist)
@@ -75,7 +77,7 @@ Options for 'py2app' command::
                           default, for compatibility)
   --prefer-ppc		  Force application to run translated on i386
                           (LSPrefersPPC=True)
-  --debug-modulegraph     Drop to pdb console after the module finding phase
+  --debug-modulegraph     drop to pdb console after the module finding phase
                           is complete
   --debug-skip-macholib   skip macholib phase (app will not be standalone!)
   --emulate-shell-environment emulate the shell environment in a Terminal window
