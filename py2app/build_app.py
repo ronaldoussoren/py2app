@@ -1316,7 +1316,7 @@ class py2app(Command):
             'include/%s/pyconfig.h'%(includedir),
         ]
         if '_sysconfigdata' not in sys.modules:
-            fwkfiles.append(
+            fmwkfiles.append(
                'lib/%s/%s/Makefile'%(pydir, configdir)
             )
 
