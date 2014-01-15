@@ -600,7 +600,7 @@ def _get_tool(toolname):
     if toolname not in _tools:
         if os.path.exists('/usr/bin/xcrun'):
             try:
-                _tools[toolname] = check_output(['/usr/bin/xcrun', '-find', 'momc'])[:-1]
+                _tools[toolname] = check_output(['/usr/bin/xcrun', '-find', toolname])[:-1]
             except subprocess.CalledProcessError:
                 raise IOError("Tool %r not found"%(toolname,))
 
@@ -626,6 +626,7 @@ def _get_tool(toolname):
                     break
             else:
                 raise IOError("Tool %r not found"%(toolname,))
+    return _tools[toolname]
 
 
 def momc(src, dst):
