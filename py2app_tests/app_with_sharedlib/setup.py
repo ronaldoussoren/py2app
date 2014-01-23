@@ -25,6 +25,7 @@ class sharedlib (Command):
         else:
             cc = ['xcrun', 'clang']
             env = dict(os.environ)
+            env['MACOSX_DEPLOYMENT_TARGET'] = get_config_var('MACOSX_DEPLOYMENT_TARGET')
 
 
         if not os.path.exists('lib'):
@@ -34,7 +35,7 @@ class sharedlib (Command):
         root_flags = sum([shlex.split(x) for x in re.findall('-isysroot\s+\S+', cflags)], [])
 
         cmd = cc + arch_flags + root_flags + ['-dynamiclib', '-o', os.path.abspath('lib/libshared.1.dylib'), 'src/sharedlib.c']
-        subprocess.check_call(cmd)
+        subprocess.check_call(cmd, env=env)
         if os.path.exists('lib/libshared.dylib'):
             os.unlink('lib/libshared.dylib')
         os.symlink('libshared.1.dylib', 'lib/libshared.dylib')
@@ -46,7 +47,7 @@ class sharedlib (Command):
             os.unlink('lib/libhalf.dylib')
 
         cmd = cc + arch_flags + root_flags + ['-dynamiclib', '-o', os.path.abspath('lib/libhalf.dylib'), 'src/sharedlib.c']
-        subprocess.check_call(cmd)
+        subprocess.check_call(cmd, env=env)
 
         os.rename('lib/libhalf.dylib', 'lib/stash/libhalf.dylib')
         os.symlink('stash/libhalf.dylib', 'lib/libhalf.dylib')

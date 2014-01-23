@@ -228,7 +228,7 @@ def _run_argvemulator(timeout = 60):
             open_url_handler, 0, FALSE)
 
     # Remove the funny -psn_xxx_xxx argument
-    if len(sys.argv) > 1 and sys.argv[1][:4] == '-psn':
+    if len(sys.argv) > 1 and sys.argv[1].startswith('-psn_'):
         del sys.argv[1]
 
     start = time.time()

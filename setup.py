@@ -11,7 +11,11 @@
 #
 import os
 import sys
-import urllib
+try:
+    import urllib.request as urllib
+except ImportError:
+    import urllib
+
 import tempfile
 import tarfile
 from distutils import log
@@ -57,7 +61,7 @@ try:
         except urllib.error:
             raise RuntimeError("Cannot determine download link for %s"%(package,))
 
-        pkgdata = json.loads(data)
+        pkgdata = json.loads(data.decode('utf-8'))
         if 'urls' not in pkgdata:
             raise RuntimeError("Cannot determine download link for %s"%(package,))
 
