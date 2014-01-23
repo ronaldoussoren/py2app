@@ -8,6 +8,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <locale.h>
+#include <sys/utsname.h>
 
 /*
     Typedefs
@@ -1137,6 +1138,7 @@ setup_asl(const char* appname)
 	do_asl_log_descriptor(cl, msg, 4 /* ASL_LEVEL_NOTICE */, 2, 2 /* ASL_LOG_DESCRIPTOR_WRITE */);
 }
 
+#ifndef PY2APP_SECONDARY
 static int
 have_psn_arg(int argc, char* const * argv)
 {
@@ -1151,30 +1153,64 @@ have_psn_arg(int argc, char* const * argv)
 	}
 	return 0;
 }
+#endif /* !PY2APP_SECONDARY */
 
 
 int
 main(int argc, char * const *argv, char * const *envp)
 {
     int rval;
-    const char *bname;
 
-    if (have_psn_arg(argc, argv) || ttyslot() == 0) {
-	    /* Running as a GUI app started by launch
-	     * services, try to redirect stdout/stderr
-	     * to ASL.
-	     */
-	    setenv("_PY2APP_LAUNCHED_", "1", 1);
+#ifndef PY2APP_SECONDARY
+    /* Running as a GUI app started by launch
+     * services, try to redirect stdout/stderr
+     * to ASL.
+     *
+     * NOTE: Detecting application bundles on OSX 10.9
+     * is annoyingly hard, the devnull trick is the least
+     * worst option I've found yet.
+     */
+    struct stat st;
+    struct utsname uts;
+    int is_app_bundle = 1;
 
-	    bname = strrchr(argv[0], '/');
-	    if (bname == NULL) {
-		    bname = argv[0];
-	    } else {
-		    bname++;
+    if (uname(&uts) != -1) {
+        if (strcmp(uts.release, "13.") <= 0) {
+	    /* OSX 10.8 or earlier */
+            if (!have_psn_arg(argc, argv)) {
+                is_app_bundle = 0;
 	    }
+	} else {
+	    /* OSX 10.9 or later */
+            if (fstat(1, &st) != -1) {
+	        if (!S_ISCHR(st.st_mode) ||
+	            major(st.st_dev) != 3 ||
+     	            minor(st.st_dev) != 2) {
 
-	    setup_asl(bname);
+    	    	        /* We appear to be launched from the
+			 * command-line after all.
+		         */
+		        is_app_bundle = st.st_dev;
+	        }
+            }
+        }
     }
+
+
+    if (is_app_bundle) {
+        const char *bname;
+        setenv("_PY2APP_LAUNCHED_", "1", 1);
+
+        bname = strrchr(argv[0], '/');
+        if (bname == NULL) {
+	    bname = argv[0];
+        } else {
+	    bname++;
+        }
+
+        setup_asl(bname);
+    }
+#endif /* !PY2APP_SECONDARY */
 
     if (bind_CoreFoundation()) {
         fprintf(stderr, "CoreFoundation not found or functions missing\n");

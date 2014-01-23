@@ -785,7 +785,7 @@ class py2app(Command):
                 elif fn.endswith('.pyw'):
                     fn = fn[:-4]
 
-                src_fn = script_executable(arch=self.arch)
+                src_fn = script_executable(arch=self.arch, secondary=True)
                 tgt_fn = os.path.join(target.appdir, 'Contents', 'MacOS', os.path.basename(fn))
                 mergecopy(src_fn, tgt_fn)
                 make_exec(tgt_fn)
@@ -1652,7 +1652,7 @@ class py2app(Command):
             elif fn.endswith('.pyw'):
                 fn = fn[:-4]
 
-            src_fn = script_executable(arch=self.arch)
+            src_fn = script_executable(arch=self.arch, secondary=True)
             tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', os.path.basename(fn))
             mergecopy(src_fn, tgt_fn)
             make_exec(tgt_fn)

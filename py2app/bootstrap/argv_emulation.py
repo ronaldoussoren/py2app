@@ -112,6 +112,7 @@ def _run_argvemulator(timeout = 60):
     typeFSRef,          = struct.unpack('>i', b'fsrf')
     FALSE               = b'\0'
     TRUE                = b'\1'
+    eventLoopTimedOutErr = -9875
 
     kEventClassAppleEvent, = struct.unpack('>i', b'eppc')
     kEventAppleEvent = 1
@@ -242,7 +243,11 @@ def _run_argvemulator(timeout = 60):
 
         sts = carbon.ReceiveNextEvent(1, ctypes.byref(eventType),
                 start + timeout[0] - now, TRUE, ctypes.byref(event))
-        if sts != 0:
+
+        if sts == eventLoopTimedOutErr:
+            break
+
+        elif sts != 0:
             print("argvemulator warning: fetching events failed")
             break
 
