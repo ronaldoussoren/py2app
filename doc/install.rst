@@ -1,6 +1,25 @@
 Installation
 ============
 
+
+Installing with pip
+-------------------
+
+To installp py2app using `pip`_, or to upgrade to the latest released version
+of py2app:
+
+.. code-block:: sh
+
+  $ pip install -U py2app
+
+If you install into a system installation of Python you might need additional
+privileges, you can use the `sudo`_ commando to get those:
+
+.. code-block:: sh
+
+    $ sudo pip install -U py2app
+
+
 Installing with easy_install
 ----------------------------
 
@@ -25,24 +44,6 @@ privileges, you can use the `sudo`_ commando to get those:
 .. code-block:: sh
 
     $ sudo easy_install -U py2app
-
-
-Installing with pip
--------------------
-
-To installp py2app using `pip`_, or to upgrade to the latest released version 
-of py2app:
-
-.. code-block:: sh
-
-  $ pip install -U py2app
-
-If you install into a system installation of Python you might need additional
-privileges, you can use the `sudo`_ commando to get those:
-
-.. code-block:: sh
-
-    $ sudo pip install -U py2app
 
 
 Installing from source
