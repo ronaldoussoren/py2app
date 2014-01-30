@@ -92,3 +92,6 @@ Options for 'py2app' command::
                           in an application or plugin.
   --include-plugins       comma-seperated list of additional plugins to include
                           in an application
+  --arch=ARCH             The architecture set to include (intel, fat, universal, ...)
+                          NOTE: The ARCH should be a subset of the architectures supported
+                          by the python interpreter.
