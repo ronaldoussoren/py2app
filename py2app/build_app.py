@@ -52,7 +52,7 @@ from py2app.filters import \
     not_stdlib_filter, not_system_filter, has_filename_filter
 from py2app import recipes
 
-from distutils.sysconfig import get_config_var
+from distutils.sysconfig import get_config_var, get_config_h_filename
 PYTHONFRAMEWORK=get_config_var('PYTHONFRAMEWORK')
 
 
@@ -1753,8 +1753,8 @@ class py2app(Command):
 
             inc_dir = os.path.join(resdir, 'include', includedir)
             self.mkpath(inc_dir)
-            self.copy_file(os.path.join(real_include, '%s/pyconfig.h'%(
-                includedir)), os.path.join(inc_dir, 'pyconfig.h'))
+            self.copy_file(get_config_h_filename(), 
+                           os.path.join(inc_dir, 'pyconfig.h'))
 
 
         self.copy_file(arcname, arcdir)
