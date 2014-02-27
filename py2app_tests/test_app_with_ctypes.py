@@ -123,13 +123,18 @@ class TestBasicAppWithCTypes (unittest.TestCase):
     def test_find_library(self):
         p = self.start_app()
         p.stdin.write('find_library("shared")\n'.encode('latin1'))
+        p.stdin.flush()
         ln = p.stdout.readline().strip()
+        if sys.version_info[0] == 3:
+            ln = ln.decode('utf-8')
         self.assertEqual(os.path.realpath(ln), os.path.realpath(
             os.path.join(self.app_dir, 'dist/BasicApp.app',
             'Contents', 'Frameworks', 'libshared.dylib')))
-
         p.stdin.write('find_library("System")\n'.encode('latin1'))
+        p.stdin.flush()
         ln = p.stdout.readline().strip()
+        if sys.version_info[0] == 3:
+            ln = ln.decode('utf-8')
         self.assertEqual(os.path.realpath(ln), os.path.realpath('/usr/lib/libSystem.dylib'))
 
 
