@@ -15,6 +15,9 @@ py2app 0.9
 - issue #134: Remove target location before copying files into
   the bundle.
 
+- issue #133: Ensure that the application's "Framework" folder
+  is on the search path for ``ctypes.util.find_library``.
+
 py2app 0.8.1
 ------------
 

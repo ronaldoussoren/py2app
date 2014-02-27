@@ -1455,6 +1455,13 @@ class py2app(Command):
             prescripts.append('disable_linecache')
             prescripts.append('boot_' + self.style)
         else:
+
+            # Add ctypes prescript because it is needed to
+            # find libraries in the bundle, but we don't run
+            # recipes and hence the ctypes recipe is not used
+            # for alias builds.
+            prescripts.append('ctypes_setup')
+
             if self.additional_paths:
                 prescripts.append('path_inject')
                 prescripts.append(
@@ -1753,7 +1760,7 @@ class py2app(Command):
 
             inc_dir = os.path.join(resdir, 'include', includedir)
             self.mkpath(inc_dir)
-            self.copy_file(get_config_h_filename(), 
+            self.copy_file(get_config_h_filename(),
                            os.path.join(inc_dir, 'pyconfig.h'))
 
 
