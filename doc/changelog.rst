@@ -4,7 +4,11 @@ Release history
 py2app 0.9
 ----------
 
--
+- pull request #4: Copying PySide plugins was broken due to bad
+  indentation.
+
+- pull request #5: py2app was broken for python versions that
+  don't use _sysconfigdata.
 
 py2app 0.8.1
 ------------
