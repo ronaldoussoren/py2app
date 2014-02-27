@@ -27,7 +27,7 @@ def _run_nibtool(source, destination):
         if os.WEXITSTATUS(status) != 0:
             raise RuntimeError("ibtool failed")
 
-_run_nibtool = None
+#_run_nibtool = None
 
 gTool = None
 def _get_ibtool():
@@ -55,7 +55,7 @@ def convert_xib(source, destination, dry_run=0):
         subprocess.check_call([_get_ibtool(), '--compile', destination, source])
     else:
         _run_nibtool(source, destination)
-    time.sleep(1)
+    #time.sleep(1)
 
 @converts(suffix=".nib")
 def convert_nib(source, destination, dry_run=0):
@@ -69,4 +69,4 @@ def convert_nib(source, destination, dry_run=0):
         subprocess.check_call([_get_ibtool, '--compile', destination, source])
     else:
         _run_nibtool(source, destination)
-    time.sleep(1)
+    #time.sleep(1)

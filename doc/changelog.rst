@@ -10,6 +10,8 @@ py2app 0.9
 - pull request #5: py2app was broken for python versions that
   don't use _sysconfigdata.
 
+- issue #135: Don't sleep for a second after compiling a XIB file
+
 py2app 0.8.1
 ------------
 
