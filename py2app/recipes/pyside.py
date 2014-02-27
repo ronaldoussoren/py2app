@@ -19,8 +19,8 @@ def check(cmd, mf):
         if '*' in item:
             for path in glob.glob(os.path.join(plugin_dir, item)):
                 resources.append((os.path.dirname('qt_plugins' + path[len(plugin_dir):]), [path]))
-            else:
-                resources.append((os.path.dirname(os.path.join('qt_plugins', item)), [os.path.join(plugin_dir, item)]))
+        else:
+            resources.append((os.path.dirname(os.path.join('qt_plugins', item)), [os.path.join(plugin_dir, item)]))
 
     # PySide dumps some of its shared files
     # into /usr/lib, which is a system location
