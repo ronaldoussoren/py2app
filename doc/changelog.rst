@@ -12,6 +12,9 @@ py2app 0.9
 
 - issue #135: Don't sleep for a second after compiling a XIB file
 
+- issue #134: Remove target location before copying files into
+  the bundle.
+
 py2app 0.8.1
 ------------
 

@@ -148,6 +148,9 @@ def _copy_file(source, destination, preserve_mode=False, preserve_times=False, u
     log.info("copying file %s -> %s", source, destination)
     with zipio.open(source, 'rb') as fp_in:
         if not dry_run:
+            if os.path.exists(destination):
+                os.unlink(destination)
+
             with open(destination, 'wb') as fp_out:
                 data = fp_in.read()
                 fp_out.write(data)
