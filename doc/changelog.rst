@@ -18,6 +18,25 @@ py2app 0.9
 - issue #133: Ensure that the application's "Framework" folder
   is on the search path for ``ctypes.util.find_library``.
 
+- issue #132: Depend on modulegraph 0.12 to avoid build errors
+  when the python code contains references to compatibility modules
+  that contain SyntaxErrors for the current python version.
+
+- Explicitly report modules that cannot be found at the end of
+  the run (for non-alias builds)
+
+  Note: This is just a warning, missing modules are not necessarily
+  a problem because modulegraph can detect imports for modules that
+  aren't used on OSX (for example)
+
+- Report modules that contain syntax errors at the end of
+  the run (for non-alias builds)
+
+  Note: This is just a warning, syntax errors be valid when the
+  dependency tree contains modules for the other major release
+  of python (e.g a compat_py2 module that contains compatibility
+  code for Python 2 and contains code that isn't valid Python 3)
+
 py2app 0.8.1
 ------------
 

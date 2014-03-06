@@ -14,6 +14,7 @@ import shlex
 import shutil
 import textwrap
 import pkg_resources
+from modulegraph import modulegraph
 
 from py2app.apptemplate.setup import main as script_executable
 from py2app.util import mergecopy, make_exec
@@ -945,6 +946,30 @@ class py2app(Command):
         py_files, extensions = self.finalize_modulefinder(mf)
         pkgdirs = self.collect_packagedirs()
         self.create_binaries(py_files, pkgdirs, extensions, loader_files)
+
+        missing = []
+        syntax_error = []
+        for module in mf.nodes():
+            if isinstance(module, modulegraph.MissingModule):
+                missing.append(module.identifier)
+            elif isinstance(module, modulegraph.InvalidSourceModule):
+                syntax_error.append(module.identifier)
+
+        if missing:
+            log.warn("Modules not found:")
+            for module in missing:
+                log.warn(" * %s"%(module))
+
+            log.warn("")
+
+        if syntax_error:
+            log.warn("Modules with syntax errors:")
+            for module in syntax_error:
+                log.warn(" * %s"%(module))
+
+            log.warn("")
+
+
 
     def create_directories(self):
         bdist_base = self.bdist_base
