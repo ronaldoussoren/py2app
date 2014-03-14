@@ -1,6 +1,12 @@
 import os
 import sys
-from macholib.util import has_filename_filter, in_system_path
+from modulegraph import modulegraph
+from macholib.util import in_system_path
+
+def has_filename_filter(module):
+    if isinstance(module, modulegraph.MissingModule):
+        return True
+    return getattr(module, 'filename', None) is not None
 
 def not_stdlib_filter(module, prefix=None):
     """
@@ -8,6 +14,9 @@ def not_stdlib_filter(module, prefix=None):
     """
     if prefix is None:
         prefix = sys.prefix
+    if module.filename is None:
+        return True
+
     prefix = os.path.join(os.path.realpath(prefix), '')
 
     rp = os.path.realpath(module.filename)
@@ -26,7 +35,7 @@ def not_stdlib_filter(module, prefix=None):
        if os.path.exists(fn):
            with open(fn, 'rU') as fp:
                prefix = fp.read().strip()
-           
+
            if rp.startswith(prefix):
                rest = rp[len(prefix):]
                if '/site-python/' in rest:

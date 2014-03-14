@@ -864,6 +864,8 @@ class py2app(Command):
             traceback.print_exc()
             pdb.post_mortem(sys.exc_info()[2])
 
+        print("Done!")
+
     def filter_dependencies(self, mf, filters):
         print("*** filtering dependencies ***")
         nodes_seen, nodes_removed, nodes_orphaned = mf.filterStack(filters)
@@ -877,7 +879,8 @@ class py2app(Command):
 
     def build_xref(self, mf, flatpackages):
         for target in self.targets:
-            appdir = target.appdir
+            base = target.get_dest_base()
+            appdir = os.path.join(self.dist_dir, os.path.dirname(base))
             appname = self.get_appname()
             dgraph = os.path.join(appdir, appname + '.html')
             print("*** creating dependency html: %s ***"
@@ -943,29 +946,42 @@ class py2app(Command):
         if self.xref:
             self.build_xref(mf, flatpackages)
 
+
         py_files, extensions = self.finalize_modulefinder(mf)
         pkgdirs = self.collect_packagedirs()
         self.create_binaries(py_files, pkgdirs, extensions, loader_files)
+
 
         missing = []
         syntax_error = []
         for module in mf.nodes():
             if isinstance(module, modulegraph.MissingModule):
-                missing.append(module.identifier)
+                if module.identifier != '__main__':
+                    missing.append(module)
             elif isinstance(module, modulegraph.InvalidSourceModule):
-                syntax_error.append(module.identifier)
+                syntax_error.append(module)
 
         if missing:
             log.warn("Modules not found:")
-            for module in missing:
-                log.warn(" * %s"%(module))
+            for module in sorted(missing):
+                #fromlist = [ (m.identifier if m is not None else '?') for m in mf.getReferers(module) ]
+                fromlist = [ m.identifier for m in mf.getReferers(module) if m is not None ]
+                if fromlist:
+                    log.warn(" * %s (imported from %s)"%(module.identifier, ", ".join(fromlist)))
+                #else:
+                #    # Don't report on missing modules that are not a
+                #    # dependency of some other module, those are ignored.
+                #    # XXX: This would still include missing modules that
+                #    #      are required by some other pruned module.
+                #    log.warn(" * %s"%(module.identifier))
+
 
             log.warn("")
 
         if syntax_error:
             log.warn("Modules with syntax errors:")
-            for module in syntax_error:
-                log.warn(" * %s"%(module))
+            for module in sorted(syntax_error):
+                log.warn(" * %s"%(module.identifier))
 
             log.warn("")
 

@@ -14,3 +14,4 @@ from . import virtualenv
 from . import pyside
 from . import wx
 from . import pyzmq
+from . import xml
