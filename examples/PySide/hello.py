@@ -1,5 +1,6 @@
 import sys
 from PySide import QtGui
+import platform
 
 # We instantiate a QApplication passing the arguments of the script to it:
 a = QtGui.QApplication(sys.argv)
