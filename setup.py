@@ -712,7 +712,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
     install_requires=[
-        "altgraph>=0.10.1",
+        "altgraph>=0.12",
         "modulegraph>=0.12",
         "macholib>=1.5",
     ],

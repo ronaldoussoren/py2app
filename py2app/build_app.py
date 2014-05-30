@@ -14,6 +14,7 @@ import shlex
 import shutil
 import textwrap
 import pkg_resources
+import collections
 from modulegraph import modulegraph
 
 from py2app.apptemplate.setup import main as script_executable
@@ -361,6 +362,8 @@ class py2app(Command):
         ("extra-scripts=", None, "set of scripts to include in the application bundle, next to the main application script"),
         ("include-plugins=", None, "List of plugins to include"),
         ("force-system-tk", None, "Ensure that Tkinter is linked against Apple's build of Tcl/Tk"),
+        ("report-missing-from-imports", None, "Report the list of missing names for 'from module import name'"),
+        ("no-report-missing-conditional-import", None, "Don't report missing modules when they appear to be conditional imports"),
     ]
 
     boolean_options = [
@@ -383,6 +386,8 @@ class py2app(Command):
         "prefer-ppc",
         "emulate-shell-environment",
         "force-system-tk",
+        "report-missing-from-imports",
+        "no-report-missing-conditional-import",
     ]
 
     def initialize_options (self):
@@ -431,6 +436,8 @@ class py2app(Command):
         self.extra_scripts = None
         self.include_plugins = None
         self.force_system_tk = False
+        self.report_missing_from_imports = False
+        self.no_report_missing_conditional_import = False
 
     def finalize_options (self):
         if not self.strip:
@@ -954,29 +961,75 @@ class py2app(Command):
 
         missing = []
         syntax_error = []
+        invalid_bytecode = []
         for module in mf.nodes():
             if isinstance(module, modulegraph.MissingModule):
                 if module.identifier != '__main__':
                     missing.append(module)
             elif isinstance(module, modulegraph.InvalidSourceModule):
                 syntax_error.append(module)
+            elif isinstance(module, modulegraph.InvalidCompiledModule):
+                invalid_bytecode.append(module)
 
         if missing:
-            log.warn("Modules not found:")
+            missing_unconditional = collections.defaultdict(set)
+            missing_fromimport = collections.defaultdict(set)
+            missing_fromimport_conditional = collections.defaultdict(set)
+            missing_conditional = collections.defaultdict(set)
+
+
             for module in sorted(missing):
-                #fromlist = [ (m.identifier if m is not None else '?') for m in mf.getReferers(module) ]
-                fromlist = [ m.identifier for m in mf.getReferers(module) if m is not None ]
-                if fromlist:
-                    log.warn(" * %s (imported from %s)"%(module.identifier, ", ".join(fromlist)))
-                #else:
-                #    # Don't report on missing modules that are not a
-                #    # dependency of some other module, those are ignored.
-                #    # XXX: This would still include missing modules that
-                #    #      are required by some other pruned module.
-                #    log.warn(" * %s"%(module.identifier))
+                for m in mf.getReferers(module):
+                    if m is None: continue # XXX
+
+                    try:
+                        ed = mf.edgeData(m, module)
+                    except KeyError:
+                        ed = None
+
+                    if isinstance(ed, modulegraph.DependencyInfo):
+                        c = missing_unconditional
+                        if ed.conditional or ed.function:
+                            if ed.get('from_import'):
+                                c = missing_fromimport_conditional
+                            else:
+                                c = missing_conditional
+
+                        elif ed.get('from_import'):
+                            c = missing_fromimport
+
+                        c[module.identifier].add(m.identifier)
+
+                    else:
+                        missing_unconditional[module.identifier].add(m.identifier)
+
+            if missing_unconditional:
+                log.warn("Modules not found (unconditional imports):")
+                for m in sorted(missing_unconditional):
+                    log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                log.warn("")
 
 
-            log.warn("")
+            if missing_conditional and not self.no_report_missing_conditional_import:
+                log.warn("Modules not found (conditional imports):")
+                for m in sorted(missing_conditional):
+                    log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_conditional[m]))))
+                log.warn("")
+
+            if self.report_missing_from_imports and (
+                    missing_fromimport or (
+                        not self.no_report_missing_conditional_import and missing_fromimport_conditional)):
+                log.warn("Modules not found ('from ... import y'):")
+                for m in sorted(missing_fromimport):
+                    log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_fromimport[m]))))
+
+                if not self.no_report_missing_conditional_import and missing_fromimport_conditional:
+                    log.warn("")
+                    log.warn("Conditional:")
+                    for m in sorted(missing_fromimport_conditional):
+                        log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_fromimport_conditional[m]))))
+
+                log.warn("")
 
         if syntax_error:
             log.warn("Modules with syntax errors:")
@@ -985,6 +1038,12 @@ class py2app(Command):
 
             log.warn("")
 
+        if invalid_bytecode:
+            log.warn("Modules with invalid bytecode:")
+            for module in sorted(invalid_bytecode):
+                log.warn(" * %s"%(module.identifier))
+
+            log.warn("")
 
 
     def create_directories(self):

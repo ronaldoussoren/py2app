@@ -19,9 +19,15 @@ plist = dict(
 )
 
 setup(
-    data_files=['English.lproj', 'data'],
-    app=[
-        dict(script="aliens_bootstrap.py", plist=plist),
-    ],
+    #data_files=['English.lproj', 'data'],
+    #app=[
+        #dict(script="aliens.py", plist=plist),
+    #],
+    app=["demo.py"],
     setup_requires=["py2app"],
+    options=dict(
+        py2app=dict(
+            arch="i386",
+        )
+    )
 )

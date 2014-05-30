@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 import random, os.path
 
@@ -8,7 +8,7 @@ from pygame.locals import *
 
 #see if we can load more than standard BMP
 if not pygame.image.get_extended():
-    raise SystemExit, "Sorry, extended image module required"
+    raise SystemExit("Sorry, extended image module required")
 
 
 #game constants
@@ -19,14 +19,15 @@ ALIEN_RELOAD   = 12     #frames between new aliens
 SCREENRECT     = Rect(0, 0, 640, 480)
 SCORE          = 0
 
+main_dir = os.path.split(os.path.abspath(__file__))[0]
 
 def load_image(file):
     "loads an image, prepares it for play"
-    file = os.path.join('data', file)
+    file = os.path.join(main_dir, 'data', file)
     try:
         surface = pygame.image.load(file)
     except pygame.error:
-        raise SystemExit, 'Could not load image "%s" %s'%(file, pygame.get_error())
+        raise SystemExit('Could not load image "%s" %s'%(file, pygame.get_error()))
     return surface.convert()
 
 def load_images(*files):
@@ -41,12 +42,12 @@ class dummysound:
 
 def load_sound(file):
     if not pygame.mixer: return dummysound()
-    file = os.path.join('data', file)
+    file = os.path.join(main_dir, 'data', file)
     try:
         sound = pygame.mixer.Sound(file)
         return sound
     except pygame.error:
-        print 'Warning, unable to load,', file
+        print ('Warning, unable to load, %s' % file)
     return dummysound()
 
 
@@ -68,10 +69,8 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(midbottom=SCREENRECT.midbottom)
         self.reloading = 0
-        self.rect.centerx = SCREENRECT.centerx
-        self.rect.bottom = SCREENRECT.bottom - 1
         self.origtop = self.rect.top
         self.facing = -1
 
@@ -83,7 +82,7 @@ class Player(pygame.sprite.Sprite):
             self.image = self.images[0]
         elif direction > 0:
             self.image = self.images[1]
-        self.rect.top = self.origtop - (self.rect.left/self.bounce%2)
+        self.rect.top = self.origtop - (self.rect.left//self.bounce%2)
 
     def gunpos(self):
         pos = self.facing*self.gun_offset + self.rect.centerx
@@ -110,7 +109,7 @@ class Alien(pygame.sprite.Sprite):
             self.rect.top = self.rect.bottom + 1
             self.rect = self.rect.clamp(SCREENRECT)
         self.frame = self.frame + 1
-        self.image = self.images[self.frame/self.animcycle%3]
+        self.image = self.images[self.frame//self.animcycle%3]
 
 
 class Explosion(pygame.sprite.Sprite):
@@ -120,13 +119,12 @@ class Explosion(pygame.sprite.Sprite):
     def __init__(self, actor):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
-        self.rect = self.image.get_rect()
+        self.rect = self.image.get_rect(center=actor.rect.center)
         self.life = self.defaultlife
-        self.rect.center = actor.rect.center
 
     def update(self):
         self.life = self.life - 1
-        self.image = self.images[self.life/self.animcycle%2]
+        self.image = self.images[self.life//self.animcycle%2]
         if self.life <= 0: self.kill()
 
 
@@ -136,8 +134,7 @@ class Shot(pygame.sprite.Sprite):
     def __init__(self, pos):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
-        self.rect = self.image.get_rect()
-        self.rect.midbottom = pos
+        self.rect = self.image.get_rect(midbottom=pos)
 
     def update(self):
         self.rect.move_ip(0, self.speed)
@@ -151,9 +148,8 @@ class Bomb(pygame.sprite.Sprite):
     def __init__(self, alien):
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
-        self.rect = self.image.get_rect()
-        self.rect.centerx = alien.rect.centerx
-        self.rect.bottom = alien.rect.bottom + 5
+        self.rect = self.image.get_rect(midbottom=
+                    alien.rect.move(0,5).midbottom)
 
     def update(self):
         self.rect.move_ip(0, self.speed)
@@ -184,7 +180,7 @@ def main(winstyle = 0):
     # Initialize pygame
     pygame.init()
     if pygame.mixer and not pygame.mixer.get_init():
-        print 'Warning, no sound'
+        print ('Warning, no sound')
         pygame.mixer = None
 
     # Set the display mode
@@ -220,7 +216,7 @@ def main(winstyle = 0):
     boom_sound = load_sound('boom.wav')
     shoot_sound = load_sound('car_door.wav')
     if pygame.mixer:
-        music = os.path.join('data', 'house_lo.wav')
+        music = os.path.join(main_dir, 'data', 'house_lo.wav')
         pygame.mixer.music.load(music)
         pygame.mixer.music.play(-1)
 
@@ -259,7 +255,7 @@ def main(winstyle = 0):
         for event in pygame.event.get():
             if event.type == QUIT or \
                 (event.type == KEYDOWN and event.key == K_ESCAPE):
-                return
+                    return
         keystate = pygame.key.get_pressed()
 
         # clear/erase the last drawn sprites
@@ -317,8 +313,10 @@ def main(winstyle = 0):
     if pygame.mixer:
         pygame.mixer.music.fadeout(1000)
     pygame.time.wait(1000)
+    pygame.quit()
 
 
 
 #call the "main" function if running this script
 if __name__ == '__main__': main()
+
