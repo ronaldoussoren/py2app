@@ -27,12 +27,12 @@ def _run():
     path = os.path.join(base, script)
     sys.argv[0] = __file__ = path
     if sys.version_info[0] == 2:
-        with open(script, 'rU') as fp:
+        with open(path, 'rU') as fp:
             source = fp.read() + "\n"
     else:
-        with open(script, 'rb') as fp:
+        with open(path, 'rb') as fp:
             encoding = guess_encoding(fp)
 
-        with open(script, 'r', encoding=encoding) as fp:
+        with open(path, 'r', encoding=encoding) as fp:
             source = fp.read() + '\n'
     exec(compile(source, path, 'exec'), globals(), globals())

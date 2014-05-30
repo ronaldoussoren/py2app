@@ -40,7 +40,9 @@ py2app 0.9
 py2app 0.8.1
 ------------
 
--
+- Loading scripts didn't work when --no-chdir was used
+
+  Reported by Barry Scott in private mail.
 
 py2app 0.8
 -----------
