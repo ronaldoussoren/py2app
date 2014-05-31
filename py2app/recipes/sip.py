@@ -34,10 +34,21 @@ class Sip(object):
         # cfg = sipconfig.Configuration()
         # qtdir = cfg.qt_lib_dir
 
-        ##new version for PyQt 4
-        from PyQt4 import pyqtconfig
-        cfg = pyqtconfig.Configuration()
-        qtdir = cfg.qt_lib_dir
+        try:
+            ##new version for PyQt 4
+            from PyQt4 import pyqtconfig
+            cfg = pyqtconfig.Configuration()
+            qtdir = cfg.qt_lib_dir
+            sipdir = os.path.dirname(cfg.pyqt_mod_dir)
+            self.plugin_dir = os.path.join(cfg.qt_dir, 'plugins')
+        except ImportError:
+            ##new version for PyQt 5
+            from PyQt5.QtCore import QLibraryInfo
+            qtdir = QLibraryInfo.location(QLibraryInfo.LibrariesPath)
+            self.plugin_dir = QLibraryInfo.location(QLibraryInfo.PluginsPath)
+            import sipconfig
+            sipdir = os.path.dirname(sipconfig.__file__)
+
         if not os.path.exists(qtdir):
             # half-broken installation? ignore.
             raise ImportError
@@ -49,16 +60,14 @@ class Sip(object):
             dyld_library_path.insert(0, qtdir)
             os.environ['DYLD_LIBRARY_PATH'] = ':'.join(dyld_library_path)
 
-        sipdir = os.path.dirname(cfg.pyqt_mod_dir)
         self.packages = set()
-        self.plugin_dir = os.path.join(cfg.qt_dir, 'plugins')
 
         for fn in os.listdir(sipdir):
             fullpath = os.path.join(sipdir, fn)
             if os.path.isdir(fullpath):
                 self.packages.add(fn)
-                if fn == 'PyQt4':
-                    # PyQt4 has a nested structure, also import
+                if fn in ('PyQt4', 'PyQt5'):
+                    # PyQt4 and later has a nested structure, also import
                     # subpackage to ensure everything get seen.
                     for sub in os.listdir(fullpath):
                         if ".py" not in sub:
@@ -87,6 +96,13 @@ class Sip(object):
                 ref = 'PyQt4.uic.port_v3'
             else:
                 ref = 'PyQt4.uic.port_v2'
+        if 'PyQt5.uic' in packages:
+            # ditto
+            if sys.version_info[0] == 2:
+                ref = 'PyQt5.uic.port_v3'
+            else:
+                ref = 'PyQt5.uic.port_v2'
+
 
             # Exclude...
             mf.lazynodes[ref] = None
@@ -108,7 +124,7 @@ class Sip(object):
             except ImportError as exc:
                 print("WARNING: ImportError in sip recipe ignored: %s"%(exc,))
 
-        if mf.findNode('PyQt4') is not None:
+        if mf.findNode('PyQt4') is not None or mf.findNode('PyQt5') is not None:
             resources = [pkg_resources.resource_filename('py2app', 'recipes/qt.conf')]
 
             for item in cmd.qt_plugins:
