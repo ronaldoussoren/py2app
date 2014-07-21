@@ -968,7 +968,7 @@ class py2app(Command):
                     missing.append(module)
             elif isinstance(module, modulegraph.InvalidSourceModule):
                 syntax_error.append(module)
-            elif isinstance(module, modulegraph.InvalidCompiledModule):
+            elif hasattr(modulegraph, 'InvalidCompiledModule') and isinstance(module, modulegraph.InvalidCompiledModule):
                 invalid_bytecode.append(module)
 
         if missing:
