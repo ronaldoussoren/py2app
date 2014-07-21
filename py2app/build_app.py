@@ -987,15 +987,15 @@ class py2app(Command):
                     except KeyError:
                         ed = None
 
-                    if isinstance(ed, modulegraph.DependencyInfo):
+                    if hasattr(modulegraph, 'DependencyInfo') and isinstance(ed, modulegraph.DependencyInfo):
                         c = missing_unconditional
                         if ed.conditional or ed.function:
-                            if ed.get('from_import'):
+                            if ed.fromlist:
                                 c = missing_fromimport_conditional
                             else:
                                 c = missing_conditional
 
-                        elif ed.get('from_import'):
+                        elif ed.fromlist:
                             c = missing_fromimport
 
                         c[module.identifier].add(m.identifier)
