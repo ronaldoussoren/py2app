@@ -4,6 +4,9 @@ Release history
 py2app 0.9
 ----------
 
+- pull request #7: Add support for PyQt5 to the sip recipe. Patch by
+  Mark Montague.
+
 - pull request #4: Copying PySide plugins was broken due to bad
   indentation.
 
