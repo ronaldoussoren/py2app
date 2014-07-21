@@ -1175,7 +1175,14 @@ class py2app(Command):
                         self.copy_file(os.path.join(prefix, rest_path), execdst)
 
                 else:
-                    self.copy_file(sys.executable, execdst)
+                    if PYTHONFRAMEWORK:
+                        # When we're using a python framework bin/python refers to a stub executable
+                        # that we don't want use, we need the executable in Resources/Python.app
+                        dpath = os.path.join(sys.prefix, 'Resources', 'Python.app', 'Contents', 'MacOS')
+                        self.copy_file(os.path.join(dpath, PYTHONFRAMEWORK), execdst)
+
+                    else:
+                        self.copy_file(sys.executable, execdst)
 
             if not self.debug_skip_macholib:
                 if self.force_system_tk:

@@ -4,6 +4,12 @@ Release history
 py2app 0.9
 ----------
 
+- issue #146, #147: The "python" binary in MyApp.app/Contents/MacOS was
+  the small stub exetable from framework builds, instead of the actual
+  command-line interpreter. The result is that you couldn't use
+  ``sys.executable`` to start a new interpreter, which (amongst others)
+  breaks multiprocessing.
+
 - pull request #7: Add support for PyQt5 to the sip recipe. Patch by
   Mark Montague.
 
