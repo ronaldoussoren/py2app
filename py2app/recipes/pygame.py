@@ -11,5 +11,4 @@ def check(cmd, mf):
             ('pygame', map(addpath, RESOURCES)),
         ],
     )
-    print 'XXX', result
     return result
