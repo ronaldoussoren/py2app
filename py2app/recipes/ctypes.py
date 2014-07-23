@@ -5,5 +5,5 @@ def check(cmd, mf):
         return None
 
     return dict(
-        #prescripts=['py2app.bootstrap.ctypes_setup'],
+        prescripts=['py2app.bootstrap.ctypes_setup'],
     )
