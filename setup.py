@@ -703,6 +703,8 @@ setup(
     description='Create standalone Mac OS X applications with Python',
     #author='Bob Ippolito',
     #author_email='bob@redivi.com',
+    author='Ronald Oussoren',
+    author_email="ronaldoussoren@mac.com",
     maintainer='Ronald Oussoren',
     maintainer_email="ronaldoussoren@mac.com",
     url='http://bitbucket.org/ronaldoussoren/py2app',
@@ -711,6 +713,7 @@ setup(
     platforms=['MacOS X'],
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
+    keywords=['.app', 'standalone'],
     install_requires=[
         "altgraph>=0.12",
         "modulegraph>=0.12",
@@ -780,6 +783,6 @@ setup(
 
     # py2app/build_app.py uses imp.find_module, and that won't work
     # with a zipped egg.
-    #zip_safe=False,
+    zip_safe=False,
     dependency_links=[], # workaround for setuptools 0.6b4 bug
 )
