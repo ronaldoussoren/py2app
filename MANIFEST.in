@@ -1,4 +1,5 @@
 include *.txt MANIFEST.in *.py
+recursive-include tools *.py
 graft doc
 graft doc/_static
 graft doc/_templates
@@ -8,12 +9,11 @@ graft py2app/bundletemplate
 graft examples
 global-exclude .DS_Store
 global-exclude *.pyc
+global-exclude *.pyo
 global-exclude *.so
 global-exclude *.dSYM
+global-exclude *.dSYM/*
 global-exclude *__pycache__*
-prune py2app/apptemplate/prebuilt/main*.dSYM
-prune py2app/bundletemplate/prebuilt/main*.dSYM
-prune py2app_tests/*.dSYM
 prune examples/*/build
 prune examples/*/dist
 prune examples/*/*/build
