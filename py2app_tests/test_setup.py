@@ -54,12 +54,20 @@ class TestSetupArguments (unittest.TestCase):
 
         # Invalid types for version
         for ver in [ (1, 0), [1, 1]]:
-            cmd = self.create_cmd(
-                name='py2app_test',
-                version=ver,
-                app=['main.py'],
-            )
-            self.assertRaises(DistutilsOptionError, cmd.get_default_plist)
+            try:
+                cmd = self.create_cmd(
+                    name='py2app_test',
+                    version=ver,
+                    app=['main.py'],
+                )
+            except TypeError:
+                # Workaround for bug in setuptools,
+                # see <https://bitbucket.org/pypa/setuptools/issue/379>
+                continue
+
+
+            else:
+                self.assertRaises(DistutilsOptionError, cmd.get_default_plist)
 
         if sys.version_info[0] > 2:
             # Avoid bytes version as well for Python 3.x
