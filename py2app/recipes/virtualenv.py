@@ -77,7 +77,13 @@ def check(cmd, mf):
 
         if mf.replace_paths:
             co = mf.replace_paths_in_code(co)
-        mf.scan_code(co, m)
+
+        # XXX: Recent versions of modulegraph made scan_code private,
+        # temporarily call the private version.
+        if hasattr(mf, 'scan_code'):
+            mf.scan_code(co, m)
+        else:
+            mf._scan_code(co, m)
 
         # That's not all there is to this, we need to look for
         # MissingModules in the distutils namespace as well and

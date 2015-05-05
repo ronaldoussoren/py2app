@@ -9,7 +9,10 @@ py2app 0.10
 py2app 0.9.1
 ------------
 
-- ?
+- The recipe for virtualenv calls a modulegraph method that was made
+  private in a recent release and hence no longer worked with py2app 0.9.
+
+  Update the recipe to work around this.
 
 py2app 0.9
 ----------
