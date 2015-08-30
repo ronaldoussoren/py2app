@@ -49,7 +49,12 @@ def retry_import(mf, m):
     else:
         m.__class__ = CompiledModule
 
-    m = mf.load_module(m.identifier, fp, pathname, stuff)
+    #making this match the code later on that checks whether scan_code needs a leading _
+    if hasattr(mf, 'load_module'):
+        m = mf.load_module(m.identifier, fp, pathname, stuff)
+    else:
+        m = mf._load_module(m.identifier, fp, pathname, stuff)
+
     if parent:
         mf.createReference(m, parent)
         parent[partname] = m
