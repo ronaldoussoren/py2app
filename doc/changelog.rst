@@ -9,12 +9,6 @@ py2app 0.10
 
   Update the recipe to work around this.
 
-py2app 0.9.1
-------------
-
-- ?
-
-
 py2app 0.9
 ----------
 
