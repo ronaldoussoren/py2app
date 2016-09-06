@@ -1894,8 +1894,11 @@ class py2app(Command):
                     continue
 
             dst = os.path.join(pydir, pkg_name)
-            self.mkpath(dst)
-            self.copy_tree(pkg, dst)
+            if os.path.isdir(pkg):
+                self.mkpath(dst)
+                self.copy_tree(pkg, dst)
+            else:
+                self.copy_file(pkg, dst + '.py')
 
             # FIXME: The python files should be bytecompiled
             #        here (see issue 101)
