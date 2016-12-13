@@ -662,6 +662,8 @@ class test (Command):
                 skip=len(getattr(result, 'skipped', [])),
             )
             print("SUMMARY: %s"%(summary,))
+            if summary['fails'] or summary['errors']:
+                sys.exit(1)
 
         finally:
             self.remove_from_sys_path()
@@ -715,7 +717,7 @@ setup(
     classifiers=CLASSIFIERS,
     keywords=['.app', 'standalone'],
     install_requires=[
-        "altgraph>=0.12",
+        "altgraph>=0.13",
         "modulegraph>=0.12",
         "macholib>=1.5",
     ],
