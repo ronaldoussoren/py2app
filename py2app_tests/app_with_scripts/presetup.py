@@ -1,7 +1,8 @@
 from distutils.core import setup, Extension, Command
 from distutils import sysconfig
 from distutils.command.build_ext import build_ext
-import os, shutil, re, subprocess
+from distutils.version import LooseVersion
+import os, shutil, re, subprocess, platform
 
 
 class my_build_ext (build_ext):
@@ -35,17 +36,25 @@ class build_dylib (Command):
 
         os.makedirs(bdir)
         cflags = self.get_arch_flags()
-        cc = sysconfig.get_config_var('CC')
+        if LooseVersion(platform.mac_ver()[0]) < LooseVersion('10.7'):
+            cc = [sysconfig.get_config_var('CC')]
+            env = dict(os.environ)
+            env['MACOSX_DEPLOYMENT_TARGET'] = sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
+        else:
+            cc = ['xcrun', 'clang']
+            env = dict(os.environ)
+            env['MACOSX_DEPLOYMENT_TARGET'] = sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
 
 
-        subprocess.check_call([cc] + cflags + [
+
+        subprocess.check_call(cc + cflags + [
             '-c', '-o', os.path.join(bdir, 'libfoo.o'),
-            'src/libfoo.c'])
+            'src/libfoo.c'], env=env)
 
         subprocess.check_call(['libtool',
             '-dynamic', '-o', os.path.join(bdir, 'libfoo.dylib'),
             '-install_name', os.path.abspath(os.path.join(bdir, 'libfoo.dylib')),
-            os.path.join(os.path.join(bdir, 'libfoo.o'))])
+            os.path.join(os.path.join(bdir, 'libfoo.o'))], env=env)
 
 setup(
     cmdclass = {

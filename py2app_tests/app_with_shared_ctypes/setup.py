@@ -2,6 +2,7 @@ from setuptools import setup, Command, Extension
 from distutils.command import build_ext as mod_build_ext
 
 from distutils.sysconfig import get_config_var
+from distutils.version import LooseVersion
 import subprocess
 import os
 import shutil
@@ -18,7 +19,7 @@ class sharedlib (Command):
     def finalize_options(self): pass
 
     def run(self):
-        if platform.mac_ver()[0] < '10.7.':
+        if LooseVersion(platform.mac_ver()[0]) < LooseVersion('10.7'):
             cc = [get_config_var('CC')]
             env = dict(os.environ)
             env['MACOSX_DEPLOYMENT_TARGET'] = get_config_var('MACOSX_DEPLOYMENT_TARGET')
