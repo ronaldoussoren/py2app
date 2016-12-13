@@ -16,3 +16,4 @@ from . import sip
 from . import virtualenv
 from . import wx
 from . import xml
+from . import pkg_resources
