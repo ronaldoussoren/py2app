@@ -12,6 +12,7 @@ import os
 import signal
 import plistlib
 import py2app
+from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -25,8 +26,11 @@ class TestBasicApp (unittest.TestCase):
     # a base-class.
     @classmethod
     def setUpClass(cls):
+        kill_child_processes()
+
         env=os.environ.copy()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
+        env['TMPDIR'] = os.getcwd()
         if 'PYTHONPATH' in env:
             env['PYTHONPATH'] = pp + ':' + env['PYTHONPATH']
         else:
@@ -38,7 +42,7 @@ class TestBasicApp (unittest.TestCase):
             cwd = cls.app_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            close_fds=True,
+            close_fds=False,
             env=env)
         lines = p.communicate()[0]
         if p.wait() != 0:

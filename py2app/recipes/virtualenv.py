@@ -72,7 +72,7 @@ def check(cmd, mf):
         # This is the virtualenv version
         mos = mf.findNode('os')
         if mos is None or mos.filename is None:
-            raise ValueError("Where is those os module")
+            raise ValueError("Where is the os module")
 
         m.filename = os.path.join(os.path.dirname(mos.filename), 'distutils', '__init__.py')
         with open(m.filename) as fp:

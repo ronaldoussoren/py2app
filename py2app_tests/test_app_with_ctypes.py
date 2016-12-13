@@ -12,6 +12,7 @@ import os
 import signal
 import py2app
 import hashlib
+from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -26,7 +27,10 @@ class TestBasicAppWithCTypes (unittest.TestCase):
     # a base-class.
     @classmethod
     def setUpClass(cls):
+        kill_child_processes()
+
         env=os.environ.copy()
+        env['TMPDIR'] = os.getcwd()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
         if 'PYTHONPATH' in env:
             env['PYTHONPATH'] = pp + ':' + env['PYTHONPATH']
@@ -43,12 +47,17 @@ class TestBasicAppWithCTypes (unittest.TestCase):
                 cwd = cls.app_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            close_fds=True,
+            close_fds=False,
             env=env
             )
         lines = p.communicate()[0]
         if p.wait() != 0:
             print (lines)
+            try:
+                os.waitpid(0, 0)
+            except os.error:
+                pass
+
             raise AssertionError("Running sharedlib failed")
 
         p = subprocess.Popen([
@@ -57,13 +66,22 @@ class TestBasicAppWithCTypes (unittest.TestCase):
             cwd = cls.app_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            close_fds=True,
+            close_fds=False,
             env=env
             )
         lines = p.communicate()[0]
         if p.wait() != 0:
             print (lines)
+            try:
+                os.waitpid(0, 0)
+            except os.error:
+                pass
             raise AssertionError("Creating basic_app bundle failed")
+
+        try:
+            os.waitpid(0, 0)
+        except os.error:
+            pass
 
     @classmethod
     def tearDownClass(cls):
@@ -90,10 +108,14 @@ class TestBasicAppWithCTypes (unittest.TestCase):
         p = subprocess.Popen([path],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                close_fds=True,
+                close_fds=False,
                 )
                 #stderr=subprocess.STDOUT)
         return p
+
+    def tearDown(self):
+        kill_child_processes()
+
 
     def wait_with_timeout(self, proc, timeout=10):
         for i in range(timeout):

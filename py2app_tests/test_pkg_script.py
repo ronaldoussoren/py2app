@@ -16,6 +16,7 @@ import os
 import signal
 import py2app
 import zipfile
+from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -31,7 +32,10 @@ class TestBasicApp (unittest.TestCase):
     # a base-class.
     @classmethod
     def setUpClass(cls):
+        kill_child_processes()
+
         env=os.environ.copy()
+        env['TMPDIR'] = os.getcwd()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
         if 'PYTHONPATH' in env:
             env['PYTHONPATH'] = pp + ':' + env['PYTHONPATH']
@@ -48,7 +52,7 @@ class TestBasicApp (unittest.TestCase):
             cwd = cls.app_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            close_fds=True,
+            close_fds=False,
             env=env
             )
         lines = p.communicate()[0]
@@ -64,6 +68,9 @@ class TestBasicApp (unittest.TestCase):
         if os.path.exists(os.path.join(cls.app_dir, 'dist')):
             shutil.rmtree(os.path.join(cls.app_dir, 'dist'))
 
+    def tearDown(self):
+        kill_child_processes()
+
     def start_app(self):
         # Start the test app, return a subprocess object where
         # stdin and stdout are connected to pipes.
@@ -74,7 +81,7 @@ class TestBasicApp (unittest.TestCase):
         p = subprocess.Popen([path],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                close_fds=True,
+                close_fds=False,
                 )
                 #stderr=subprocess.STDOUT)
         return p

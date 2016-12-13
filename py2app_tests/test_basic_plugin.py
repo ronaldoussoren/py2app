@@ -17,6 +17,7 @@ from distutils.sysconfig import get_config_var
 from distutils.version import LooseVersion
 import py2app
 import platform
+from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -31,6 +32,8 @@ class TestBasicPlugin (unittest.TestCase):
     # a base-class.
     @classmethod
     def setUpClass(cls):
+        kill_child_processes()
+
         try:
             if os.path.exists(os.path.join(cls.plugin_dir, 'build')):
                 shutil.rmtree(os.path.join(cls.plugin_dir, 'build'))
@@ -41,6 +44,7 @@ class TestBasicPlugin (unittest.TestCase):
             cmd = [ sys.executable, 'setup.py', 'py2app'] + cls.py2app_args
 
             env=os.environ.copy()
+            env['TMPDIR'] = os.getcwd()
             pp = os.path.dirname(os.path.dirname(py2app.__file__))
             if 'PYTHONPATH' in env:
                 env['PYTHONPATH'] = pp + ':' + env['PYTHONPATH']
@@ -56,11 +60,15 @@ class TestBasicPlugin (unittest.TestCase):
                 cwd = cls.plugin_dir,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                close_fds=True,
+                close_fds=False,
                 env=env)
             lines = p.communicate()[0]
             if p.wait() != 0:
                 print (lines)
+                try:
+                    os.waitpid(0, 0)
+                except os.error:
+                    pass
                 raise AssertionError("Creating basic_plugin bundle failed")
 
             p = subprocess.Popen([
@@ -69,6 +77,10 @@ class TestBasicPlugin (unittest.TestCase):
             lines = p.communicate()[0]
             xit = p.wait()
             if p.wait() != 0:
+                try:
+                    os.waitpid(0, 0)
+                except os.error:
+                    pass
                 raise AssertionError("Fetching Xcode root failed")
 
             root = lines.strip()
@@ -90,11 +102,20 @@ class TestBasicPlugin (unittest.TestCase):
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                close_fds=True)
+                close_fds=False)
             lines = p.communicate()[0]
             if p.wait() != 0:
                 print (lines)
+                try:
+                    os.waitpid(0, 0)
+                except os.error:
+                    pass
                 raise AssertionError("Creating bundle_loader failed")
+
+            try:
+                os.waitpid(0, 0)
+            except os.error:
+                pass
 
 
         except:
@@ -119,13 +140,16 @@ class TestBasicPlugin (unittest.TestCase):
                     os.path.join(self.plugin_dir,
                                 'dist/BasicPlugin.bundle'),
         ]
-        p = subprocess.Popen(cmd,
+        p = self._p = subprocess.Popen(cmd,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                close_fds=True,
+                close_fds=False,
                 )
                 #stderr=subprocess.STDOUT)
         return p
+
+    def tearDown(self):
+        kill_child_processes()
 
     def wait_with_timeout(self, proc, timeout=10):
         for i in range(timeout):

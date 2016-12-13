@@ -11,8 +11,10 @@ import time
 import os
 import signal
 from distutils.sysconfig import get_config_var
+from distutils.version import LooseVersion
 import py2app
 import platform
+from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -37,6 +39,7 @@ class TestBasicPlugin (unittest.TestCase):
             cmd = [ sys.executable, 'setup.py', 'py2app'] + cls.py2app_args
 
             env=os.environ.copy()
+            env['TMPDIR'] = os.getcwd()
             pp = os.path.dirname(os.path.dirname(py2app.__file__))
             if 'PYTHONPATH' in env:
                 env['PYTHONPATH'] = pp + ':' + env['PYTHONPATH']
@@ -52,7 +55,7 @@ class TestBasicPlugin (unittest.TestCase):
                 cwd = cls.plugin_dir,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                close_fds=True,
+                close_fds=False,
                 env=env)
             lines = p.communicate()[0]
             if p.wait() != 0:
@@ -71,7 +74,7 @@ class TestBasicPlugin (unittest.TestCase):
             if sys.version_info[0] != 2:
                 root = root.decode('utf-8')
 
-            if platform.mac_ver()[0] < '10.7.':
+            if LooseVersion(platform.mac_ver()[0]) < LooseVersion('10.7'):
                 cc = [get_config_var('CC')]
                 env = dict(os.environ)
                 env['MACOSX_DEPLOYMENT_TARGET'] = get_config_var('MACOSX_DEPLOYMENT_TARGET')
@@ -86,7 +89,7 @@ class TestBasicPlugin (unittest.TestCase):
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                close_fds=True)
+                close_fds=False)
             lines = p.communicate()[0]
             if p.wait() != 0:
                 print (lines)
@@ -108,6 +111,9 @@ class TestBasicPlugin (unittest.TestCase):
         if os.path.exists(os.path.join(cls.plugin_dir, 'dist')):
             shutil.rmtree(os.path.join(cls.plugin_dir, 'dist'))
 
+    def tearDown(self):
+        kill_child_processes()
+
     def start_app(self):
         # Start the test app, return a subprocess object where
         # stdin and stdout are connected to pipes.
@@ -118,7 +124,7 @@ class TestBasicPlugin (unittest.TestCase):
         p = subprocess.Popen(cmd,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                close_fds=True,
+                close_fds=False,
                 )
                 #stderr=subprocess.STDOUT)
         return p
@@ -142,7 +148,7 @@ class TestBasicPlugin (unittest.TestCase):
         p = subprocess.Popen([path],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                close_fds=True,
+                close_fds=False,
                 )
                 #stderr=subprocess.STDOUT)
         return p
@@ -198,6 +204,8 @@ class TestBasicPluginUnicodePath (TestBasicPlugin):
 
     @classmethod
     def setUpClass(cls):
+        kill_child_processes()
+
         try:
             if os.path.exists(cls.plugin_dir):
                 shutil.rmtree(cls.plugin_dir)

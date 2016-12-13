@@ -29,6 +29,7 @@ import os
 import signal
 import py2app
 import hashlib
+from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -69,6 +70,7 @@ class TestBasicApp (unittest.TestCase):
         cls.class_cleanup()
 
         env=os.environ.copy()
+        env['TMPDIR'] = os.getcwd()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
         if 'PYTHONPATH' in env:
             env['PYTHONPATH'] = pp + ':' + env['PYTHONPATH']
@@ -85,12 +87,17 @@ class TestBasicApp (unittest.TestCase):
             cwd = cls.app_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            close_fds=True,
+            close_fds=False,
             env=env
             )
         lines = p.communicate()[0]
         if p.wait() != 0:
             print (lines)
+            print("Creating basic_app extension failed")
+            try:
+                os.waitpid(0, 0)
+            except os.error:
+                pass
             raise AssertionError("Creating basic_app extension failed")
 
         p = subprocess.Popen([
@@ -99,13 +106,23 @@ class TestBasicApp (unittest.TestCase):
             cwd = cls.app_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            close_fds=True,
+            close_fds=False,
             env=env
             )
         lines = p.communicate()[0]
         if p.wait() != 0:
             print (lines)
+            print("Creating basic_app bundle failed")
+            try:
+                os.waitpid(0, 0)
+            except os.error:
+                pass
             raise AssertionError("Creating basic_app bundle failed")
+
+        try:
+            os.waitpid(0, 0)
+        except os.error:
+            pass
 
         cls.checksums = make_checksums(
                 os.path.join(cls.app_dir, 'dist/BasicApp.app'))
@@ -137,13 +154,17 @@ class TestBasicApp (unittest.TestCase):
                 self.app_dir,
             'dist/BasicApp.app/Contents/MacOS/BasicApp')
 
-        p = subprocess.Popen([path],
+        p = self._p = subprocess.Popen([path],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                close_fds=True,
+                close_fds=False,
                 )
                 #stderr=subprocess.STDOUT)
         return p
+
+    def tearDown(self):
+        kill_child_processes()
+
 
     def run_script(self, name):
         path = os.path.join(
@@ -153,7 +174,7 @@ class TestBasicApp (unittest.TestCase):
         p = subprocess.Popen([path],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
-                close_fds=True,
+                close_fds=False,
                 )
                 #stderr=subprocess.STDOUT)
         return p
@@ -297,6 +318,8 @@ class TestBasicAppUnicodePath (TestBasicApp):
 
     @classmethod
     def setUpClass(cls):
+        kill_child_processes()
+
         try:
             if os.path.exists(cls.app_dir):
                 shutil.rmtree(cls.app_dir)
