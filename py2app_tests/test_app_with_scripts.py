@@ -144,6 +144,9 @@ class TestBasicApp (unittest.TestCase):
         if os.path.exists(os.path.join(cls.app_dir, 'dist')):
             shutil.rmtree(os.path.join(cls.app_dir, 'dist'))
 
+        for fn in glob.glob(os.path.join(cls.app_dir, 'foo.*.so')):
+            os.unlink(fn)
+
         if os.path.exists(os.path.join(cls.app_dir, 'foo.so')):
             os.unlink(os.path.join(cls.app_dir, 'foo.so'))
 
