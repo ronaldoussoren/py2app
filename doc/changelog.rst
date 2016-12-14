@@ -16,6 +16,11 @@ py2app 0.10
 
 - Fix issue #201: py2app is not compatible with pyvenv virtualenvs
 
+- Fix issue #179: the stdout/stderr streams are no longer forwarded to console.app using ASL (by default),
+  use "--redirect-stdout-to-asl" to enable the redirection functionality.
+
+  Note that for unclear reasons the redirection doesn't work on OSX 10.12 at the moment.
+
 py2app 0.9
 ----------
 

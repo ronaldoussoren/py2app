@@ -364,6 +364,7 @@ class py2app(Command):
         ("force-system-tk", None, "Ensure that Tkinter is linked against Apple's build of Tcl/Tk"),
         ("report-missing-from-imports", None, "Report the list of missing names for 'from module import name'"),
         ("no-report-missing-conditional-import", None, "Don't report missing modules when they appear to be conditional imports"),
+        ("redirect-stdout-to-asl", None, "Forward the stdout/stderr streams to Console.app using the ASL library"),
     ]
 
     boolean_options = [
@@ -388,6 +389,7 @@ class py2app(Command):
         "force-system-tk",
         "report-missing-from-imports",
         "no-report-missing-conditional-import",
+        "redirect-stdout-to-asl",
     ]
 
     def initialize_options (self):
@@ -438,6 +440,7 @@ class py2app(Command):
         self.force_system_tk = False
         self.report_missing_from_imports = False
         self.no_report_missing_conditional_import = False
+        self.redirect_stdout_to_asl = False
         self._python_app = None
 
     def finalize_options (self):
@@ -1671,6 +1674,7 @@ class py2app(Command):
             plist=self.plist,
             extension=self.extension,
             arch=self.arch,
+            redirect_stdout=self.redirect_stdout_to_asl
         )
         appdir = fsencoding(appdir)
         resdir = os.path.join(appdir, 'Contents', 'Resources')
