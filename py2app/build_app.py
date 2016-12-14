@@ -15,6 +15,7 @@ import shutil
 import textwrap
 import pkg_resources
 import collections
+import types
 from modulegraph import modulegraph
 
 from py2app.apptemplate.setup import main as script_executable
@@ -1047,14 +1048,49 @@ class py2app(Command):
             if missing_unconditional:
                 log.warn("Modules not found (unconditional imports):")
                 for m in sorted(missing_unconditional):
-                    log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                    try:
+                        if '.' in m:
+                            m1, m2 = m.rsplit('.', 1)
+                            o = __import__(m1, fromlist=[m2])
+                            try:
+                                o = getattr(o, m2)
+                            except AttributeError:
+                                log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                                continue
+
+
+                        else:
+                            o = __import__(m)
+
+                        if isinstance(o, types.ModuleType):
+                            log.warn(" * %s (%s) [module alias]" % (m, ", ".join(sorted(missing_unconditional[m]))))
+
+                    except ImportError, exc:
+                        log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
                 log.warn("")
 
 
             if missing_conditional and not self.no_report_missing_conditional_import:
                 log.warn("Modules not found (conditional imports):")
                 for m in sorted(missing_conditional):
-                    log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_conditional[m]))))
+                    try:
+                        if '.' in m:
+                            m1, m2 = m.rsplit('.', 1)
+                            o = __import__(m1, fromlist=[m2])
+                            try:
+                                o = getattr(o, m2)
+                            except AttributeError:
+                                log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                                continue
+
+
+                        else:
+                            o = __import__(m)
+
+                        if isinstance(o, types.ModuleType):
+                            log.warn(" * %s (%s) [module alias]" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                    except ImportError:
+                        log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_conditional[m]))))
                 log.warn("")
 
             if self.report_missing_from_imports and (

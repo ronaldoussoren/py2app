@@ -28,6 +28,11 @@ py2app 0.10
 
 - py2applet now longer uses "argv_emulation" by default, that results in too many problems.
 
+- Issue #174: clean up the summary about missing modules by removing warnings about things that aren't modules.
+
+  Also notes when an module is likely an alias for some other module. These changes should remove a lot
+  of false postive warnings from the output of py2app.
+
 py2app 0.9
 ----------
 
