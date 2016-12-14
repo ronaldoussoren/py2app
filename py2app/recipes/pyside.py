@@ -8,7 +8,12 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-    from PySide import QtCore
+    try:
+        from PySide import QtCore
+    except ImportError:
+        print("WARNING: macholib found PySide, but cannot import")
+        return {}
+
     plugin_dir = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath)
 
     resources = [pkg_resources.resource_filename('py2app', 'recipes/qt.conf')]
@@ -27,7 +32,6 @@ def check(cmd, mf):
     # and those files are therefore not included
     # into the app bundle by default.
     from macholib.util import NOT_SYSTEM_FILES
-    NOT_SYSTEM_FILES
 
     import sys
     for fn in os.listdir('/usr/lib'):
