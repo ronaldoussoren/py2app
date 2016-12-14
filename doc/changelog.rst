@@ -26,6 +26,8 @@ py2app 0.10
   The package 'lxml.isoschematron' is not zip-safe and tries to load resources using the normal
   filesystem APIs, which doesn't work when the package is part of a zipfile.
 
+- py2applet now longer uses "argv_emulation" by default, that results in too many problems.
+
 py2app 0.9
 ----------
 

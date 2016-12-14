@@ -127,7 +127,7 @@ def main():
         packages=packages,
         plist=plist,
         iconfile=iconfile,
-        argv_emulation=True,
+        argv_emulation=False,
     )
     for k,v in list(options.items()):
         if not v:
