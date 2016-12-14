@@ -325,9 +325,9 @@ CLASSIFIERS = [
 
 
 if sys.version_info[0] == 3 or (sys.version_info[:2] >= (2,7)):
-    tests_require = []
+    tests_require = [ 'pyobjc']
 else:
-    tests_require = ['unittest2']
+    tests_require = ['unittest2', 'pyobjc' ]
 
 
 
