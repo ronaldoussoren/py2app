@@ -1,6 +1,6 @@
 #
 # LXML uses imports from C code (or actually Cython code)
-# and those cannot be detected by modulegraph. 
+# and those cannot be detected by modulegraph.
 # The check function adds the hidden imports to the graph
 #
 # The dependency list was extracted from lxml 3.0.2
@@ -25,6 +25,11 @@ def check(cmd, mf):
             mf.import_hook('copy_reg', m)
         else:
             mf.import_hook('copyreg', m)
+
+    m = mf.findNode('lxml.isoschematron')
+    if m is not None and m.filename is not None:
+        # Not zip-safe (see issue 118)
+        return dict(packages=['lxml'])
 
     return {}
 

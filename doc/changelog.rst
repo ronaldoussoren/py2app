@@ -21,6 +21,11 @@ py2app 0.10
 
   Note that for unclear reasons the redirection doesn't work on OSX 10.12 at the moment.
 
+- Fix issue #188: Troubles with lxml.isoschematron
+
+  The package 'lxml.isoschematron' is not zip-safe and tries to load resources using the normal
+  filesystem APIs, which doesn't work when the package is part of a zipfile.
+
 py2app 0.9
 ----------
 
