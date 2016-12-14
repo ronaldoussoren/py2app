@@ -14,6 +14,8 @@ py2app 0.10
 
   See `issue #177 in PyObjC's repository <https://bitbucket.org/ronaldoussoren/pyobjc/issues/177/on-python3-print-does-not-automatically>`_ for more information.
 
+- Fix issue #201: py2app is not compatible with pyvenv virtualenvs
+
 py2app 0.9
 ----------
 

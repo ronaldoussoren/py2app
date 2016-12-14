@@ -438,8 +438,36 @@ class py2app(Command):
         self.force_system_tk = False
         self.report_missing_from_imports = False
         self.no_report_missing_conditional_import = False
+        self._python_app = None
 
     def finalize_options (self):
+        if os.path.exists(os.path.join(sys.prefix, 'pyvenv.cfg')):
+            with open(os.path.join(sys.prefix, 'pyvenv.cfg')) as fp:
+                for line in fp:
+                    if line.startswith('home = '):
+                        _, home_path = line.split('=', 1)
+                        prefix = os.path.dirname(home_path.strip())
+                        break
+
+                else:
+                    raise DistutilsPlatformError('Pyvenv detected, but cannot determine base prefix')
+
+
+                self._python_app = os.path.join(prefix, 'Resources', 'Python.app')
+
+
+        elif os.path.exists(os.path.join(sys.prefix, ".Python")):
+            fn = os.path.join(sys.prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
+            if os.path.exists(fn):
+                with open(fn, 'rU') as fp:
+                    prefix = fp.read().strip()
+                    self._python_app = os.path.join(prefix, 'Resources', 'Python.app')
+            else:
+                raise DistutilsPlatformError('Virtualenv detected, but cannot determine base prefix')
+
+        else:
+            self._python_app = os.path.join(sys.prefix, 'Resources', 'Python.app')
+
         if not self.strip:
             self.no_strip = True
         elif self.no_strip:
@@ -510,7 +538,7 @@ class py2app(Command):
 
         if self.iconfile is None and 'CFBundleIconFile' not in self.plist:
             # Default is the generic applet icon in the framework
-            iconfile = os.path.join(sys.prefix, 'Resources', 'Python.app',
+            iconfile = os.path.join(self._python_app,
                 'Contents', 'Resources', 'PythonApplet.icns')
             if os.path.exists(iconfile):
                 self.iconfile = iconfile
@@ -568,7 +596,17 @@ class py2app(Command):
             version = sys.version
         version = version[:3]
         info = None
-        if os.path.exists(os.path.join(prefix, ".Python")):
+        if os.path.exists(os.path.join(prefix, "pyvenv.cfg")):
+                with open(os.path.join(prefix, "pyvenv.cfg")) as fp:
+                    for ln in fp:
+                        if ln.startswith('home = '):
+                            _, home_path = ln.split('=', 1)
+                            prefix = os.path.dirname(home_path.strip())
+                            break
+                    else:
+                        raise DistutilsPlatformError('Pyvenv detected, but cannot determine base prefix')
+
+        elif os.path.exists(os.path.join(prefix, ".Python")):
             # We're in a virtualenv environment, locate the real prefix
             fn = os.path.join(prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
             if os.path.exists(fn):
@@ -1154,7 +1192,13 @@ class py2app(Command):
             if self.semi_standalone:
                 self.symlink(sys.executable, execdst)
             else:
-                if os.path.exists(os.path.join(sys.prefix, ".Python")):
+                if PYTHONFRAMEWORK:
+                    # When we're using a python framework bin/python refers to a stub executable
+                    # that we don't want use, we need the executable in Resources/Python.app
+                    dpath = os.path.join(self._python_app, 'Contents', 'MacOS')
+                    self.copy_file(os.path.join(dpath, PYTHONFRAMEWORK), execdst)
+
+                elif os.path.exists(os.path.join(sys.prefix, ".Python")):
                     fn = os.path.join(sys.prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
                     if os.path.exists(fn):
                         with open(fn, 'rU') as fp:
@@ -1164,25 +1208,10 @@ class py2app(Command):
                     if rest_path.startswith('.'):
                         rest_path = rest_path[1:]
 
-                    if PYTHONFRAMEWORK:
-                        # When we're using a python framework bin/python refers to a stub executable
-                        # that we don't want use, we need the executable in Resources/Python.app
-                        dpath = os.path.join(prefix, 'Resources', 'Python.app', 'Contents', 'MacOS')
-                        self.copy_file(os.path.join(dpath, PYTHONFRAMEWORK), execdst)
-
-
-                    else:
-                        self.copy_file(os.path.join(prefix, rest_path), execdst)
+                    self.copy_file(os.path.join(prefix, rest_path), execdst)
 
                 else:
-                    if PYTHONFRAMEWORK:
-                        # When we're using a python framework bin/python refers to a stub executable
-                        # that we don't want use, we need the executable in Resources/Python.app
-                        dpath = os.path.join(sys.prefix, 'Resources', 'Python.app', 'Contents', 'MacOS')
-                        self.copy_file(os.path.join(dpath, PYTHONFRAMEWORK), execdst)
-
-                    else:
-                        self.copy_file(sys.executable, execdst)
+                    self.copy_file(sys.executable, execdst)
 
             if not self.debug_skip_macholib:
                 if self.force_system_tk:
@@ -1387,7 +1416,7 @@ class py2app(Command):
         if os.path.exists(outdir):
             # Python framework has already been created.
             return
-        
+
         self.mkpath(os.path.join(outdir, 'Resources'))
         pydir = 'python%s.%s'%(sys.version_info[:2])
 
