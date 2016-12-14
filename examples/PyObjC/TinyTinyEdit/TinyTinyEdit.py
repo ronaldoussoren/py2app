@@ -19,7 +19,7 @@ class TinyTinyDocument(NSDocument):
             self.path = path
         else:
             # "revert"
-            self.readFromUTF8(path)
+            self.readFromUTF8_(path)
         return True
 
     def writeToFile_ofType_(self, path, tp):
@@ -31,7 +31,7 @@ class TinyTinyDocument(NSDocument):
 
     def windowControllerDidLoadNib_(self, controller):
         if self.path:
-            self.readFromUTF8(self.path)
+            self.readFromUTF8_(self.path)
         else:
             if hasattr(sys, 'maxint'):
                 maxint = sys.maxint
@@ -43,7 +43,7 @@ class TinyTinyDocument(NSDocument):
             self.textView.setString_("Welcome to TinyTinyEdit in Python\nVersion: %s\nsys.%s: %d\nbyteorder: %s\nflags: %s"%(
                 sys.version, maxint_label, maxint, sys.byteorder, sys.flags))
 
-    def readFromUTF8(self, path):
+    def readFromUTF8_(self, path):
         f = file(path)
         text = unicode(f.read(), "utf8")
         f.close()
