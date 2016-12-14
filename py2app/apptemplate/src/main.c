@@ -894,6 +894,15 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
      */
     setenv("PYTHONDONTWRITEBYTECODE", "1", 1);
 
+#ifndef PY2APP_SECONDARY
+    /*
+     * Force stdout/stderr to be unbuffered, needed when using the ASL
+     * output redirection because Python 3's IO library won't use
+     * line buffering with that.
+     */
+    setenv("PYTHONUNBUFFERED", "1", 1);
+#endif
+
 
     if (!py2app_getApplicationName()) return report_error(ERR_NONAME);
     pyLocations = (CFArrayRef)py2app_getKey("PyRuntimeLocations");
