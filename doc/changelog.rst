@@ -35,6 +35,8 @@ py2app 0.10
 
 - Fix issue #161: opengl recipe uses "file" function that isn't present on Python 3
 
+- Add "qt5" recipe that does the right thing for the PyQt5 wheel on PyPI (tested with PyQt5 5.6)
+
 py2app 0.9
 ----------
 

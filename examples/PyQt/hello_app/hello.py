@@ -1,9 +1,6 @@
 import sys
 from PyQt5 import Qt
 
-print(Qt.__file__)
-print(dir(Qt))
-
 # We instantiate a QApplication passing the arguments of the script to it:
 a = Qt.QApplication(sys.argv)
 
