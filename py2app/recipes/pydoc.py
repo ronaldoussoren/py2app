@@ -5,10 +5,8 @@ def check(cmd, mf):
         return None
     refs = [
         'Tkinter', 'tty', 'BaseHTTPServer', 'mimetools', 'select',
-        'threading', 'ic', 'getopt', 'tkinter',
+        'threading', 'ic', 'getopt', 'tkinter', 'win32',
     ]
-    if sys.platform != 'win32':
-        refs.append('nturl2path')
     for ref in refs:
         mf.removeReference(m, ref)
     return dict()

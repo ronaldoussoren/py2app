@@ -12,7 +12,10 @@ import os
 import signal
 import py2app
 import hashlib
-from .tools import kill_child_processes
+if __name__ == "__main__":
+    from tools import kill_child_processes
+else:
+    from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -94,8 +97,11 @@ class TestEmailCompat (unittest.TestCase):
         if os.path.exists(os.path.join(cls.app_dir, 'dist')):
             shutil.rmtree(os.path.join(cls.app_dir, 'dist'))
 
+        time.sleep(2)
+
     def tearDown(self):
         kill_child_processes()
+        time.sleep(1)
 
     def start_app(self):
         # Start the test app, return a subprocess object where

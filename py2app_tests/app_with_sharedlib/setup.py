@@ -5,6 +5,7 @@ from distutils.sysconfig import get_config_var
 from distutils.version import LooseVersion
 import subprocess
 import os
+import glob
 import shutil
 import platform
 import shlex
@@ -78,11 +79,14 @@ class my_build_ext (mod_build_ext.build_ext):
 
         mod_build_ext.build_ext.run(self)
 
+        fns = glob.glob('square*.so')
+        assert len(fns) == 1
+
         subprocess.check_call([
             'install_name_tool', '-change',
                os.path.abspath('lib/libshared.1.dylib'),
                os.path.abspath('lib/libshared.dylib'),
-               'square.so'
+               fns[0]
             ])
 
 setup(

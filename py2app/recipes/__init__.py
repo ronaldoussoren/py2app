@@ -11,6 +11,7 @@ from . import pygame
 from . import pyopengl
 from . import pyside
 from . import pyzmq
+from . import qt5
 from . import scipy
 from . import sip
 from . import virtualenv

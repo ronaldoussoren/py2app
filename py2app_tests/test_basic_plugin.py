@@ -17,7 +17,10 @@ from distutils.sysconfig import get_config_var
 from distutils.version import LooseVersion
 import py2app
 import platform
-from .tools import kill_child_processes
+if __name__ == "__main__":
+    from tools import kill_child_processes
+else:
+    from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -133,6 +136,8 @@ class TestBasicPlugin (unittest.TestCase):
         if os.path.exists(os.path.join(cls.plugin_dir, 'dist')):
             shutil.rmtree(os.path.join(cls.plugin_dir, 'dist'))
 
+        time.sleep(2)
+
     def start_app(self):
         # Start the test app, return a subprocess object where
         # stdin and stdout are connected to pipes.
@@ -150,6 +155,7 @@ class TestBasicPlugin (unittest.TestCase):
 
     def tearDown(self):
         kill_child_processes()
+        time.sleep(1)
 
     def wait_with_timeout(self, proc, timeout=10):
         for i in range(timeout):

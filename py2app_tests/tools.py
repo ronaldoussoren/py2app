@@ -6,6 +6,7 @@ def kill_child_processes():
     ps_command = subprocess.Popen("ps -o pid,ppid -ax" , shell=True, stdout=subprocess.PIPE)
     ps_output = ps_command.stdout.read()
     retcode = ps_command.wait()
+    ps_command.stdout.close()
     if sys.version_info[0] != 2:
         ps_output = ps_output.decode('utf-8')
     for line in ps_output.splitlines():
@@ -19,6 +20,7 @@ def kill_child_processes():
     ps_command = subprocess.Popen("ps -ax", shell=True, stdout=subprocess.PIPE)
     ps_output = ps_command.stdout.read()
     retcode = ps_command.wait()
+    ps_command.stdout.close()
     if sys.version_info[0] != 2:
         ps_output = ps_output.decode('utf-8')
 

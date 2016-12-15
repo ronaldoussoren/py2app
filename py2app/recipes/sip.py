@@ -22,34 +22,27 @@ class Sip(object):
 
     def config(self):
         if self.packages is not None:
+            print("packages", self.packages)
             return self.packages
 
         import sipconfig, os
-        try:
-            set
-        except NameError:
-            from sets import Set as set
-
-        ##old version for PyQt/Qt 3
-        # cfg = sipconfig.Configuration()
-        # qtdir = cfg.qt_lib_dir
 
         try:
-            ##new version for PyQt 4
             from PyQt4 import pyqtconfig
+
             cfg = pyqtconfig.Configuration()
             qtdir = cfg.qt_lib_dir
             sipdir = os.path.dirname(cfg.pyqt_mod_dir)
             self.plugin_dir = os.path.join(cfg.qt_dir, 'plugins')
         except ImportError:
-            ##new version for PyQt 5
             from PyQt5.QtCore import QLibraryInfo
+
             qtdir = QLibraryInfo.location(QLibraryInfo.LibrariesPath)
             self.plugin_dir = QLibraryInfo.location(QLibraryInfo.PluginsPath)
-            import sipconfig
             sipdir = os.path.dirname(sipconfig.__file__)
 
         if not os.path.exists(qtdir):
+            print("sip: Qtdir %r does not exist"%(qtdir))
             # half-broken installation? ignore.
             raise ImportError
 
@@ -78,6 +71,7 @@ class Sip(object):
         #if "PyQt4.uic" in self.packages and sys.version_info.major != 3:
         #    print("WARNING: PyQt uic module found.")
         #    print("avoid python3 metaclass syntax errors by adding 'PyQt4.uic' to your excludes option.")
+        print("sip: packages: %s"%(self.packages,))
 
         return self.packages
 
@@ -85,7 +79,7 @@ class Sip(object):
         try:
             packages = self.config()
         except ImportError:
-            return dict()
+            return None
 
         if 'PyQt4.uic' in packages:
             # PyQt4.uic contains subpackages with python 2 and python 3
@@ -96,6 +90,7 @@ class Sip(object):
                 ref = 'PyQt4.uic.port_v3'
             else:
                 ref = 'PyQt4.uic.port_v2'
+
         if 'PyQt5.uic' in packages:
             # ditto
             if sys.version_info[0] == 2:
@@ -111,7 +106,9 @@ class Sip(object):
             m = mf.findNode(pkg)
             if m is not None and m.filename is not None:
                 break
+
         else:
+            print("sip: No sip package used in application")
             return None
 
         mf.import_hook('sip', m)
@@ -124,6 +121,8 @@ class Sip(object):
             except ImportError as exc:
                 print("WARNING: ImportError in sip recipe ignored: %s"%(exc,))
 
+        print(mf.findNode("PyQt4"))
+        print(mf.findNode("PyQt5"))
         if mf.findNode('PyQt4') is not None or mf.findNode('PyQt5') is not None:
             resources = [pkg_resources.resource_filename('py2app', 'recipes/qt.conf')]
 
@@ -137,8 +136,10 @@ class Sip(object):
                 else:
                     resources.append((os.path.dirname(os.path.join('qt_plugins', item)), [os.path.join(self.plugin_dir, item)]))
 
+            print("PyQt resources", resources)
             return dict(resources=resources)
 
+        print("Return {}")
         return dict()
 
 check = Sip().check

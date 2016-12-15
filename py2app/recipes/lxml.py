@@ -31,5 +31,8 @@ def check(cmd, mf):
         # Not zip-safe (see issue 118)
         return dict(packages=['lxml'])
 
+    if mf.findNode('lxml') is None:
+        return None
+
     return {}
 

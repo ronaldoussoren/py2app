@@ -8,5 +8,6 @@ from distutils.core import setup
 import py2app
 
 setup(
+    setup_requires=['py2app', 'PyQt5'],
     app=["hello.py"],
 )

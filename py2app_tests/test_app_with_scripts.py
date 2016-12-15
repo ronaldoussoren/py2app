@@ -29,7 +29,11 @@ import os
 import signal
 import py2app
 import hashlib
-from .tools import kill_child_processes
+import glob
+if __name__ == "__main__":
+    from tools import kill_child_processes
+else:
+    from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -92,7 +96,7 @@ class TestBasicApp (unittest.TestCase):
             )
         lines = p.communicate()[0]
         if p.wait() != 0:
-            print (lines)
+            sys.stdout.write(lines)
             print("Creating basic_app extension failed")
             try:
                 os.waitpid(0, 0)
@@ -150,6 +154,8 @@ class TestBasicApp (unittest.TestCase):
         if os.path.exists(os.path.join(cls.app_dir, 'foo.so')):
             os.unlink(os.path.join(cls.app_dir, 'foo.so'))
 
+        time.sleep(2)
+
     def start_app(self):
         # Start the test app, return a subprocess object where
         # stdin and stdout are connected to pipes.
@@ -167,6 +173,7 @@ class TestBasicApp (unittest.TestCase):
 
     def tearDown(self):
         kill_child_processes()
+        time.sleep(1)
 
 
     def run_script(self, name):

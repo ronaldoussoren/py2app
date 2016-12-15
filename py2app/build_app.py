@@ -865,6 +865,7 @@ class py2app(Command):
             for name, check in rdict.items():
                 rval = check(self, mf)
                 if rval is None:
+                    print("--- Skipping recipe %s ---" % (name,))
                     continue
                 # we can pull this off so long as we stop the iter
                 del rdict[name]
