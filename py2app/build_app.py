@@ -952,7 +952,12 @@ class py2app(Command):
     def finalize_modulefinder(self, mf):
         for item in mf.flatten():
             if isinstance(item, Package) and item.filename == '-':
-                if sys.version_info[:2] <= (3,3):
+                # In python3.3 or later the default importer supports namespace
+                # packages without an __init__ file, don't use that funcionality
+                # because that causes problems with our suppport for loading
+                # C extensions.
+                #if sys.version_info[:2] <= (3,3):
+                if 1:
                     fn = os.path.join(self.temp_dir, 'empty_package', '__init__.py')
                     if not os.path.exists(fn):
                         dn = os.path.dirname(fn)
