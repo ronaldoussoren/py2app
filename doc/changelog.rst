@@ -33,6 +33,8 @@ py2app 0.10
   Also notes when an module is likely an alias for some other module. These changes should remove a lot
   of false postive warnings from the output of py2app.
 
+- Fix issue #161: opengl recipe uses "file" function that isn't present on Python 3
+
 py2app 0.9
 ----------
 
