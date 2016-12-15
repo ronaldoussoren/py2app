@@ -34,4 +34,9 @@ def _run():
         with open(script, 'r', encoding=encoding) as fp:
             source = fp.read() + '\n'
 
+        BOM=b'\xef\xbb\xbf'.decode('utf-8')
+        if source.startswith(BOM):
+            source = source[1:]
+
+
     exec(compile(source, script, 'exec'), globals(), globals())
