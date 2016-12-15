@@ -1,6 +1,6 @@
-from PyQt5.QtCore import QUrl
-from PyQt5.QtGui import QPushButton, QApplication
-from PyQt5.QtDeclarative import QDeclarativeView
+from PyQt4.QtCore import QUrl
+from PyQt4.QtGui import QPushButton, QApplication
+from PyQt4.QtDeclarative import QDeclarativeView
 
 # This example uses a QML file to show a scrolling list containing
 # all the items listed into dataList.
