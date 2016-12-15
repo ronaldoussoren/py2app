@@ -1065,7 +1065,7 @@ class py2app(Command):
                         if isinstance(o, types.ModuleType):
                             log.warn(" * %s (%s) [module alias]" % (m, ", ".join(sorted(missing_unconditional[m]))))
 
-                    except ImportError, exc:
+                    except ImportError:
                         log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
                 log.warn("")
 

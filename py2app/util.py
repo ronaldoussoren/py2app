@@ -373,10 +373,16 @@ byte_compile(files, optimize=%r, force=%r,
             else:
                 cfile = mod.identifier.replace('.', os.sep)
 
-                if mod.packagepath:
-                    dfile = cfile + os.sep + '__init__.py' + (__debug__ and 'c' or 'o')
+                if sys.version_info[:2] <= (3, 4):
+                    if mod.packagepath:
+                        dfile = cfile + os.sep + '__init__.py' + (__debug__ and 'c' or 'o')
+                    else:
+                        dfile = cfile + '.py' + (__debug__ and 'c' or 'o')
                 else:
-                    dfile = cfile + '.py' + (__debug__ and 'c' or 'o')
+                    if mod.packagepath:
+                        dfile = cfile + os.sep + '__init__.pyc'
+                    else:
+                        dfile = cfile + '.pyc'
             if target_dir:
                 cfile = os.path.join(target_dir, dfile)
 
