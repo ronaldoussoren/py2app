@@ -3,7 +3,7 @@ import sys, os
 import pprint
 import PIL.Image
 
-PATH="/Library/Application Support/Carbonite/CarboniteAlerts.app/Contents/Resources/background_left_illustration.jpg"
+PATH="/System/Library//Automator/Crop Images.action/Contents/Resources/shark-tall-no-scale.jpg"
 
 print("globals() is %r" % id(globals()))
 def somefunc():
@@ -24,4 +24,3 @@ if __name__ == '__main__':
     img = PIL.Image.open(PATH)
     print(type(img))
     print(img.size)
-    pprint.pprint(list(sorted(sys.modules.keys())))
