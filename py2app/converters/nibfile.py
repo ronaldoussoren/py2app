@@ -25,7 +25,7 @@ def _run_nibtool(source, destination):
     else:
         pid, status = os.waitpid(pid, 0)
         if os.WEXITSTATUS(status) != 0:
-            raise RuntimeError("ibtool failed")
+            raise RuntimeError("ibtool failed (%r -> %r)"%(source, destination))
 
 #_run_nibtool = None
 
