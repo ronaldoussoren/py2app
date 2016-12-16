@@ -65,6 +65,21 @@ def check(cmd, mf):
     if sip is not None:
         mf.removeReference(sip, 'ImageTk')
 
+    # The ImageQt plugin should only be usefull when using PyQt, which
+    # would then be explicitly imported.
+    # Note: this code doesn't have the right side-effect at the moment
+    # due to the way the PyQt5 recipe is structured.
+    sip = mf.findNode('PIL.ImageQt')
+    if sip is not None:
+        mf.removeReference(sip, 'PyQt5')
+        mf.removeReference(sip, 'PyQt5.QtGui')
+        mf.removeReference(sip, 'PyQt5.QtCore')
+
+        mf.removeReference(sip, 'PyQt4')
+        mf.removeReference(sip, 'PyQt4.QtGui')
+        mf.removeReference(sip, 'PyQt4.QtCore')
+        pass
+
     return dict(
         prescripts = ['py2app.recipes.PIL.prescript', s],
         include = "PIL.JpegPresets", # Dodgy import from PIL.JpegPlugin in Pillow 2.0
