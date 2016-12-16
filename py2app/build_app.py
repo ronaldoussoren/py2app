@@ -158,9 +158,22 @@ def framework_copy_condition(src):
     return skipscm(src) and os.path.basename(src) != 'Headers'
 
 class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
-    def __init__(self, appbuilder, *args, **kwargs):
+    def __init__(self, appbuilder, ext_dir, copyexts, *args, **kwargs):
         super(PythonStandalone, self).__init__(*args, **kwargs)
         self.appbuilder = appbuilder
+        self.ext_map = {}
+        for e in copyexts:
+            fn = os.path.join(ext_dir,
+                (e.identifier.replace('.', os.sep) +
+                os.path.splitext(e.filename)[1])
+            )
+            self.ext_map[fn] = os.path.dirname(e.filename)
+
+    def update_node(self, m):
+        if isinstance(m, macholib.MachO.MachO):
+            if m.filename in self.ext_map:
+                m.loader_path = self.ext_map[m.filename]
+        return m
 
     def copy_dylib(self, src):
         dest = os.path.join(self.dest, os.path.basename(src))
@@ -180,6 +193,8 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
 
         else:
             dest = os.path.join(self.dest, os.path.basename(src))
+
+        self.ext_map[dest] = os.path.dirname(src)
         return self.appbuilder.copy_dylib(src, dest)
 
     def copy_framework(self, info):
@@ -1230,6 +1245,7 @@ class py2app(Command):
             extra_scripts = list(self.extra_scripts)
             if hasattr(target, 'extra_scripts'):
                 extra_scripts.extend(target.extra_scripts)
+
             dst = self.build_executable(
                 target, arcname, pkgexts, copyexts, target.script, extra_scripts)
             exp = os.path.join(dst, 'Contents', 'MacOS')
@@ -1271,7 +1287,13 @@ class py2app(Command):
                         print("tkinter not found at", tkinter_path)
 
 
-                mm = PythonStandalone(self, dst, executable_path=exp)
+                mm = PythonStandalone(
+                        appbuilder=self,
+                        base=dst,
+                        ext_dir=os.path.join(dst, 'Contents', 'Resources', 'lib', 'python%s.%s'%(sys.version_info[:2]), 'lib-dynload'),
+                        copyexts=copyexts,
+                        executable_path=exp)
+
                 dylib, runtime = self.get_runtime()
                 if self.semi_standalone:
                     mm.excludes.append(runtime)

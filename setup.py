@@ -719,7 +719,7 @@ setup(
     install_requires=[
         "altgraph>=0.13",
         "modulegraph>=0.12",
-        "macholib>=1.5",
+        "macholib>=1.8",
     ],
     tests_require=tests_require,
     cmdclass=cmdclass,
