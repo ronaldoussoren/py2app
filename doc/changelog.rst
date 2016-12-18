@@ -37,6 +37,11 @@ py2app 0.10
 
 - Add "qt5" recipe that does the right thing for the PyQt5 wheel on PyPI (tested with PyQt5 5.6)
 
+- Add support for "@loader_path" in the link commands of C extension.
+
+  This makes it possible to use wheels that were processed by `delocate-listdeps <https://github.com/matthew-brett/delocate>`_
+  when building application bundles.
+
 py2app 0.9
 ----------
 
