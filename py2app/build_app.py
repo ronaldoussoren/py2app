@@ -74,6 +74,13 @@ try:
 except NameError:
     basestring = str
 
+if hasattr(sys, 'real_prefix'):
+    sys_base_prefix = sys.real_prefix
+elif hasattr(sys, 'base_prefix'):
+    sys_base_prefix = sys.base_prefix
+else:
+    sys_base_prefix = sys.prefix
+
 def rewrite_tkinter_load_commands(tkinter_path):
     print("rewrite_tk", tkinter_path)
     m = macholib.MachO.MachO(tkinter_path)
@@ -460,7 +467,10 @@ class py2app(Command):
         self._python_app = None
 
     def finalize_options (self):
-        if os.path.exists(os.path.join(sys.prefix, 'pyvenv.cfg')):
+        if sys_base_prefix != sys.prefix:
+            self._python_app = os.path.join(sys_base_prefix, 'Resources', 'Python.app')
+
+        elif os.path.exists(os.path.join(sys.prefix, 'pyvenv.cfg')):
             with open(os.path.join(sys.prefix, 'pyvenv.cfg')) as fp:
                 for line in fp:
                     if line.startswith('home = '):
@@ -615,7 +625,10 @@ class py2app(Command):
             version = sys.version
         version = version[:3]
         info = None
-        if os.path.exists(os.path.join(prefix, "pyvenv.cfg")):
+        if sys_base_prefix != sys.prefix:
+            prefix = sys_base_prefix
+
+        elif os.path.exists(os.path.join(prefix, "pyvenv.cfg")):
                 with open(os.path.join(prefix, "pyvenv.cfg")) as fp:
                     for ln in fp:
                         if ln.startswith('home = '):
