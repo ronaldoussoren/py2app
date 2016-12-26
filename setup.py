@@ -718,7 +718,7 @@ setup(
     keywords=['.app', 'standalone'],
     install_requires=[
         "altgraph>=0.13",
-        "modulegraph>=0.12",
+        "modulegraph>=0.13",
         "macholib>=1.8",
     ],
     tests_require=tests_require,
