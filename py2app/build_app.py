@@ -2109,3 +2109,9 @@ class py2app(Command):
             not self.force,
             dry_run=self.dry_run,
             condition=condition)
+
+    def copy_file(self, infile, outfile):
+        """
+        This version doesn't bork on existing symlinks
+        """
+        return copy_file(infile, outfile)
