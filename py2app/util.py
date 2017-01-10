@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import os, sys, imp, time, errno, stat
+import os, sys, imp, time, errno, stat, filecmp
 from modulegraph.find_modules import PY_SUFFIXES, C_SUFFIXES
 from modulegraph.util import *
 from modulegraph import zipio
@@ -123,9 +123,7 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
     else:
         if symlink:
             if not dry_run:
-                if os.path.exists(destination):
-                    os.unlink(destination)
-                os.symlink(os.path.abspath(source), destination)
+                make_symlink(os.path.abspath(source), destination)
 
         else:
             copy_file(source, destination, dry_run=dry_run, preserve_mode=True)
@@ -148,6 +146,8 @@ def _copy_file(source, destination, preserve_mode=False, preserve_times=False, u
     log.info("copying file %s -> %s", source, destination)
     with zipio.open(source, 'rb') as fp_in:
         if not dry_run:
+            if os.path.isdir(destination):
+                destination = os.path.join(destination, os.path.basename(source))
             if os.path.exists(destination):
                 os.unlink(destination)
 
@@ -170,6 +170,11 @@ def _copy_file(source, destination, preserve_mode=False, preserve_times=False, u
                 mtime = zipio.getmtime(source)
                 os.utime(destination, (mtime, mtime))
 
+def make_symlink(source, target):
+    if os.path.islink(target):
+        os.unlink(target)
+
+    os.symlink(source, target)
 
 def newer(source, target):
     """
@@ -548,6 +553,11 @@ def copy_tree(src, dst,
         if (condition is not None) and (not condition(src_name)):
             continue
 
+        # Note: using zipio's internal _locate function throws an IOError on
+        # dead symlinks, so handle it here.
+        if os.path.islink(src_name) and not os.path.exists(os.readlink(src_name)):
+            continue
+
         if preserve_symlinks and zipio.islink(src_name):
             link_dest = zipio.readlink(src_name)
             log.info("linking %s -> %s", dst_name, link_dest)
@@ -555,9 +565,7 @@ def copy_tree(src, dst,
                 if update and not newer(src, dst_name):
                     pass
                 else:
-                    if os.path.islink(dst_name):
-                        os.remove(dst_name)
-                    os.symlink(link_dest, dst_name)
+                    make_symlink(link_dest, dst_name)
             outputs.append(dst_name)
 
         elif zipio.isdir(src_name) and not os.path.isfile(src_name):

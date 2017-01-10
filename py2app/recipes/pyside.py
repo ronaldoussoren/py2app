@@ -1,6 +1,8 @@
-import pkg_resources
+# since pkg_resources.py lives next to this file, we need to disambiguate the import
+from __future__ import absolute_import
 import glob
 import os
+import pkg_resources
 
 def check(cmd, mf):
     name = 'PySide'

@@ -50,7 +50,7 @@ from py2app.util import \
     fancy_split, byte_compile, make_loader, imp_find_module, \
     copy_tree, fsencoding, strip_files, in_system_path, makedirs, \
     iter_platform_files, find_version, skipscm, momc, copy_file, \
-    copy_resource
+    copy_resource, make_symlink
 from py2app.filters import \
     not_stdlib_filter, not_system_filter, has_filename_filter
 from py2app import recipes
@@ -189,7 +189,7 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
             #       files of the same name in a per-package install location.
             link_dest = os.path.join(self.dest, os.path.basename(src))
             if os.path.basename(link_dest) != os.path.basename(dest):
-                os.symlink(os.path.basename(dest), link_dest)
+                make_symlink(os.path.basename(dest), link_dest)
 
         else:
             dest = os.path.join(self.dest, os.path.basename(src))
@@ -648,13 +648,6 @@ class py2app(Command):
 
         return dylib, runtime
 
-    def symlink(self, src, dst):
-        try:
-            os.remove(dst)
-        except OSError:
-            pass
-        os.symlink(src, dst)
-
     def get_runtime_preferences(self, prefix=None, version=None):
         dylib, runtime = self.get_runtime(prefix=prefix, version=version)
         yield os.path.join('@executable_path', '..', 'Frameworks', dylib)
@@ -1072,8 +1065,8 @@ class py2app(Command):
                     try:
                         if '.' in m:
                             m1, m2 = m.rsplit('.', 1)
-                            o = __import__(m1, fromlist=[m2])
                             try:
+                                o = __import__(m1, fromlist=[m2])
                                 o = getattr(o, m2)
                             except AttributeError:
                                 log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
@@ -1251,7 +1244,7 @@ class py2app(Command):
             exp = os.path.join(dst, 'Contents', 'MacOS')
             execdst = os.path.join(exp, 'python')
             if self.semi_standalone:
-                self.symlink(sys.executable, execdst)
+                make_symlink(sys.executable, execdst)
             else:
                 if PYTHONFRAMEWORK:
                     # When we're using a python framework bin/python refers to a stub executable
@@ -1489,15 +1482,15 @@ class py2app(Command):
 
         # Create a symlink "for Python.frameworks/Versions/Current". This
         # is required for the Mac App-store.
-        os.symlink(
+        make_symlink(
                 os.path.basename(outdir),
                 os.path.join(os.path.dirname(outdir), "Current"))
 
         # Likewise for two links in the root of the framework:
-        os.symlink(
+        make_symlink(
             'Versions/Current/Resources',
             os.path.join(os.path.dirname(os.path.dirname(outdir)), 'Resources'))
-        os.symlink(
+        make_symlink(
             os.path.join('Versions/Current', PYTHONFRAMEWORK),
             os.path.join(os.path.dirname(os.path.dirname(outdir)), PYTHONFRAMEWORK))
 
@@ -1772,17 +1765,17 @@ class py2app(Command):
             pyExecutable = prefixPathExecutable
         else:
             pyExecutable = sys.executable
-        self.symlink(pyExecutable, execdst)
+        make_symlink(pyExecutable, execdst)
 
         # make PYTHONHOME
         pyhome = os.path.join(resdir, 'lib', 'python' + sys.version[:3])
         realhome = os.path.join(sys.prefix, 'lib', 'python' + sys.version[:3])
         makedirs(pyhome)
         if self.optimize:
-            self.symlink('../../site.pyo', os.path.join(pyhome, 'site.pyo'))
+            make_symlink('../../site.pyo', os.path.join(pyhome, 'site.pyo'))
         else:
-            self.symlink('../../site.pyc', os.path.join(pyhome, 'site.pyc'))
-        self.symlink(
+            make_symlink('../../site.pyc', os.path.join(pyhome, 'site.pyc'))
+        make_symlink(
             os.path.join(realhome, 'config'),
             os.path.join(pyhome, 'config'))
 
@@ -1822,7 +1815,7 @@ class py2app(Command):
             if src == dest:
                 continue
             makedirs(os.path.dirname(dest))
-            self.symlink(os.path.abspath(src), dest)
+            make_symlink(os.path.abspath(src), dest)
 
         self.compile_datamodels(resdir)
         self.compile_mappingmodels(resdir)
@@ -1945,15 +1938,15 @@ class py2app(Command):
         #    late on sys.path to be found in that case).
         #
         if self.optimize:
-            self.symlink('../../site.pyo', os.path.join(pydir, 'site.pyo'))
+            make_symlink('../../site.pyo', os.path.join(pydir, 'site.pyo'))
         else:
-            self.symlink('../../site.pyc', os.path.join(pydir, 'site.pyc'))
+            make_symlink('../../site.pyc', os.path.join(pydir, 'site.pyc'))
         cfgdir = os.path.join(pydir, configdir)
         realcfg = os.path.join(realhome, configdir)
         real_include = os.path.join(sys.prefix, 'include')
         if self.semi_standalone:
-            self.symlink(realcfg, cfgdir)
-            self.symlink(real_include, os.path.join(resdir, 'include'))
+            make_symlink(realcfg, cfgdir)
+            make_symlink(real_include, os.path.join(resdir, 'include'))
         else:
             self.mkpath(cfgdir)
             if '_sysconfigdata' not in sys.modules:
