@@ -10,6 +10,9 @@ PyQt4.Qt to PyQt4.QtCore) are handled in C code and therefore cannot be
 detected by the python code in py2app).
 """
 
+# since pkg_resources.py lives next to this file, we need to disambiguate the import
+from __future__ import absolute_import
+
 import sys
 import glob
 import os
