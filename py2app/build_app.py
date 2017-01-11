@@ -320,6 +320,9 @@ class py2app(Command):
          "comma-separated list of frameworks or dylibs to exclude"),
         ("datamodels=", None,
          "xcdatamodels to be compiled and copied into Resources"),
+        ("expected-missing-imports=", None,
+         "expected missing imports either a comma sperated list "
+         "or @ followed by file containing a list of imports, one per line"),
         ("mappingmodels=", None,
           "xcmappingmodels to be compiled and copied into Resources"),
         ("resources=", 'r',
@@ -408,6 +411,12 @@ class py2app(Command):
         "redirect-stdout-to-asl",
     ]
 
+    always_expected_missing_imports = set([
+        'org', 'java',                  # Jython only
+        '_frozen_importlib_external'    # Seems to be side effect of py2app
+        ])
+
+
     def initialize_options (self):
         self.app = None
         self.plugin = None
@@ -458,6 +467,8 @@ class py2app(Command):
         self.no_report_missing_conditional_import = False
         self.redirect_stdout_to_asl = False
         self._python_app = None
+        self.expected_missing_imports = None
+
 
     def finalize_options (self):
         if os.path.exists(os.path.join(sys.prefix, 'pyvenv.cfg')):
@@ -570,12 +581,36 @@ class py2app(Command):
         self.extra_scripts = fancy_split(self.extra_scripts)
         self.include_plugins = fancy_split(self.include_plugins)
 
+        if self.expected_missing_imports is None:
+            self.expected_missing_imports = self.always_expected_missing_imports
+        else:
+            if self.expected_missing_imports.startswith( '@' ):
+                self.expected_missing_imports = self.read_expected_missing_imports_file( self.expected_missing_imports[1:] )
+            else:
+                self.expected_missing_imports = set(fancy_split(self.expected_missing_imports))
+            self.expected_missing_imports |= self.always_expected_missing_imports
 
         if self.datamodels:
             print("WARNING: the datamodels option is deprecated, add model files to the list of resources")
 
         if self.mappingmodels:
             print("WARNING: the mappingmodels option is deprecated, add model files to the list of resources")
+
+
+    def read_expected_missing_imports_file( self, filename ):
+        #
+        #   ignore blank lines and lines that start with a '#'
+        #   only one import per line
+        #
+        expected_missing_imports = set()
+        with open( filename, 'r' ) as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith( '#' ) or line == '':
+                    continue
+                expected_missing_imports.add( line )
+
+        return expected_missing_imports
 
 
     def get_default_plist(self):
@@ -886,6 +921,9 @@ class py2app(Command):
                 del rdict[name]
                 print('*** using recipe: %s ***' % (name,))
 
+                if 'expected_missing_imports' in rval:
+                    self.expected_missing_imports |= rval.get('expected_missing_imports')
+
                 if rval.get('packages'):
                     self.packages.update(rval['packages'])
                     find_needed_modules(mf, packages=rval['packages'])
@@ -998,6 +1036,15 @@ class py2app(Command):
             for pkg in self.packages
         ]))
 
+    def may_log_missing(self, module_name):
+        module_parts = module_name.split('.')
+        for num_parts in range(1,len(module_parts)+1):
+            module_id = '.'.join(module_parts[0:num_parts])
+            if module_id in self.expected_missing_imports:
+                return False
+
+        return True
+
     def run_normal(self):
         mf = self.get_modulefinder()
         filters = self.collect_filters()
@@ -1040,7 +1087,7 @@ class py2app(Command):
             missing_fromimport_conditional = collections.defaultdict(set)
             missing_conditional = collections.defaultdict(set)
 
-
+            log.info( 'checking for any import problems' )
             for module in sorted(missing):
                 for m in mf.getReferers(module):
                     if m is None: continue # XXX
@@ -1067,7 +1114,7 @@ class py2app(Command):
                         missing_unconditional[module.identifier].add(m.identifier)
 
             if missing_unconditional:
-                log.warn("Modules not found (unconditional imports):")
+                warnings = []
                 for m in sorted(missing_unconditional):
                     try:
                         if '.' in m:
@@ -1076,7 +1123,8 @@ class py2app(Command):
                             try:
                                 o = getattr(o, m2)
                             except AttributeError:
-                                log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                                if self.may_log_missing(m):
+                                    warnings.append(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
                                 continue
 
 
@@ -1084,15 +1132,22 @@ class py2app(Command):
                             o = __import__(m)
 
                         if isinstance(o, types.ModuleType):
-                            log.warn(" * %s (%s) [module alias]" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                            if self.may_log_missing(m):
+                                warnings.append(" * %s (%s) [module alias]" % (m, ", ".join(sorted(missing_unconditional[m]))))
 
                     except ImportError:
-                        log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
-                log.warn("")
+                        if self.may_log_missing(m):
+                            warnings.append(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
+
+                if len(warnings) > 0:
+                    log.warn("Modules not found (unconditional imports):")
+                    for msg in warnings:
+                        log.warn(msg)
+                    log.warn("")
 
 
             if missing_conditional and not self.no_report_missing_conditional_import:
-                log.warn("Modules not found (conditional imports):")
+                warnings = []
                 for m in sorted(missing_conditional):
                     try:
                         if '.' in m:
@@ -1101,7 +1156,8 @@ class py2app(Command):
                             try:
                                 o = getattr(o, m2)
                             except AttributeError:
-                                log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                                if self.may_log_missing(m):
+                                    warnings.append(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
                                 continue
 
 
@@ -1109,10 +1165,17 @@ class py2app(Command):
                             o = __import__(m)
 
                         if isinstance(o, types.ModuleType):
-                            log.warn(" * %s (%s) [module alias]" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                            if self.may_log_missing(m):
+                                warnings.append(" * %s (%s) [module alias]" % (m, ", ".join(sorted(missing_unconditional[m]))))
                     except ImportError:
-                        log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_conditional[m]))))
-                log.warn("")
+                        if self.may_log_missing(m):
+                            warnings.append(" * %s (%s)" % (m, ", ".join(sorted(missing_conditional[m]))))
+
+                if len(warnings) > 0:
+                    log.warn("Modules not found (conditional imports):")
+                    for msg in warnings:
+                        log.warn(msg)
+                    log.warn("")
 
             if self.report_missing_from_imports and (
                     missing_fromimport or (
@@ -1126,7 +1189,6 @@ class py2app(Command):
                     log.warn("Conditional:")
                     for m in sorted(missing_fromimport_conditional):
                         log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_fromimport_conditional[m]))))
-
                 log.warn("")
 
         if syntax_error:
