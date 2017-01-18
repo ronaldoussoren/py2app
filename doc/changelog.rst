@@ -16,6 +16,8 @@ py2app 0.10
 
 - Fix issue #201: py2app is not compatible with pyvenv virtualenvs
 
+  With additional fix by Oskari Timperi.
+
 - Fix issue #179: the stdout/stderr streams are no longer forwarded to console.app using ASL (by default),
   use "--redirect-stdout-to-asl" to enable the redirection functionality.
 
@@ -41,6 +43,10 @@ py2app 0.10
 
   This makes it possible to use wheels that were processed by `delocate-listdeps <https://github.com/matthew-brett/delocate>`_
   when building application bundles.
+
+- Do not report imports that are expected to be missing
+
+  Patch by Barry Scott.
 
 py2app 0.9
 ----------
