@@ -1,6 +1,4 @@
 import sys
-
-import sys
 def check(cmd, mf):
     m = mf.findNode('PyQt5')
     if m:
