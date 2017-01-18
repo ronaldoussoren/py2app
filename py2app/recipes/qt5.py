@@ -1,7 +1,9 @@
-from modulegraph.modulegraph import MissingModule
+import sys
+
+import sys
 def check(cmd, mf):
     m = mf.findNode('PyQt5')
-    if m and not isinstance(m, MissingModule):
+    if m:
         try:
             # PyQt5 with sipconfig module, handled
             # by sip recipe
@@ -17,6 +19,10 @@ def check(cmd, mf):
         # 2. Use of other modules, datafiles and C libraries
         #    in the PyQt5 package.
         mf.import_hook('sip', m)
-        return dict(packages=['PyQt5'])
+        if sys.version[0] != 2:
+            return dict(packages=['PyQt5'],
+                        expected_missing_imports=set(['copy_reg', 'cStringIO', 'StringIO']))
+        else:
+            return dict(packages=['PyQt5'])
 
     return None
