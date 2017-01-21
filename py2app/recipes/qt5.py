@@ -1,7 +1,9 @@
 import sys
+from modulegraph.modulegraph import MissingModule
+
 def check(cmd, mf):
     m = mf.findNode('PyQt5')
-    if m:
+    if m and not isinstance(m, MissingModule):
         try:
             # PyQt5 with sipconfig module, handled
             # by sip recipe
