@@ -1,6 +1,11 @@
 Release history
 ===============
 
+py2app 0.12
+-----------
+
+* (No updates yet)
+
 py2app 0.11
 -----------
 
