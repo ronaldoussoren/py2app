@@ -7,7 +7,7 @@ from . import lxml
 from . import matplotlib
 from . import mimetypes
 from . import numpy
-from . import os
+from . import os_module
 from . import pydoc
 from . import pyenchant
 from . import pygame
