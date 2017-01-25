@@ -1,13 +1,8 @@
 Release history
 ===============
 
-py2app 0.10
+py2app 0.11
 -----------
-
-- The recipe for virtualenv calls a modulegraph method that was made
-  private in a recent release and hence no longer worked with py2app 0.9.
-
-  Update the recipe to work around this.
 
 - Make sure the stdout/stderr streams of the main binary of the application
   are unbuffered.
@@ -47,6 +42,15 @@ py2app 0.10
 - Do not report imports that are expected to be missing
 
   Patch by Barry Scott.
+
+py2app 0.10
+-----------
+
+- The recipe for virtualenv calls a modulegraph method that was made
+  private in a recent release and hence no longer worked with py2app 0.9.
+
+  Update the recipe to work around this.
+
 
 py2app 0.9
 ----------
