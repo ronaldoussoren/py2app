@@ -4,7 +4,7 @@ Release history
 py2app 0.12
 -----------
 
-* (No updates yet)
+* Pull request #15 by Armin Samii: Safer symlink and file copying
 
 py2app 0.11
 -----------
