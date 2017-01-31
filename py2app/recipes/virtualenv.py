@@ -6,6 +6,7 @@ distutils instead
 This recipe is rather compilicated and definitely not a
 good model for other recipes!!!
 """
+from __future__ import absolute_import
 import sys, os, imp
 from modulegraph.modulegraph import MissingModule, \
         Package, SourceModule, CompiledModule, find_module
