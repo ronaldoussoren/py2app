@@ -6,6 +6,10 @@ py2app 0.12
 
 * Pull request #15 by Armin Samii: Safer symlink and file copying
 
+* Update recipes: a number of recipe names conflicted with toplevel
+  modules imported by recipes. This causes problems on Python 2.7 (without
+  absolute imports)
+
 py2app 0.11
 -----------
 

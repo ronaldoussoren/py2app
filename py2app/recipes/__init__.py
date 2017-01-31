@@ -22,5 +22,5 @@ from . import subprocess
 from . import virtualenv
 from . import wx
 from . import xml
-from . import pkg_resources
+from . import setuptools
 from . import uuid
