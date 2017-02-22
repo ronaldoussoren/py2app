@@ -701,7 +701,7 @@ if sys.platform != 'darwin':
 setup(
     # metadata
     name='py2app',
-    version='0.12',
+    version='0.13',
     description='Create standalone Mac OS X applications with Python',
     #author='Bob Ippolito',
     #author_email='bob@redivi.com',

@@ -1,6 +1,17 @@
 Release history
 ===============
 
+py2app 0.13
+-----------
+
+Bug fixes:
+
+* (None yet)
+
+Features:
+
+* (None yet)
+
 py2app 0.12
 -----------
 
