@@ -19,6 +19,7 @@ from . import re
 from . import scipy
 from . import sip
 from . import subprocess
+from . import sysconfig_module
 from . import virtualenv
 from . import wx
 from . import xml
