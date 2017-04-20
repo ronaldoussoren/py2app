@@ -9,6 +9,10 @@ Bug fixes:
 * Issue 185 in PyObjC's tracker: sysconfig using ``__import__`` in Python 3.6 or
   later, which confuses modulegraph.
 
+* Pull request #17: Location of site-packages in the "--user" location has changed
+
+  Patch by Matt Mukerjee
+
 Features:
 
 * (None yet)
