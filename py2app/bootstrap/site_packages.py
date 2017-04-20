@@ -10,9 +10,14 @@ def _site_packages():
     if os.path.join('.framework', '') in os.path.join(sys.prefix, ''):
         home = os.environ.get('HOME')
         if home:
+            # Sierra and later
             paths.append(os.path.join(home, 'Library', 'Python',
                                       sys.version[:3], 'lib', 'python',
                                       'site-packages'))
+
+            # Before Sierra
+            paths.append(os.path.join(home, 'Library', 'Python',
+                                      sys.version[:3], 'site-packages'))
 
     # Work around for a misfeature in setuptools: easy_install.pth places
     # site-packages way to early on sys.path and that breaks py2app bundles.
