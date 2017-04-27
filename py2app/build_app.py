@@ -1078,6 +1078,8 @@ class py2app(Command):
         missing = []
         syntax_error = []
         invalid_bytecode = []
+        invalid_relative_import = []
+
         for module in mf.nodes():
             if isinstance(module, modulegraph.MissingModule):
                 if module.identifier != '__main__':
@@ -1086,6 +1088,8 @@ class py2app(Command):
                 syntax_error.append(module)
             elif hasattr(modulegraph, 'InvalidCompiledModule') and isinstance(module, modulegraph.InvalidCompiledModule):
                 invalid_bytecode.append(module)
+            elif hasattr(modulegraph, 'InvalidRelativeImport') and isinstance(module, modulegraph.InvalidRelativeImport):
+                invalid_relative_import.append(module)
 
         if missing:
             missing_unconditional = collections.defaultdict(set)
@@ -1203,6 +1207,18 @@ class py2app(Command):
                 log.warn(" * %s"%(module.identifier))
 
             log.warn("")
+
+        if invalid_relative_import:
+            log.warn("Modules with invalid relative imports:")
+
+            imports = collections.defaultdict(set)
+
+            for module in sorted(invalid_relative_import):
+                for n in mf.get_edges(module)[1]:
+                    imports[n.identifier].add(module.relative_path)
+
+            for mod in sorted(imports):
+                log.warn(" * %s (importing %s)"%(mod, ", ".join(sorted(imports[mod]))))
 
         if invalid_bytecode:
             log.warn("Modules with invalid bytecode:")
@@ -2052,7 +2068,6 @@ class py2app(Command):
             preserve_symlinks=True)
         for pkg_name in self.packages:
             pkg = self.get_bootstrap(pkg_name)
-            print('XXXX', pkg_name, pkg)
 
             if self.semi_standalone:
                 # For semi-standalone builds don't copy packages
