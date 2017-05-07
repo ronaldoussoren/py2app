@@ -6,7 +6,7 @@ from macholib.util import in_system_path
 def has_filename_filter(module):
     if isinstance(module, modulegraph.MissingModule):
         return True
-    if isinstance(hasattr(modulegraph, 'InvalidRelativeImport') and module, modulegraph.InvalidRelativeImport):
+    if hasattr(modulegraph, 'InvalidRelativeImport') and isinstance(module, modulegraph.InvalidRelativeImport):
         return True
     return getattr(module, 'filename', None) is not None
 
