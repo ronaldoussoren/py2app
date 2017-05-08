@@ -2,6 +2,7 @@ import sys
 import py2app
 __all__ = ['infoPlistDict']
 
+
 def infoPlistDict(CFBundleExecutable, plist={}):
     CFBundleExecutable = CFBundleExecutable
     NSPrincipalClass = ''.join(CFBundleExecutable.split())
@@ -11,7 +12,8 @@ def infoPlistDict(CFBundleExecutable, plist={}):
         CFBundleDisplayName=plist.get('CFBundleName', CFBundleExecutable),
         CFBundleExecutable=CFBundleExecutable,
         CFBundleIconFile=CFBundleExecutable,
-        CFBundleIdentifier='org.pythonmac.unspecified.%s' % (NSPrincipalClass,),
+        CFBundleIdentifier='org.pythonmac.unspecified.%s' % (
+            NSPrincipalClass,),
         CFBundleInfoDictionaryVersion='6.0',
         CFBundleName=CFBundleExecutable,
         CFBundlePackageType='BNDL',
@@ -24,13 +26,14 @@ def infoPlistDict(CFBundleExecutable, plist={}):
         NSMainNibFile='MainMen',
         NSPrincipalClass=NSPrincipalClass,
         PyMainFileNames=['__boot__'],
-        PyResourcePackages=[ (s % version) for s in [
+        PyResourcePackages=[(s % version) for s in [
             'lib/python%s',
             'lib/python%s/lib-dynload',
             'lib/python%s/site-packages.zip',
-        ]] + [ 'lib/python%s.zip' % version.replace('.', '') ],
+        ]] + ['lib/python%s.zip' % version.replace('.', '')],
         PyRuntimeLocations=[(s % version) for s in [
-            '@executable_path/../Frameworks/Python.framework/Versions/%s/Python',
+            ('@executable_path/../Frameworks/Python.framework'
+             '/Versions/%s/Python'),
             '~/Library/Frameworks/Python.framework/Versions/%s/Python',
             '/Library/Frameworks/Python.framework/Versions/%s/Python',
             '/Network/Library/Frameworks/Python.framework/Versions/%s/Python',
@@ -44,7 +47,8 @@ def infoPlistDict(CFBundleExecutable, plist={}):
         PythonShortVersion=sys.version[:3],
         PythonExecutable=sys.executable,
     ))
-    py2appInfo = pythonInfo.setdefault('py2app', {}).update(dict(
+    py2appInfo = pythonInfo.setdefault('py2app', {})
+    py2appInfo.update(dict(
         version=py2app.__version__,
         template='bundle',
     ))

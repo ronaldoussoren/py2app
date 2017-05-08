@@ -7,16 +7,18 @@ It's expected that only one Python script is dragged in.
 """
 from __future__ import print_function
 
-import os, sys
+import os
+import sys
 from distutils.core import setup
 from plistlib import Plist
-import py2app
+import py2app  # noqa: F401
 import tempfile
 import shutil
 import imp
 import pprint
 from py2app.util import copy_tree
 from py2app import build_app
+
 try:
     set
 except NameError:
@@ -52,6 +54,7 @@ setup(
 )
 '''
 
+
 def get_option_map():
     optmap = {}
     for option in build_app.py2app.user_options:
@@ -60,6 +63,7 @@ def get_option_map():
             optmap['-' + opt_short] = opt_long.rstrip('=')
     return optmap
 
+
 def get_cmd_options():
     options = set()
     for option in build_app.py2app.user_options:
@@ -67,6 +71,7 @@ def get_cmd_options():
         if opt_long.endswith('=') and opt_short:
             options.add('-' + opt_short)
     return options
+
 
 def main():
     if not sys.argv[1:]:
@@ -128,13 +133,14 @@ def main():
         plist=plist,
         iconfile=iconfile,
     )
-    for k,v in list(options.items()):
+    for k, v in list(options.items()):
         if not v:
             del options[k]
     if is_make_setup:
         make_setup(args, scripts, data_files, options)
     else:
         build(args, scripts, data_files, options)
+
 
 def make_setup(args, scripts, data_files, options):
     optmap = get_option_map()
@@ -168,6 +174,7 @@ def make_setup(args, scripts, data_files, options):
     f.close()
     print('Wrote setup.py')
 
+
 def build(args, scripts, data_files, options):
     old_argv = sys.argv
     sys.argv = [sys.argv[0], 'py2app'] + args
@@ -200,6 +207,7 @@ def build(args, scripts, data_files, options):
         shutil.rmtree(tempdir, ignore_errors=True)
         sys.argv = old_argv
         sys.path = old_path
+
 
 if __name__ == '__main__':
     main()

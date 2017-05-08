@@ -1,8 +1,10 @@
 import sys
 from modulegraph.modulegraph import MissingModule
 
+
 def check(cmd, mf):
-    if sys.version_info[0] != 2: return {}
+    if sys.version_info[0] != 2:
+        return {}
 
     # ftplib has an optional dependency on an external (and likely
     # non-existing) SOCKS module.

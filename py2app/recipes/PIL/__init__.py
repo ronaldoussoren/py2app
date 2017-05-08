@@ -1,5 +1,6 @@
-from py2app.util import imp_find_module
-import os, sys, glob
+from modulegraph.util import imp_find_module
+import os
+import sys
 
 try:
     from cStringIO import StringIO
@@ -81,7 +82,7 @@ def check(cmd, mf):
         pass
 
     return dict(
-        prescripts = ['py2app.recipes.PIL.prescript', s],
-        include = "PIL.JpegPresets", # Dodgy import from PIL.JpegPlugin in Pillow 2.0
-        flatpackages = [os.path.dirname(m.filename)],
+        prescripts=['py2app.recipes.PIL.prescript', s],
+        include="PIL.JpegPresets",  # import from PIL.JpegPlugin in Pillow 2.0
+        flatpackages=[os.path.dirname(m.filename)],
     )

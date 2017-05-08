@@ -3,7 +3,6 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-
     # PyZMQ is a package that contains
     # a shared library. This recipe
     # is mostly a workaround for a bug

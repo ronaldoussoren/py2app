@@ -6,7 +6,7 @@ py2app 0.14
 
 Features:
 
-* (None yet)
+* Started using flake8 to improve coding style
 
 Bug fixes:
 

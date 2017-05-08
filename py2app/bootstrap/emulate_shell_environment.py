@@ -2,7 +2,6 @@ def _emulate_shell_environ():
     import os
     import sys
     import time
-    import subprocess
 
     if sys.version_info[0] > 2:
         env = os.environb

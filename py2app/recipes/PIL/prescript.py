@@ -7,6 +7,7 @@ def _recipes_pil_prescript(plugins):
         have_PIL = True
 
     import sys
+
     def init():
         if Image._initialized >= 2:
             return
@@ -22,9 +23,10 @@ def _recipes_pil_prescript(plugins):
             try:
                 if have_PIL:
                     try:
-                        # First try absolute import through PIL (for Pillow support)
-                        # only then try relative imports
-                        m = __import__('PIL.' + plugin, globals(), locals(), [])
+                        # First try absolute import through PIL (for
+                        # Pillow support) only then try relative imports
+                        m = __import__(
+                            'PIL.' + plugin, globals(), locals(), [])
                         m = getattr(m, plugin)
                         sys.modules[plugin] = m
                         continue

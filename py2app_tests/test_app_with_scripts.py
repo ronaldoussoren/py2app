@@ -96,7 +96,10 @@ class TestBasicApp (unittest.TestCase):
             )
         lines = p.communicate()[0]
         if p.wait() != 0:
-            sys.stdout.write(lines)
+            if sys.version_info[0] == 2:
+                sys.stdout.write(lines)
+            else:
+                sys.stdout.write(lines.decode('utf-8'))
             print("Creating basic_app extension failed")
             try:
                 os.waitpid(0, 0)

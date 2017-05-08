@@ -1,4 +1,6 @@
 import os
+
+
 def check(cmd, mf):
     m = mf.findNode('matplotlib')
     if m is None or m.filename is None:
@@ -14,11 +16,11 @@ def check(cmd, mf):
                 mf.import_hook('matplotlib.backends', m, ['*'])
 
             else:
-                mf.import_hook('matplotlib.backends.backend_%s'%(backend,), m)
+                mf.import_hook('matplotlib.backends.backend_%s' % (
+                    backend,), m)
 
     else:
         backends = {'packages': ['matplotlib']}
-
 
     return dict(
         prescripts=['py2app.recipes.matplotlib_prescript'],

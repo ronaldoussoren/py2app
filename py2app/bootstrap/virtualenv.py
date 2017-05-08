@@ -1,5 +1,7 @@
 def _fixup_virtualenv(real_prefix):
-    import sys, os
+    import sys
+    import os
+
     sys.real_prefix = real_prefix
 
     # NOTE: The adjustment code is based from logic in the site.py
@@ -8,8 +10,9 @@ def _fixup_virtualenv(real_prefix):
 
     paths = [os.path.join(sys.real_prefix, 'lib', 'python'+sys.version[:3])]
     hardcoded_relative_dirs = paths[:]
-    plat_path = os.path.join(sys.real_prefix, 'lib', 'python'+sys.version[:3],
-         'plat-%s' % sys.platform)
+    plat_path = os.path.join(
+        sys.real_prefix, 'lib', 'python'+sys.version[:3],
+        'plat-%s' % sys.platform)
     if os.path.exists(plat_path):
         paths.append(plat_path)
 
@@ -22,9 +25,11 @@ def _fixup_virtualenv(real_prefix):
 
     # These are hardcoded in the Apple's Python executable,
     # but relative to sys.prefix, so we have to fix them up:
-    hardcoded_paths = [os.path.join(relative_dir, module)
-                       for relative_dir in hardcoded_relative_dirs
-                       for module in ('plat-darwin', 'plat-mac', 'plat-mac/lib-scriptpackages')]
+    hardcoded_paths = [
+        os.path.join(relative_dir, module)
+        for relative_dir in hardcoded_relative_dirs
+        for module in (
+            'plat-darwin', 'plat-mac', 'plat-mac/lib-scriptpackages')]
 
     for path in hardcoded_paths:
         if os.path.exists(path):

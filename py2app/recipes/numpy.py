@@ -3,5 +3,5 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
     return dict(
-        packages = ['numpy']
+        packages=['numpy']
     )

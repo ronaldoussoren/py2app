@@ -16,5 +16,5 @@ def check(cmd, mf):
         'wx.lib.pubsub.utils.*',
     ]
     return dict(
-        includes = include_packages
+        includes=include_packages
     )

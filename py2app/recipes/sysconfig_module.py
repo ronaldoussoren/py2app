@@ -1,5 +1,6 @@
 import sys
 
+
 def check(cmd, mf):
     if sys.version_info[:2] >= (3, 6):
         # As of Python 3.6 the sysconfig module
@@ -15,4 +16,3 @@ def check(cmd, mf):
 
     else:
         return None
-

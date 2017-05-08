@@ -6,6 +6,7 @@
 # The dependency list was extracted from lxml 3.0.2
 import sys
 
+
 def check(cmd, mf):
     m = mf.findNode('lxml.etree')
     if m is not None and m.filename is not None:
@@ -35,4 +36,3 @@ def check(cmd, mf):
         return None
 
     return {}
-

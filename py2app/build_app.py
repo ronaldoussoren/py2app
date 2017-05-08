@@ -12,14 +12,13 @@ import zipfile
 import plistlib
 import shlex
 import shutil
-import textwrap
 import pkg_resources
 import collections
 import types
 from modulegraph import modulegraph
 
 from py2app.apptemplate.setup import main as script_executable
-from py2app.util import mergecopy, make_exec
+from py2app.util import mergecopy, make_exec, mapc
 
 try:
     from cStringIO import StringIO
@@ -32,10 +31,11 @@ from itertools import chain
 from setuptools import Command
 from distutils.util import convert_path
 from distutils import log
-from distutils.errors import *
+from distutils.errors import DistutilsPlatformError, DistutilsOptionError
 
 
-from modulegraph.find_modules import find_modules, parse_mf_results, find_needed_modules
+from modulegraph.find_modules import find_modules, parse_mf_results
+from modulegraph.find_modules import find_needed_modules
 from modulegraph.modulegraph import SourceModule, Package, Script
 from modulegraph import zipio
 
@@ -47,16 +47,16 @@ from macholib.util import flipwritable
 from py2app.create_appbundle import create_appbundle
 from py2app.create_pluginbundle import create_pluginbundle
 from py2app.util import \
-    fancy_split, byte_compile, make_loader, imp_find_module, \
+    fancy_split, byte_compile, make_loader, \
     copy_tree, fsencoding, strip_files, in_system_path, makedirs, \
     iter_platform_files, find_version, skipscm, momc, copy_file, \
     copy_resource, make_symlink
-from py2app.filters import \
-    not_stdlib_filter, not_system_filter, has_filename_filter
+from py2app.filters import not_stdlib_filter, has_filename_filter
 from py2app import recipes
+from modulegraph.util import imp_find_module
 
 from distutils.sysconfig import get_config_var, get_config_h_filename
-PYTHONFRAMEWORK=get_config_var('PYTHONFRAMEWORK')
+PYTHONFRAMEWORK = get_config_var('PYTHONFRAMEWORK')
 
 
 PLUGIN_SUFFIXES = {
@@ -81,6 +81,7 @@ elif hasattr(sys, 'base_prefix'):
 else:
     sys_base_prefix = sys.prefix
 
+
 def rewrite_tkinter_load_commands(tkinter_path):
     print("rewrite_tk", tkinter_path)
     m = macholib.MachO.MachO(tkinter_path)
@@ -93,11 +94,13 @@ def rewrite_tkinter_load_commands(tkinter_path):
         for idx, name, other in header.walkRelocatables():
             if other.endswith('/Tk'):
                 if tk_path is not None and other != tk_path:
-                    raise DistutilsPlatformError('_tkinter is linked to different Tk paths')
+                    raise DistutilsPlatformError(
+                        '_tkinter is linked to different Tk paths')
                 tk_path = other
             elif other.endswith('/Tcl'):
                 if tcl_path is not None and other != tcl_path:
-                    raise DistutilsPlatformError('_tkinter is linked to different Tcl paths')
+                    raise DistutilsPlatformError(
+                        '_tkinter is linked to different Tcl paths')
                 tcl_path = other
 
     if tcl_path is None or 'Tcl.framework' not in tcl_path:
@@ -106,24 +109,32 @@ def rewrite_tkinter_load_commands(tkinter_path):
     if tk_path is None or 'Tk.framework' not in tk_path:
         raise DistutilsPlatformError('_tkinter is not linked a Tk.framework')
 
-    system_tcl_versions = [nm for nm in os.listdir('/System/Library/Frameworks/Tcl.framework/Versions') if nm != 'Current']
-    system_tk_versions = [nm for nm in os.listdir('/System/Library/Frameworks/Tk.framework/Versions') if nm != 'Current']
+    system_tcl_versions = [nm for nm in os.listdir(
+        '/System/Library/Frameworks/Tcl.framework/Versions')
+        if nm != 'Current']
+    system_tk_versions = [nm for nm in os.listdir(
+        '/System/Library/Frameworks/Tk.framework/Versions')
+        if nm != 'Current']
 
     if not tcl_path.startswith('/System/Library/Frameworks'):
         # ../Versions/8.5/Tcl
         ver = os.path.basename(os.path.dirname(tcl_path))
         if ver not in system_tcl_versions:
-            raise DistutilsPlatformError('_tkinter is linked to a version of Tcl not in /System')
+            raise DistutilsPlatformError(
+                '_tkinter is linked to a version of Tcl not in /System')
 
-        rewrite_map[tcl_path] = '/System/Library/Frameworks/Tcl.framework/Versions/%s/Tcl'%(ver,)
+        rewrite_map[tcl_path] = \
+            '/System/Library/Frameworks/Tcl.framework/Versions/%s/Tcl' % (ver,)
 
     if not tk_path.startswith('/System/Library/Frameworks'):
         # ../Versions/8.5/Tk
         ver = os.path.basename(os.path.dirname(tk_path))
         if ver not in system_tk_versions:
-            raise DistutilsPlatformError('_tkinter is linked to a version of Tk not in /System')
+            raise DistutilsPlatformError(
+                '_tkinter is linked to a version of Tk not in /System')
 
-        rewrite_map[tk_path] = '/System/Library/Frameworks/Tk.framework/Versions/%s/Tk'%(ver,)
+        rewrite_map[tk_path] = \
+            '/System/Library/Frameworks/Tk.framework/Versions/%s/Tk' % (ver,)
 
     if rewrite_map:
         print("Relinking _tkinter.so to system Tcl/Tk")
@@ -132,7 +143,8 @@ def rewrite_tkinter_load_commands(tkinter_path):
             for idx, name, other in header.walkRelocatables():
                 data = rewrite_map.get(other)
                 if data:
-                    if header.rewriteDataForCommand(idx, data.encode(sys.getfilesystemencoding())):
+                    if header.rewriteDataForCommand(
+                            idx, data.encode(sys.getfilesystemencoding())):
                         rewroteAny = True
 
         if rewroteAny:
@@ -155,14 +167,16 @@ def rewrite_tkinter_load_commands(tkinter_path):
 def get_zipfile(dist, semi_standalone=False):
     if sys.version_info[0] == 3:
         if semi_standalone:
-            return "python%d.%d/site-packages.zip"%(sys.version_info[:2])
+            return "python%d.%d/site-packages.zip" % (sys.version_info[:2])
         else:
-            return "python%d%d.zip"%(sys.version_info[:2])
+            return "python%d%d.zip" % (sys.version_info[:2])
     return getattr(dist, "zipfile", None) or "site-packages.zip"
+
 
 def framework_copy_condition(src):
     # Skip Headers, .svn, and CVS dirs
     return skipscm(src) and os.path.basename(src) != 'Headers'
+
 
 class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
     def __init__(self, appbuilder, ext_dir, copyexts, *args, **kwargs):
@@ -170,9 +184,12 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
         self.appbuilder = appbuilder
         self.ext_map = {}
         for e in copyexts:
-            fn = os.path.join(ext_dir,
-                (e.identifier.replace('.', os.sep) +
-                os.path.splitext(e.filename)[1])
+            fn = os.path.join(
+                ext_dir,
+                (
+                    e.identifier.replace('.', os.sep) +
+                    os.path.splitext(e.filename)[1]
+                )
             )
             self.ext_map[fn] = os.path.dirname(e.filename)
 
@@ -185,7 +202,8 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
     def copy_dylib(self, src):
         dest = os.path.join(self.dest, os.path.basename(src))
         if os.path.islink(src):
-            dest = os.path.join(self.dest, os.path.basename(os.path.realpath(src)))
+            dest = os.path.join(
+                self.dest, os.path.basename(os.path.realpath(src)))
 
             # Ensure that the orginal name also exists, avoids problems when
             # the filename is used from Python (see issue #65)
@@ -210,6 +228,7 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
         self.pending.append((destfn, iter_platform_files(dest)))
         return destfn
 
+
 def iterRecipes(module=recipes):
     for name in dir(module):
         if name.startswith('_'):
@@ -217,6 +236,7 @@ def iterRecipes(module=recipes):
         check = getattr(getattr(module, name), 'check', None)
         if check is not None:
             yield (name, check)
+
 
 # A very loosely defined "target".  We assume either a "script" or "modules"
 # attribute.  Some attributes will be target specific.
@@ -230,7 +250,9 @@ class Target(object):
 
     def get_dest_base(self):
         dest_base = getattr(self, "dest_base", None)
-        if dest_base: return dest_base
+        if dest_base:
+            return dest_base
+
         script = getattr(self, "script", None)
         if script:
             return os.path.basename(os.path.splitext(script)[0])
@@ -253,6 +275,7 @@ def validate_target(dist, attr, value):
         # XXX - support apps and plugins?
         raise DistutilsOptionError(
             "You must specify either app or plugin, not both")
+
 
 def FixupTargets(targets, default_attribute):
     if not targets:
@@ -277,21 +300,26 @@ def FixupTargets(targets, default_attribute):
         ret.append(target)
     return ret
 
+
 def normalize_data_file(fn):
     if isinstance(fn, basestring):
         fn = convert_path(fn)
         return ('', [fn])
     return fn
 
+
 def is_system():
     prefix = sys.prefix
     if os.path.exists(os.path.join(prefix, ".Python")):
-        fn = os.path.join(prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
+        fn = os.path.join(
+            prefix, "lib", "python%d.%d" % (
+                sys.version_info[:2]), "orig-prefix.txt")
         if os.path.exists(fn):
             with open(fn, 'rU') as fp:
                 prefix = fp.read().strip()
 
     return in_system_path(prefix)
+
 
 def installation_info(version=None):
     if version is None:
@@ -301,6 +329,7 @@ def installation_info(version=None):
         return version[:3] + " (FORCED: Using vendor Python)"
     else:
         return version[:3]
+
 
 class py2app(Command):
     description = "create a Mac OS X application or plugin from Python scripts"
@@ -331,11 +360,13 @@ class py2app(Command):
          "expected missing imports either a comma sperated list "
          "or @ followed by file containing a list of imports, one per line"),
         ("mappingmodels=", None,
-          "xcmappingmodels to be compiled and copied into Resources"),
+         "xcmappingmodels to be compiled and copied into Resources"),
         ("resources=", 'r',
-         "comma-separated list of additional data files and folders to include (not for code!)"),
+         "comma-separated list of additional data files and folders to "
+         "include (not for code!)"),
         ("frameworks=", 'f',
-         "comma-separated list of additional frameworks and dylibs to include"),
+         "comma-separated list of additional frameworks and dylibs to "
+         "include"),
         ("plist=", 'P',
          "Info.plist template file, dict, or plistlib.Plist"),
         ("extension=", None,
@@ -346,14 +377,16 @@ class py2app(Command):
          "output module cross-reference as html"),
         ("no-strip", None,
          "do not strip debug and local symbols from output"),
-        #("compressed", 'c',
+        # ("compressed", 'c',
         # "create a compressed zipfile"),
         ("no-chdir", 'C',
-         "do not change to the data directory (Contents/Resources) [forced for plugins]"),
-        #("no-zip", 'Z',
+         "do not change to the data directory (Contents/Resources) "
+         "[forced for plugins]"),
+        # ("no-zip", 'Z',
         # "do not use a zip file (XXX)"),
         ("semi-standalone", 's',
-         "depend on an existing installation of Python " + installation_info()),
+         "depend on an existing installation of Python "
+         + installation_info()),
         ("alias", 'A',
          "Use an alias to current source file (for development only!)"),
         ("argv-emulation", 'a',
@@ -365,7 +398,7 @@ class py2app(Command):
         ("use-pythonpath", None,
          "Allow PYTHONPATH to effect the interpreter's environment"),
         ("use-faulthandler", None,
-         "Enable the faulthandler in the generated bundle (Python 3.3 or later)"),
+         "Enable the faulthandler in the generated bundle (Python 3.3+)"),
         ("verbose-interpreter", None,
          "Start python in verbose mode"),
         ('bdist-base=', 'b',
@@ -375,26 +408,38 @@ class py2app(Command):
         ('site-packages', None,
          "include the system and user site-packages into sys.path"),
         ("strip", 'S',
-         "strip debug and local symbols from output (on by default, for compatibility)"),
+         "strip debug and local symbols from output (on by default, for "
+         "compatibility)"),
         ("prefer-ppc", None,
          "Force application to run translated on i386 (LSPrefersPPC=True)"),
         ('debug-modulegraph', None,
          'Drop to pdb console after the module finding phase is complete'),
         ("debug-skip-macholib", None,
          "skip macholib phase (app will not be standalone!)"),
-        ("arch=", None, "set of architectures to use (fat, fat3, universal, intel, i386, ppc, x86_64; default is the set for the current python binary)"),
-        ("qt-plugins=", None, "set of Qt plugins to include in the application bundle (default None)"),
-        ("matplotlib-backends=", None, "set of matplotlib backends to include (default: include entire package)"),
-        ("extra-scripts=", None, "set of scripts to include in the application bundle, next to the main application script"),
+        ("arch=", None,
+            "set of architectures to use (fat, fat3, universal, intel, "
+            "i386, ppc, x86_64; default is the set for the current python "
+            "binary)"),
+        ("qt-plugins=", None,
+            "set of Qt plugins to include in the application bundle "
+            "(default None)"),
+        ("matplotlib-backends=", None,
+            "set of matplotlib backends to include (default: all)"),
+        ("extra-scripts=", None,
+            "set of additonal scripts to include in the application bundle"),
         ("include-plugins=", None, "List of plugins to include"),
-        ("force-system-tk", None, "Ensure that Tkinter is linked against Apple's build of Tcl/Tk"),
-        ("report-missing-from-imports", None, "Report the list of missing names for 'from module import name'"),
-        ("no-report-missing-conditional-import", None, "Don't report missing modules when they appear to be conditional imports"),
-        ("redirect-stdout-to-asl", None, "Forward the stdout/stderr streams to Console.app using the ASL library"),
+        ("force-system-tk", None,
+            "Ensure that Tkinter is linked against Apple's build of Tcl/Tk"),
+        ("report-missing-from-imports", None,
+            "Report the list of missing names for 'from module import name'"),
+        ("no-report-missing-conditional-import", None,
+            "Don't report missing modules from conditional imports"),
+        ("redirect-stdout-to-asl", None,
+            "Forward the stdout/stderr streams to Console.app using ASL"),
     ]
 
     boolean_options = [
-        #"compressed",
+        # "compressed",
         "xref",
         "strip",
         "no-strip",
@@ -402,7 +447,7 @@ class py2app(Command):
         "semi-standalone",
         "alias",
         "argv-emulation",
-        #"no-zip",
+        # "no-zip",
         "use-pythonpath",
         "use-faulthandler",
         "verbose-interpreter",
@@ -423,8 +468,7 @@ class py2app(Command):
         '_frozen_importlib_external'    # Seems to be side effect of py2app
         ])
 
-
-    def initialize_options (self):
+    def initialize_options(self):
         self.app = None
         self.plugin = None
         self.bdist_base = None
@@ -476,10 +520,10 @@ class py2app(Command):
         self._python_app = None
         self.expected_missing_imports = None
 
-
-    def finalize_options (self):
+    def finalize_options(self):
         if sys_base_prefix != sys.prefix:
-            self._python_app = os.path.join(sys_base_prefix, 'Resources', 'Python.app')
+            self._python_app = os.path.join(
+                sys_base_prefix, 'Resources', 'Python.app')
 
         elif os.path.exists(os.path.join(sys.prefix, 'pyvenv.cfg')):
             with open(os.path.join(sys.prefix, 'pyvenv.cfg')) as fp:
@@ -490,23 +534,28 @@ class py2app(Command):
                         break
 
                 else:
-                    raise DistutilsPlatformError('Pyvenv detected, but cannot determine base prefix')
+                    raise DistutilsPlatformError(
+                        'Pyvenv detected, but cannot determine base prefix')
 
-
-                self._python_app = os.path.join(prefix, 'Resources', 'Python.app')
-
+                self._python_app = os.path.join(
+                    prefix, 'Resources', 'Python.app')
 
         elif os.path.exists(os.path.join(sys.prefix, ".Python")):
-            fn = os.path.join(sys.prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
+            fn = os.path.join(
+                sys.prefix, "lib", "python%d.%d" % (sys.version_info[:2]),
+                "orig-prefix.txt")
             if os.path.exists(fn):
                 with open(fn, 'rU') as fp:
                     prefix = fp.read().strip()
-                    self._python_app = os.path.join(prefix, 'Resources', 'Python.app')
+                    self._python_app = os.path.join(
+                        prefix, 'Resources', 'Python.app')
             else:
-                raise DistutilsPlatformError('Virtualenv detected, but cannot determine base prefix')
+                raise DistutilsPlatformError(
+                    'Virtualenv detected, but cannot determine base prefix')
 
         else:
-            self._python_app = os.path.join(sys.prefix, 'Resources', 'Python.app')
+            self._python_app = os.path.join(
+                sys.prefix, 'Resources', 'Python.app')
 
         if not self.strip:
             self.no_strip = True
@@ -520,9 +569,6 @@ class py2app(Command):
 
         if self.use_faulthandler:
             self.includes.add('faulthandler')
-        #if sys.version_info[:2] >= (3, 2):
-        #    self.includes.add('pkgutil')
-        #    self.includes.add('imp')
         self.packages = set(fancy_split(self.packages))
 
         self.excludes = set(fancy_split(self.excludes))
@@ -531,7 +577,8 @@ class py2app(Command):
         self.excludes.add('site')
         if getattr(self.distribution, 'install_requires', None):
             self.includes.add('pkg_resources')
-            self.eggs = pkg_resources.require(self.distribution.install_requires)
+            self.eggs = pkg_resources.require(
+                self.distribution.install_requires)
 
         # Setuptools/distribute style namespace packages uses
         # __import__('pkg_resources'), and that import isn't detected at the
@@ -578,11 +625,11 @@ class py2app(Command):
 
         if self.iconfile is None and 'CFBundleIconFile' not in self.plist:
             # Default is the generic applet icon in the framework
-            iconfile = os.path.join(self._python_app,
-                'Contents', 'Resources', 'PythonApplet.icns')
+            iconfile = os.path.join(
+                self._python_app, 'Contents', 'Resources',
+                'PythonApplet.icns')
             if os.path.exists(iconfile):
                 self.iconfile = iconfile
-
 
         self.runtime_preferences = list(self.get_runtime_preferences())
 
@@ -592,36 +639,43 @@ class py2app(Command):
         self.include_plugins = fancy_split(self.include_plugins)
 
         if self.expected_missing_imports is None:
-            self.expected_missing_imports = self.always_expected_missing_imports
+            self.expected_missing_imports = \
+                    self.always_expected_missing_imports
         else:
-            if self.expected_missing_imports.startswith( '@' ):
-                self.expected_missing_imports = self.read_expected_missing_imports_file( self.expected_missing_imports[1:] )
+            if self.expected_missing_imports.startswith('@'):
+                self.expected_missing_imports = \
+                    self.read_expected_missing_imports_file(
+                        self.expected_missing_imports[1:])
             else:
-                self.expected_missing_imports = set(fancy_split(self.expected_missing_imports))
-            self.expected_missing_imports |= self.always_expected_missing_imports
+                self.expected_missing_imports = set(
+                        fancy_split(self.expected_missing_imports))
+            self.expected_missing_imports |= \
+                self.always_expected_missing_imports
 
         if self.datamodels:
-            print("WARNING: the datamodels option is deprecated, add model files to the list of resources")
+            print(
+                "WARNING: the datamodels option is deprecated, "
+                "add model files to the list of resources")
 
         if self.mappingmodels:
-            print("WARNING: the mappingmodels option is deprecated, add model files to the list of resources")
+            print(
+                "WARNING: the mappingmodels option is deprecated, "
+                "add model files to the list of resources")
 
-
-    def read_expected_missing_imports_file( self, filename ):
+    def read_expected_missing_imports_file(self, filename):
         #
         #   ignore blank lines and lines that start with a '#'
         #   only one import per line
         #
         expected_missing_imports = set()
-        with open( filename, 'r' ) as f:
+        with open(filename, 'r') as f:
             for line in f:
                 line = line.strip()
-                if line.startswith( '#' ) or line == '':
+                if line.startswith('#') or line == '':
                     continue
-                expected_missing_imports.add( line )
+                expected_missing_imports.add(line)
 
         return expected_missing_imports
-
 
     def get_default_plist(self):
         # XXX - this is all single target stuff
@@ -638,7 +692,8 @@ class py2app(Command):
         if not isinstance(version, basestring):
             raise DistutilsOptionError("Version must be a string")
 
-        if sys.version_info[0] > 2 and isinstance(version, type('a'.encode('ascii'))):
+        if sys.version_info[0] > 2 and \
+                isinstance(version, type('a'.encode('ascii'))):
             raise DistutilsOptionError("Version must be a string")
 
         plist['CFBundleVersion'] = version
@@ -671,11 +726,15 @@ class py2app(Command):
                             prefix = os.path.dirname(home_path.strip())
                             break
                     else:
-                        raise DistutilsPlatformError('Pyvenv detected, but cannot determine base prefix')
+                        raise DistutilsPlatformError(
+                            'Pyvenv detected, cannot determine base prefix')
 
         elif os.path.exists(os.path.join(prefix, ".Python")):
             # We're in a virtualenv environment, locate the real prefix
-            fn = os.path.join(prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
+            fn = os.path.join(
+                prefix, "lib", "python%d.%d" % (sys.version_info[:2]),
+                "orig-prefix.txt")
+
             if os.path.exists(fn):
                 with open(fn, 'rU') as fp:
                     prefix = fp.read().strip()
@@ -705,30 +764,39 @@ class py2app(Command):
     def run(self):
         if get_config_var('PYTHONFRAMEWORK') is None:
             if not get_config_var('Py_ENABLE_SHARED'):
-                raise DistutilsPlatformError("This python does not have a shared library or framework")
+                raise DistutilsPlatformError(
+                    "This python does not have a shared library or framework")
 
             else:
-                # Issue .. in py2app's tracker, and issue .. in python's tracker: a unix-style shared
-                # library build did not read the application environment correctly. The collection of
-                # if statements below gives a clean error message when py2app is started, instead of
-                # building a bundle that will give a confusing error message when started.
-                msg = "py2app is not supported for a shared library build with this version of python"
-                if sys.version_info[:2] < (2,7):
+                # Issue .. in py2app's tracker, and issue .. in python's
+                # tracker: a unix-style shared library build did not read the
+                # application environment correctly. The collection of
+                # if statements below gives a clean error message when py2app
+                # is started, instead of building a bundle that will give a
+                # confusing error message when started.
+                msg = (
+                    "py2app is not supported for a shared library build "
+                    "with this version of python"
+                )
+                if sys.version_info[:2] < (2, 7):
                     raise DistutilsPlatformError(msg)
-                elif sys.version_info[:2] == (2,7) and sys.version[3] < 4:
+                elif sys.version_info[:2] == (2, 7) \
+                        and sys.version_info[3] < 4:
                     raise DistutilsPlatformError(msg)
                 elif sys.version_info[0] == 3 and sys.version_info[1] < 2:
                     raise DistutilsPlatformError(msg)
-                elif sys.version_info[0] == 3 and sys.version_info[1] == 2 and sys.version_info[3] < 3:
+                elif sys.version_info[:2] == (3, 2) \
+                        and sys.version_info[3] < 3:
                     raise DistutilsPlatformError(msg)
-                elif sys.version_info[0] == 3 and sys.version_info[1] == 3 and sys.version_info[3] < 1:
+                elif sys.version_info[:2] == (3, 3) \
+                        and sys.version_info[3] < 1:
                     raise DistutilsPlatformError(msg)
 
         if hasattr(self.distribution, "install_requires") \
                 and self.distribution.install_requires:
 
-            self.distribution.fetch_build_eggs(self.distribution.install_requires)
-
+            self.distribution.fetch_build_eggs(
+                    self.distribution.install_requires)
 
         build = self.reinitialize_command('build')
         build.build_base = self.bdist_base
@@ -758,9 +826,9 @@ class py2app(Command):
         finally:
             sys.path = sys_old_path
 
-
     def iter_datamodels(self, resdir):
-        for (path, files) in (normalize_data_file(fn) for fn in (self.datamodels or ())):
+        for (path, files) in (
+                normalize_data_file(fn) for fn in (self.datamodels or ())):
             path = fsencoding(path)
             for fn in files:
                 fn = fsencoding(fn)
@@ -778,7 +846,8 @@ class py2app(Command):
             momc(src, dest)
 
     def iter_mappingmodels(self, resdir):
-        for (path, files) in (normalize_data_file(fn) for fn in (self.mappingmodels or ())):
+        for (path, files) in (
+                normalize_data_file(fn) for fn in (self.mappingmodels or ())):
             path = fsencoding(path)
             for fn in files:
                 fn = fsencoding(fn)
@@ -805,7 +874,9 @@ class py2app(Command):
                     subdir = PLUGIN_SUFFIXES[ext]
                     path = item
                 except KeyError:
-                    raise DistutilsOptionError("Cannot determine subdirectory for plugin %s"%(item,))
+                    raise DistutilsOptionError(
+                        "Cannot determine subdirectory for plugin %s" % (
+                            item,))
 
             yield path, os.path.join(subdir, os.path.basename(path))
 
@@ -851,7 +922,6 @@ class py2app(Command):
             result['PyOptions']['optimize'] = self.optimize
         return result
 
-
     def initialize_plist(self):
         plist = self.get_default_plist()
         for target in self.targets:
@@ -864,8 +934,8 @@ class py2app(Command):
             if not os.path.exists(iconfile):
                 iconfile = iconfile + '.icns'
             if not os.path.exists(iconfile):
-                raise DistutilsOptionError("icon file must exist: %r"
-                    % (self.iconfile,))
+                raise DistutilsOptionError(
+                    "icon file must exist: %r" % (self.iconfile,))
             self.resources.append(iconfile)
             plist['CFBundleIconFile'] = os.path.basename(iconfile)
         if self.prefer_ppc:
@@ -882,7 +952,8 @@ class py2app(Command):
             if hasattr(target, 'extra_scripts'):
                 extra_scripts.update(extra_scripts)
 
-            dst = self.build_alias_executable(target, target.script, extra_scripts)
+            dst = self.build_alias_executable(
+                target, target.script, extra_scripts)
             self.app_files.append(dst)
 
             for fn in extra_scripts:
@@ -892,7 +963,8 @@ class py2app(Command):
                     fn = fn[:-4]
 
                 src_fn = script_executable(arch=self.arch, secondary=True)
-                tgt_fn = os.path.join(target.appdir, 'Contents', 'MacOS', os.path.basename(fn))
+                tgt_fn = os.path.join(
+                    target.appdir, 'Contents', 'MacOS', os.path.basename(fn))
                 mergecopy(src_fn, tgt_fn)
                 make_exec(tgt_fn)
 
@@ -928,7 +1000,8 @@ class py2app(Command):
                 print('*** using recipe: %s ***' % (name,))
 
                 if 'expected_missing_imports' in rval:
-                    self.expected_missing_imports |= rval.get('expected_missing_imports')
+                    self.expected_missing_imports |= rval.get(
+                        'expected_missing_imports')
 
                 if rval.get('packages'):
                     self.packages.update(rval['packages'])
@@ -940,8 +1013,8 @@ class py2app(Command):
                     flatpackages[pkg[0]] = pkg[1]
                 filters.extend(rval.get('filters', ()))
                 loader_files.extend(rval.get('loader_files', ()))
-                newbootstraps = list(map(self.get_bootstrap,
-                    rval.get('prescripts', ())))
+                newbootstraps = list(
+                    map(self.get_bootstrap, rval.get('prescripts', ())))
 
                 if rval.get('includes'):
                     find_needed_modules(mf, includes=rval['includes'])
@@ -969,7 +1042,9 @@ class py2app(Command):
             raise
             # XXX - remove when not debugging
             #       distutils sucks
-            import pdb, sys, traceback
+            import pdb
+            import sys
+            import traceback
             traceback.print_exc()
             pdb.post_mortem(sys.exc_info()[2])
 
@@ -992,8 +1067,8 @@ class py2app(Command):
             appdir = os.path.join(self.dist_dir, os.path.dirname(base))
             appname = self.get_appname()
             dgraph = os.path.join(appdir, appname + '.html')
-            print("*** creating dependency html: %s ***"
-                % (os.path.basename(dgraph),))
+            print("*** creating dependency html: %s ***" % (
+                os.path.basename(dgraph),))
             with open(dgraph, 'w') as fp:
                 mf.create_xref(fp)
 
@@ -1003,8 +1078,9 @@ class py2app(Command):
             appdir = os.path.join(self.dist_dir, os.path.dirname(base))
             appname = self.get_appname()
             dgraph = os.path.join(appdir, appname + '.dot')
-            print("*** creating dependency graph: %s ***"
-                % (os.path.basename(dgraph),))
+            print(
+                "*** creating dependency graph: %s ***" % (
+                    os.path.basename(dgraph),))
             with open(dgraph, 'w') as fp:
                 mf.graphreport(fp, flatpackages=flatpackages)
 
@@ -1012,17 +1088,19 @@ class py2app(Command):
         for item in mf.flatten():
             if isinstance(item, Package) and item.filename == '-':
                 # In python3.3 or later the default importer supports namespace
-                # packages without an __init__ file, don't use that funcionality
-                # because that causes problems with our suppport for loading
-                # C extensions.
-                #if sys.version_info[:2] <= (3,3):
+                # packages without an __init__ file, don't use that
+                # funcionality because that causes problems with our suppport
+                # for loading C extensions.
+                #
+                # if sys.version_info[:2] <= (3,3):
                 if 1:
-                    fn = os.path.join(self.temp_dir, 'empty_package', '__init__.py')
+                    fn = os.path.join(
+                        self.temp_dir, 'empty_package', '__init__.py')
                     if not os.path.exists(fn):
                         dn = os.path.dirname(fn)
                         if not os.path.exists(dn):
                             os.makedirs(dn)
-                        with open(fn, 'w') as fp:
+                        with open(fn, 'w'):
                             pass
 
                     item.filename = fn
@@ -1031,7 +1109,7 @@ class py2app(Command):
 
         # Remove all top-level scripts from the list of python files,
         # those get treated differently.
-        py_files = [ item for item in py_files if not isinstance(item, Script) ]
+        py_files = [item for item in py_files if not isinstance(item, Script)]
 
         extensions = list(extensions)
         return py_files, extensions
@@ -1044,7 +1122,7 @@ class py2app(Command):
 
     def may_log_missing(self, module_name):
         module_parts = module_name.split('.')
-        for num_parts in range(1,len(module_parts)+1):
+        for num_parts in range(1, len(module_parts)+1):
             module_id = '.'.join(module_parts[0:num_parts])
             if module_id in self.expected_missing_imports:
                 return False
@@ -1069,11 +1147,9 @@ class py2app(Command):
         if self.xref:
             self.build_xref(mf, flatpackages)
 
-
         py_files, extensions = self.finalize_modulefinder(mf)
         pkgdirs = self.collect_packagedirs()
         self.create_binaries(py_files, pkgdirs, extensions, loader_files)
-
 
         missing = []
         syntax_error = []
@@ -1086,9 +1162,11 @@ class py2app(Command):
                     missing.append(module)
             elif isinstance(module, modulegraph.InvalidSourceModule):
                 syntax_error.append(module)
-            elif hasattr(modulegraph, 'InvalidCompiledModule') and isinstance(module, modulegraph.InvalidCompiledModule):
+            elif hasattr(modulegraph, 'InvalidCompiledModule') \
+                    and isinstance(module, modulegraph.InvalidCompiledModule):
                 invalid_bytecode.append(module)
-            elif hasattr(modulegraph, 'InvalidRelativeImport') and isinstance(module, modulegraph.InvalidRelativeImport):
+            elif hasattr(modulegraph, 'InvalidRelativeImport') \
+                    and isinstance(module, modulegraph.InvalidRelativeImport):
                 invalid_relative_import.append(module)
 
         if missing:
@@ -1097,17 +1175,19 @@ class py2app(Command):
             missing_fromimport_conditional = collections.defaultdict(set)
             missing_conditional = collections.defaultdict(set)
 
-            log.info( 'checking for any import problems' )
+            log.info('checking for any import problems')
             for module in sorted(missing):
                 for m in mf.getReferers(module):
-                    if m is None: continue # XXX
+                    if m is None:
+                        continue  # XXX
 
                     try:
                         ed = mf.edgeData(m, module)
                     except KeyError:
                         ed = None
 
-                    if hasattr(modulegraph, 'DependencyInfo') and isinstance(ed, modulegraph.DependencyInfo):
+                    if hasattr(modulegraph, 'DependencyInfo') and \
+                            isinstance(ed, modulegraph.DependencyInfo):
                         c = missing_unconditional
                         if ed.conditional or ed.function:
                             if ed.fromlist:
@@ -1121,7 +1201,8 @@ class py2app(Command):
                         c[module.identifier].add(m.identifier)
 
                     else:
-                        missing_unconditional[module.identifier].add(m.identifier)
+                        missing_unconditional[
+                            module.identifier].add(m.identifier)
 
             if missing_unconditional:
                 warnings = []
@@ -1134,20 +1215,27 @@ class py2app(Command):
                                 o = getattr(o, m2)
                             except AttributeError:
                                 if self.may_log_missing(m):
-                                    warnings.append(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                                    warnings.append(
+                                        " * %s (%s)" % (
+                                            m, ", ".join(sorted(
+                                                missing_unconditional[m]))))
                                 continue
-
 
                         else:
                             o = __import__(m)
 
                         if isinstance(o, types.ModuleType):
                             if self.may_log_missing(m):
-                                warnings.append(" * %s (%s) [module alias]" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                                warnings.append(
+                                    " * %s (%s) [module alias]" % (
+                                        m, ", ".join(sorted(
+                                            missing_unconditional[m]))))
 
                     except ImportError:
                         if self.may_log_missing(m):
-                            warnings.append(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                            warnings.append(" * %s (%s)" % (
+                                m, ", ".join(sorted(
+                                    missing_unconditional[m]))))
 
                 if len(warnings) > 0:
                     log.warn("Modules not found (unconditional imports):")
@@ -1155,8 +1243,8 @@ class py2app(Command):
                         log.warn(msg)
                     log.warn("")
 
-
-            if missing_conditional and not self.no_report_missing_conditional_import:
+            if missing_conditional and \
+                    not self.no_report_missing_conditional_import:
                 warnings = []
                 for m in sorted(missing_conditional):
                     try:
@@ -1167,19 +1255,25 @@ class py2app(Command):
                                 o = getattr(o, m2)
                             except AttributeError:
                                 if self.may_log_missing(m):
-                                    warnings.append(" * %s (%s)" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                                    warnings.append(
+                                        " * %s (%s)" % (
+                                            m, ", ".join(sorted(
+                                                missing_unconditional[m]))))
                                 continue
-
 
                         else:
                             o = __import__(m)
 
                         if isinstance(o, types.ModuleType):
                             if self.may_log_missing(m):
-                                warnings.append(" * %s (%s) [module alias]" % (m, ", ".join(sorted(missing_unconditional[m]))))
+                                warnings.append(
+                                    " * %s (%s) [module alias]" % (
+                                        m, ", ".join(
+                                            sorted(missing_unconditional[m]))))
                     except ImportError:
                         if self.may_log_missing(m):
-                            warnings.append(" * %s (%s)" % (m, ", ".join(sorted(missing_conditional[m]))))
+                            warnings.append(" * %s (%s)" % (
+                                m, ", ".join(sorted(missing_conditional[m]))))
 
                 if len(warnings) > 0:
                     log.warn("Modules not found (conditional imports):")
@@ -1189,22 +1283,28 @@ class py2app(Command):
 
             if self.report_missing_from_imports and (
                     missing_fromimport or (
-                        not self.no_report_missing_conditional_import and missing_fromimport_conditional)):
+                        not self.no_report_missing_conditional_import
+                        and missing_fromimport_conditional)):
                 log.warn("Modules not found ('from ... import y'):")
                 for m in sorted(missing_fromimport):
-                    log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_fromimport[m]))))
+                    log.warn(" * %s (%s)" % (
+                        m, ", ".join(sorted(missing_fromimport[m]))))
 
-                if not self.no_report_missing_conditional_import and missing_fromimport_conditional:
+                if not self.no_report_missing_conditional_import \
+                        and missing_fromimport_conditional:
                     log.warn("")
                     log.warn("Conditional:")
                     for m in sorted(missing_fromimport_conditional):
-                        log.warn(" * %s (%s)" % (m, ", ".join(sorted(missing_fromimport_conditional[m]))))
+                        log.warn(" * %s (%s)" % (
+                            m,
+                            ", ".join(
+                                sorted(missing_fromimport_conditional[m]))))
                 log.warn("")
 
         if syntax_error:
             log.warn("Modules with syntax errors:")
             for module in sorted(syntax_error):
-                log.warn(" * %s"%(module.identifier))
+                log.warn(" * %s" % (module.identifier))
 
             log.warn("")
 
@@ -1218,24 +1318,25 @@ class py2app(Command):
                     imports[n.identifier].add(module.relative_path)
 
             for mod in sorted(imports):
-                log.warn(" * %s (importing %s)"%(mod, ", ".join(sorted(imports[mod]))))
+                log.warn(" * %s (importing %s)" % (
+                    mod, ", ".join(sorted(imports[mod]))))
 
         if invalid_bytecode:
             log.warn("Modules with invalid bytecode:")
             for module in sorted(invalid_bytecode):
-                log.warn(" * %s"%(module.identifier))
+                log.warn(" * %s" % (module.identifier))
 
             log.warn("")
-
 
     def create_directories(self):
         bdist_base = self.bdist_base
         if self.semi_standalone:
-            self.bdist_dir = os.path.join(bdist_base,
+            self.bdist_dir = os.path.join(
+                bdist_base,
                 'python%s-semi_standalone' % (sys.version[:3],), 'app')
         else:
-            self.bdist_dir = os.path.join(bdist_base,
-                'python%s-standalone' % (sys.version[:3],), 'app')
+            self.bdist_dir = os.path.join(
+                bdist_base, 'python%s-standalone' % (sys.version[:3],), 'app')
 
         if os.path.exists(self.bdist_dir):
             shutil.rmtree(self.bdist_dir)
@@ -1250,8 +1351,10 @@ class py2app(Command):
         self.dist_dir = os.path.abspath(self.dist_dir)
         self.mkpath(self.dist_dir)
 
-        self.lib_dir = os.path.join(self.bdist_dir,
-            os.path.dirname(get_zipfile(self.distribution, self.semi_standalone)))
+        self.lib_dir = os.path.join(
+            self.bdist_dir,
+            os.path.dirname(
+                get_zipfile(self.distribution, self.semi_standalone)))
         self.mkpath(self.lib_dir)
 
         self.ext_dir = os.path.join(self.lib_dir, 'lib-dynload')
@@ -1266,6 +1369,7 @@ class py2app(Command):
         pkgexts = []
         copyexts = []
         extmap = {}
+
         def packagefilter(mod, pkgdirs=pkgdirs):
             fn = os.path.realpath(getattr(mod, 'filename', None))
             if fn is None:
@@ -1297,7 +1401,8 @@ class py2app(Command):
                      dry_run=self.dry_run)
 
         for item in py_files:
-            if not isinstance(item, Package): continue
+            if not isinstance(item, Package):
+                continue
             self.copy_package_data(item, self.collect_dir)
 
         self.lib_files = []
@@ -1317,12 +1422,10 @@ class py2app(Command):
                 else:
                     self.copy_file(fn, destfn)
 
-        arcname = self.make_lib_archive(archive_name,
+        arcname = self.make_lib_archive(
+            archive_name,
             base_dir=self.collect_dir, verbose=self.verbose,
             dry_run=self.dry_run)
-
-        # XXX: this doesn't work with python3
-        #self.lib_files.append(arcname)
 
         # build the executables
         for target in self.targets:
@@ -1331,25 +1434,33 @@ class py2app(Command):
                 extra_scripts.extend(target.extra_scripts)
 
             dst = self.build_executable(
-                target, arcname, pkgexts, copyexts, target.script, extra_scripts)
+                target, arcname, pkgexts, copyexts, target.script,
+                extra_scripts)
             exp = os.path.join(dst, 'Contents', 'MacOS')
             execdst = os.path.join(exp, 'python')
             if self.semi_standalone:
                 make_symlink(sys.executable, execdst)
             else:
                 if PYTHONFRAMEWORK:
-                    # When we're using a python framework bin/python refers to a stub executable
-                    # that we don't want use, we need the executable in Resources/Python.app
+                    # When we're using a python framework bin/python refers
+                    # to a stub executable that we don't want use, we need
+                    # the executable in Resources/Python.app
                     dpath = os.path.join(self._python_app, 'Contents', 'MacOS')
-                    self.copy_file(os.path.join(dpath, PYTHONFRAMEWORK), execdst)
+                    self.copy_file(
+                        os.path.join(dpath, PYTHONFRAMEWORK), execdst)
 
                 elif os.path.exists(os.path.join(sys.prefix, ".Python")):
-                    fn = os.path.join(sys.prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "orig-prefix.txt")
+                    fn = os.path.join(
+                        sys.prefix, "lib",
+                        "python%d.%d" % (sys.version_info[:2]),
+                        "orig-prefix.txt")
+
                     if os.path.exists(fn):
                         with open(fn, 'rU') as fp:
                             prefix = fp.read().strip()
 
-                    rest_path = os.path.normpath(sys.executable)[len(os.path.normpath(sys.prefix))+1:]
+                    rest_path = os.path.normpath(
+                        sys.executable)[len(os.path.normpath(sys.prefix))+1:]
                     if rest_path.startswith('.'):
                         rest_path = rest_path[1:]
 
@@ -1362,19 +1473,23 @@ class py2app(Command):
                 if self.force_system_tk:
                     print("force system tk")
                     resdir = os.path.join(dst, 'Contents', 'Resources')
-                    pydir = os.path.join(resdir, 'lib', 'python%s.%s'%(sys.version_info[:2]))
-                    ext_dir = os.path.join(pydir, os.path.basename(self.ext_dir))
+                    pydir = os.path.join(
+                        resdir, 'lib', 'python%s.%s' % (sys.version_info[:2]))
+                    ext_dir = os.path.join(
+                        pydir, os.path.basename(self.ext_dir))
                     tkinter_path = os.path.join(ext_dir, '_tkinter.so')
                     if os.path.exists(tkinter_path):
                         rewrite_tkinter_load_commands(tkinter_path)
                     else:
                         print("tkinter not found at", tkinter_path)
 
-
                 mm = PythonStandalone(
                         appbuilder=self,
                         base=dst,
-                        ext_dir=os.path.join(dst, 'Contents', 'Resources', 'lib', 'python%s.%s'%(sys.version_info[:2]), 'lib-dynload'),
+                        ext_dir=os.path.join(
+                            dst, 'Contents', 'Resources', 'lib',
+                            'python%s.%s' % (sys.version_info[:2]),
+                            'lib-dynload'),
                         copyexts=copyexts,
                         executable_path=exp)
 
@@ -1404,10 +1519,11 @@ class py2app(Command):
         This is a bit of a hack, it would be better to identify python eggs
         and copy those in whole.
         """
-        exts = [ i[0] for i in imp.get_suffixes() ]
+        exts = [i[0] for i in imp.get_suffixes()]
         exts.append('.py')
         exts.append('.pyc')
         exts.append('.pyo')
+
         def datafilter(item):
             for e in exts:
                 if item.endswith(e):
@@ -1450,16 +1566,16 @@ class py2app(Command):
                     continue
 
                 elif zipio.isdir(pth) and (
-                        zipio.isfile(os.path.join(pth, '__init__.py'))
+                     zipio.isfile(os.path.join(pth, '__init__.py'))
                      or zipio.isfile(os.path.join(pth, '__init__.pyc'))
                      or zipio.isfile(os.path.join(pth, '__init__.pyo'))):
-                    # Subdirectory is a python package, these will get included later on
-                    # when the subpackage itself is included, ignore for now.
+                    # Subdirectory is a python package, these will get
+                    # included later on when the subpackage itself is
+                    # included, ignore for now.
                     pass
 
                 else:
                     copy_file(pth, os.path.join(target_dir, fname))
-
 
     def strip_dsym(self, platfiles):
         """ Remove .dSYM directories in the bundled application """
@@ -1473,7 +1589,7 @@ class py2app(Command):
         for dirpath, dnames, fnames in os.walk(self.appdir):
             for nm in list(dnames):
                 if nm.endswith('.dSYM'):
-                    print("removing debug info: %s/%s"%(dirpath, nm))
+                    print("removing debug info: %s/%s" % (dirpath, nm))
                     shutil.rmtree(os.path.join(dirpath, nm))
                     dnames.remove(nm)
         return [file for file in platfiles if '.dSYM' not in file]
@@ -1489,7 +1605,8 @@ class py2app(Command):
         stripped = 0
         for fn in stripfiles:
             stripped += os.stat(fn).st_size
-        log.info('stripping saved %d bytes (%d / %d)',
+        log.info(
+            'stripping saved %d bytes (%d / %d)',
             unstripped - stripped, stripped, unstripped)
 
     def copy_dylib(self, src, dst):
@@ -1512,6 +1629,7 @@ class py2app(Command):
         infile = os.path.join(info['location'], short)
         outfile = os.path.join(dst, short)
         vsplit = os.path.join(infile, 'Versions').split(os.sep)
+
         def condition(src, vsplit=vsplit, version=version):
             srcsplit = src.split(os.sep)
             if (
@@ -1519,12 +1637,14 @@ class py2app(Command):
                     srcsplit[:len(vsplit)] == vsplit and
                     srcsplit[len(vsplit)] != version and
                     not os.path.islink(src)
-                ):
+                    ):
                 return False
+
             # Skip Headers, .svn, and CVS dirs
             return framework_copy_condition(src)
 
-        return self.copy_tree(infile, outfile,
+        return self.copy_tree(
+            infile, outfile,
             preserve_symlinks=True, condition=condition)
 
     def copy_framework(self, info, dst):
@@ -1540,7 +1660,8 @@ class py2app(Command):
         short = info['shortname'] + '.framework'
         infile = os.path.join(info['location'], short)
         outfile = os.path.join(dst, short)
-        return self.copy_tree(infile, outfile,
+        return self.copy_tree(
+            infile, outfile,
             preserve_symlinks=True, condition=framework_copy_condition)
 
     def copy_python_framework(self, info, dst):
@@ -1550,9 +1671,8 @@ class py2app(Command):
         includedir = get_config_var('CONFINCLUDEPY')
         configdir = get_config_var('LIBPL')
 
-
         if includedir is None:
-            includedir = 'python%d.%d'%(sys.version_info[:2])
+            includedir = 'python%d.%d' % (sys.version_info[:2])
         else:
             includedir = os.path.basename(includedir)
 
@@ -1561,7 +1681,6 @@ class py2app(Command):
         else:
             configdir = os.path.basename(configdir)
 
-
         indir = os.path.dirname(os.path.join(info['location'], info['name']))
         outdir = os.path.dirname(os.path.join(dst, info['name']))
         if os.path.exists(outdir):
@@ -1569,7 +1688,7 @@ class py2app(Command):
             return
 
         self.mkpath(os.path.join(outdir, 'Resources'))
-        pydir = 'python%s.%s'%(sys.version_info[:2])
+        pydir = 'python%s.%s' % (sys.version_info[:2])
 
         # Create a symlink "for Python.frameworks/Versions/Current". This
         # is required for the Mac App-store.
@@ -1580,11 +1699,12 @@ class py2app(Command):
         # Likewise for two links in the root of the framework:
         make_symlink(
             'Versions/Current/Resources',
-            os.path.join(os.path.dirname(os.path.dirname(outdir)), 'Resources'))
+            os.path.join(
+                os.path.dirname(os.path.dirname(outdir)), 'Resources'))
         make_symlink(
             os.path.join('Versions/Current', PYTHONFRAMEWORK),
-            os.path.join(os.path.dirname(os.path.dirname(outdir)), PYTHONFRAMEWORK))
-
+            os.path.join(
+                os.path.dirname(os.path.dirname(outdir)), PYTHONFRAMEWORK))
 
         # Experiment for issue 57
         if not os.path.exists(os.path.join(indir, 'include')):
@@ -1600,23 +1720,20 @@ class py2app(Command):
         self.mkpath(os.path.join(outdir, 'lib', pydir))
         self.mkpath(os.path.join(outdir, 'lib', pydir, configdir))
 
-
         fmwkfiles = [
             os.path.basename(info['name']),
             'Resources/Info.plist',
-            'include/%s/pyconfig.h'%(includedir),
+            'include/%s/pyconfig.h' % (includedir),
         ]
         if '_sysconfigdata' not in sys.modules:
             fmwkfiles.append(
-               'lib/%s/%s/Makefile'%(pydir, configdir)
+               'lib/%s/%s/Makefile' % (pydir, configdir)
             )
 
         for fn in fmwkfiles:
             self.copy_file(
                 os.path.join(indir, fn),
                 os.path.join(outdir, fn))
-
-
 
     def fixup_distribution(self):
         dist = self.distribution
@@ -1625,8 +1742,8 @@ class py2app(Command):
         # reasons.
         app = dist.app
         plugin = dist.plugin
-        # If we can get suitable values from self.app and self.plugin, we prefer
-        # them.
+        # If we can get suitable values from self.app and self.plugin,
+        # we prefer them.
         if self.app is not None or self.plugin is not None:
             app = self.app
             plugin = self.plugin
@@ -1665,7 +1782,7 @@ class py2app(Command):
                   "all targets must use the same directory: %s" %
                   ([p for p in paths],))
         if paths:
-            app_dir = paths.pop() # the only element
+            app_dir = paths.pop()  # the only element
             if os.path.isabs(app_dir):
                 raise DistutilsOptionError(
                       "app directory must be relative: %s" % (app_dir,))
@@ -1693,12 +1810,16 @@ class py2app(Command):
             # it.
             if self.alias or self.semi_standalone:
                 prescripts.append("virtualenv")
-                prescripts.append(StringIO('_fixup_virtualenv(%r)' % (sys.real_prefix,)))
+                prescripts.append(
+                    StringIO('_fixup_virtualenv(%r)' % (sys.real_prefix,)))
 
             if self.site_packages or self.alias:
                 import site
                 global_site_packages = not os.path.exists(
-                        os.path.join(os.path.dirname(site.__file__), 'no-global-site-packages.txt'))
+                    os.path.join(
+                        os.path.dirname(site.__file__),
+                        'no-global-site-packages.txt'))
+
                 prescripts.append('virtualenv_site_packages')
                 prescripts.append(StringIO('_site_packages(%r, %r, %d)' % (
                     sys.prefix, sys.real_prefix, global_site_packages)))
@@ -1709,13 +1830,10 @@ class py2app(Command):
         if is_system():
             prescripts.append('system_path_extras')
 
-        #if self.style == 'app':
-        #    prescripts.append('setup_pkgresource')
-
         included_subpkg = [pkg for pkg in self.packages if '.' in pkg]
         if included_subpkg:
             prescripts.append('setup_included_subpackages')
-            prescripts.append(StringIO('_path_hooks = %r'%(
+            prescripts.append(StringIO('_path_hooks = %r' % (
                 included_subpkg)))
 
         if self.emulate_shell_environment:
@@ -1726,7 +1844,7 @@ class py2app(Command):
             if 'CFBundleDocumentTypes' not in self.plist:
                 self.plist['CFBundleDocumentTypes'] = [
                     {
-                        'CFBundleTypeOSTypes' : [
+                        'CFBundleTypeOSTypes': [
                             '****',
                             'fold',
                             'disk',
@@ -1770,7 +1888,6 @@ class py2app(Command):
             prescripts = getattr(target, 'prescripts', [])
             target.prescripts = newprescripts + prescripts
 
-
     def get_bootstrap(self, bootstrap):
         if isinstance(bootstrap, basestring):
             if not os.path.exists(bootstrap):
@@ -1813,7 +1930,8 @@ class py2app(Command):
             self.plist.setdefault(
                 'PyRuntimeLocations', self.runtime_preferences)
         pythonInfo = self.plist.setdefault('PythonInfoDict', {})
-        py2appInfo = pythonInfo.setdefault('py2app', {}).update(dict(
+        py2appInfo = pythonInfo.setdefault('py2app', {})
+        py2appInfo.update(dict(
             alias=bool(self.alias),
         ))
         appdir, plist = create_appbundle(
@@ -1870,7 +1988,6 @@ class py2app(Command):
             os.path.join(realhome, 'config'),
             os.path.join(pyhome, 'config'))
 
-
         # symlink data files
         # XXX: fixme: need to integrate automatic data conversion
         for src, dest in self.iter_data_files():
@@ -1916,7 +2033,7 @@ class py2app(Command):
         for fn in target.prescripts:
             bootfile.write(self.get_bootstrap_data(fn))
             bootfile.write('\n\n')
-        bootfile.write("DEFAULT_SCRIPT=%r\n"%(os.path.realpath(script),))
+        bootfile.write("DEFAULT_SCRIPT=%r\n" % (os.path.realpath(script),))
         script_map = {}
         for fn in extra_scripts:
             tgt = os.path.realpath(fn)
@@ -1928,7 +2045,7 @@ class py2app(Command):
             else:
                 script_map[fn] = tgt
 
-        bootfile.write("SCRIPT_MAP=%r\n"%(script_map,))
+        bootfile.write("SCRIPT_MAP=%r\n" % (script_map,))
         bootfile.write('try:\n')
         bootfile.write('    _run()\n')
         bootfile.write('except KeyboardInterrupt:\n')
@@ -1938,7 +2055,8 @@ class py2app(Command):
         target.appdir = appdir
         return appdir
 
-    def build_executable(self, target, arcname, pkgexts, copyexts, script, extra_scripts):
+    def build_executable(
+            self, target, arcname, pkgexts, copyexts, script, extra_scripts):
         # Build an executable for the target
         appdir, resdir, plist = self.create_bundle(target, script)
         self.appdir = appdir
@@ -1952,10 +2070,10 @@ class py2app(Command):
                 fn = fn[:-4]
 
             src_fn = script_executable(arch=self.arch, secondary=True)
-            tgt_fn = os.path.join(self.appdir, 'Contents', 'MacOS', os.path.basename(fn))
+            tgt_fn = os.path.join(
+                self.appdir, 'Contents', 'MacOS', os.path.basename(fn))
             mergecopy(src_fn, tgt_fn)
             make_exec(tgt_fn)
-
 
         site_path = os.path.join(resdir, 'site.py')
         byte_compile([
@@ -1969,13 +2087,11 @@ class py2app(Command):
         if not self.dry_run:
             os.unlink(site_path)
 
-
         includedir = get_config_var('CONFINCLUDEPY')
         configdir = get_config_var('LIBPL')
 
-
         if includedir is None:
-            includedir = 'python%d.%d'%(sys.version_info[:2])
+            includedir = 'python%d.%d' % (sys.version_info[:2])
         else:
             includedir = os.path.basename(includedir)
 
@@ -1993,7 +2109,7 @@ class py2app(Command):
             bootfile.write(self.get_bootstrap_data(fn))
             bootfile.write('\n\n')
 
-        bootfile.write("DEFAULT_SCRIPT=%r\n"%(os.path.basename(script),))
+        bootfile.write("DEFAULT_SCRIPT=%r\n" % (os.path.basename(script),))
 
         script_map = {}
         for fn in extra_scripts:
@@ -2005,7 +2121,7 @@ class py2app(Command):
             else:
                 script_map[fn] = fn
 
-        bootfile.write("SCRIPT_MAP=%r\n"%(script_map,))
+        bootfile.write("SCRIPT_MAP=%r\n" % (script_map,))
         bootfile.write('_run()\n')
         bootfile.close()
 
@@ -2013,7 +2129,9 @@ class py2app(Command):
         for fn in extra_scripts:
             self.copy_file(fn, resdir)
 
-        pydir = os.path.join(resdir, 'lib', 'python%s.%s'%(sys.version_info[:2]))
+        pydir = os.path.join(
+            resdir, 'lib', 'python%s.%s' % (sys.version_info[:2]))
+
         if sys.version_info[0] == 2 or self.semi_standalone:
             arcdir = os.path.join(resdir, 'lib', 'python' + sys.version[:3])
         else:
@@ -2048,13 +2166,12 @@ class py2app(Command):
                 for fn in 'Makefile', 'Setup', 'Setup.local', 'Setup.config':
                     rfn = os.path.join(realcfg, fn)
                     if os.path.exists(rfn):
-                       self.copy_file(rfn, os.path.join(cfgdir, fn))
+                        self.copy_file(rfn, os.path.join(cfgdir, fn))
 
             inc_dir = os.path.join(resdir, 'include', includedir)
             self.mkpath(inc_dir)
             self.copy_file(get_config_h_filename(),
                            os.path.join(inc_dir, 'pyconfig.h'))
-
 
         self.copy_file(arcname, arcdir)
         if sys.version_info[0] != 2:
@@ -2063,7 +2180,8 @@ class py2app(Command):
 
         ext_dir = os.path.join(pydir, os.path.basename(self.ext_dir))
         self.copy_tree(self.ext_dir, ext_dir, preserve_symlinks=True)
-        self.copy_tree(self.framework_dir,
+        self.copy_tree(
+            self.framework_dir,
             os.path.join(appdir, 'Contents', 'Frameworks'),
             preserve_symlinks=True)
         for pkg_name in self.packages:
@@ -2088,9 +2206,12 @@ class py2app(Command):
             #        here (see issue 101)
 
         for copyext in copyexts:
-            fn = os.path.join(ext_dir,
-                (copyext.identifier.replace('.', os.sep) +
-                os.path.splitext(copyext.filename)[1])
+            fn = os.path.join(
+                ext_dir,
+                (
+                    copyext.identifier.replace('.', os.sep) +
+                    os.path.splitext(copyext.filename)[1]
+                )
             )
             self.mkpath(os.path.dirname(fn))
             copy_file(copyext.filename, fn, dry_run=self.dry_run)
@@ -2111,7 +2232,6 @@ class py2app(Command):
             makedirs(os.path.dirname(dest))
             copy_resource(src, dest, dry_run=self.dry_run)
 
-
         target.appdir = appdir
         return appdir
 
@@ -2121,14 +2241,16 @@ class py2app(Command):
         pathname = os.path.join(self.temp_dir, "%s.py" % slashname)
         if os.path.exists(pathname):
             if self.verbose:
-                print("skipping python loader for extension %r"
-                    % (item.identifier,))
+                print(
+                    "skipping python loader for extension %r" % (
+                        item.identifier,))
         else:
             self.mkpath(os.path.dirname(pathname))
             # and what about dry_run?
             if self.verbose:
-                print("creating python loader for extension %r"
-                    % (item.identifier,))
+                print(
+                    "creating python loader for extension %r" % (
+                        item.identifier,))
 
             fname = slashname + os.path.splitext(item.filename)[1]
             source = make_loader(fname)
@@ -2178,9 +2300,10 @@ class py2app(Command):
 
         return zip_filename
 
-    def copy_tree(self, infile, outfile,
-                   preserve_mode=1, preserve_times=1, preserve_symlinks=0,
-                   level=1, condition=None):
+    def copy_tree(
+            self, infile, outfile,
+            preserve_mode=1, preserve_times=1, preserve_symlinks=0,
+            level=1, condition=None):
         """Copy an entire directory tree respecting verbose, dry-run,
         and force flags.
 
@@ -2188,7 +2311,7 @@ class py2app(Command):
         """
         return copy_tree(
             infile, outfile,
-            preserve_mode,preserve_times,preserve_symlinks,
+            preserve_mode, preserve_times, preserve_symlinks,
             not self.force,
             dry_run=self.dry_run,
             condition=condition)

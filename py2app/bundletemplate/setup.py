@@ -8,7 +8,9 @@ gPreBuildVariants = [
     {
         'name': 'main-universal',
         'target': '10.5',
-        'cflags': '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.5.sdk -arch i386 -arch ppc -arch ppc64 -arch x86_64',
+        'cflags':
+            '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.5.sdk '
+            '-arch i386 -arch ppc -arch ppc64 -arch x86_64',
         'cc': 'gcc-4.2',
     },
     {
@@ -38,7 +40,7 @@ gPreBuildVariants = [
     {
         'name': 'main-i386',
         'target': '10.3',
-        #'cflags': '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.4u.sdk -arch i386',
+        # 'cflags': '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.4u.sdk -arch i386',
         'cflags': '-arch i386 -isysroot /',
         'cc': 'clang',
     },
@@ -51,7 +53,9 @@ gPreBuildVariants = [
     {
         'name': 'main-fat',
         'target': '10.3',
-        'cflags': '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc',
+        'cflags':
+            '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.4u.sdk '
+            '-arch i386 -arch ppc',
         'cc': 'gcc-4.0',
     },
 ]
@@ -73,18 +77,18 @@ def main(all=False, arch=None):
         x = re.sub('-arch\s+\S+', '', BASE_CFLAGS)
         if x == BASE_CFLAGS:
             break
-        BASE_CFLAGS=x
+        BASE_CFLAGS = x
 
     while True:
         x = re.sub('-isysroot\s+\S+', '', BASE_CFLAGS)
         if x == BASE_CFLAGS:
             break
-        BASE_CFLAGS=x
+        BASE_CFLAGS = x
 
     if arch is None:
         arch = distutils.util.get_platform().split('-')[-1]
         if sys.prefix.startswith('/System') and \
-                sys.version_info[:2] == (2,5):
+                sys.version_info[:2] == (2, 5):
             arch = "fat"
 
     name = 'main-' + arch
@@ -92,7 +96,8 @@ def main(all=False, arch=None):
 
     if all:
         for entry in gPreBuildVariants:
-            if (not all) and entry['name'] != name: continue
+            if (not all) and entry['name'] != name:
+                continue
 
             dest = os.path.join(builddir, entry['name'])
             if not os.path.exists(dest) or (
@@ -102,13 +107,14 @@ def main(all=False, arch=None):
                     root = fp.read().strip()
                     fp.close()
 
-                print ("rebuilding %s"%(entry['name']))
+                print("rebuilding %s" % (entry['name']))
 
-                #CC=os.path.join(root, 'usr', 'bin', entry['cc'])
-                CC=entry['cc']
-                CFLAGS = BASE_CFLAGS + ' ' + entry['cflags'].replace('@@XCODE_ROOT@@', root)
+                CC = entry['cc']
+                CFLAGS = BASE_CFLAGS + ' ' \
+                    + entry['cflags'].replace('@@XCODE_ROOT@@', root)
                 os.environ['MACOSX_DEPLOYMENT_TARGET'] = entry['target']
-                os.system('"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s' % locals())
+                os.system(
+                    '"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s' % locals())
 
     dest = os.path.join(
             builddir,

@@ -1,4 +1,3 @@
-import os
 def check(cmd, mf):
     m = mf.findNode('ctypes')
     if m is None or m.filename is None:

@@ -9,14 +9,11 @@ The problem with SIP is that all inter-module depedencies (for example from
 PyQt4.Qt to PyQt4.QtCore) are handled in C code and therefore cannot be
 detected by the python code in py2app).
 """
-
-# since pkg_resources.py lives next to this file, we need to disambiguate the import
-from __future__ import absolute_import
-
 import sys
 import glob
 import os
 import pkg_resources
+
 
 class Sip(object):
     def __init__(self):
@@ -28,7 +25,8 @@ class Sip(object):
             print("packages", self.packages)
             return self.packages
 
-        import sipconfig, os
+        import sipconfig
+        import os
 
         try:
             from PyQt4 import pyqtconfig
@@ -45,7 +43,7 @@ class Sip(object):
             sipdir = os.path.dirname(sipconfig.__file__)
 
         if not os.path.exists(qtdir):
-            print("sip: Qtdir %r does not exist"%(qtdir))
+            print("sip: Qtdir %r does not exist" % (qtdir))
             # half-broken installation? ignore.
             raise ImportError
 
@@ -67,14 +65,10 @@ class Sip(object):
                     # subpackage to ensure everything get seen.
                     for sub in os.listdir(fullpath):
                         if ".py" not in sub:
-                            self.packages.add('%s.%s'%(fn, sub.replace(".so","")))
+                            self.packages.add('%s.%s' % (
+                                fn, sub.replace(".so", "")))
 
-        # Causes a python3-related syntax error (metaclass keyword),
-        # and you probably don't need it:
-        #if "PyQt4.uic" in self.packages and sys.version_info.major != 3:
-        #    print("WARNING: PyQt uic module found.")
-        #    print("avoid python3 metaclass syntax errors by adding 'PyQt4.uic' to your excludes option.")
-        print("sip: packages: %s"%(self.packages,))
+        print("sip: packages: %s" % (self.packages,))
 
         return self.packages
 
@@ -101,7 +95,6 @@ class Sip(object):
             else:
                 ref = 'PyQt5.uic.port_v2'
 
-
             # Exclude...
             mf.lazynodes[ref] = None
 
@@ -122,12 +115,13 @@ class Sip(object):
             try:
                 mf.import_hook(pkg, m)
             except ImportError as exc:
-                print("WARNING: ImportError in sip recipe ignored: %s"%(exc,))
+                print("WARNING: ImportError in sip recipe ignored: %s" % (
+                    exc,))
 
-        print(mf.findNode("PyQt4"))
-        print(mf.findNode("PyQt5"))
-        if mf.findNode('PyQt4') is not None or mf.findNode('PyQt5') is not None:
-            resources = [pkg_resources.resource_filename('py2app', 'recipes/qt.conf')]
+        if mf.findNode('PyQt4') is not None \
+                or mf.findNode('PyQt5') is not None:
+            resources = [
+                pkg_resources.resource_filename('py2app', 'recipes/qt.conf')]
 
             for item in cmd.qt_plugins:
                 if '/' not in item:
@@ -135,14 +129,26 @@ class Sip(object):
 
                 if '*' in item:
                     for path in glob.glob(os.path.join(self.plugin_dir, item)):
-                        resources.append((os.path.dirname('qt_plugins' + path[len(self.plugin_dir):]), [path]))
+                        rel_path = path[len(self.plugin_dir):]
+                        resources.append(
+                            (
+                                os.path.dirname('qt_plugins' + rel_path),
+                                [path]
+                            )
+                        )
                 else:
-                    resources.append((os.path.dirname(os.path.join('qt_plugins', item)), [os.path.join(self.plugin_dir, item)]))
+                    resources.append(
+                        (
+                            os.path.dirname(os.path.join('qt_plugins', item)),
+                            [os.path.join(self.plugin_dir, item)]
+                        )
+                    )
 
             print("PyQt resources", resources)
             return dict(resources=resources)
 
         print("Return {}")
         return dict()
+
 
 check = Sip().check

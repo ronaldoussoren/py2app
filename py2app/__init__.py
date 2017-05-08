@@ -31,4 +31,4 @@ import pkg_resources
 __version__ = pkg_resources.require('py2app')[0].version
 
 # This makes the py2app command work in the distutils.core.setup() case
-import setuptools
+import setuptools  # noqa: F401

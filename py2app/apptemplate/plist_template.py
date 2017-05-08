@@ -2,6 +2,7 @@ import sys
 import py2app
 __all__ = ['infoPlistDict']
 
+
 def infoPlistDict(CFBundleExecutable, plist={}):
     CFBundleExecutable = CFBundleExecutable
     version = sys.version[:3]
@@ -10,7 +11,8 @@ def infoPlistDict(CFBundleExecutable, plist={}):
         CFBundleDisplayName=plist.get('CFBundleName', CFBundleExecutable),
         CFBundleExecutable=CFBundleExecutable,
         CFBundleIconFile=CFBundleExecutable,
-        CFBundleIdentifier='org.pythonmac.unspecified.%s' % (''.join(CFBundleExecutable.split()),),
+        CFBundleIdentifier='org.pythonmac.unspecified.%s' % (
+            ''.join(CFBundleExecutable.split()),),
         CFBundleInfoDictionaryVersion='6.0',
         CFBundleName=CFBundleExecutable,
         CFBundlePackageType='APPL',
@@ -25,7 +27,10 @@ def infoPlistDict(CFBundleExecutable, plist={}):
         PyMainFileNames=['__boot__'],
         PyResourcePackages=[],
         PyRuntimeLocations=[(s % version) for s in [
-            '@executable_path/../Frameworks/Python.framework/Versions/%s/Python',
+            (
+                '@executable_path/../Frameworks/Python.framework'
+                '/Versions/%s/Python'
+            ),
             '~/Library/Frameworks/Python.framework/Versions/%s/Python',
             '/Library/Frameworks/Python.framework/Versions/%s/Python',
             '/Network/Library/Frameworks/Python.framework/Versions/%s/Python',
@@ -39,7 +44,8 @@ def infoPlistDict(CFBundleExecutable, plist={}):
         PythonShortVersion=sys.version[:3],
         PythonExecutable=sys.executable,
     ))
-    py2appInfo = pythonInfo.setdefault('py2app', {}).update(dict(
+    py2appInfo = pythonInfo.setdefault('py2app', {})
+    py2appInfo.update(dict(
         version=py2app.__version__,
         template='app',
     ))

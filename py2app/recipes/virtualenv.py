@@ -7,9 +7,12 @@ This recipe is rather compilicated and definitely not a
 good model for other recipes!!!
 """
 from __future__ import absolute_import
-import sys, os, imp
+import sys
+import os
+import imp
 from modulegraph.modulegraph import MissingModule, \
         Package, SourceModule, CompiledModule, find_module
+
 
 def retry_import(mf, m):
     """
@@ -21,8 +24,6 @@ def retry_import(mf, m):
     else:
         parent = None
         partname = m.identifier
-
-
 
     # This is basicly mf.find_module inlined and with a
     # check disabled.
@@ -38,9 +39,9 @@ def retry_import(mf, m):
             buf = os.path.realpath(buf)
         return (fp, buf, stuff)
     try:
-        fp, pathname, stuff = fmod(partname,
-                        parent and parent.packagepath, parent)
-    except ImportError as e:
+        fp, pathname, stuff = fmod(
+                partname, parent and parent.packagepath, parent)
+    except ImportError:
         return
 
     if stuff[-1] == imp.PKG_DIRECTORY:
@@ -50,7 +51,8 @@ def retry_import(mf, m):
     else:
         m.__class__ = CompiledModule
 
-    #making this match the code later on that checks whether scan_code needs a leading _
+    # making this match the code later on that checks whether scan_code needs
+    # a leading _
     if hasattr(mf, 'load_module'):
         m = mf.load_module(m.identifier, fp, pathname, stuff)
     else:
@@ -75,7 +77,8 @@ def check(cmd, mf):
         if mos is None or mos.filename is None:
             raise ValueError("Where is the os module")
 
-        m.filename = os.path.join(os.path.dirname(mos.filename), 'distutils', '__init__.py')
+        m.filename = os.path.join(
+            os.path.dirname(mos.filename), 'distutils', '__init__.py')
         with open(m.filename) as fp:
             source = fp.read() + '\n'
         m.code = co = compile(source, m.filename, 'exec')
@@ -101,6 +104,5 @@ def check(cmd, mf):
                     # importing it.
                     #
                     retry_import(mf, m)
-
 
     return dict()

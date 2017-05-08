@@ -1,27 +1,27 @@
-from . import PIL
-from . import ctypes
-from . import docutils
-from . import ftplib
-from . import importlib
-from . import lxml
-from . import matplotlib
-from . import mimetypes
-from . import numpy
-from . import os_module
-from . import pydoc
-from . import pyenchant
-from . import pygame
-from . import pyopengl
-from . import pyside
-from . import pyzmq
-from . import qt5
-from . import re
-from . import scipy
-from . import sip
-from . import subprocess
-from . import sysconfig_module
-from . import virtualenv
-from . import wx
-from . import xml
-from . import setuptools
-from . import uuid
+from . import PIL  # noqa: F401
+from . import ctypes  # noqa: F401
+from . import docutils  # noqa: F401
+from . import ftplib  # noqa: F401
+from . import importlib  # noqa: F401
+from . import lxml  # noqa: F401
+from . import matplotlib  # noqa: F401
+from . import mimetypes  # noqa: F401
+from . import numpy  # noqa: F401
+from . import os_module  # noqa: F401
+from . import pydoc  # noqa: F401
+from . import pyenchant  # noqa: F401
+from . import pygame  # noqa: F401
+from . import pyopengl  # noqa: F401
+from . import pyside  # noqa: F401
+from . import pyzmq  # noqa: F401
+from . import qt5  # noqa: F401
+from . import re  # noqa: F401
+from . import scipy  # noqa: F401
+from . import sip  # noqa: F401
+from . import subprocess  # noqa: F401
+from . import sysconfig_module  # noqa: F401
+from . import virtualenv  # noqa: F401
+from . import wx  # noqa: F401
+from . import xml  # noqa: F401
+from . import setuptools  # noqa: F401
+from . import uuid  # noqa: F401

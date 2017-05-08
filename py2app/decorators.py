@@ -9,6 +9,6 @@ def converts(suffix):
             pass
     """
     def wrapper(func):
-        func.py2app_suffix=suffix
+        func.py2app_suffix = suffix
         return func
     return wrapper

@@ -1,8 +1,10 @@
 import sys
 from modulegraph.modulegraph import MissingModule
 
+
 def check(cmd, mf):
-    if sys.version_info[0] != 2: return {}
+    if sys.version_info[0] != 2:
+        return {}
 
     # Optional dependency on XML+ package in the stdlib, ignore
     # this when the package isn't present.

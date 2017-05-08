@@ -6,9 +6,12 @@ from pkg_resources import resource_filename
 import py2app.apptemplate
 from py2app.util import makedirs, mergecopy, mergetree, skipscm, make_exec
 
-def create_appbundle(destdir, name, extension='.app', module=py2app.apptemplate,
+
+def create_appbundle(
+        destdir, name, extension='.app', module=py2app.apptemplate,
         platform='MacOS', copy=mergecopy, mergetree=mergetree,
         condition=skipscm, plist={}, arch=None, redirect_stdout=False):
+
     kw = module.plist_template.infoPlistDict(
         plist.get('CFBundleExecutable', name), plist)
     app = os.path.join(destdir, kw['CFBundleName'] + extension)
@@ -31,8 +34,10 @@ def create_appbundle(destdir, name, extension='.app', module=py2app.apptemplate,
         makedirs(d)
     plist.write(plistPath)
     srcmain = module.setup.main(arch=arch, secondary=not redirect_stdout)
-    if sys.version_info[0] == 2 and isinstance(kw['CFBundleExecutable'], unicode):
-        destmain = os.path.join(platdir, kw['CFBundleExecutable'].encode('utf-8'))
+    if sys.version_info[0] == 2 \
+            and isinstance(kw['CFBundleExecutable'], unicode):
+        destmain = os.path.join(
+            platdir, kw['CFBundleExecutable'].encode('utf-8'))
     else:
         destmain = os.path.join(platdir, kw['CFBundleExecutable'])
 
@@ -50,6 +55,6 @@ def create_appbundle(destdir, name, extension='.app', module=py2app.apptemplate,
     )
     return app, plist
 
+
 if __name__ == '__main__':
-    import sys
     create_appbundle('build', sys.argv[1])

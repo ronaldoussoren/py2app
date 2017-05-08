@@ -1,4 +1,3 @@
-import sys
 def check(cmd, mf):
     m = mf.findNode('pydoc')
     if m is None or m.filename is None:

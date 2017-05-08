@@ -10,7 +10,6 @@ def _import_encodings():
     encodings.__path__ = pkgutil.extend_path(
             encodings.__path__,
             encodings.__name__)
-    #imp.reload(encodings)
 
     import encodings.mac_roman
     encodings.aliases.__file__ = os.path.join(
@@ -19,5 +18,6 @@ def _import_encodings():
 
     imp.reload(encodings.aliases)
     imp.reload(encodings)
+
 
 _import_encodings()

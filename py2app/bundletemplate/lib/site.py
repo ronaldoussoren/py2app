@@ -17,17 +17,20 @@ sys.path.append(_parent + '/site-packages.zip')
 # add the uncompressed site-packages to the path to compensate for that.
 sys.path.append(_parent + '/site-packages')
 
-USER_SITE=None
+USER_SITE = None
 
-import os
+import os  # noqa: E402
+
 try:
     basestring
 except NameError:
     basestring = str
 
+
 def makepath(*paths):
     dir = os.path.abspath(os.path.join(*paths))
     return dir, os.path.normcase(dir)
+
 
 for m in sys.modules.values():
     f = getattr(m, '__file__', None)
@@ -45,12 +48,13 @@ for dir in sys.path:
     # if they only differ in case); turn relative paths into absolute
     # paths.
     dir, dircase = makepath(dir)
-    if not dircase in _dirs_in_sys_path:
+    if dircase not in _dirs_in_sys_path:
         L.append(dir)
         _dirs_in_sys_path[dircase] = 1
 sys.path[:] = L
 del dir, dircase, L
 _dirs_in_sys_path = None
+
 
 def _init_pathinfo():
     global _dirs_in_sys_path
@@ -61,6 +65,7 @@ def _init_pathinfo():
         dir, dircase = makepath(dir)
         d[dircase] = 1
 
+
 def addsitedir(sitedir):
     global _dirs_in_sys_path
     if _dirs_in_sys_path is None:
@@ -69,7 +74,7 @@ def addsitedir(sitedir):
     else:
         reset = 0
     sitedir, sitedircase = makepath(sitedir)
-    if not sitedircase in _dirs_in_sys_path:
+    if sitedircase not in _dirs_in_sys_path:
         sys.path.append(sitedir)        # Add path component
     try:
         names = os.listdir(sitedir)
@@ -81,6 +86,7 @@ def addsitedir(sitedir):
             addpackage(sitedir, name)
     if reset:
         _dirs_in_sys_path = None
+
 
 def addpackage(sitedir, name):
     global _dirs_in_sys_path
@@ -104,7 +110,7 @@ def addpackage(sitedir, name):
                 if dir[-1] == '\n':
                     dir = dir[:-1]
                 dir, dircase = makepath(sitedir, dir)
-                if not dircase in _dirs_in_sys_path and os.path.exists(dir):
+                if dircase not in _dirs_in_sys_path and os.path.exists(dir):
                     sys.path.append(dir)
                     _dirs_in_sys_path[dircase] = 1
     except IOError:
@@ -113,13 +119,11 @@ def addpackage(sitedir, name):
         _dirs_in_sys_path = None
 
 
-#sys.setdefaultencoding('utf-8')
-
 #
 # Run custom site specific code, if available.
 #
 try:
-    import sitecustomize
+    import sitecustomize  # noqa: F401
 except ImportError:
     pass
 
