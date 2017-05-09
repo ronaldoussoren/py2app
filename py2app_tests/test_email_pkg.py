@@ -133,7 +133,7 @@ class TestEmailCompat (unittest.TestCase):
     # End of setup code
     #
 
-    @unittest.skipUnless(sys.version_info[0] == 2, "Pyton 2.x only")
+    @unittest.skipUnless(sys.version_info[0] == 2, "Python 2.x only")
     def test_imports(self):
         p = self.start_app()
 

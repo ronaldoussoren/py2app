@@ -157,6 +157,7 @@ class TestArgvEmulation (unittest.TestCase):
         for x in range(70):     # Argv emulation can take up-to 60 seconds
             time.sleep(1)
             if os.path.exists(path):
+                time.sleep(5)
                 break
 
         self.assertTrue(os.path.isfile(path))

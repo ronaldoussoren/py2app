@@ -45,16 +45,22 @@ class build_dylib (Command):
             env = dict(os.environ)
             env['MACOSX_DEPLOYMENT_TARGET'] = sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
 
-
-
         subprocess.check_call(cc + cflags + [
             '-c', '-o', os.path.join(bdir, 'libfoo.o'),
             'src/libfoo.c'], env=env)
 
-        subprocess.check_call(['libtool',
-            '-dynamic', '-o', os.path.join(bdir, 'libfoo.dylib'),
-            '-install_name', os.path.abspath(os.path.join(bdir, 'libfoo.dylib')),
-            os.path.join(os.path.join(bdir, 'libfoo.o'))], env=env)
+        for x in range(5):
+            try:
+                subprocess.check_call(['libtool',
+                    '-dynamic', '-o', os.path.join(bdir, 'libfoo.dylib'),
+                    '-install_name', os.path.abspath(os.path.join(bdir, 'libfoo.dylib')),
+                    os.path.join(os.path.join(bdir, 'libfoo.o'))], env=env)
+            except:
+                print("Link attempt failed, retrying")
+
+            else:
+                print("Link succeeded")
+                break
 
 setup(
     cmdclass = {

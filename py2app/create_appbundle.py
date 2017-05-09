@@ -33,7 +33,7 @@ def create_appbundle(
     for d in dirs:
         makedirs(d)
     plist.write(plistPath)
-    srcmain = module.setup.main(arch=arch, secondary=not redirect_stdout)
+    srcmain = module.setup.main(arch=arch, redirect_asl=redirect_stdout)
     if sys.version_info[0] == 2 \
             and isinstance(kw['CFBundleExecutable'], unicode):
         destmain = os.path.join(
@@ -45,6 +45,8 @@ def create_appbundle(
         fp.write(
             kw['CFBundlePackageType'] + kw['CFBundleSignature']
         )
+
+    print("Copy %r -> %r" % (srcmain, destmain))
     copy(srcmain, destmain)
     make_exec(destmain)
     mergetree(

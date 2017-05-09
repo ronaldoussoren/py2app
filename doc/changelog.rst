@@ -10,7 +10,7 @@ Features:
 
 Bug fixes:
 
-* (None yet)
+* The fix for issue #179 broke the argv emulator
 
 
 py2app 0.13

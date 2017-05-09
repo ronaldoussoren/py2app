@@ -60,7 +60,7 @@ gPreBuildVariants = [
 ]
 
 
-def main(all=False, arch=None, secondary=False):
+def main(all=False, arch=None, secondary=False, redirect_asl=False):
     basepath = os.path.dirname(__file__)
     builddir = os.path.join(basepath, 'prebuilt')
     if not os.path.exists(builddir):
@@ -122,8 +122,19 @@ def main(all=False, arch=None, secondary=False):
                             '-framework Cocoa'
                         ) % locals())
 
+                    if not replace:
+                        CFLAGS += " -DREDIRECT_ASL"
+                        dest = dest.replace('main', 'main-asl')
+                        os.system(
+                            (
+                                '"%(CC)s" -o "%(dest)s" "%(src)s" %(CFLAGS)s '
+                                '-framework Cocoa'
+                            ) % locals())
+
     if secondary:
         name = 'secondary-'
+    elif redirect_asl:
+        name = 'main-asl-'
     else:
         name = 'main-'
 
@@ -131,6 +142,12 @@ def main(all=False, arch=None, secondary=False):
             builddir,
             name + arch
     )
+    if not os.path.exists(dest) and name == 'main-asl-':
+        name = 'main-'
+        dest = os.path.join(
+                builddir,
+                name + arch
+        )
 
     return dest
 

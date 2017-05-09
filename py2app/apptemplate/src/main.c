@@ -1192,15 +1192,15 @@ main(int argc, char * const *argv, char * const *envp)
 	} else {
 	    /* OSX 10.9 or later */
             if (fstat(1, &st) != -1) {
-	        if (!S_ISCHR(st.st_mode) ||
-	            major(st.st_dev) != 3 ||
-     	            minor(st.st_dev) != 2) {
+		is_app_bundle = 0;
+		if (S_ISCHR(st.st_mode)) {
+		    if (major(st.st_dev) == 3 && minor(st.st_dev) == 2) {
+		        is_app_bundle = 1;
+		    } else if (major(st.st_dev) == 13) {
+		        is_app_bundle = 1;
+		    }
 
-    	    	        /* We appear to be launched from the
-			 * command-line after all.
-		         */
-		        is_app_bundle = st.st_dev;
-	        }
+		}
             }
         }
     }
@@ -1217,7 +1217,9 @@ main(int argc, char * const *argv, char * const *envp)
 	    bname++;
         }
 
+#ifdef REDIRECT_ASL
         setup_asl(bname);
+#endif /* REDIRECT_ASL */
     }
 #endif /* !PY2APP_SECONDARY */
 
