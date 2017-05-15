@@ -12,6 +12,8 @@ Bug fixes:
 
 * Issue #222: The fix for issue #179 broke the argv emulator
 
+* Issue #226: Py2app could fail while reporting on possibly missing modules
+
 
 py2app 0.13
 -----------

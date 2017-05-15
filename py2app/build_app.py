@@ -1213,7 +1213,7 @@ class py2app(Command):
                             try:
                                 o = __import__(m1, fromlist=[m2])
                                 o = getattr(o, m2)
-                            except AttributeError:
+                            except Exception:
                                 if self.may_log_missing(m):
                                     warnings.append(
                                         " * %s (%s)" % (
@@ -1253,7 +1253,7 @@ class py2app(Command):
                             o = __import__(m1, fromlist=[m2])
                             try:
                                 o = getattr(o, m2)
-                            except AttributeError:
+                            except Exception:
                                 if self.may_log_missing(m):
                                     warnings.append(
                                         " * %s (%s)" % (
