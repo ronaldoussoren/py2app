@@ -1066,6 +1066,7 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     return rval;
 }
 
+#ifdef REDIRECT_ASL
 void
 setup_asl(const char* appname)
 {
@@ -1146,6 +1147,7 @@ setup_asl(const char* appname)
 	do_asl_log_descriptor(cl, msg, 4 /* ASL_LEVEL_NOTICE */, 1, 2 /* ASL_LOG_DESCRIPTOR_WRITE */);
 	do_asl_log_descriptor(cl, msg, 4 /* ASL_LEVEL_NOTICE */, 2, 2 /* ASL_LOG_DESCRIPTOR_WRITE */);
 }
+#endif
 
 #ifndef PY2APP_SECONDARY
 static int
@@ -1195,11 +1197,12 @@ main(int argc, char * const *argv, char * const *envp)
 		is_app_bundle = 0;
 		if (S_ISCHR(st.st_mode)) {
 		    if (major(st.st_dev) == 3 && minor(st.st_dev) == 2) {
+			/* devnull */
 		        is_app_bundle = 1;
-		    } else if (major(st.st_dev) == 13) {
+		    } else if (major(st.st_dev) != 4 && major(st.st_dev) != 5) {
+			/* not pty or tty */
 		        is_app_bundle = 1;
 		    }
-
 		}
             }
         }
