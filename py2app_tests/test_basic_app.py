@@ -219,6 +219,8 @@ class TestBasicApp (unittest.TestCase):
 
         p.stdin.close()
         p.stdout.close()
+        exit = self.wait_with_timeout(p)
+        self.assertEqual(exit, 0)
         self.assertChecksumsSame()
 
     def test_is_optimized(self):
@@ -233,6 +235,9 @@ class TestBasicApp (unittest.TestCase):
         finally:
             p.stdin.close()
             p.stdout.close()
+            exit = self.wait_with_timeout(p)
+            self.assertEqual(exit, 0)
+
         self.assertChecksumsSame()
 
 
@@ -251,6 +256,33 @@ class TestBasicApp (unittest.TestCase):
 
         self.assertEqual(os.readlink(os.path.join(path, fwk)), os.path.join('Versions', 'Current', fwk))
         self.assertEqual(os.readlink(os.path.join(path, 'Resources')), os.path.join('Versions', 'Current', 'Resources'))
+
+    def test_python_executable_mode(self):
+        path = os.path.join(
+                self.app_dir,
+                'dist/BasicApp.app/Contents/MacOS/python')
+
+        self.assertTrue(os.path.exists(path))
+        mode = os.stat(path).st_mode
+        self.assertTrue(mode & 0o001, 'Not executable for other')
+        self.assertTrue(mode & 0o010, 'Not executable for group')
+        self.assertTrue(mode & 0o100, 'Not executable for user')
+
+    def test_python_executable_use(self):
+        p = self.start_app()
+
+        try:
+            p.stdin.write('run_python()\n'.encode('latin1'))
+            p.stdin.flush()
+            ln = p.stdout.readline()
+            self.assertEqual(ln.strip(), b"ok")
+
+        finally:
+            p.stdin.close()
+            p.stdout.close()
+            exit = self.wait_with_timeout(p)
+            self.assertEqual(exit, 0)
+
 
 class TestBasicAliasApp (TestBasicApp):
     py2app_args = [ '--alias', ]
@@ -347,6 +379,12 @@ class TestBasicAppUnicodePath (TestBasicApp):
     def tearDownClass(cls):
         if os.path.exists(cls.app_dir):
             shutil.rmtree(cls.app_dir)
+
+
+    @unittest.expectedFailure
+    def test_python_executable_use(self):
+        self.fail('loading codecs fails on py36i')
+
 
 class TestBasicAliasAppUnicodePath (TestBasicAppUnicodePath):
     py2app_args = [ '--alias', ]

@@ -19,6 +19,12 @@ def import_module(name):
 def print_path():
     print(sys.path)
 
+def run_python():
+    import subprocess
+
+    p = subprocess.Popen([sys.executable, '-c', 'print("ok")'])
+    p.wait()
+
 while True:
     line = sys.stdin.readline()
     if not line:

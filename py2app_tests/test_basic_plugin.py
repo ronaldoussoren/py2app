@@ -190,6 +190,17 @@ class TestBasicPlugin (unittest.TestCase):
         exit = self.wait_with_timeout(p)
         self.assertEqual(exit, 0)
 
+    def test_python_executable_mode(self):
+        path = os.path.join(
+            self.plugin_dir,
+            'dist/BasicPlugin.bundle/Contents/MacOS/python')
+
+        self.assertTrue(os.path.exists(path))
+        mode = os.stat(path).st_mode
+        self.assertTrue(mode & 0o001, 'Not executable for other')
+        self.assertTrue(mode & 0o010, 'Not executable for group')
+        self.assertTrue(mode & 0o100, 'Not executable for user')
+
 class TestBasicAliasPlugin (TestBasicPlugin):
     py2app_args = [ '--alias' ]
 

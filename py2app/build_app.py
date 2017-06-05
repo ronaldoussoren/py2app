@@ -1448,6 +1448,7 @@ class py2app(Command):
                     dpath = os.path.join(self._python_app, 'Contents', 'MacOS')
                     self.copy_file(
                         os.path.join(dpath, PYTHONFRAMEWORK), execdst)
+                    make_exec(execdst)
 
                 elif os.path.exists(os.path.join(sys.prefix, ".Python")):
                     fn = os.path.join(
@@ -1465,9 +1466,11 @@ class py2app(Command):
                         rest_path = rest_path[1:]
 
                     self.copy_file(os.path.join(prefix, rest_path), execdst)
+                    make_exec(execdst)
 
                 else:
                     self.copy_file(sys.executable, execdst)
+                    make_exec(execdst)
 
             if not self.debug_skip_macholib:
                 if self.force_system_tk:

@@ -14,6 +14,8 @@ Bug fixes:
 
 * Issue #226: Py2app could fail while reporting on possibly missing modules
 
+* Issue #228: The python executable included in the app bundle as ``sys.exectuable`` was not executable
+
 
 py2app 0.13
 -----------
