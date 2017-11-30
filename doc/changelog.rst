@@ -1,16 +1,12 @@
 Release history
 ===============
 
-py2app 0.15
------------
+py2app 0.14.1
+-------------
 
-Features:
+* Updated dependencies
 
-* (None yet)
-
-Bug fixes:
-
-* (None yet)
+* Updated PyPI metadata
 
 py2app 0.14
 -----------
