@@ -23,16 +23,29 @@ def create_appbundle(
     resources = os.path.join(contents, 'Resources')
     platdir = os.path.join(contents, platform)
     dirs = [contents, resources, platdir]
-    plist = plistlib.Plist()
+    plist = {}
     plist.update(kw)
     plistPath = os.path.join(contents, 'Info.plist')
     if os.path.exists(plistPath):
-        if plist != plistlib.Plist.fromFile(plistPath):
-            for d in dirs:
-                shutil.rmtree(d, ignore_errors=True)
+        with open(plistPath, 'rb') as fp:
+            if hasattr(plistlib, 'load'):
+                contents = plistlib.load(fp)
+            else:
+                # 2.7
+                contents = plistlib.readPlist(fp)
+
+            if plist != contents:
+                for d in dirs:
+                    shutil.rmtree(d, ignore_errors=True)
     for d in dirs:
         makedirs(d)
-    plist.write(plistPath)
+
+    with open(plistPath, 'wb') as fp:
+         if hasattr(plistlib, 'dump'):
+             plistlib.dump(plist, fp)
+         else:
+             plistlib.writePlist(plist, fp)
+ 
     srcmain = module.setup.main(arch=arch, redirect_asl=redirect_stdout)
     if sys.version_info[0] == 2 \
             and isinstance(kw['CFBundleExecutable'], unicode):

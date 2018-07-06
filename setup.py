@@ -568,9 +568,9 @@ setup(
     classifiers=CLASSIFIERS,
     keywords=['.app', 'standalone'],
     install_requires=[
-        "altgraph>=0.15",
-        "modulegraph>=0.15",
-        "macholib>=1.9",
+        "altgraph>=0.16",
+        "modulegraph>=0.17",
+        "macholib>=1.10",
     ],
     tests_require=tests_require,
     cmdclass=cmdclass,

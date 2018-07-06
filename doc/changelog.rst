@@ -1,6 +1,14 @@
 Release history
 ===============
 
+py2app 0.15
+-----------
+
+* Fixed issues for Python 3.7, in particular changes in the plistlib library
+  (Issue #242)
+
+* Updated dependencies on macholib, altgraph and modulegraph
+
 py2app 0.14.1
 -------------
 

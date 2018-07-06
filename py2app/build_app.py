@@ -610,8 +610,15 @@ class py2app(Command):
         if not self.plist:
             self.plist = {}
         if isinstance(self.plist, basestring):
-            self.plist = plistlib.Plist.fromFile(self.plist)
-        if isinstance(self.plist, plistlib.Dict):
+
+            if hasattr(plistlib, 'load'):
+                with open(self.plist, 'rb') as fp:
+                    self.plist = plistlib.load(fp)
+            else:
+                # 2.7
+                self.plist = plistlib.Plist.fromFile(self.plist)
+        if hasattr(plistlib, 'Dict') and isinstance(self.plist, plistlib.Dict):
+            # 2.7
             self.plist = dict(self.plist.__dict__)
         else:
             self.plist = dict(self.plist)

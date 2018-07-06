@@ -8,7 +8,7 @@ URLTYPES = [
     }
 ]
 
-Plist = dict(
+plist = dict(
     NSAppleScriptEnabled = 'YES',
     CFBundleIdentifier = 'com.myurl',
     LSMinimumSystemVersion = "10.4",
@@ -21,6 +21,6 @@ setup(
     app=['main.py'],
     options=dict(py2app=dict(
         argv_emulation=True,
-        plist=Plist,
+        plist=plist,
     )),
 )

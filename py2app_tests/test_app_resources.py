@@ -78,8 +78,12 @@ class TestBasicApp (unittest.TestCase):
         resource_dir = os.path.join(self.app_dir, 'dist', 'SimpleApp.app',
             'Contents', 'Resources')
 
-        pl = plistlib.readPlist(os.path.join(
-            resource_dir, '..', 'Info.plist'))
+        with open(os.path.join( resource_dir, '..', 'Info.plist'), 'rb') as fp:
+           if hasattr(plistlib, 'load'):
+              pl = plistlib.load(fp)
+           else:
+              pl = plistlib.readPlist(fp)
+
         self.assertEqual(pl['CFBundleIconFile'], 'main.icns')
 
         src_file = os.path.join(self.app_dir, 'main.icns')
