@@ -374,6 +374,7 @@ class TestOptimized1 (TestBasicApp):
         finally:
             p.stdin.close()
             p.stdout.close()
+            p.wait()
 
         self.assertChecksumsSame()
 
@@ -392,6 +393,7 @@ class TestOptimized2 (TestBasicApp):
         finally:
             p.stdin.close()
             p.stdout.close()
+            p.wait()
 
         self.assertChecksumsSame()
 
