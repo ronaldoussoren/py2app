@@ -9,6 +9,8 @@ py2app 0.15
 
 * Updated dependencies on macholib, altgraph and modulegraph
 
+**Due to a bug in CPython 3.7.0 using -O does not work with that version of CPython**
+
 py2app 0.14.1
 -------------
 

@@ -475,9 +475,10 @@ class py2app(Command):
         self.xref = False
         self.graph = False
         self.no_zip = 0
-        self.optimize = 0
-        if hasattr(sys, 'flags'):
-            self.optimize = sys.flags.optimize
+        self.optimize = None
+        #self.optimize = 0
+        #if hasattr(sys, 'flags'):
+            #self.optimize = sys.flags.optimize
         self.arch = None
         self.strip = True
         self.no_strip = False
@@ -556,6 +557,11 @@ class py2app(Command):
         else:
             self._python_app = os.path.join(
                 sys.prefix, 'Resources', 'Python.app')
+
+        if self.optimize is None:
+            self.optimize = 0
+            if hasattr(sys, 'flags'):
+                self.optimize = sys.flags.optimize
 
         if not self.strip:
             self.no_strip = True
@@ -2079,7 +2085,7 @@ class py2app(Command):
             elif fn.endswith('.pyw'):
                 fn = fn[:-4]
 
-            src_fn = script_executable(arch=self.arch, secondary=True)
+            src_fn = script_executable(arch=self.arch, secondary=False)
             tgt_fn = os.path.join(
                 self.appdir, 'Contents', 'MacOS', os.path.basename(fn))
             mergecopy(src_fn, tgt_fn)

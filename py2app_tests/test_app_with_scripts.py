@@ -385,6 +385,10 @@ class TestOptimized2 (TestBasicApp):
         p = self.start_app()
 
         try:
+            p.stdin.write('import sys; print(sys.flags)\n'.encode('latin1'))
+            p.stdin.flush()
+            ln = p.stdout.readline()
+            print(ln)
             p.stdin.write('print(__debug__)\n'.encode('latin1'))
             p.stdin.flush()
             ln = p.stdout.readline()

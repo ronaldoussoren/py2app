@@ -407,6 +407,8 @@ class TestOptimized1 (TestBasicApp):
         finally:
             p.stdin.close()
             p.stdout.close()
+            exit = self.wait_with_timeout(p)
+            self.assertEqual(exit, 0)
 
         self.assertChecksumsSame()
 
@@ -425,6 +427,8 @@ class TestOptimized2 (TestBasicApp):
         finally:
             p.stdin.close()
             p.stdout.close()
+            exit = self.wait_with_timeout(p)
+            self.assertEqual(exit, 0)
 
         self.assertChecksumsSame()
 
