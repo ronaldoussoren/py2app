@@ -10,7 +10,7 @@ from __future__ import print_function
 import os
 import sys
 from distutils.core import setup
-from plistlib import Plist
+import plistlib
 import py2app  # noqa: F401
 import tempfile
 import shutil
@@ -111,7 +111,11 @@ def main():
             else:
                 scripts.append(fn)
         elif os.path.basename(fn) == 'Info.plist':
-            plist = Plist.fromFile(fn)
+            with open(fn, 'rb') as fp:
+                if hasattr(plistlib, 'load'):
+                    plist = plistlib.load(fp)
+                else:
+                    plist = plistlib.readPlist(fp)
         elif fn.endswith('.icns') and not iconfile:
             iconfile = os.path.abspath(fn)
         elif os.path.isdir(fn):

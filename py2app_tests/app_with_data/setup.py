@@ -1,11 +1,10 @@
 from setuptools import setup
-from plistlib import Plist
 
 setup(
     name='BasicApp',
     app=['main.py'],
     options = dict(py2app=dict(
-        plist = Plist(
+        plist = dict(
             CFBundleName               = "SimpleApp",
             CFBundleShortVersionString = "1.0",
             CFBudleGetInfoString       = "SimpleApp 1.0",

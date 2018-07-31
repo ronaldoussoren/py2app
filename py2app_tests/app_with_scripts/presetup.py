@@ -2,7 +2,7 @@ from distutils.core import setup, Extension, Command
 from distutils import sysconfig
 from distutils.command.build_ext import build_ext
 from distutils.version import LooseVersion
-import os, shutil, re, subprocess, platform
+import os, shutil, re, subprocess, platform, time
 
 
 class my_build_ext (build_ext):
@@ -49,18 +49,10 @@ class build_dylib (Command):
             '-c', '-o', os.path.join(bdir, 'libfoo.o'),
             'src/libfoo.c'], env=env)
 
-        for x in range(5):
-            try:
-                subprocess.check_call(['libtool',
-                    '-dynamic', '-o', os.path.join(bdir, 'libfoo.dylib'),
-                    '-install_name', os.path.abspath(os.path.join(bdir, 'libfoo.dylib')),
-                    os.path.join(os.path.join(bdir, 'libfoo.o'))], env=env)
-            except:
-                print("Link attempt failed, retrying")
-
-            else:
-                print("Link succeeded")
-                break
+        subprocess.check_call(cc + [
+            '-dynamiclib', '-o', os.path.join(bdir, 'libfoo.dylib'),
+            '-install_name', os.path.abspath(os.path.join(bdir, 'libfoo.dylib')),
+            os.path.join(os.path.join(bdir, 'libfoo.o'))], env=env)
 
 setup(
     cmdclass = {

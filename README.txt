@@ -7,3 +7,12 @@ Windows.
 
 NOTE: py2app must be used on OSX to build applications,
 it cannot create Mac applications on other platforms.
+
+Project links
+-------------
+
+* `Documentation <https://altgraph.readthedocs.io/en/latest/>`_
+
+* `Issue Tracker <https://bitbucket.org/ronaldoussoren/altgraph/issues?status=new&status=open>`_
+
+* `Repository <https://bitbucket.org/ronaldoussoren/altgraph/>`_

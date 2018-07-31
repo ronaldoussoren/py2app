@@ -285,11 +285,7 @@ from distutils.errors  import DistutilsError
 from distutils import log
 from distutils.core import Command
 from fnmatch import fnmatch
-
-try:
-    from distutils.core import PyPIRCCommand
-except ImportError:
-    PyPIRCCommand = None
+from setuptools.command import egg_info
 
 fp = open('README.txt')
 try:
@@ -357,161 +353,6 @@ def test_loader():
 
     return unittest.TestSuite(suites)
 
-if PyPIRCCommand is None:
-    class upload_docs (Command):
-        description = "upload sphinx documentation"
-        user_options = []
-
-        def initialize_options(self):
-            pass
-
-        def finalize_options(self):
-            pass
-
-        def run(self):
-            raise DistutilsError("not supported on this version of python")
-
-else:
-    class upload_docs (PyPIRCCommand):
-        description = "upload sphinx documentation"
-        user_options = PyPIRCCommand.user_options
-
-        def initialize_options(self):
-            PyPIRCCommand.initialize_options(self)
-            self.username = ''
-            self.password = ''
-
-
-        def finalize_options(self):
-            PyPIRCCommand.finalize_options(self)
-            config = self._read_pypirc()
-            if config != {}:
-                self.username = config['username']
-                self.password = config['password']
-
-
-        def run(self):
-            import subprocess
-            import shutil
-            import zipfile
-            import os
-            import urllib
-            import StringIO
-            from base64 import standard_b64encode
-            import httplib
-            import urlparse
-
-            # Extract the package name from distutils metadata
-            meta = self.distribution.metadata
-            name = meta.get_name()
-
-            # Run sphinx
-            if os.path.exists('doc/_build'):
-                shutil.rmtree('doc/_build')
-            os.mkdir('doc/_build')
-
-            p = subprocess.Popen(['make', 'html'],
-                cwd='doc')
-            exit = p.wait()
-            if exit != 0:
-                raise DistutilsError("sphinx-build failed")
-
-            # Collect sphinx output
-            if not os.path.exists('dist'):
-                os.mkdir('dist')
-            zf = zipfile.ZipFile('dist/%s-docs.zip'%(name,), 'w',
-                    compression=zipfile.ZIP_DEFLATED)
-
-            for toplevel, dirs, files in os.walk('doc/_build/html'):
-                for fn in files:
-                    fullname = os.path.join(toplevel, fn)
-                    relname = os.path.relpath(fullname, 'doc/_build/html')
-
-                    print ("%s -> %s"%(fullname, relname))
-
-                    zf.write(fullname, relname)
-
-            zf.close()
-
-            # Upload the results, this code is based on the distutils
-            # 'upload' command.
-            content = open('dist/%s-docs.zip'%(name,), 'rb').read()
-
-            data = {
-                ':action': 'doc_upload',
-                'name': name,
-                'content': ('%s-docs.zip'%(name,), content),
-            }
-            auth = "Basic " + standard_b64encode(self.username + ":" +
-                 self.password)
-
-
-            boundary = '--------------GHSKFJDLGDS7543FJKLFHRE75642756743254'
-            sep_boundary = '\n--' + boundary
-            end_boundary = sep_boundary + '--'
-            body = StringIO.StringIO()
-            for key, value in data.items():
-                if not isinstance(value, list):
-                    value = [value]
-
-                for value in value:
-                    if isinstance(value, tuple):
-                        fn = ';filename="%s"'%(value[0])
-                        value = value[1]
-                    else:
-                        fn = ''
-
-                    body.write(sep_boundary)
-                    body.write('\nContent-Disposition: form-data; name="%s"'%key)
-                    body.write(fn)
-                    body.write("\n\n")
-                    body.write(value)
-
-            body.write(end_boundary)
-            body.write('\n')
-            body = body.getvalue()
-
-            self.announce("Uploading documentation to %s"%(self.repository,), log.INFO)
-
-            schema, netloc, url, params, query, fragments = \
-                    urlparse.urlparse(self.repository)
-
-
-            if schema == 'http':
-                http = httplib.HTTPConnection(netloc)
-            elif schema == 'https':
-                http = httplib.HTTPSConnection(netloc)
-            else:
-                raise AssertionError("unsupported schema "+schema)
-
-            data = ''
-            loglevel = log.INFO
-            try:
-                http.connect()
-                http.putrequest("POST", url)
-                http.putheader('Content-type',
-                    'multipart/form-data; boundary=%s'%boundary)
-                http.putheader('Content-length', str(len(body)))
-                http.putheader('Authorization', auth)
-                http.endheaders()
-                http.send(body)
-            except socket.error:
-                e = socket.exc_info()[1]
-                self.announce(str(e), log.ERROR)
-                return
-
-            r = http.getresponse()
-            if r.status in (200, 301):
-                self.announce('Upload succeeded (%s): %s' % (r.status, r.reason),
-                    log.INFO)
-            else:
-                self.announce('Upload failed (%s): %s' % (r.status, r.reason),
-                    log.ERROR)
-
-                print ('-'*75)
-                print (r.read())
-                print ('-'*75)
-
 
 def recursiveGlob(root, pathPattern):
     """
@@ -555,6 +396,15 @@ def importExternalTestCases(unittest,
         suites.append(s)
 
     return unittest.TestSuite(suites)
+
+class my_egg_info (egg_info.egg_info):
+    def run(self):
+        egg_info.egg_info.run(self)
+
+        path = os.path.join(self.egg_info, 'PKG-INFO')
+        with open(path, 'a+') as fp:
+            fp.write('Project-URL: Documentation, https://py2app.readthedocs.io/en/latest/\n')
+            fp.write('Project-URL: Issue tracker, https://bitbucket.org/ronaldoussoren/py2app/issues?status=new&status=open\n')
 
 
 class test (Command):
@@ -670,7 +520,7 @@ class test (Command):
 
 
 cmdclass = dict(
-    upload_docs=upload_docs,
+    egg_info=my_egg_info,
     test=test,
 )
 if sys.platform != 'darwin':
@@ -714,12 +564,13 @@ setup(
     license='MIT or PSF License',
     platforms=['MacOS X'],
     long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/x-rst; charset=UTF-8',
     classifiers=CLASSIFIERS,
     keywords=['.app', 'standalone'],
     install_requires=[
-        "altgraph>=0.13",
-        "modulegraph>=0.15",
-        "macholib>=1.8",
+        "altgraph>=0.16",
+        "modulegraph>=0.17",
+        "macholib>=1.10",
     ],
     tests_require=tests_require,
     cmdclass=cmdclass,

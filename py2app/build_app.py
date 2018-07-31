@@ -475,9 +475,10 @@ class py2app(Command):
         self.xref = False
         self.graph = False
         self.no_zip = 0
-        self.optimize = 0
-        if hasattr(sys, 'flags'):
-            self.optimize = sys.flags.optimize
+        self.optimize = None
+        #self.optimize = 0
+        #if hasattr(sys, 'flags'):
+            #self.optimize = sys.flags.optimize
         self.arch = None
         self.strip = True
         self.no_strip = False
@@ -557,6 +558,11 @@ class py2app(Command):
             self._python_app = os.path.join(
                 sys.prefix, 'Resources', 'Python.app')
 
+        if self.optimize is None:
+            self.optimize = 0
+            if hasattr(sys, 'flags'):
+                self.optimize = sys.flags.optimize
+
         if not self.strip:
             self.no_strip = True
         elif self.no_strip:
@@ -610,8 +616,15 @@ class py2app(Command):
         if not self.plist:
             self.plist = {}
         if isinstance(self.plist, basestring):
-            self.plist = plistlib.Plist.fromFile(self.plist)
-        if isinstance(self.plist, plistlib.Dict):
+
+            if hasattr(plistlib, 'load'):
+                with open(self.plist, 'rb') as fp:
+                    self.plist = plistlib.load(fp)
+            else:
+                # 2.7
+                self.plist = plistlib.Plist.fromFile(self.plist)
+        if hasattr(plistlib, 'Dict') and isinstance(self.plist, plistlib.Dict):
+            # 2.7
             self.plist = dict(self.plist.__dict__)
         else:
             self.plist = dict(self.plist)
@@ -2072,7 +2085,7 @@ class py2app(Command):
             elif fn.endswith('.pyw'):
                 fn = fn[:-4]
 
-            src_fn = script_executable(arch=self.arch, secondary=True)
+            src_fn = script_executable(arch=self.arch, secondary=False)
             tgt_fn = os.path.join(
                 self.appdir, 'Contents', 'MacOS', os.path.basename(fn))
             mergecopy(src_fn, tgt_fn)
