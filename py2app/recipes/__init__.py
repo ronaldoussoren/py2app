@@ -13,6 +13,7 @@ from . import pyenchant  # noqa: F401
 from . import pygame  # noqa: F401
 from . import pyopengl  # noqa: F401
 from . import pyside  # noqa: F401
+from . import pyside2  # noqa: F401
 from . import pyzmq  # noqa: F401
 from . import qt5  # noqa: F401
 from . import re  # noqa: F401
