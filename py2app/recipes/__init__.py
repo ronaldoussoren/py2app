@@ -20,6 +20,7 @@ from . import scipy  # noqa: F401
 from . import sip  # noqa: F401
 from . import subprocess  # noqa: F401
 from . import sysconfig_module  # noqa: F401
+from . import tkinter  # noqa: F401
 from . import virtualenv  # noqa: F401
 from . import wx  # noqa: F401
 from . import xml  # noqa: F401

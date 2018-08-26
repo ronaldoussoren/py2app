@@ -1,6 +1,19 @@
 Release history
 ===============
 
+py2app 0.16
+-----------
+
+* #244: Copy the Tcl/Tk support libraries into the application bundle for
+  Python builds using a classic unix install of Tcl/Tk instead of a framework
+  build.
+
+  This results in working app bundles when a Python.org installation that
+  includes Tcl/Tk (such as Python 3.7).
+
+* Don't copy numpy into application just because the application uses
+  Pillow.
+
 py2app 0.15
 -----------
 
