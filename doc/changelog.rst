@@ -14,6 +14,10 @@ py2app 0.16
 * Don't copy numpy into application just because the application uses
   Pillow.
 
+* Add recipe for Pyside
+
+  Patch by Alberto Sottile
+
 py2app 0.15
 -----------
 
