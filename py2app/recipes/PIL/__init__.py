@@ -81,6 +81,14 @@ def check(cmd, mf):
         mf.removeReference(sip, 'PyQt4.QtCore')
         pass
 
+    imagefilter = mf.findNode('PIL.ImageFilter')
+    if imagefilter is not None:
+        # Optional dependency on numpy to process
+        # numpy data passed into the filter. Remove
+        # this reference to ensure numpy is only copied
+        # when it is actually used in the application.
+        mf.removeReference(sip, 'numpy')
+
     return dict(
         prescripts=['py2app.recipes.PIL.prescript', s],
         include="PIL.JpegPresets",  # import from PIL.JpegPlugin in Pillow 2.0
