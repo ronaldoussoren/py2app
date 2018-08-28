@@ -287,7 +287,7 @@ from distutils.core import Command
 from fnmatch import fnmatch
 from setuptools.command import egg_info
 
-fp = open('README.txt')
+fp = open('README.rst')
 try:
     LONG_DESCRIPTION = fp.read()
 finally:
@@ -551,7 +551,7 @@ if sys.platform != 'darwin':
 setup(
     # metadata
     name='py2app',
-    version='0.15',
+    version='0.16',
     description='Create standalone Mac OS X applications with Python',
     #author='Bob Ippolito',
     #author_email='bob@redivi.com',
