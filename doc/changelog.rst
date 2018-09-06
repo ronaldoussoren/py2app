@@ -1,6 +1,12 @@
 Release history
 ===============
 
+py2app 0.17
+-----------
+
+* #247: The new tkinter recipe didn't work properly for installations
+  that do use a framework install of Tcl/Tk.
+
 py2app 0.16
 -----------
 

@@ -34,6 +34,9 @@ def check(cmd, mf):
             tcl_path = fn
             paths.append(os.path.join(lib, fn))
 
+    if not paths:
+        return None
+
     prescript = textwrap.dedent("""\
         def _boot_tkinter():
             import os
