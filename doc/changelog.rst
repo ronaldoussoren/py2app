@@ -4,7 +4,7 @@ Release history
 py2app 0.18
 -----------
 
-* (EMPTY)
+* #250: Add recipe for "six.moves", which also works for "botocore.vendored.six.moves"
 
 py2app 0.17
 -----------
