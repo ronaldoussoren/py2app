@@ -64,11 +64,20 @@ SIX_TAB={
     'urllib.response': ('urllib', 'urllib.request'),
 }
 
-SIX_MOVES=['six.moves', 'botocore.six']
 
 def check(cmd, mf):
     found = False
-    for mod in SIX_MOVES:
+
+    six_moves=['six.moves']
+
+    # A number of libraries contain a vendored version
+    # of six. Automaticly detect those:
+    for nm in mf.graph.node_list():
+        if not isinstance(nm, str): continue
+        if nm.endswith('.six.moves'):
+            six_moves.append(nm)
+
+    for mod in six_moves:
         m = mf.findNode(mod)
         if m is None:
             continue
