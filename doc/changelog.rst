@@ -1,6 +1,11 @@
 Release history
 ===============
 
+py2app 0.19
+-----------
+
+* #251: Add recipe for "botocore"
+
 py2app 0.18
 -----------
 

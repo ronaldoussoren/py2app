@@ -1,3 +1,4 @@
+from . import botocore  # noqa: F401
 from . import PIL  # noqa: F401
 from . import ctypes  # noqa: F401
 from . import docutils  # noqa: F401
