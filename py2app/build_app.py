@@ -1820,7 +1820,34 @@ class py2app(Command):
             # bootstrap
             prescripts.append('import_encodings')
 
-        if os.path.exists(os.path.join(sys.prefix, ".Python")):
+        if os.path.exists(os.path.join(sys.prefix, "pyvenv.cfg")):
+            # We're in a venv, which means sys.path
+            # will be broken in alias builds unless we fix
+            # it.
+            real_prefix = None
+            global_site_packages = False
+            with open(os.path.join(sys.prefix, "pyvenv.cfg")) as fp:
+
+                for ln in fp:
+                    if ln.startswith('home = '):
+                        _, home_path = ln.split('=', 1)
+                        real_prefix = os.path.dirname(home_path.strip())
+
+                    elif ln.startswith('include-system-site-packages = '):
+                        _, global_site_packages = ln.split('=', 1)
+                        global_site_packages = (global_site_packages == 'true')
+
+            if real_prefix is None:
+                raise DistutilsPlatformError(
+                    'Pyvenv detected, cannot determine base prefix')
+
+            if self.site_packages or self.alias:
+                print("Add paths for VENV", real_prefix, global_site_packages)
+                prescripts.append('virtualenv_site_packages')
+                prescripts.append(StringIO('_site_packages(%r, %r, %d)' % (
+                    sys.prefix, real_prefix, global_site_packages)))
+
+        elif os.path.exists(os.path.join(sys.prefix, ".Python")):
             # We're in a virtualenv, which means sys.path
             # will be broken in alias builds unless we fix
             # it.

@@ -6,6 +6,8 @@ py2app 0.19
 
 * #251: Add recipe for "botocore"
 
+* #253: "python setup.py py2app -A" creates invalid bundle from "venv" virtual environments
+
 py2app 0.18
 -----------
 
