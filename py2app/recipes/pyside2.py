@@ -54,4 +54,9 @@ def check(cmd, mf):
         if add:
             NOT_SYSTEM_FILES.append(os.path.join('/usr/lib', fn))
 
+    mf.import_hook('PySide2.support', m, ['*'])
+    mf.import_hook('PySide2.support.signature', m, ['*'])
+    mf.import_hook('PySide2.support.signature.lib', m, ['*'])
+    mf.import_hook('PySide2.support.signature.typing', m, ['*'])
+
     return dict(resources=resources)

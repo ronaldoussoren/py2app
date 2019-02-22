@@ -19,6 +19,7 @@ from . import pyzmq  # noqa: F401
 from . import qt5  # noqa: F401
 from . import re  # noqa: F401
 from . import scipy  # noqa: F401
+from . import shiboken2  # noqa: F401
 from . import sip  # noqa: F401
 from . import six  # noqa: F401
 from . import subprocess  # noqa: F401
