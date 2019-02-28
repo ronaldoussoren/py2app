@@ -8,6 +8,10 @@ py2app 0.19
 
 * #253: "python setup.py py2app -A" creates invalid bundle from "venv" virtual environments
 
+* Updated recipe for PySide2 and new recipe for Shiboken2
+
+  Patch by Alberto Sottile.
+
 py2app 0.18
 -----------
 
