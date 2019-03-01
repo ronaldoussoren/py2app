@@ -85,8 +85,23 @@ class TestBasicPlugin (unittest.TestCase):
                 cc = ['xcrun', 'clang']
                 env = dict(os.environ)
 
+            cflags = get_config_var('CFLAGS').split()
+            ldflags = get_config_var('LDFLAGS').split()
+            if LooseVersion(platform.mac_ver()[0]) >= LooseVersion('10.14'):
+                for idx, val in enumerate(cflags):
+                    if val == '-arch' and cflags[idx+1] == 'i386':
+                        del cflags[idx+1]
+                        del cflags[idx]
+                        break
+
+                for idx, val in enumerate(ldflags):
+                    if val == '-arch' and ldflags[idx+1] == 'i386':
+                        del ldflags[idx+1]
+                        del ldflags[idx]
+                        break
+
             p = subprocess.Popen(cc
-                +  get_config_var('LDFLAGS').split() + get_config_var('CFLAGS').split() + [
+                +  ldflags + cflags + [
                     '-o', 'bundle_loader', os.path.join(DIR_NAME, 'bundle_loader.m'),
                     '-framework', 'Foundation'],
                 env=env,

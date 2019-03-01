@@ -1010,7 +1010,7 @@ class py2app(Command):
                     continue
                 # we can pull this off so long as we stop the iter
                 del rdict[name]
-                print('*** using recipe: %s ***' % (name,))
+                print('*** using recipe: %s ***' % (name,), rval)
 
                 if 'expected_missing_imports' in rval:
                     self.expected_missing_imports |= rval.get(

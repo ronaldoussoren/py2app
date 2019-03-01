@@ -110,8 +110,11 @@ def check(cmd, mf):
                     alt = (alt,)
 
                 for nm in alt:
-                    mf.import_hook(nm, m)
-                    found = True
+                    try:
+                        mf.import_hook(nm, m)
+                        found = True
+                    except ImportError:
+                        pass
 
         # Look for submodules that aren't automaticly
         # processed.
