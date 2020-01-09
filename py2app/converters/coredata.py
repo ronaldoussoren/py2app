@@ -2,8 +2,9 @@
 Automatic compilation of CoreData model files
 """
 import os
+
 from py2app.decorators import converts
-from py2app.util import momc, mapc
+from py2app.util import mapc, momc
 
 
 @converts(suffix=".xcdatamodel")

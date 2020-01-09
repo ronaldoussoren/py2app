@@ -13,6 +13,6 @@ Project links
 
 * `Documentation <https://py2app.readthedocs.io/en/latest/>`_
 
-* `Issue Tracker <https://bitbucket.org/ronaldoussoren/py2app/issues?status=new&status=open>`_
+* `Issue Tracker <https://github.com/ronaldoussoren/py2app/issues`_
 
-* `Repository <https://bitbucket.org/ronaldoussoren/py2app/>`_
+* `Repository <https://github.com/ronaldoussoren/py2app/>`_

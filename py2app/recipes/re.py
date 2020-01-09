@@ -1,4 +1,4 @@
 def check(cmd, mf):
-    m = mf.findNode('re')
+    m = mf.findNode("re")
     if m:
-        return dict(expected_missing_imports=set(['sys.getwindowsversion']))
+        return {"expected_missing_imports": {"sys.getwindowsversion"}}

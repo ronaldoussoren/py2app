@@ -1,9 +1,11 @@
 def _recipes_pil_prescript(plugins):
     try:
         import Image
+
         have_PIL = False
     except ImportError:
         from PIL import Image
+
         have_PIL = True
 
     import sys
@@ -15,7 +17,8 @@ def _recipes_pil_prescript(plugins):
         if have_PIL:
             try:
                 import PIL.JpegPresets
-                sys.modules['JpegPresets'] = PIL.JpegPresets
+
+                sys.modules["JpegPresets"] = PIL.JpegPresets
             except ImportError:
                 pass
 
@@ -25,8 +28,7 @@ def _recipes_pil_prescript(plugins):
                     try:
                         # First try absolute import through PIL (for
                         # Pillow support) only then try relative imports
-                        m = __import__(
-                            'PIL.' + plugin, globals(), locals(), [])
+                        m = __import__("PIL." + plugin, globals(), locals(), [])
                         m = getattr(m, plugin)
                         sys.modules[plugin] = m
                         continue
@@ -36,7 +38,7 @@ def _recipes_pil_prescript(plugins):
                 __import__(plugin, globals(), locals(), [])
             except ImportError:
                 if Image.DEBUG:
-                    print('Image: failed to import')
+                    print("Image: failed to import")
 
         if Image.OPEN or Image.SAVE:
             Image._initialized = 2

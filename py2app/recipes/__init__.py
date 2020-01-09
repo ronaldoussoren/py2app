@@ -1,5 +1,5 @@
-from . import botocore  # noqa: F401
 from . import PIL  # noqa: F401
+from . import botocore  # noqa: F401
 from . import ctypes  # noqa: F401
 from . import docutils  # noqa: F401
 from . import ftplib  # noqa: F401
@@ -19,14 +19,14 @@ from . import pyzmq  # noqa: F401
 from . import qt5  # noqa: F401
 from . import re  # noqa: F401
 from . import scipy  # noqa: F401
+from . import setuptools  # noqa: F401
 from . import shiboken2  # noqa: F401
 from . import sip  # noqa: F401
 from . import six  # noqa: F401
 from . import subprocess  # noqa: F401
 from . import sysconfig_module  # noqa: F401
 from . import tkinter  # noqa: F401
+from . import uuid  # noqa: F401
 from . import virtualenv  # noqa: F401
 from . import wx  # noqa: F401
 from . import xml  # noqa: F401
-from . import setuptools  # noqa: F401
-from . import uuid  # noqa: F401

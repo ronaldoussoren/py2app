@@ -7,19 +7,26 @@ This recipe is rather compilicated and definitely not a
 good model for other recipes!!!
 """
 from __future__ import absolute_import
-import sys
-import os
+
 import imp
-from modulegraph.modulegraph import MissingModule, \
-        Package, SourceModule, CompiledModule, find_module
+import os
+import sys
+
+from modulegraph.modulegraph import (
+    CompiledModule,
+    MissingModule,
+    Package,
+    SourceModule,
+    find_module,
+)
 
 
 def retry_import(mf, m):
     """
     Try to reimport 'm', which should be a MissingModule
     """
-    if '.' in m.identifier:
-        pname, partname = m.identifier.rsplit('.', 1)
+    if "." in m.identifier:
+        pname, partname = m.identifier.rsplit(".", 1)
         parent = mf.findNode(pname)
     else:
         parent = None
@@ -38,9 +45,9 @@ def retry_import(mf, m):
         if buf:
             buf = os.path.realpath(buf)
         return (fp, buf, stuff)
+
     try:
-        fp, pathname, stuff = fmod(
-                partname, parent and parent.packagepath, parent)
+        fp, pathname, stuff = fmod(partname, parent and parent.packagepath, parent)
     except ImportError:
         return
 
@@ -53,7 +60,7 @@ def retry_import(mf, m):
 
     # making this match the code later on that checks whether scan_code needs
     # a leading _
-    if hasattr(mf, 'load_module'):
+    if hasattr(mf, "load_module"):
         m = mf.load_module(m.identifier, fp, pathname, stuff)
     else:
         m = mf._load_module(m.identifier, fp, pathname, stuff)
@@ -65,31 +72,32 @@ def retry_import(mf, m):
 
 
 def check(cmd, mf):
-    m = mf.findNode('distutils')
+    m = mf.findNode("distutils")
     if m is None or m.filename is None:
         return None
 
-    with open(m.filename, 'rU') as fp:
+    with open(m.filename, "rU") as fp:
         contents = fp.read()
-    if 'virtualenv' in contents:
+    if "virtualenv" in contents:
         # This is the virtualenv version
-        mos = mf.findNode('os')
+        mos = mf.findNode("os")
         if mos is None or mos.filename is None:
             raise ValueError("Where is the os module")
 
         m.filename = os.path.join(
-            os.path.dirname(mos.filename), 'distutils', '__init__.py')
+            os.path.dirname(mos.filename), "distutils", "__init__.py"
+        )
         with open(m.filename) as fp:
-            source = fp.read() + '\n'
-        m.code = co = compile(source, m.filename, 'exec')
+            source = fp.read() + "\n"
+        m.code = co = compile(source, m.filename, "exec")
         m.packagepath = [os.path.dirname(m.filename)]
 
         if mf.replace_paths:
             co = mf.replace_paths_in_code(co)
 
-        # XXX: Recent versions of modulegraph made scan_code private,
+        # Recent versions of modulegraph made scan_code private,
         # temporarily call the private version.
-        if hasattr(mf, 'scan_code'):
+        if hasattr(mf, "scan_code"):
             mf.scan_code(co, m)
         else:
             mf._scan_code(co, m)
@@ -99,10 +107,10 @@ def check(cmd, mf):
         # try to import these again.
         for m in mf.flatten():
             if isinstance(m, MissingModule):
-                if m.identifier.startswith('distutils.'):
+                if m.identifier.startswith("distutils."):
                     # A missing distutils package, retry
                     # importing it.
                     #
                     retry_import(mf, m)
 
-    return dict()
+    return {}

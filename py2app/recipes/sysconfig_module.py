@@ -6,13 +6,11 @@ def check(cmd, mf):
         # As of Python 3.6 the sysconfig module
         # dynamicly imports a module using the
         # __import__ function.
-        m = mf.findNode('sysconfig')
+        m = mf.findNode("sysconfig")
         if m is not None:
             import sysconfig
 
-            mf.import_hook(
-                sysconfig._get_sysconfigdata_name(),
-                m)
+            mf.import_hook(sysconfig._get_sysconfigdata_name(), m)
 
     else:
         return None

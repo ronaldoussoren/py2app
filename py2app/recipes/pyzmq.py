@@ -1,5 +1,5 @@
 def check(cmd, mf):
-    m = mf.findNode('zmq')
+    m = mf.findNode("zmq")
     if m is None or m.filename is None:
         return None
 
@@ -9,6 +9,4 @@ def check(cmd, mf):
     # in py2app: it copies the dylib into
     # the site-packages zipfile and builds
     # a non-functionaly application.
-    return dict(
-        packages=['zmq']
-    )
+    return {"packages": ["zmq"]}

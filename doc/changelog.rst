@@ -1,6 +1,17 @@
 Release history
 ===============
 
+py2app 0.20
+-----------
+
+* Migratie naar GitHub
+
+* #274: Fix an issue in the PyQt5 recipe
+
+* Fix issue with emulate-shell-environment option on macOS 10.15 (Catalina)
+
+* Make sure the test suite passes again
+
 py2app 0.19
 -----------
 

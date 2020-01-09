@@ -1,4 +1,4 @@
 def check(cmd, mf):
-    m = mf.findNode('mimetypes')
+    m = mf.findNode("mimetypes")
     if m:
-        return dict(expected_missing_imports=set(['winreg']))
+        return {"expected_missing_imports": {"winreg"}}

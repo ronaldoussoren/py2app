@@ -8,18 +8,18 @@ def _fixup_virtualenv(real_prefix):
     # installed by virtualenv 1.8.2 (but simplified by removing support
     # for platforms that aren't supported by py2app)
 
-    paths = [os.path.join(sys.real_prefix, 'lib', 'python'+sys.version[:3])]
+    paths = [os.path.join(sys.real_prefix, "lib", "python" + sys.version[:3])]
     hardcoded_relative_dirs = paths[:]
     plat_path = os.path.join(
-        sys.real_prefix, 'lib', 'python'+sys.version[:3],
-        'plat-%s' % sys.platform)
+        sys.real_prefix, "lib", "python" + sys.version[:3], "plat-%s" % sys.platform
+    )
     if os.path.exists(plat_path):
         paths.append(plat_path)
 
     # This is hardcoded in the Python executable, but
     # relative to sys.prefix, so we have to fix up:
     for path in list(paths):
-        tk_dir = os.path.join(path, 'lib-tk')
+        tk_dir = os.path.join(path, "lib-tk")
         if os.path.exists(tk_dir):
             paths.append(tk_dir)
 
@@ -28,8 +28,8 @@ def _fixup_virtualenv(real_prefix):
     hardcoded_paths = [
         os.path.join(relative_dir, module)
         for relative_dir in hardcoded_relative_dirs
-        for module in (
-            'plat-darwin', 'plat-mac', 'plat-mac/lib-scriptpackages')]
+        for module in ("plat-darwin", "plat-mac", "plat-mac/lib-scriptpackages")
+    ]
 
     for path in hardcoded_paths:
         if os.path.exists(path):

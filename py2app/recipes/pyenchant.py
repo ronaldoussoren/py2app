@@ -9,11 +9,11 @@ import os
 
 
 def check(cmd, mf):
-    m = mf.findNode('enchant')
+    m = mf.findNode("enchant")
     if m is None or m.filename is None:
         return None
 
-    if 'PYENCHANT_LIBRARY_PATH' in os.environ:
+    if "PYENCHANT_LIBRARY_PATH" in os.environ:
         # libpath = os.environ['PYENCHANT_LIBRARY_PATH']
         print("WARNING: using pyEnchant without embedding")
         print("WARNING: this is not supported at the moment")
@@ -26,4 +26,4 @@ def check(cmd, mf):
 
     # Include the entire package outside of site-packages.zip,
     # mostly to avoid trying to extract the C code from the package
-    return dict(packages=['enchant'])
+    return {"packages": ["enchant"]}

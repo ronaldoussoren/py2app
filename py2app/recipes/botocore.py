@@ -1,5 +1,5 @@
 def check(cmd, mf):
-    m = mf.findNode('botocore')
+    m = mf.findNode("botocore")
     if m is None or m.filename is None:
         return None
 
@@ -7,6 +7,4 @@ def check(cmd, mf):
     # references those using filesystem APIs.
     # Include the entire package in the app bundle,
     # and outside of site-packages.zip.
-    return dict(
-        packages=['botocore'],
-    )
+    return {"packages": ["botocore"]}

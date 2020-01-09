@@ -3,7 +3,7 @@ def _reset_sys_path():
     import sys
     import os
 
-    resources = os.environ['RESOURCEPATH']
+    resources = os.environ["RESOURCEPATH"]
     while sys.path[0] == resources:
         del sys.path[0]
 

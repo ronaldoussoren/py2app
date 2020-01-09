@@ -33,6 +33,8 @@ class TestBasicAppWithExtension (unittest.TestCase):
     def setUpClass(cls):
         kill_child_processes()
 
+        cls.tearDownClass()
+
         env=os.environ.copy()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
         env['TMPDIR'] = os.getcwd()
@@ -152,6 +154,13 @@ class TestBasicAppWithExtension (unittest.TestCase):
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"8")
 
+        p.stdin.close()
+
+        exit = self.wait_with_timeout(p)
+        self.assertEqual(exit, 0)
+
+        p.stdout.close()
+
     def test_simple_imports(self):
         p = self.start_app()
 
@@ -206,6 +215,10 @@ class TestBasicAppWithExtension (unittest.TestCase):
             self.assertTrue(ln.strip().startswith("* import failed"), ln)
 
         p.stdin.close()
+
+        exit = self.wait_with_timeout(p)
+        self.assertEqual(exit, 0)
+
         p.stdout.close()
 
     def test_app_structure(self):

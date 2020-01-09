@@ -5,21 +5,28 @@ This is stripped down and customized for use in py2app applications
 """
 
 import sys
+
 # os is actually in the zip, so we need to do this here.
 # we can't call it python24.zip because zlib is not a built-in module (!)
-_libdir = '/lib/python' + sys.version[:3]
-_parent = '/'.join(__file__.split('/')[:-1])
+_libdir = "/lib/python" + sys.version[:3]
+_parent = "/".join(__file__.split("/")[:-1])
 if not _parent.endswith(_libdir):
     _parent += _libdir
-sys.path.append(_parent + '/site-packages.zip')
+sys.path.append(_parent + "/site-packages.zip")
 
 # Stuffit decompresses recursively by default, that can mess up py2app bundles,
 # add the uncompressed site-packages to the path to compensate for that.
-sys.path.append(_parent + '/site-packages')
+sys.path.append(_parent + "/site-packages")
 
 USER_SITE = None
 
-import os  # noqa: E402
+
+def _import_os():
+    global os
+    import os  # noqa: E402
+
+
+_import_os()
 
 try:
     basestring
@@ -33,7 +40,7 @@ def makepath(*paths):
 
 
 for m in sys.modules.values():
-    f = getattr(m, '__file__', None)
+    f = getattr(m, "__file__", None)
     if isinstance(f, basestring) and os.path.exists(f):
         m.__file__ = os.path.abspath(m.__file__)
 del m
@@ -76,7 +83,7 @@ def addsitedir(sitedir):
         reset = 0
     sitedir, sitedircase = makepath(sitedir)
     if sitedircase not in _dirs_in_sys_path:
-        sys.path.append(sitedir)        # Add path component
+        sys.path.append(sitedir)  # Add path component
     try:
         names = os.listdir(sitedir)
     except os.error:
@@ -103,12 +110,12 @@ def addpackage(sitedir, name):
                 dir = f.readline()
                 if not dir:
                     break
-                if dir[0] == '#':
+                if dir[0] == "#":
                     continue
                 if dir.startswith("import"):
                     exec(dir)
                     continue
-                if dir[-1] == '\n':
+                if dir[-1] == "\n":
                     dir = dir[:-1]
                 dir, dircase = makepath(sitedir, dir)
                 if dircase not in _dirs_in_sys_path and os.path.exists(dir):

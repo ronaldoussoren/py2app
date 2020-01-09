@@ -9,20 +9,31 @@ def _site_packages():
         prefixes.append(sys.exec_prefix)
     for prefix in prefixes:
         paths.append(
-            os.path.join(
-                prefix, 'lib', 'python' + sys.version[:3], 'site-packages'))
+            os.path.join(prefix, "lib", "python" + sys.version[:3], "site-packages")
+        )
 
-    if os.path.join('.framework', '') in os.path.join(sys.prefix, ''):
-        home = os.environ.get('HOME')
+    if os.path.join(".framework", "") in os.path.join(sys.prefix, ""):
+        home = os.environ.get("HOME")
         if home:
             # Sierra and later
-            paths.append(os.path.join(home, 'Library', 'Python',
-                                      sys.version[:3], 'lib', 'python',
-                                      'site-packages'))
+            paths.append(
+                os.path.join(
+                    home,
+                    "Library",
+                    "Python",
+                    sys.version[:3],
+                    "lib",
+                    "python",
+                    "site-packages",
+                )
+            )
 
             # Before Sierra
-            paths.append(os.path.join(home, 'Library', 'Python',
-                                      sys.version[:3], 'site-packages'))
+            paths.append(
+                os.path.join(
+                    home, "Library", "Python", sys.version[:3], "site-packages"
+                )
+            )
 
     # Work around for a misfeature in setuptools: easy_install.pth places
     # site-packages way to early on sys.path and that breaks py2app bundles.

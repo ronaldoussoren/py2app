@@ -8,7 +8,9 @@ def converts(suffix):
         def convert_png(source_file, destination_file):
             pass
     """
+
     def wrapper(func):
         func.py2app_suffix = suffix
         return func
+
     return wrapper

@@ -1,8 +1,3 @@
-.. py2app documentation master file, created by Virgil Dupras
-   sphinx-quickstart on Sat Jul 31 09:59:24 2010.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 py2app - Create standalone Mac OS X applications with Python
 ============================================================
 
@@ -38,10 +33,10 @@ Mailing list:
     http://www.python.org/community/sigs/current/pythonmac-sig/
 
 Issue tracker:
-    http://bitbucket.org/ronaldoussoren/py2app/issues
+    https://github.com/ronaldoussoren/py2app/issues
 
 Source code repository:
-    https://bitbucket.org/ronaldoussoren/py2app/src
+    https://github.com/ronaldoussoren/py2app
 
 PyPI Entry:
     http://pypi.python.org/pypi/py2app/

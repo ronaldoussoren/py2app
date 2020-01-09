@@ -1,19 +1,20 @@
 from __future__ import print_function
 
+import errno
 import os
+import stat
+import subprocess
 import sys
 import time
-import errno
-import stat
-from modulegraph.find_modules import PY_SUFFIXES
-from modulegraph import zipio
-import macholib.util
-import zipfile
 import warnings
+import zipfile
 from distutils import log
 
 import pkg_resources
-import subprocess
+
+import macholib.util
+from modulegraph import zipio
+from modulegraph.find_modules import PY_SUFFIXES
 
 try:
     unicode
@@ -25,26 +26,22 @@ except NameError:
 
 
 def os_path_islink(path):
-    warnings.warn(
-        "Use zipio.islink instead of os_path_islink", DeprecationWarning)
+    warnings.warn("Use zipio.islink instead of os_path_islink", DeprecationWarning)
     return zipio.islink(path)
 
 
 def os_path_isdir(path):
-    warnings.warn(
-        "Use zipio.isdir instead of os_path_isdir", DeprecationWarning)
+    warnings.warn("Use zipio.isdir instead of os_path_isdir", DeprecationWarning)
     return zipio.islink(path)
 
 
 def os_readlink(path):
-    warnings.warn(
-        "Use zipio.readlink instead of os_readlink", DeprecationWarning)
+    warnings.warn("Use zipio.readlink instead of os_readlink", DeprecationWarning)
     return zipio.islink(path)
 
 
 def get_zip_data(path_to_zip, path_in_zip):
-    warnings.warn(
-        "Use zipio.open instead of get_zip_data", DeprecationWarning)
+    warnings.warn("Use zipio.open instead of get_zip_data", DeprecationWarning)
     zf = zipfile.ZipFile(path_to_zip)
     return zf.read(path_in_zip)
 
@@ -58,16 +55,16 @@ def path_to_zip(path):
     zf = zipfile.ZipFile(path_to_zip)
     orig_path = path
     from distutils.errors import DistutilsFileError
+
     if os.path.exists(path):
         return (None, path)
 
     else:
-        rest = ''
+        rest = ""
         while not os.path.exists(path):
             path, r = os.path.split(path)
             if not path:
-                raise DistutilsFileError(
-                    "File doesn't exist: %s" % (orig_path,))
+                raise DistutilsFileError("File doesn't exist: %s" % (orig_path,))
             rest = os.path.join(r, rest)
 
         if not os.path.isfile(path):
@@ -80,7 +77,7 @@ def path_to_zip(path):
         except zipfile.BadZipfile:
             raise DistutilsFileError("File doesn't exist: %s" % (orig_path,))
 
-        if rest.endswith('/'):
+        if rest.endswith("/"):
             rest = rest[:-1]
 
         return path, rest
@@ -109,11 +106,12 @@ gConverterTab = {}
 
 def find_converter(source):
     if not gConverterTab:
-        for ep in pkg_resources.iter_entry_points('py2app.converter'):
+        for ep in pkg_resources.iter_entry_points("py2app.converter"):
             function = ep.load()
             if not hasattr(function, "py2app_suffix"):
-                print("WARNING: %s does not have 'py2app_suffix' attribute" % (
-                    function))
+                print(
+                    "WARNING: %s does not have 'py2app_suffix' attribute" % (function)
+                )
                 continue
             gConverterTab[function.py2app_suffix] = function
 
@@ -142,7 +140,9 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
             copy_resource(
                 os.path.join(source, fn),
                 os.path.join(destination, fn),
-                dry_run=dry_run, symlink=symlink)
+                dry_run=dry_run,
+                symlink=symlink,
+            )
 
     else:
         if symlink:
@@ -154,13 +154,18 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
 
 
 def copy_file(
-        source, destination, preserve_mode=False,
-        preserve_times=False, update=False, dry_run=0):
+    source,
+    destination,
+    preserve_mode=False,
+    preserve_times=False,
+    update=False,
+    dry_run=0,
+):
     while True:
         try:
             _copy_file(
-                source, destination, preserve_mode, preserve_times,
-                update, dry_run)
+                source, destination, preserve_mode, preserve_times, update, dry_run
+            )
             return
         except IOError as exc:
             if exc.errno != errno.EAGAIN:
@@ -168,29 +173,35 @@ def copy_file(
 
             log.info(
                 "copying file %s failed due to spurious EAGAIN, "
-                "retrying in 2 seconds", source)
+                "retrying in 2 seconds",
+                source,
+            )
             time.sleep(2)
 
 
 def _copy_file(
-        source, destination, preserve_mode=False,
-        preserve_times=False, update=False, dry_run=0):
+    source,
+    destination,
+    preserve_mode=False,
+    preserve_times=False,
+    update=False,
+    dry_run=0,
+):
     log.info("copying file %s -> %s", source, destination)
-    with zipio.open(source, 'rb') as fp_in:
+    with zipio.open(source, "rb") as fp_in:
         if not dry_run:
             if os.path.isdir(destination):
-                destination = os.path.join(
-                    destination, os.path.basename(source))
+                destination = os.path.join(destination, os.path.basename(source))
             if os.path.exists(destination):
                 os.unlink(destination)
 
-            with open(destination, 'wb') as fp_out:
+            with open(destination, "wb") as fp_out:
                 data = fp_in.read()
                 fp_out.write(data)
 
             if preserve_mode:
                 mode = None
-                if hasattr(zipio, 'getmode'):
+                if hasattr(zipio, "getmode"):
                     mode = zipio.getmode(source)
 
                 elif os.path.isfile(source):
@@ -228,6 +239,7 @@ def find_version(fn):
     return "0.0.0"
     import compiler
     from compiler.ast import Module, Stmt, Assign, AssName, Const
+
     ast = compiler.parseFile(fn)
     if not isinstance(ast, Module):
         raise ValueError("expecting Module")
@@ -241,11 +253,11 @@ def find_version(fn):
             continue
         assName = node.nodes[0]
         if not (
-                isinstance(assName, AssName) and
-                isinstance(node.expr, Const) and
-                assName.flags == 'OP_ASSIGN' and
-                assName.name == '__version__'
-                ):
+            isinstance(assName, AssName)
+            and isinstance(node.expr, Const)
+            and assName.flags == "OP_ASSIGN"
+            and assName.name == "__version__"
+        ):
             continue
         return node.expr.value
     else:
@@ -260,10 +272,14 @@ def in_system_path(filename):
 
 
 if sys.version_info[0] == 2:
-    def fsencoding(s, encoding=sys.getfilesystemencoding()):
+
+    def fsencoding(s, encoding=sys.getfilesystemencoding()):  # noqa: M511,B008
         return macholib.util.fsencoding(s, encoding=encoding)
+
+
 else:
-    def fsencoding(s, encoding=sys.getfilesystemencoding()):
+
+    def fsencoding(s, encoding=sys.getfilesystemencoding()):  # noqa: M511,B008
         return s
 
 
@@ -285,8 +301,7 @@ def mergecopy(src, dest):
 
 def mergetree(src, dst, condition=None, copyfn=mergecopy):
     """Recursively merge a directory tree using mergecopy()."""
-    return macholib.util.mergetree(
-            src, dst, condition=condition, copyfn=copyfn)
+    return macholib.util.mergetree(src, dst, condition=condition, copyfn=copyfn)
 
 
 def move(src, dst):
@@ -362,58 +377,68 @@ def make_loader(fn):
     return LOADER % fn
 
 
-def byte_compile(py_files, optimize=0, force=0,
-                 target_dir=None, verbose=1, dry_run=0,
-                 direct=None):
+def byte_compile(
+    py_files, optimize=0, force=0, target_dir=None, verbose=1, dry_run=0, direct=None
+):
 
     if direct is None:
-        direct = (__debug__ and optimize == 0)
+        direct = __debug__ and optimize == 0
 
     # "Indirect" byte-compilation: write a temporary script and then
     # run it with the appropriate flags.
     if not direct:
         from tempfile import mktemp
         from distutils.util import execute, spawn
+
         script_name = mktemp(".py")
         if verbose:
             print("writing byte-compilation script '%s'" % script_name)
         if not dry_run:
             with open(script_name, "w") as script:
-                script.write("""
+                script.write(
+                    """
 from py2app.util import byte_compile
 from modulegraph.modulegraph import *
 files = [
-""")
+"""
+                )
 
                 for f in py_files:
                     script.write(repr(f) + ",\n")
                 script.write("]\n")
-                script.write("""
+                script.write(
+                    """
 byte_compile(files, optimize=%r, force=%r,
              target_dir=%r,
              verbose=%r, dry_run=0,
              direct=1)
-""" % (optimize, force, target_dir, verbose))
+"""
+                    % (optimize, force, target_dir, verbose)
+                )
 
         # Ensure that py2app is on PYTHONPATH, this ensures that
         # py2app.util can be found even when we're running from
         # an .egg that was downloaded by setuptools
         import py2app
-        pp = os.path.dirname(os.path.dirname(py2app.__file__))
-        if 'PYTHONPATH' in os.environ:
-            pp = '%s:%s' % (pp, os.environ['PYTHONPATH'])
 
-        cmd = [
-            '/usr/bin/env', 'PYTHONPATH=%s' % (pp,),
-            sys.executable, script_name]
+        pp = os.path.dirname(os.path.dirname(py2app.__file__))
+        if "PYTHONPATH" in os.environ:
+            pp = "%s:%s" % (pp, os.environ["PYTHONPATH"])
+
+        cmd = ["/usr/bin/env", "PYTHONPATH=%s" % (pp,), sys.executable, script_name]
 
         if optimize == 1:
             cmd.insert(3, "-O")
         elif optimize == 2:
             cmd.insert(3, "-OO")
         spawn(cmd, verbose=verbose, dry_run=dry_run)
-        execute(os.remove, (script_name,), "removing %s" % script_name,
-                verbose=verbose, dry_run=dry_run)
+        execute(
+            os.remove,
+            (script_name,),
+            "removing %s" % script_name,
+            verbose=verbose,
+            dry_run=dry_run,
+        )
 
     else:
         from py_compile import compile
@@ -425,22 +450,22 @@ byte_compile(files, optimize=%r, force=%r,
             #   dfile - purported source filename (same as 'file' by default)
             if mod.filename == mod.identifier:
                 cfile = os.path.basename(mod.filename)
-                dfile = cfile + (__debug__ and 'c' or 'o')
+                dfile = cfile + (__debug__ and "c" or "o")
             else:
-                cfile = mod.identifier.replace('.', os.sep)
+                cfile = mod.identifier.replace(".", os.sep)
 
                 if sys.version_info[:2] <= (3, 4):
                     if mod.packagepath:
-                        dfile = cfile + os.sep + '__init__.py' + (
-                            __debug__ and 'c' or 'o')
+                        dfile = (
+                            cfile + os.sep + "__init__.py" + (__debug__ and "c" or "o")
+                        )
                     else:
-                        dfile = cfile + '.py' + (
-                            __debug__ and 'c' or 'o')
+                        dfile = cfile + ".py" + (__debug__ and "c" or "o")
                 else:
                     if mod.packagepath:
-                        dfile = cfile + os.sep + '__init__.pyc'
+                        dfile = cfile + os.sep + "__init__.pyc"
                     else:
-                        dfile = cfile + '.pyc'
+                        dfile = cfile + ".pyc"
             if target_dir:
                 cfile = os.path.join(target_dir, dfile)
 
@@ -452,11 +477,11 @@ byte_compile(files, optimize=%r, force=%r,
                     mkpath(os.path.dirname(cfile))
                     suffix = os.path.splitext(mod.filename)[1]
 
-                    if suffix in ('.py', '.pyw'):
-                        fn = cfile + '.py'
+                    if suffix in (".py", ".pyw"):
+                        fn = cfile + ".py"
 
-                        with zipio.open(mod.filename, 'rb') as fp_in:
-                            with open(fn, 'wb') as fp_out:
+                        with zipio.open(mod.filename, "rb") as fp_in:
+                            with open(fn, "wb") as fp_out:
                                 fp_out.write(fp_in.read())
 
                         compile(fn, cfile, dfile)
@@ -469,15 +494,15 @@ byte_compile(files, optimize=%r, force=%r,
                         copy_file(mod.filename, cfile, preserve_times=True)
 
                     else:
-                        raise RuntimeError(
-                            "Don't know how to handle %r" % mod.filename)
+                        raise RuntimeError("Don't know how to handle %r" % mod.filename)
             else:
                 if verbose:
-                    print("skipping byte-compilation of %s to %s" %
-                          (mod.filename, dfile))
+                    print(
+                        "skipping byte-compilation of %s to %s" % (mod.filename, dfile)
+                    )
 
 
-SCMDIRS = ['CVS', '.svn', '.hg', '.git']
+SCMDIRS = ["CVS", ".svn", ".hg", ".git"]
 
 
 def skipscm(ofn):
@@ -507,26 +532,27 @@ def skipfunc(junk=(), junk_exts=(), chain=()):
     return _skipfunc
 
 
-JUNK = ['.DS_Store', '.gdb_history', 'build', 'dist'] + SCMDIRS
-JUNK_EXTS = ['.pbxuser', '.pyc', '.pyo', '.swp']
+JUNK = [".DS_Store", ".gdb_history", "build", "dist"] + SCMDIRS
+JUNK_EXTS = [".pbxuser", ".pyc", ".pyo", ".swp"]
 skipjunk = skipfunc(JUNK, JUNK_EXTS)
 
 
 def get_magic(platform=sys.platform):
-    if platform == 'darwin':
+    if platform == "darwin":
         import struct
         import macholib.mach_o
+
         return [
-            struct.pack('!L', macholib.mach_o.MH_MAGIC),
-            struct.pack('!L', macholib.mach_o.MH_CIGAM),
-            struct.pack('!L', macholib.mach_o.MH_MAGIC_64),
-            struct.pack('!L', macholib.mach_o.MH_CIGAM_64),
-            struct.pack('!L', macholib.mach_o.FAT_MAGIC),
+            struct.pack("!L", macholib.mach_o.MH_MAGIC),
+            struct.pack("!L", macholib.mach_o.MH_CIGAM),
+            struct.pack("!L", macholib.mach_o.MH_MAGIC_64),
+            struct.pack("!L", macholib.mach_o.MH_CIGAM_64),
+            struct.pack("!L", macholib.mach_o.FAT_MAGIC),
         ]
-    elif platform == 'linux2':
-        return ['\x7fELF']
-    elif platform == 'win32':
-        return ['MZ']
+    elif platform == "linux2":
+        return ["\x7fELF"]
+    elif platform == "win32":
+        return ["MZ"]
     return None
 
 
@@ -534,7 +560,7 @@ def iter_platform_files(path, is_platform_file=macholib.util.is_platform_file):
     """
     Iterate over all of the platform files in a directory
     """
-    for root, dirs, files in os.walk(path):
+    for root, _dirs, files in os.walk(path):
         for fn in files:
             fn = os.path.join(root, fn)
             if is_platform_file(fn):
@@ -551,9 +577,16 @@ def strip_files(files, dry_run=0, verbose=0):
 
 
 def copy_tree(
-        src, dst, preserve_mode=1, preserve_times=1,
-        preserve_symlinks=0, update=0, verbose=0, dry_run=0,
-        condition=None):
+    src,
+    dst,
+    preserve_mode=1,
+    preserve_times=1,
+    preserve_symlinks=0,
+    update=0,
+    verbose=0,
+    dry_run=0,
+    condition=None,
+):
 
     """
     Copy an entire directory tree 'src' to a new location 'dst'.  Both
@@ -589,8 +622,7 @@ def copy_tree(
         condition = skipscm
 
     if not dry_run and not zipio.isdir(src):
-        raise DistutilsFileError(
-              "cannot copy tree '%s': not a directory" % src)
+        raise DistutilsFileError("cannot copy tree '%s': not a directory" % src)
     try:
         names = zipio.listdir(src)
     except os.error as exc:
@@ -598,8 +630,7 @@ def copy_tree(
         if dry_run:
             names = []
         else:
-            raise DistutilsFileError(
-                  "error listing files in '%s': %s" % (src, errstr))
+            raise DistutilsFileError("error listing files in '%s': %s" % (src, errstr))
 
     if not dry_run:
         mkpath(dst)
@@ -614,8 +645,7 @@ def copy_tree(
 
         # Note: using zipio's internal _locate function throws an IOError on
         # dead symlinks, so handle it here.
-        if os.path.islink(src_name) \
-                and not os.path.exists(os.readlink(src_name)):
+        if os.path.islink(src_name) and not os.path.exists(os.readlink(src_name)):
             continue
 
         if preserve_symlinks and zipio.islink(src_name):
@@ -631,21 +661,34 @@ def copy_tree(
         elif zipio.isdir(src_name) and not os.path.isfile(src_name):
             # ^^^ this odd tests ensures that resource files that
             # happen to be a zipfile won't get extracted.
-            # XXX: need API in zipio to clean up this code
             outputs.extend(
-                copy_tree(src_name, dst_name, preserve_mode,
-                          preserve_times, preserve_symlinks, update,
-                          dry_run=dry_run, condition=condition))
+                copy_tree(
+                    src_name,
+                    dst_name,
+                    preserve_mode,
+                    preserve_times,
+                    preserve_symlinks,
+                    update,
+                    dry_run=dry_run,
+                    condition=condition,
+                )
+            )
         else:
-            copy_file(src_name, dst_name, preserve_mode,
-                      preserve_times, update, dry_run=dry_run)
+            copy_file(
+                src_name,
+                dst_name,
+                preserve_mode,
+                preserve_times,
+                update,
+                dry_run=dry_run,
+            )
             outputs.append(dst_name)
 
     return outputs
 
 
 def walk_files(path):
-    for root, dirs, files in os.walk(path):
+    for _root, _dirs, files in os.walk(path):
         for f in files:
             yield f
 
@@ -656,7 +699,7 @@ def find_app(app):
         return dpath
     if os.path.isabs(app):
         return None
-    for path in os.environ.get('PATH', '').split(':'):
+    for path in os.environ.get("PATH", "").split(":"):
         dpath = os.path.realpath(os.path.join(path, app))
         if os.path.exists(dpath):
             return dpath
@@ -664,8 +707,7 @@ def find_app(app):
 
 
 def check_output(command_line):
-    p = subprocess.Popen(
-            command_line, stdout=subprocess.PIPE)
+    p = subprocess.Popen(command_line, stdout=subprocess.PIPE)
     stdout, _ = p.communicate()
     xit = p.wait()
     if xit != 0:
@@ -679,36 +721,37 @@ _tools = {}
 
 def _get_tool(toolname):
     if toolname not in _tools:
-        if os.path.exists('/usr/bin/xcrun'):
+        if os.path.exists("/usr/bin/xcrun"):
             try:
-                _tools[toolname] = check_output([
-                    '/usr/bin/xcrun', '-find', toolname])[:-1]
+                _tools[toolname] = check_output(["/usr/bin/xcrun", "-find", toolname])[
+                    :-1
+                ]
             except subprocess.CalledProcessError:
                 raise IOError("Tool %r not found" % (toolname,))
 
         else:
             # Support for Xcode 3.x and earlier
-            if toolname == 'momc':
+            if toolname == "momc":
                 choices = [
                     (
-                        '/Library/Application Support/Apple/'
-                        'Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/'
-                        'Contents/Resources/momc'
+                        "/Library/Application Support/Apple/"
+                        "Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/"
+                        "Contents/Resources/momc"
                     ),
                     (
-                        '/Developer/Library/Xcode/Plug-ins/'
-                        'XDCoreDataModel.xdplugin/Contents/Resources/momc'
+                        "/Developer/Library/Xcode/Plug-ins/"
+                        "XDCoreDataModel.xdplugin/Contents/Resources/momc"
                     ),
-                    '/Developer/usr/bin/momc',
+                    "/Developer/usr/bin/momc",
                 ]
-            elif toolname == 'mapc':
+            elif toolname == "mapc":
                 choices = [
                     (
-                        '/Developer/Library/Xcode/Plug-ins/'
-                        'XDMappingModel.xdplugin/'
-                        'Contents/Resources/mapc',
+                        "/Developer/Library/Xcode/Plug-ins/"
+                        "XDMappingModel.xdplugin/"
+                        "Contents/Resources/mapc",
                     ),
-                    '/Developer/usr/bin/mapc'
+                    "/Developer/usr/bin/mapc",
                 ]
             else:
                 raise IOError("Tool %r not found" % (toolname,))
@@ -723,8 +766,8 @@ def _get_tool(toolname):
 
 
 def momc(src, dst):
-    subprocess.check_call([_get_tool('momc'), src, dst])
+    subprocess.check_call([_get_tool("momc"), src, dst])
 
 
 def mapc(src, dst):
-    subprocess.check_call([_get_tool('mapc'), src, dst])
+    subprocess.check_call([_get_tool("mapc"), src, dst])

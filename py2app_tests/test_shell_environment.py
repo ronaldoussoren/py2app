@@ -32,6 +32,8 @@ class TestShellEnvironment (unittest.TestCase):
     # a base-class.
     @classmethod
     def setUpClass(cls):
+        cls.tearDownClass()
+
         kill_child_processes()
 
         env=os.environ.copy()
@@ -89,7 +91,7 @@ class TestShellEnvironment (unittest.TestCase):
             if os.path.exists(path):
                 break
 
-        self.assertTrue(os.path.isfile(path))
+        self.assertTrue(os.path.isfile(path), "%r is not a file"%(path,))
 
         fp = open(path)
         data = fp.read().strip()
