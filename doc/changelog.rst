@@ -10,7 +10,7 @@ py2app 0.20
 
 * Fix issue with emulate-shell-environment option on macOS 10.15 (Catalina)
 
-* Make sure the test suite passes again
+* #269: Py2app didn't work with Python 3.8
 
 py2app 0.19
 -----------

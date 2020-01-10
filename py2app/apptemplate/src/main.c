@@ -27,7 +27,7 @@ typedef void (*Py_FinalizePtr)(void);
 typedef PyObject *(*PySys_GetObjectPtr)(const char *);
 typedef int *(*PySys_SetArgvPtr)(int argc, char **argv);
 typedef PyObject *(*PyObject_GetAttrStringPtr)(PyObject *, const char *);
-typedef wchar_t* (*_Py_DecodeUTF8_surrogateescapePtr)(const char *s, ssize_t size);
+typedef wchar_t* (*_Py_DecodeUTF8_surrogateescapePtr)(const char *s, ssize_t size, ssize_t* outsize);
 
 
 typedef CFTypeRef id;
@@ -1037,12 +1037,12 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     if (isPy3K) {
        int i;
 
-       argv_new = alloca((argc+1) * sizeof(wchar_t));
+       argv_new = alloca((argc+1) * sizeof(wchar_t*));
        argv_new[argc] = NULL;
-       argv_new[0] = (char*)py2app__Py_DecodeUTF8_surrogateescape(c_mainScript, strlen(c_mainScript));
+       argv_new[0] = (char*)py2app__Py_DecodeUTF8_surrogateescape(c_mainScript, strlen(c_mainScript), NULL);
 
        for (i = 1; i < argc; i++) {
-	  argv_new[i] = (char*)py2app__Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]));
+	  argv_new[i] = (char*)py2app__Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]), NULL);
        }
 
     } else {
