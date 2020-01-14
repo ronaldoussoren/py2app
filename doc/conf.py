@@ -20,7 +20,7 @@ def get_version():
     for ln in open(setup_py, 'rU'):
         ln = ln.strip()
         if ln.startswith('version='):
-            return ln.split("'")[1]
+            return ln.split("\"")[1]
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
