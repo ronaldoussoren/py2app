@@ -4,7 +4,7 @@ Release history
 py2app 0.20
 -----------
 
-* Migratie naar GitHub
+* Migrate to GitHub
 
 * #274: Fix an issue in the PyQt5 recipe
 
