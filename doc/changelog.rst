@@ -116,7 +116,7 @@ py2app 0.11
 - Make sure the stdout/stderr streams of the main binary of the application
   are unbuffered.
 
-  See `issue #177 in PyObjC's repository <https://bitbucket.org/ronaldoussoren/pyobjc/issues/177/on-python3-print-does-not-automatically>`_ for more information.
+  See `issue #177 in PyObjC's repository <https://github.com/ronaldoussoren/pyobjc/issues/177/on-python3-print-does-not-automatically>`_ for more information.
 
 - Fix issue #201: py2app is not compatible with pyvenv virtualenvs
 

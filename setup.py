@@ -276,7 +276,7 @@ setup(
     author_email="ronaldoussoren@mac.com",
     maintainer="Ronald Oussoren",
     maintainer_email="ronaldoussoren@mac.com",
-    url="http://bitbucket.org/ronaldoussoren/py2app",
+    url="http://github.com/ronaldoussoren/py2app",
     download_url="http://pypi.python.org/pypi/py2app",
     license="MIT or PSF License",
     platforms=["MacOS X"],
