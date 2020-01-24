@@ -1,0 +1,17 @@
+name: run_tox
+on: [push, pull_request]
+jobs:
+  run_tox:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: [3.7]  # [2.7, 3.5, 3.6, 3.7, 3.8]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+      - run: pip install tox  # black codespell flake8 pytest
+      - run: tox TOXENV=py37
+      # - run: codespell --quiet-level=2  # --ignore-words-list="" --skip=""
+      # - run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      # - run: pip install -r requirements.txt || true
+      # - run: pytest
