@@ -1,5 +1,6 @@
 from AppKit import NSTerminateNow, NSApp, NSRunAlertPanel
-from PyObjCTools import AppHelper
+from Foundation import NSObject
+from PyObjCTools import AppHelper, NSObject
 
 def exception_handler():
     import traceback, sys, os
