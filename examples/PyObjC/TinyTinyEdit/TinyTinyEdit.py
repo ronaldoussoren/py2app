@@ -5,6 +5,11 @@ from PyObjCTools import AppHelper
 import objc
 import sys
 
+try:
+    unicode
+except NameError:
+    unicode = str
+
 class TinyTinyDocument(NSDocument):
     textView = objc.IBOutlet()
 
@@ -23,7 +28,7 @@ class TinyTinyDocument(NSDocument):
         return True
 
     def writeToFile_ofType_(self, path, tp):
-        f = file(path, "w")
+        f = open(path, "w")
         text = self.textView.string()
         f.write(text.encode("utf8"))
         f.close()
@@ -44,7 +49,7 @@ class TinyTinyDocument(NSDocument):
                 sys.version, maxint_label, maxint, sys.byteorder, sys.flags))
 
     def readFromUTF8_(self, path):
-        f = file(path)
+        f = open(path)
         text = unicode(f.read(), "utf8")
         f.close()
         self.textView.setString_(text)

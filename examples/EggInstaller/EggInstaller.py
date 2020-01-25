@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import time
@@ -27,7 +28,7 @@ if __name__ == '__main__':
 """
 
 def log(*args):
-    print '[EggInstaller]', ' '.join(map(str, args))
+    print('[EggInstaller]', ' '.join(map(str, args)))
 
 def main():
     fd, name = tempfile.mkstemp(suffix='.py', prefix='EggInstaller')
@@ -35,7 +36,7 @@ def main():
     script.write(SCRIPT % (sys.executable, ['--'] + sys.argv[1:]))
     script.flush()
     script.close()
-    os.chmod(name, 0700)
+    os.chmod(name, 0o700)
     cmd = ['/usr/bin/open', '-a', 'Terminal', name]
     os.spawnv(os.P_WAIT, cmd[0], cmd)
     log('waiting for', name)

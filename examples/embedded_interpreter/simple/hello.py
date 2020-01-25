@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys, os
 import pprint
 try:
@@ -7,18 +8,18 @@ except NameError:
 
 def print_sys():
     for arg in 'prefix', 'exec_prefix', 'executable':
-        print '%s: %s' % (arg, getattr(sys, arg))
+        print('%s: %s' % (arg, getattr(sys, arg)))
 
 def host_main():
-    print 'Hello from main executable (pid: %s)' % (os.getpid(),)
+    print('Hello from main executable (pid: %s)' % (os.getpid(),))
     print_sys()
-    print ''
+    print('')
     os.spawnv(os.P_WAIT, sys.executable, [sys.executable, __file__, 'subinterpreter', repr(sys.path)])
 
 def spawned_main():
-    print 'Hello from spawned executable (pid: %s)' % (os.getpid(),)
+    print('Hello from spawned executable (pid: %s)' % (os.getpid(),))
     print_sys()
-    print ''
+    print('')
     otherpaths = set(filter(os.path.exists, eval(sys.argv[2])))
     mypaths = set(filter(os.path.exists, sys.path))
     mine_not_other = list(mypaths - otherpaths)
@@ -26,13 +27,13 @@ def spawned_main():
     mine_not_other.sort()
     other_not_mine.sort()
     if mine_not_other or other_not_mine:
-        print 'Path mismatch :('
+        print('Path mismatch :(')
         if mine_not_other:
-            print 'sub-interpreter extras: ', mine_not_other
+            print('sub-interpreter extras: ', mine_not_other)
         if other_not_mine:
-            print 'sub-interpreter missing: ', other_not_mine
+            print('sub-interpreter missing: ', other_not_mine)
     else:
-        print 'Sub-interpreter launched ok!'
+        print('Sub-interpreter launched ok!')
 
 if __name__ == '__main__':
     if sys.argv[1:2] == ['subinterpreter']:
