@@ -1,6 +1,11 @@
 Release history
 ===============
 
+py2app 0.21
+-----------
+
+* PR 277 (Christian Clauss): Fix some Python 3 issues
+
 py2app 0.20
 -----------
 
