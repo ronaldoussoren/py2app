@@ -18,9 +18,5 @@ jobs:
       # - run: python setup.py test  # Never seems to terminate!!
       # - run: python -m unittest py2app_tests || true
       # - run: pytest . || true  # Never seems to terminate!!
-      - run: pytest . --timeout=120 || true  # kill tests after 2 minutes
+      - run: pytest . --timeout=30 || true  # kill tests after 30 seconds
       - run: pytest py2app_tests/test_app_resources.py || true
-      # - run: pytest py2app_tests/test_app_with_ctypes.py || true  # Never seems to terminate!!
-      - run: pytest py2app_tests/test_app_with_scripts.py || true
-      - run: pytest py2app_tests/test_app_with_sharedlib.py || true
-      - run: pytest py2app_tests/test_argv_emulation.py || true
