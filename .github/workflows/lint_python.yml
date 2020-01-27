@@ -2,14 +2,17 @@ name: lint_python
 on: [push, pull_request]
 jobs:
   lint_python:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-python@master
+      - run: pip install --upgrade pip
       - run: pip install black codespell flake8 isort pytest
       - run: black . --diff || true
       - run: codespell --quiet-level=2 || true  # --ignore-words-list="" --skip=""
       - run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
       - run: isort --recursive . || true
-      - run: pip install -r requirements.txt || true
+      # - run: pip install -r requirements.txt || true
+      - run: python setup.py
+      - run: python -m unittest .
       - run: pytest . || true
