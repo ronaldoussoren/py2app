@@ -8,7 +8,7 @@ jobs:
       - uses: actions/setup-python@master
       - run: pip install --upgrade pip
       - run: pip install black codespell flake8 isort pytest
-      - run: black . --diff || true
+      - run: black . --check || true
       - run: codespell --quiet-level=2 || true  # --ignore-words-list="" --skip=""
       - run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
       - run: isort --recursive . || true
@@ -16,5 +16,5 @@ jobs:
       - run: python setup.py build
       - run: python setup.py install
       # - run: python setup.py test  # Never seems to terminate!!
-      - run: python -m unittest . || true
-      - run: pytest . || true
+      # - run: python -m unittest py2app_tests || true
+      - run: pytest . --ignore py2app_tests/test_app_with_ctypes.py || true
