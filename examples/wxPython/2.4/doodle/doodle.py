@@ -218,7 +218,7 @@ class DoodleWindow(wx.Window):
             pen = wx.Pen(colour, thickness, wx.SOLID)
             dc.SetPen(pen)
             for coords in line:
-                apply(dc.DrawLine, coords)
+                dc.DrawLine(*coords)
         dc.EndDrawing()
 
 
