@@ -1,6 +1,12 @@
 Release history
 ===============
 
+py2app 0.20.1
+-------------
+
+* #276: Rebuilt the binary stubs on a 10.12 machine to fix launching
+  Tk apps.
+
 py2app 0.20
 -----------
 
