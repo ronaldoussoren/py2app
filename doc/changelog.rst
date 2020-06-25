@@ -2,6 +2,12 @@ Release history
 ===============
 
 
+py2app 0.22
+-----------
+
+* #300: Add support for ARM64 and Universal 2 binaries
+
+  .. note:: Support is highly experimental, these stubs have not been tested yet.
 
 py2app 0.21
 -----------

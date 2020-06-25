@@ -6,6 +6,19 @@ import sys
 
 gPreBuildVariants = [
     {
+        "name": "main-universal2",
+        "target": "10.9",
+        "cflags": "-g -arch arm64 -arch x86_64",
+        "cc": "/usr/bin/clang",
+    },
+    {
+        "name": "main-arm64",
+        "target": "10.16",
+        "cflags": "-g -arch arm64",
+        "cc": "/usr/bin/clang",
+    },
+
+    {
         "name": "main-universal",
         "target": "10.5",
         "cflags": "-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.5.sdk "
