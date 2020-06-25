@@ -9,6 +9,9 @@ py2app 0.22
 
   .. note:: Support is highly experimental, these stubs have not been tested yet.
 
+* #299: Fix build error when building with the copy of Python 3 shipped
+  with Xcode.
+
 py2app 0.21
 -----------
 

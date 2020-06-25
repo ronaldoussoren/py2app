@@ -1555,7 +1555,10 @@ class py2app(Command):
                     # to a stub executable that we don't want use, we need
                     # the executable in Resources/Python.app
                     dpath = os.path.join(self._python_app, "Contents", "MacOS")
-                    self.copy_file(os.path.join(dpath, PYTHONFRAMEWORK), execdst)
+                    sfile = os.path.join(dpath, PYTHONFRAMEWORK)
+                    if not os.path.exists(sfile):
+                        sfile = os.path.join(dpath, "Python")
+                    self.copy_file(sfile, execdst)
                     make_exec(execdst)
 
                 elif os.path.exists(os.path.join(sys.prefix, ".Python")):
@@ -1797,6 +1800,9 @@ class py2app(Command):
             includedir = "python%d.%d" % (sys.version_info[:2])
         else:
             includedir = os.path.basename(includedir)
+            if includedir == "Headers":
+                # This is a copy of Python as shipped with Xcode
+                includedir = "python%d.%d%s" % (sys.version_info[:2] + (sys.abiflags,))
 
         if configdir is None:
             configdir = "config"
