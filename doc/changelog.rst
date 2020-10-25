@@ -1,6 +1,12 @@
 Release history
 ===============
 
+py2app 0.22
+-----------
+
+* #314: Don't use Image.DEBUG in the PIL recipy, that attribute is not longer valid
+
+  PR by Aleksandar Topuzović 
 
 py2app 0.22
 -----------
