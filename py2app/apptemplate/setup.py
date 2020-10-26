@@ -33,7 +33,7 @@ gPreBuildVariants = [
     {
         "name": "main-x86_64",
         "target": "10.5",
-        "cflags": "-g -arch x86_64",
+        "cflags": "-g -arch x86_64 -Wl,-rpath,@executable_path/../Frameworks",
         "cc": "/usr/bin/clang",
     },
     {
