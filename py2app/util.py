@@ -15,6 +15,7 @@ import pkg_resources
 import macholib.util
 from modulegraph import zipio
 from modulegraph.find_modules import PY_SUFFIXES
+from macholib.util import is_platform_file
 
 try:
     unicode
@@ -771,3 +772,14 @@ def momc(src, dst):
 
 def mapc(src, dst):
     subprocess.check_call([_get_tool("mapc"), src, dst])
+
+def _macho_find(path):
+    for basename, dirs, files in os.walk(path):
+        for fn in files:
+            path = os.path.join(basename, fn)
+            if is_platform_file(path):
+                yield path
+
+def codesign_adhoc(platfiles):
+    for file in platfiles:
+        subprocess.check_call(["codesign", "-s", "-", "--preserve-metadata=identifier,entitlements,flags,runtime", "-f", file])

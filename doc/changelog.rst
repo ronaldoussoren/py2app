@@ -5,6 +5,11 @@ Release history
 py2app 0.22
 -----------
 
+* #319: Add ad-hoc signature for application bundles
+
+  ARM64 binaries on macOS 11 must be signed, even if it is only an ad-hoc signature.
+  py2app will now add an ad-hoc code signature.
+ 
 * #300: Add support for ARM64 and Universal 2 binaries
 
   .. note:: Support is highly experimental, these stubs have not been tested yet.

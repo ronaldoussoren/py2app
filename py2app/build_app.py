@@ -38,6 +38,7 @@ from py2app.create_pluginbundle import create_pluginbundle
 from py2app.filters import has_filename_filter, not_stdlib_filter
 from py2app.util import (
     byte_compile,
+    codesign_adhoc,
     copy_file,
     copy_resource,
     copy_tree,
@@ -1630,9 +1631,13 @@ class py2app(Command):
                 for fmwk in self.frameworks:
                     mm.mm.run_file(fmwk)
                 platfiles = mm.run()
+
+
                 if self.strip:
                     platfiles = self.strip_dsym(platfiles)
                     self.strip_files(platfiles)
+
+                codesign_adhoc(platfiles)
             self.app_files.append(dst)
 
     def copy_package_data(self, package, target_dir):
