@@ -1,6 +1,12 @@
 Release history
 ===============
 
+py2app 0.23
+-----------
+
+* #314: Don't use Image.DEBUG in the PIL recipy, that attribute is not longer valid
+
+  PR by Aleksandar Topuzović 
 
 py2app 0.22
 -----------
@@ -16,6 +22,8 @@ py2app 0.22
 
 * #299: Fix build error when building with the copy of Python 3 shipped
   with Xcode.
+
+* #281: Generated bundle doesn't work on macOS 10.9 and 10.10.
 
 py2app 0.21
 -----------
