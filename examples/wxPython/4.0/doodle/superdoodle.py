@@ -15,7 +15,8 @@ import wx.html
 from wx.lib import buttons # for generic button classes
 from doodle import DoodleWindow
 
-import os, cPickle
+import os
+import pickle as cPickle
 
 
 #----------------------------------------------------------------------
@@ -42,6 +43,7 @@ class DoodleFrame(wx.Frame):
     def __init__(self, parent):
         wx.Frame.__init__(self, parent, -1, self.title, size=(800,600),
                          style=wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE)
+
         self.CreateStatusBar()
         self.MakeMenu()
         self.filename = None
@@ -65,7 +67,7 @@ class DoodleFrame(wx.Frame):
     def SaveFile(self):
         if self.filename:
             data = self.doodle.GetLinesData()
-            f = open(self.filename, 'w')
+            f = open(self.filename, 'wb')
             cPickle.dump(data, f)
             f.close()
 
@@ -73,7 +75,7 @@ class DoodleFrame(wx.Frame):
     def ReadFile(self):
         if self.filename:
             try:
-                f = open(self.filename, 'r')
+                f = open(self.filename, 'rb')
                 data = cPickle.load(f)
                 f.close()
                 self.doodle.SetLinesData(data)
@@ -120,7 +122,7 @@ class DoodleFrame(wx.Frame):
 
     def OnMenuOpen(self, event):
         dlg = wx.FileDialog(self, "Open doodle file...", os.getcwd(),
-                           style=wx.OPEN, wildcard = self.wildcard)
+                           style=wx.FD_OPEN, wildcard = self.wildcard)
         if dlg.ShowModal() == wx.ID_OK:
             self.filename = dlg.GetPath()
             self.ReadFile()
@@ -137,7 +139,7 @@ class DoodleFrame(wx.Frame):
 
     def OnMenuSaveAs(self, event):
         dlg = wx.FileDialog(self, "Save doodle as...", os.getcwd(),
-                           style=wx.SAVE | wx.OVERWRITE_PROMPT,
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
                            wildcard = self.wildcard)
         if dlg.ShowModal() == wx.ID_OK:
             filename = dlg.GetPath()
@@ -195,9 +197,9 @@ class ControlPanel(wx.Panel):
         self.clrBtns = {}
         colours = doodle.menuColours
         keys = colours.keys()
-        keys.sort()
+        sortedkeys = sorted(keys)
         cGrid = wx.GridSizer(cols=numCols, hgap=2, vgap=2)
-        for k in keys:
+        for k in sortedkeys:
             bmp = self.MakeBitmap(colours[k])
             b = buttons.GenBitmapToggleButton(self, k, bmp, size=btnSize )
             b.SetBezelWidth(1)
@@ -205,7 +207,7 @@ class ControlPanel(wx.Panel):
             self.Bind(wx.EVT_BUTTON, self.OnSetColour, b)
             cGrid.Add(b, 0)
             self.clrBtns[colours[k]] = b
-        self.clrBtns[colours[keys[0]]].SetToggle(True)
+        self.clrBtns[colours[sortedkeys[0]]].SetToggle(True)
 
 
         # Make a grid of buttons for the thicknesses.  Attach each button
@@ -319,10 +321,8 @@ class ColourIndicator(wx.Window):
         if self.colour:
             sz = self.GetClientSize()
             pen = wx.Pen(self.colour, self.thickness)
-            dc.BeginDrawing()
             dc.SetPen(pen)
             dc.DrawLine(10, sz.height/2, sz.width-10, sz.height/2)
-            dc.EndDrawing()
 
 
 #----------------------------------------------------------------------
@@ -399,5 +399,5 @@ class DoodleApp(wx.App):
 #----------------------------------------------------------------------
 
 if __name__ == '__main__':
-    app = DoodleApp(redirect=True)
+    app = DoodleApp()
     app.MainLoop()
