@@ -398,5 +398,5 @@ class DoodleApp(wx.App):
 #----------------------------------------------------------------------
 
 if __name__ == '__main__':
-    app = DoodleApp()
+    app = DoodleApp(redirect=True)
     app.MainLoop()
