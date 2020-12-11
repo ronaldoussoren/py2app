@@ -107,8 +107,8 @@ class DoodleWindow(wx.Window):
         """Make a menu that can be popped up later"""
         menu = wx.Menu()
         keys = self.menuColours.keys()
-        keys.sort()
-        for k in keys:
+        sortedkeys = sorted(keys)
+        for k in sortedkeys:
             text = self.menuColours[k]
             menu.Append(k, text, kind=wx.ITEM_CHECK)
         self.Bind(wx.EVT_MENU_RANGE, self.OnMenuSetColour, id=100, id2=200)
@@ -171,14 +171,12 @@ class DoodleWindow(wx.Window):
         """
         if event.Dragging() and event.LeftIsDown():
             dc = wx.BufferedDC(wx.ClientDC(self), self.buffer)
-            dc.BeginDrawing()
             dc.SetPen(self.pen)
             pos = event.GetPosition()
             coords = (self.pos.x, self.pos.y, pos.x, pos.y)
             self.curLine.append(coords)
             dc.DrawLine(*coords)
             self.pos = pos
-            dc.EndDrawing()
 
 
     def OnSize(self, event):
@@ -216,13 +214,11 @@ class DoodleWindow(wx.Window):
         """
         Redraws all the lines that have been drawn already.
         """
-        dc.BeginDrawing()
         for colour, thickness, line in self.lines:
             pen = wx.Pen(colour, thickness, wx.SOLID)
             dc.SetPen(pen)
             for coords in line:
                 dc.DrawLine(*coords)
-        dc.EndDrawing()
 
 
     # Event handlers for the popup menu, uses the event ID to determine
