@@ -23,15 +23,14 @@ import pickle as cPickle
 
 wx.RegisterId(5000)  # Give a high starting value for the IDs, just for kicks
 
-idNEW    = wx.NewId()
-idOPEN   = wx.NewId()
-idSAVE   = wx.NewId()
-idSAVEAS = wx.NewId()
-idCLEAR  = wx.NewId()
-idEXIT   = wx.NewId()
-idABOUT  = wx.NewId()
-
-
+#wx.NewId() is deprecated, use wx.NewIdRef() instead to do the same thing.
+idNEW    = wx.NewIdRef()
+idOPEN   = wx.NewIdRef()
+idSAVE   = wx.NewIdRef()
+idSAVEAS = wx.NewIdRef()
+idCLEAR  = wx.NewIdRef()
+idEXIT   = wx.NewIdRef()
+idABOUT  = wx.NewIdRef()
 
 class DoodleFrame(wx.Frame):
     """
@@ -91,17 +90,17 @@ class DoodleFrame(wx.Frame):
         # Using the "\tKeyName" syntax automatically creates a
         # wx.AcceleratorTable for this frame and binds the keys to
         # the menu items.
-        menu1.Append(idOPEN, "&Open\tCtrl-O", "Open a doodle file")
-        menu1.Append(idSAVE, "&Save\tCtrl-S", "Save the doodle")
-        menu1.Append(idSAVEAS, "Save &As", "Save the doodle in a new file")
+        menu1.Append(int(idOPEN), "&Open\tCtrl-O", "Open a doodle file")
+        menu1.Append(int(idSAVE), "&Save\tCtrl-S", "Save the doodle")
+        menu1.Append(int(idSAVEAS), "Save &As", "Save the doodle in a new file")
         menu1.AppendSeparator()
-        menu1.Append(idCLEAR, "&Clear", "Clear the current doodle")
+        menu1.Append(int(idCLEAR), "&Clear", "Clear the current doodle")
         menu1.AppendSeparator()
-        menu1.Append(idEXIT, "E&xit", "Terminate the application")
+        menu1.Append(int(idEXIT), "E&xit", "Terminate the application")
 
         # and the help menu
         menu2 = wx.Menu()
-        menu2.Append(idABOUT, "&About\tCtrl-H", "Display the gratuitous 'about this app' thingamajig")
+        menu2.Append(int(idABOUT), "&About\tCtrl-H", "Display the gratuitous 'about this app' thingamajig")
 
         # and add them to a menubar
         menuBar = wx.MenuBar()
@@ -253,7 +252,7 @@ class ControlPanel(wx.Panel):
         it into a wx.MemoryDC and drawing on it.  In this case we just set
         a background brush and clear the dc.
         """
-        bmp = wx.EmptyBitmap(self.BMP_SIZE, self.BMP_SIZE)
+        bmp = wx.Bitmap(self.BMP_SIZE, self.BMP_SIZE)
         dc = wx.MemoryDC()
         dc.SelectObject(bmp)
         dc.SetBackground(wx.Brush(colour))
@@ -322,7 +321,7 @@ class ColourIndicator(wx.Window):
             sz = self.GetClientSize()
             pen = wx.Pen(self.colour, self.thickness)
             dc.SetPen(pen)
-            dc.DrawLine(10, sz.height/2, sz.width-10, sz.height/2)
+            dc.DrawLine(10, sz.height//2, sz.width-10, sz.height//2)
 
 
 #----------------------------------------------------------------------
