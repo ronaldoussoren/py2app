@@ -43,7 +43,7 @@ class DoodleWindow(wx.Window):
 
         self.InitBuffer()
 
-        self.SetCursor(wx.StockCursor(wx.CURSOR_PENCIL))
+        self.SetCursor(wx.Cursor(wx.CURSOR_PENCIL))
 
         # hook some mouse events
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
@@ -71,7 +71,7 @@ class DoodleWindow(wx.Window):
     def InitBuffer(self):
         """Initialize the bitmap used for buffering the display."""
         size = self.GetClientSize()
-        self.buffer = wx.EmptyBitmap(max(1,size.width), max(1,size.height))
+        self.buffer = wx.Bitmap(max(1,size.width), max(1,size.height))
         dc = wx.BufferedDC(None, self.buffer)
         dc.SetBackground(wx.Brush(self.GetBackgroundColour()))
         dc.Clear()
@@ -251,7 +251,7 @@ class DoodleFrame(wx.Frame):
 #----------------------------------------------------------------------
 
 if __name__ == '__main__':
-    app = wx.PySimpleApp()
+    app = wx.App()
     frame = DoodleFrame(None)
     frame.Show(True)
     app.MainLoop()
