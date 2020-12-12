@@ -1,7 +1,7 @@
 def _import_encodings():
-    import os
-    import imp
     import encodings
+    import imp
+    import os
     import pkgutil
     import sys
 

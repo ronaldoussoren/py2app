@@ -1,7 +1,8 @@
 def _setup_pkgresources():
-    import pkg_resources
     import os
     import plistlib
+
+    import pkg_resources
 
     if hasattr(plistlib, "load"):
         with open(

@@ -10,12 +10,11 @@ import warnings
 import zipfile
 from distutils import log
 
-import pkg_resources
-
 import macholib.util
+import pkg_resources
+from macholib.util import is_platform_file
 from modulegraph import zipio
 from modulegraph.find_modules import PY_SUFFIXES
-from macholib.util import is_platform_file
 
 try:
     unicode
@@ -239,7 +238,7 @@ def find_version(fn):
     """
     return "0.0.0"
     import compiler
-    from compiler.ast import Module, Stmt, Assign, AssName, Const
+    from compiler.ast import Assign, AssName, Const, Module, Stmt
 
     ast = compiler.parseFile(fn)
     if not isinstance(ast, Module):
@@ -388,8 +387,8 @@ def byte_compile(
     # "Indirect" byte-compilation: write a temporary script and then
     # run it with the appropriate flags.
     if not direct:
-        from tempfile import mktemp
         from distutils.util import execute, spawn
+        from tempfile import mktemp
 
         script_name = mktemp(".py")
         if verbose:
@@ -442,8 +441,8 @@ byte_compile(files, optimize=%r, force=%r,
         )
 
     else:
-        from py_compile import compile
         from distutils.dir_util import mkpath
+        from py_compile import compile
 
         for mod in py_files:
             # Terminology from the py_compile module:
@@ -541,6 +540,7 @@ skipjunk = skipfunc(JUNK, JUNK_EXTS)
 def get_magic(platform=sys.platform):
     if platform == "darwin":
         import struct
+
         import macholib.mach_o
 
         return [
@@ -611,10 +611,10 @@ def copy_tree(
     assert isinstance(src, (str, unicode)), repr(src)
     assert isinstance(dst, (str, unicode)), repr(dst)
 
-    from distutils.dir_util import mkpath
-    from distutils.dep_util import newer
-    from distutils.errors import DistutilsFileError
     from distutils import log
+    from distutils.dep_util import newer
+    from distutils.dir_util import mkpath
+    from distutils.errors import DistutilsFileError
 
     src = fsencoding(src)
     dst = fsencoding(dst)
@@ -773,13 +773,24 @@ def momc(src, dst):
 def mapc(src, dst):
     subprocess.check_call([_get_tool("mapc"), src, dst])
 
+
 def _macho_find(path):
-    for basename, dirs, files in os.walk(path):
+    for basename, _dirs, files in os.walk(path):
         for fn in files:
             path = os.path.join(basename, fn)
             if is_platform_file(path):
                 yield path
 
+
 def codesign_adhoc(platfiles):
     for file in platfiles:
-        subprocess.check_call(["codesign", "-s", "-", "--preserve-metadata=identifier,entitlements,flags,runtime", "-f", file])
+        subprocess.check_call(
+            [
+                "codesign",
+                "-s",
+                "-",
+                "--preserve-metadata=identifier,entitlements,flags,runtime",
+                "-f",
+                file,
+            ]
+        )

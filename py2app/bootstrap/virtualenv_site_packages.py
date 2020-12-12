@@ -1,7 +1,7 @@
 def _site_packages(prefix, real_prefix, global_site_packages):
+    import os
     import site
     import sys
-    import os
 
     paths = []
 

@@ -30,11 +30,7 @@ import signal
 import py2app
 import hashlib
 from distutils.sysconfig import get_config_var
-
-if __name__ == "__main__":
-    from tools import kill_child_processes
-else:
-    from .tools import kill_child_processes
+from .tools import kill_child_processes
 
 try:
     unichr

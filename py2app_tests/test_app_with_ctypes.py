@@ -12,10 +12,7 @@ import os
 import signal
 import py2app
 import hashlib
-if __name__ == "__main__":
-    from tools import kill_child_processes
-else:
-    from .tools import kill_child_processes
+from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 

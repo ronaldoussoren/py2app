@@ -160,8 +160,12 @@ class test(Command):
             sys.path.remove(dirname)
 
     def add_project_to_sys_path(self):
-        from pkg_resources import normalize_path, add_activation_listener
-        from pkg_resources import working_set, require
+        from pkg_resources import (
+            add_activation_listener,
+            normalize_path,
+            require,
+            working_set,
+        )
 
         self.reinitialize_command("egg_info")
         self.run_command("egg_info")
@@ -241,8 +245,9 @@ cmdclass = {"egg_info": my_egg_info, "test": test}
 if sys.platform != "darwin":
     msg = "This distribution is only supported on MacOSX"
     from distutils.command import build, install
-    from setuptools.command import develop, install_lib, build_py
     from distutils.errors import DistutilsPlatformError
+
+    from setuptools.command import build_py, develop, install_lib
 
     def create_command_subclass(base_class):
         class subcommand(base_class):

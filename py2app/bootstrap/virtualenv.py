@@ -1,6 +1,6 @@
 def _fixup_virtualenv(real_prefix):
-    import sys
     import os
+    import sys
 
     sys.real_prefix = real_prefix
 

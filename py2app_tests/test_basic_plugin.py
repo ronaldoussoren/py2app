@@ -17,10 +17,7 @@ from distutils.sysconfig import get_config_var, get_config_vars
 from distutils.version import LooseVersion
 import py2app
 import platform
-if __name__ == "__main__":
-    from tools import kill_child_processes
-else:
-    from .tools import kill_child_processes
+from .tools import kill_child_processes
 
 try:
     unichr

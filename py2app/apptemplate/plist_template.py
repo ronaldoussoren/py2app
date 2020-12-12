@@ -1,4 +1,5 @@
 import sys
+
 import py2app
 
 __all__ = ["infoPlistDict"]

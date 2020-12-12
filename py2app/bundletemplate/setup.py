@@ -17,7 +17,6 @@ gPreBuildVariants = [
         "cflags": "-g -arch arm64",
         "cc": "/usr/bin/clang",
     },
-
     {
         "name": "main-universal",
         "target": "10.5",
@@ -34,7 +33,7 @@ gPreBuildVariants = [
     {
         "name": "main-x86_64",
         "target": "10.5",
-        "cflags": "-isysroot / -arch x86_64",
+        "cflags": "-arch x86_64 -g",
         "cc": "clang",
     },
     {

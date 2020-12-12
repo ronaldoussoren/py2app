@@ -26,8 +26,9 @@ class Sip(object):
             print("packages", self.packages)
             return self.packages
 
-        import sipconfig
         import os
+
+        import sipconfig
 
         try:
             from PyQt4 import pyqtconfig

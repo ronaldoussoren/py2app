@@ -188,12 +188,17 @@ def build(args, scripts, data_files, options):
     tempdir = tempfile.mkdtemp()
     os.chdir(tempdir)
     try:
-        d = setup(app=scripts, data_files=data_files, options={"py2app": options},)
+        d = setup(
+            app=scripts,
+            data_files=data_files,
+            options={"py2app": options},
+        )
         for target in d.app:
             copy_tree(
                 target.appdir,
                 os.path.join(
-                    os.path.dirname(target.script), os.path.basename(target.appdir),
+                    os.path.dirname(target.script),
+                    os.path.basename(target.appdir),
                 ),
                 preserve_symlinks=True,
             )

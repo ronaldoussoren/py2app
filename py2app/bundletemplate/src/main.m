@@ -46,6 +46,7 @@ typedef enum {PyGILState_LOCKED, PyGILState_UNLOCKED} PyGILState_STATE;
 typedef PyGILState_STATE (*PyGILState_EnsurePtr)(void);
 typedef void (*PyGILState_ReleasePtr)(PyGILState_STATE);
 typedef PyThreadState *(*PyThreadState_SwapPtr)(PyThreadState *);
+typedef PyThreadState *(*PyEval_SaveThreadPtr)(void);
 typedef void (*PyEval_ReleaseLockPtr)(void);
 typedef void (*PyErr_ClearPtr)(void);
 typedef void (*PyErr_PrintPtr)(void);
@@ -408,6 +409,7 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(PyModule_AddObject);
     LOOKUP(PyModule_GetDict);
     LOOKUP(PyThreadState_Swap);
+    LOOKUP(PyEval_SaveThread);
     OPT_LOOKUP(_Py_DecodeUTF8_surrogateescape);
 
 
@@ -670,8 +672,9 @@ cleanup:
     PyErr_Clear();
     PyGILState_Release(gilState);
     if (gilState == PyGILState_LOCKED) {
-        PyThreadState_Swap(NULL);
-        PyEval_ReleaseLock();
+        /*PyThreadState_Swap(NULL);*/
+        /*PyEval_ReleaseLock(); */
+        PyEval_SaveThread();
     }
 
     return rval;

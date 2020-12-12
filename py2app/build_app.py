@@ -20,17 +20,17 @@ from distutils.sysconfig import get_config_h_filename, get_config_var
 from distutils.util import convert_path
 from itertools import chain
 
-import pkg_resources
-from setuptools import Command
-
 import macholib.dyld
 import macholib.MachO
 import macholib.MachOStandalone
+import pkg_resources
 from macholib.util import flipwritable
 from modulegraph import modulegraph, zipio
 from modulegraph.find_modules import find_modules, find_needed_modules, parse_mf_results
 from modulegraph.modulegraph import Package, Script, SourceModule
 from modulegraph.util import imp_find_module
+from setuptools import Command
+
 from py2app import recipes
 from py2app.apptemplate.setup import main as script_executable
 from py2app.create_appbundle import create_appbundle
@@ -1632,12 +1632,12 @@ class py2app(Command):
                     mm.mm.run_file(fmwk)
                 platfiles = mm.run()
 
-
                 if self.strip:
                     platfiles = self.strip_dsym(platfiles)
                     self.strip_files(platfiles)
 
-                codesign_adhoc(platfiles)
+                if self.arch in ("universal2", "arm64"):
+                    codesign_adhoc(platfiles)
             self.app_files.append(dst)
 
     def copy_package_data(self, package, target_dir):
@@ -2070,7 +2070,11 @@ class py2app(Command):
         if self.runtime_preferences and use_runtime_preference:
             self.plist.setdefault("PyRuntimeLocations", self.runtime_preferences)
         appdir, plist = create_pluginbundle(
-            appdir, appname, plist=self.plist, extension=self.extension, arch=self.arch,
+            appdir,
+            appname,
+            plist=self.plist,
+            extension=self.extension,
+            arch=self.arch,
         )
         appdir = fsencoding(appdir)
         resdir = os.path.join(appdir, "Contents", "Resources")
