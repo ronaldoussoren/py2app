@@ -17,14 +17,14 @@ import zipfile
 from distutils import log
 from distutils.errors import DistutilsOptionError, DistutilsPlatformError
 from distutils.sysconfig import get_config_h_filename, get_config_var
-from distutils.util import convert_path
+from distutils.util import convert_path, get_platform
 from itertools import chain
 
 import macholib.dyld
 import macholib.MachO
 import macholib.MachOStandalone
 import pkg_resources
-from macholib.util import flipwritable
+from macholib.util import flipwritable, is_platform_file
 from modulegraph import modulegraph, zipio
 from modulegraph.find_modules import find_modules, find_needed_modules, parse_mf_results
 from modulegraph.modulegraph import Package, Script, SourceModule
@@ -1052,6 +1052,16 @@ class py2app(Command):
                 mergecopy(src_fn, tgt_fn)
                 make_exec(tgt_fn)
 
+            arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
+            if arch in ("universal2", "arm64"):
+                platfiles = []
+                for basedir, _dirs, files in os.walk(target.appdir):
+                    for fn in files:
+                        p = os.path.join(basedir, fn)
+                        if is_platform_file(p):
+                            platfiles.append(p)
+                codesign_adhoc(platfiles)
+
     def collect_recipedict(self):
         return dict(iterRecipes())
 
@@ -1636,7 +1646,9 @@ class py2app(Command):
                     platfiles = self.strip_dsym(platfiles)
                     self.strip_files(platfiles)
 
-                if self.arch in ("universal2", "arm64"):
+                arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
+               
+                if arch in ("universal2", "arm64"):
                     codesign_adhoc(platfiles)
             self.app_files.append(dst)
 
