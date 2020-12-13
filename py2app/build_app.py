@@ -1054,13 +1054,7 @@ class py2app(Command):
 
             arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
             if arch in ("universal2", "arm64"):
-                platfiles = []
-                for basedir, _dirs, files in os.walk(target.appdir):
-                    for fn in files:
-                        p = os.path.join(basedir, fn)
-                        if is_platform_file(p):
-                            platfiles.append(p)
-                codesign_adhoc(platfiles)
+                codesign_adhoc(target.appdir)
 
     def collect_recipedict(self):
         return dict(iterRecipes())
@@ -1649,7 +1643,7 @@ class py2app(Command):
                 arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
                
                 if arch in ("universal2", "arm64"):
-                    codesign_adhoc(platfiles)
+                    codesign_adhoc(target.appdir)
             self.app_files.append(dst)
 
     def copy_package_data(self, package, target_dir):

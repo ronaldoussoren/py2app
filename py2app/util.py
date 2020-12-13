@@ -782,15 +782,50 @@ def _macho_find(path):
                 yield path
 
 
-def codesign_adhoc(platfiles):
-    for file in platfiles:
-        subprocess.check_call(
-            [
-                "codesign",
-                "-s",
-                "-",
-                "--preserve-metadata=identifier,entitlements,flags,runtime",
-                "-f",
-                file,
-            ]
-        )
+def _dosign(*path):
+    subprocess.check_call(
+        (
+	    "codesign",
+	        "-s",
+	    "-",
+	    "--preserve-metadata=identifier,entitlements,flags,runtime",
+	    "-f",
+        ) + path
+    )
+
+def codesign_adhoc(bundle):
+    """
+    (Re)sign a bundle
+
+    Signing should be done "depth-first", sign 
+    libraries before signing the libraries/executables 
+    linking to them.
+
+    The current implementation is a crude hack,
+    but is better than nothing. Signing properly requires
+    performing a topological sort using dependencies.
+
+    "codesign" will resign the entire bundle, but only
+    if partial signatures are valid.
+    """
+    #try:
+    #    _dosign(bundle)
+    #    return
+    #except subprocess.CalledProcessError:
+    #    pass
+
+    platfiles = list(_macho_find(bundle))
+    print("sign", platfiles)
+    while platfiles:
+        for file in platfiles:
+            failed = []
+            try:
+                _dosign(file)
+            except subprocess.CalledProcessError:
+                failed.append(file)
+        if failed == platfiles:
+            raise RuntimeError("Cannot sign bundle %r"%(bundle,))
+        platfiles = failed
+    
+
+    _dosign(bundle)
