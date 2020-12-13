@@ -4,6 +4,14 @@ Release history
 py2app 0.23
 -----------
 
+* #315: Stub executables have an LC_RPATH that points to the Frameworks folder
+
+  PR by Aleksandar Topuzović (atopuzov)
+
+* #322: Port wxPython examples to 4.0
+
+  PR by Hamish Mcintyre-Bhatty (hamishmb)
+
 * #314: Don't use Image.DEBUG in the PIL recipy, that attribute is not longer valid
 
   PR by Aleksandar Topuzović 
