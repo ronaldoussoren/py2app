@@ -90,6 +90,22 @@ else:
     sys_base_prefix = sys.prefix
 
 
+def loader_paths(sourcefn, destfn):
+    # Yield (sourcefn, destfn) pairs for all
+    # '@loader_path' load commands in 'sourcefn'
+    sourcedir = os.path.dirname(sourcefn)
+    destdir = os.path.dirname(destfn)
+
+    m = macholib.MachO.MachO(sourcefn)
+    for header in m.headers:
+        for _idx, _name, other in header.walkRelocatables():
+            if not other.startswith("@loader_path/"):
+                continue
+            relpath = other[13:]
+            yield os.path.join(sourcedir, relpath), os.path.join(destdir, relpath)
+
+        
+
 def rewrite_tkinter_load_commands(tkinter_path):
     print("rewrite_tk", tkinter_path)
     m = macholib.MachO.MachO(tkinter_path)
@@ -209,6 +225,7 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
                 (e.identifier.replace(".", os.sep) + os.path.splitext(e.filename)[1]),
             )
             self.ext_map[fn] = os.path.dirname(e.filename)
+
 
     def update_node(self, m):
         if isinstance(m, macholib.MachO.MachO):
@@ -2211,6 +2228,21 @@ class py2app(Command):
         target.appdir = appdir
         return appdir
 
+    def copy_loader_paths(self, sourcefn, destfn):
+        todo = [(sourcefn, destfn)]
+    
+        while todo:
+            next = []
+            for item in todo:
+                for s, d in loader_paths(*item):
+                    if os.path.exists(d): continue
+                    next.append((s, d))
+                    if not self.dry_run:
+                       if not os.path.exists(os.path.dirname(d)):
+                          os.makedirs(os.path.dirname(d))
+                    copy_file(s, d, dry_run=self.dry_run)
+            todo = next
+
     def build_executable(
         self, target, arcname, pkgexts, copyexts, script, extra_scripts
     ):
@@ -2373,6 +2405,11 @@ class py2app(Command):
             )
             self.mkpath(os.path.dirname(fn))
             copy_file(copyext.filename, fn, dry_run=self.dry_run)
+
+            # MachoStandalone does not support '@loader_path' (and cannot in its
+            # current form). Check for "@loader_path" in the load commands of 
+            # the extension and copy those files into the bundle as well.
+            self.copy_loader_paths(copyext.filename, fn)
 
         for src, dest in self.iter_data_files():
             dest = os.path.join(resdir, dest)

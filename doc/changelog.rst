@@ -16,6 +16,13 @@ py2app 0.23
 
   PR by Aleksandar Topuzović 
 
+* #320: Process "@loader_path" in load commands
+
+  A popular pattern in C extensions with bindins to C library on PyPI is to
+  copy those C libraries into the wheel and reference those using
+  an "@loader_path" linker command in the C extension. Until this release
+  py2app could not process those linker commands correctly.
+
 py2app 0.22
 -----------
 
