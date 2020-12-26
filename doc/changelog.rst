@@ -23,6 +23,8 @@ py2app 0.23
   an "@loader_path" linker command in the C extension. Until this release
   py2app could not process those linker commands correctly.
 
+* #298: Add recipe for pycryptodome
+
 py2app 0.22
 -----------
 
