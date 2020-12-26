@@ -14,7 +14,7 @@ py2app 0.23
 
 * #314: Don't use Image.DEBUG in the PIL recipy, that attribute is not longer valid
 
-  PR by Aleksandar Topuzović 
+  PR by Aleksandar Topuzović
 
 * #320: Process "@loader_path" in load commands
 
@@ -25,6 +25,8 @@ py2app 0.23
 
 * #298: Add recipe for pycryptodome
 
+* #282: Add recipe for h5py
+
 py2app 0.22
 -----------
 
@@ -32,7 +34,7 @@ py2app 0.22
 
   ARM64 binaries on macOS 11 must be signed, even if it is only an ad-hoc signature.
   py2app will now add an ad-hoc code signature.
- 
+
 * #300: Add support for ARM64 and Universal 2 binaries
 
   .. note:: Support is highly experimental, these stubs have not been tested yet.
