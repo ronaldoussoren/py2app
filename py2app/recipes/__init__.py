@@ -32,3 +32,4 @@ from . import wx  # noqa: F401
 from . import xml  # noqa: F401
 from . import pycryptodome  # noqa: F401
 from . import h5py  # noqa: F401
+from . import tensorflow  # noqa: F401

@@ -27,6 +27,13 @@ py2app 0.23
 
 * #282: Add recipe for h5py
 
+* #283: Add recipe for tensorflow
+
+  The recipe just includes the entire package into the generated app bundle,
+  I haven't checked yet if there is a way to reduce the size of this
+  package (which is rather huge).
+
+
 py2app 0.22
 -----------
 
