@@ -1,6 +1,15 @@
 Release history
 ===============
 
+py2app 0.24
+-----------
+
+* Consolidate recipes that just include a package 
+  as is into a single recipe to reduce code complexity.
+
+* Consolidate recipes that just mark imports as expected
+  missing into a single recipe to reduce code complexity.
+
 py2app 0.23
 -----------
 
