@@ -10,6 +10,11 @@ py2app 0.24
 * Consolidate recipes that just mark imports as expected
   missing into a single recipe to reduce code complexity.
 
+* #334: Include binary stubs for Universal 2 binaries in the archives
+
+  The files were in the repository, but were excluded from the source
+  and wheel archives.
+
 py2app 0.23
 -----------
 
