@@ -297,6 +297,7 @@ setup(
     package_data={
         "py2app.recipes": ["qt.conf"],
         "py2app.apptemplate": [
+            "prebuilt/main-arm64",
             "prebuilt/main-i386",
             "prebuilt/main-ppc",
             "prebuilt/main-x86_64",
@@ -306,6 +307,7 @@ setup(
             "prebuilt/main-intel",
             "prebuilt/main-universal",
             "prebuilt/main-universal2",
+            "prebuilt/main-asl-arm64",
             "prebuilt/main-asl-i386",
             "prebuilt/main-asl-ppc",
             "prebuilt/main-asl-x86_64",
@@ -315,6 +317,7 @@ setup(
             "prebuilt/main-asl-intel",
             "prebuilt/main-asl-universal",
             "prebuilt/main-asl-universal2",
+            "prebuilt/secondary-arm64",
             "prebuilt/secondary-i386",
             "prebuilt/secondary-ppc",
             "prebuilt/secondary-x86_64",
@@ -329,6 +332,7 @@ setup(
             "src/main.c",
         ],
         "py2app.bundletemplate": [
+            "prebuilt/main-arm64",
             "prebuilt/main-i386",
             "prebuilt/main-ppc",
             "prebuilt/main-x86_64",
