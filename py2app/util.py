@@ -646,8 +646,9 @@ def copy_tree(
 
         # Note: using zipio's internal _locate function throws an IOError on
         # dead symlinks, so handle it here.
-        if os.path.islink(src_name) and not os.path.exists(os.readlink(src_name)):
+        if os.path.islink(src_name) and not os.path.exists(os.path.join(src, os.readlink(src_name))):
             continue
+
 
         if preserve_symlinks and zipio.islink(src_name):
             link_dest = zipio.readlink(src_name)
