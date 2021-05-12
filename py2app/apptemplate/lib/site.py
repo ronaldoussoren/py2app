@@ -142,3 +142,7 @@ except ImportError:
 #
 if hasattr(sys, "setdefaultencoding"):
     del sys.setdefaultencoding
+
+import builtins
+import _sitebuiltins
+builtins.help = _sitebuiltins._Helper()
