@@ -1,4 +1,6 @@
 import os
+from matplotlib import __version__ as VER
+from pkg_resources import packaging
 
 
 def check(cmd, mf):
@@ -22,8 +24,10 @@ def check(cmd, mf):
         backends = {"packages": ["matplotlib"]}
 
     result = {
-        "prescripts": ["py2app.recipes.matplotlib_prescript"],
         "resources": [os.path.join(os.path.dirname(m.filename), "mpl-data")],
     }
+    if packaging.version.parse(VER) < packaging.version.parse('3.1'):
+        result.update({"prescripts": ["py2app.recipes.matplotlib_prescript"]})
+
     result.update(backends)
     return result
