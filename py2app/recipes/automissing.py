@@ -7,9 +7,6 @@ AUTO_MISSING=[
     ('re', ('sys.getwindowsversion', )),
     ('subprocess', ('_winapi', )),
     ('uuid', ('netbios', 'win32wnet', )),
-    ('sphinx', ('sphinxcontrib.applehelp', 'sphinxcontrib.devhelp',
-                'sphinxcontrib.htmlhelp', 'sphinxcontrib.jsmath',
-                'sphinxcontrib.qthelp', 'sphinxcontrib.serializinghtml'))
 ]
 
 def check(cmd, mf):
