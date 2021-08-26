@@ -6,6 +6,7 @@ from . import docutils  # noqa: F401
 from . import ftplib  # noqa: F401
 from . import lxml  # noqa: F401
 from . import matplotlib  # noqa: F401
+from . import multiprocessing  # noqa: F401
 from . import pydoc  # noqa: F401
 from . import pyenchant  # noqa: F401
 from . import pygame  # noqa: F401

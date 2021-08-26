@@ -1,6 +1,11 @@
 Release history
 ===============
 
+py2app 0.25
+-----------
+
+* #358: Add recipe for multiprocessing
+
 py2app 0.24
 -----------
 
