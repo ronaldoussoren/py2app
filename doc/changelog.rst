@@ -10,6 +10,22 @@ py2app 0.25
 
   PR by Ryan Clary (mrclary on GitHub)
 
+* PR353: Add recipe for sphinx
+
+  PR by Ryan Clary (mrclary on GitHub)
+
+* PR352: Fix for using ipython
+
+  PR by Ryan Clary (mrclary on GitHub)
+
+* PR351: Tweak the matplotlib recipe
+
+  PR by Ryan Clary (mrclary on GitHub)
+
+* PR348: Fix for checking for dead symlinks links in py2app
+
+  PR by Oliver Cordes (ocordes on GitHub)
+
 py2app 0.24
 -----------
 
