@@ -6,6 +6,10 @@ py2app 0.25
 
 * #358: Add recipe for multiprocessing
 
+* PR363: Add recipe for platformdirs
+
+  PR by Ryan Clary (mrclary on GitHub)
+
 py2app 0.24
 -----------
 
