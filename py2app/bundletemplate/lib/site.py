@@ -58,6 +58,7 @@ for dir in sys.path:
     if dircase not in _dirs_in_sys_path:
         L.append(dir)
         _dirs_in_sys_path[dircase] = 1
+
 sys.path[:] = L
 del dir, dircase, L
 _dirs_in_sys_path = None
@@ -141,3 +142,7 @@ except ImportError:
 #
 if hasattr(sys, "setdefaultencoding"):
     del sys.setdefaultencoding
+
+import builtins
+import _sitebuiltins
+builtins.help = _sitebuiltins._Helper()
