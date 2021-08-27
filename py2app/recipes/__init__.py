@@ -23,3 +23,4 @@ from . import tkinter  # noqa: F401
 from . import virtualenv  # noqa: F401
 from . import wx  # noqa: F401
 from . import xml  # noqa: F401
+from . import platformdirs  # noqa: F401
