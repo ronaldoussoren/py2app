@@ -666,6 +666,7 @@ class py2app(Command):
             self.argv_inject = shlex.split(self.argv_inject)
         self.includes = set(fancy_split(self.includes))
         self.includes.add("encodings.*")
+        self.includes.add("_sitebuiltins")
 
         if self.use_faulthandler:
             self.includes.add("faulthandler")
