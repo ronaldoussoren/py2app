@@ -1,5 +1,4 @@
 import os
-from matplotlib import __version__ as VER
 from pkg_resources import packaging
 
 
@@ -7,6 +6,11 @@ def check(cmd, mf):
     m = mf.findNode("matplotlib")
     if m is None or m.filename is None:
         return None
+
+    # Don't try to import unless we've found the library,
+    # otherwise we'll get an error when trying to use
+    # py2app on a system with matplotlib
+    from matplotlib import __version__ as VER
 
     if cmd.matplotlib_backends:
         backends = {}
