@@ -26,7 +26,9 @@ py2app 0.25
 
   PR by Oliver Cordes (ocordes on GitHub)
 
-* 354: Fix buggy "autopackages" recipe
+* #354: Fix buggy "autopackages" recipe
+
+* #350: Add sentencepiece to the autopackages list
 
 py2app 0.24
 -----------

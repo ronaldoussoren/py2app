@@ -20,6 +20,9 @@ AUTO_PACKAGES=[
     # XXX: Check if this is still needed.
     'zmq',
 
+    # Swig using packages
+    'sentencepiece',
+
     # Various
     'numpy',
     'scipy',
