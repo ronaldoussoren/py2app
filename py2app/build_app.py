@@ -615,6 +615,10 @@ class py2app(Command):
         self.expected_missing_imports = None
 
     def finalize_options(self):
+        if self.prefer_ppc:
+            print("WARNING: Option --prefer-ppc is deprecated an will be removed "
+                  "in a future version. Use --arch instead")
+
         if sys_base_prefix != sys.prefix:
             self._python_app = os.path.join(sys_base_prefix, "Resources", "Python.app")
 
