@@ -26,6 +26,8 @@ py2app 0.25
 
   PR by Oliver Cordes (ocordes on GitHub)
 
+* 354: Fix buggy "autopackages" recipe
+
 py2app 0.24
 -----------
 

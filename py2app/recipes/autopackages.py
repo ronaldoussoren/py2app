@@ -32,7 +32,7 @@ def check(cmd, mf):
     for python_package in AUTO_PACKAGES:
         m = mf.findNode(python_package)
         if m is None or m.filename is None:
-            return None
+            continue
 
         to_include.append(python_package)
 
