@@ -25,47 +25,6 @@ for you automatically::
     $ py2applet --make-setup MyApplication.py
 
 
-Self-bootstrapping
-------------------
-
-For ease of distribution, you may wish to have your ``setup.py`` script
-automatically ensure that `setuptools`_ is installed. This requires having a
-copy of ``ez_setup`` in your project, which can be obtained from here::
-
-    http://peak.telecommunity.com/dist/ez_setup.py
-
-Or it may be referenced from ``svn:externals`` as such::
-
-    ez_setup svn://svn.eby-sarna.com/svnroot/ez_setup
-
-If choosing the ``svn:externals`` approach you should consider that your
-project's source code will depend on a third party, which has reliability
-and security implications. Also note that the ``ez_setup`` external uses
-the ``svn://`` protocol (TCP port 3690) rather than ``http://`` so it is
-somewhat less likely to work behind some firewalls or proxies.
-
-Once this is done, you simply add the two line ``ez_setup`` preamble to the
-very beginning of your ``setup.py``::
-
-    """
-    py2app build script for MyApplication.
-
-    Will automatically ensure that all build prerequisites are available
-    via ez_setup.
-
-    Usage:
-        python setup.py py2app
-    """
-    import ez_setup
-    ez_setup.use_setuptools()
-
-    from setuptools import setup
-    setup(
-        app=["MyApplication.py"],
-    setup_requires=["py2app"],
-    )
-
-
 Cross-platform
 --------------
 
@@ -99,6 +58,9 @@ Cross-platform applications can share a ``setup.py`` script for both
 	    app=[mainscript],
 	    # Cross-platform applications generally expect sys.argv to
 	    # be used for opening files.
+            # Don't use this with GUI toolkits, the argv
+            # emulator causes problems and toolkits generally have
+            # hooks for responding to file-open events.
 	    options=dict(py2app=dict(argv_emulation=True)),
 	)
     elif sys.platform == 'win32':
