@@ -30,6 +30,8 @@ py2app 0.25
 
 * #350: Add sentencepiece to the autopackages list
 
+* #359: Add recipe for PyQt6
+
 py2app 0.24
 -----------
 
