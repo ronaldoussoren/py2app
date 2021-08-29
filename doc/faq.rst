@@ -41,3 +41,15 @@ Frequently Asked Questions
   C extensions and libraries are compatible with that architecture
   as well.
 
+* Using Cython with py2app
+
+  Cython generates C extensions. Because of that the dependency
+  walker in py2app cannot find import statements in ".pyx" files".
+
+  To create working applications you have to ensure that 
+  dependencies are made visible to py2app, either by adding
+  import statements to a python file that is included in the 
+  application, or by using the "includes" option.
+
+  See examples/PyQt/cython_app in the repository for an 
+  example of the latter.
