@@ -12,20 +12,13 @@ of py2app:
 
   $ pip install -U py2app
 
-If you install into a system installation of Python, you might need additional
-privileges; you can use the `sudo`_ commando to get those:
-
-.. code-block:: sh
-
-    $ sudo pip install -U py2app
-
 
 Installing from source
 ----------------------
 
 To install py2app from source, simply use the normal procedure for
-installing any Python package. Since py2app uses `distribute`_,
-all dependencies (including `distribute`_ itself) will be automatically
+installing any Python package. Since py2app uses `setuptools`_,
+all dependencies (including `setuptools`_ itself) will be automatically
 acquired and installed for you as appropriate:
 
 .. code-block:: sh
@@ -56,4 +49,3 @@ New py2app scripts should look like this::
 
 .. _`setuptools`: http://pypi.python.org/pypi/setuptools/
 .. _`pip`: http://www.pip-installer.org/en/latest/
-.. _`sudo`: http://www.sudo.ws/sudo/intro.html
