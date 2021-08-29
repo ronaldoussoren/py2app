@@ -28,7 +28,7 @@ setup(
     setup_requires=['py2app'],
     options={
              'cython': {"language_level":"3"},
-             'py2app': {"includes": "PyQt5.QWidget"}
+             'py2app': {"includes": "PyQt6.QWidget"}
             },
     install_requires=[
         "Cython"

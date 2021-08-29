@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QMessageBox, QApplication
+from PyQt6.QtWidgets import QMessageBox, QApplication
 
 def main():
     app = QApplication(sys.argv)
