@@ -32,6 +32,8 @@ py2app 0.25
 
 * #359: Add recipe for PyQt6
 
+* #349: Add recipe for OpenCV (opencv-python, ``import cv2``)
+
 py2app 0.24
 -----------
 
