@@ -13,9 +13,10 @@ Contents
    :maxdepth: 2
 
    install
+   tutorial
+   debugging
    dependencies
    faq
-   tutorial
    tweaking
    examples
    options
@@ -39,7 +40,7 @@ Source code repository:
     https://github.com/ronaldoussoren/py2app
 
 PyPI Entry:
-    http://pypi.python.org/pypi/py2app/
+    https://pypi.org/project/py2app/
 
 If you're looking for help, pay special attention to the ``examples``
 folder in the source, which demonstrates many common use cases.

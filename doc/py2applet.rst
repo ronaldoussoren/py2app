@@ -9,9 +9,6 @@ normally pass to the ``py2app`` command, plus the names of any scripts,
 packages, icons, plist files, or data files that you want to generate
 the application from.
 
-The ``--argv-emulation`` option is assumed to be desired by default for
-``py2applet`` scripts.
-
 The first ``.py`` file is the main script. The application's name will
 be derived from this main script.
 

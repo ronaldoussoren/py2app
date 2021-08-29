@@ -29,7 +29,7 @@ Cross-platform
 --------------
 
 Cross-platform applications can share a ``setup.py`` script for both
-`py2exe`_ and py2app. Here is an example `Self-bootstrapping`_
+`py2exe`_ and py2app. Here is an example 
 ``setup.py`` that will build an application on Windows or Mac OS X::
 
     """
@@ -44,9 +44,6 @@ Cross-platform applications can share a ``setup.py`` script for both
     Usage (Windows):
         python setup.py py2exe
     """
-    import ez_setup
-    ez_setup.use_setuptools()
-
     import sys
     from setuptools import setup
     
