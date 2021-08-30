@@ -1,10 +1,17 @@
 import os
 
 AUTO_PACKAGES=[
-    # Embbedded datafiles accessed using 
+    # Embbedded datafiles accessed using
     # ``__file__`` relative paths.
     'botocore',
-    
+    'alabaster',
+    'astroid',
+    'jedi',
+    'parso',
+    'pylint',
+    'qtawesome',
+    'textdistance',
+
     # Import dependencies between C extensions
     'h5py',
 
