@@ -34,6 +34,10 @@ py2app 0.25
 
 * #349: Add recipe for OpenCV (opencv-python, ``import cv2``)
 
+* PR365: Add RTree recipe
+
+  PR by Ryan Clary (mrclary on GitHub)
+
 py2app 0.24
 -----------
 
