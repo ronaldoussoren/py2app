@@ -14,7 +14,7 @@ def check(cmd, mf):
     for python_package, expected_missing in AUTO_MISSING:
         m = mf.findNode(python_package)
         if m is None or m.filename is None:
-            return None
+            continue
 
         to_return.extend(expected_missing)
 

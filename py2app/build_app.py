@@ -104,7 +104,7 @@ def loader_paths(sourcefn, destfn):
             relpath = other[13:]
             yield os.path.join(sourcedir, relpath), os.path.join(destdir, relpath)
 
-        
+
 
 def rewrite_tkinter_load_commands(tkinter_path):
     print("rewrite_tk", tkinter_path)
@@ -1134,6 +1134,9 @@ class py2app(Command):
                 if rval.get("resources"):
                     self.resources.extend(rval["resources"])
 
+                if rval.get("frameworks"):
+                    self.frameworks.extend(rval["frameworks"])
+
                 for fn in newbootstraps:
                     if isinstance(fn, basestring):
                         mf.run_script(fn)
@@ -1663,7 +1666,7 @@ class py2app(Command):
                     self.strip_files(platfiles)
 
                 arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
-               
+
                 if arch in ("universal2", "arm64"):
                     codesign_adhoc(target.appdir)
             self.app_files.append(dst)
@@ -2235,7 +2238,7 @@ class py2app(Command):
 
     def copy_loader_paths(self, sourcefn, destfn):
         todo = [(sourcefn, destfn)]
-    
+
         while todo:
             next = []
             for item in todo:
@@ -2412,7 +2415,7 @@ class py2app(Command):
             copy_file(copyext.filename, fn, dry_run=self.dry_run)
 
             # MachoStandalone does not support '@loader_path' (and cannot in its
-            # current form). Check for "@loader_path" in the load commands of 
+            # current form). Check for "@loader_path" in the load commands of
             # the extension and copy those files into the bundle as well.
             self.copy_loader_paths(copyext.filename, fn)
 

@@ -28,4 +28,4 @@ from . import xml  # noqa: F401
 from . import ipython  # noqa: F401
 from . import sphinx  # noqa: F401
 from . import platformdirs  # noqa: F401
-
+from . import rtree  # noqa: F401
