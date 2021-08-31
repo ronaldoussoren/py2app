@@ -2,7 +2,6 @@ from . import PIL  # noqa: F401
 from . import automissing  # noqa: F401
 from . import autopackages  # noqa: F401
 from . import ctypes  # noqa: F401
-from . import docutils  # noqa: F401
 from . import ftplib  # noqa: F401
 from . import ipython  # noqa: F401
 from . import lxml  # noqa: F401

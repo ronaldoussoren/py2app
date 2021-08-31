@@ -6,6 +6,7 @@ AUTO_PACKAGES=[
     'botocore',
     'alabaster',
     'astroid',
+    'docutils',
     'jedi',
     'parso',
     'pylint',
