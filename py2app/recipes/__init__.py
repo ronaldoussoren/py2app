@@ -9,6 +9,7 @@ from . import lxml  # noqa: F401
 from . import matplotlib  # noqa: F401
 from . import multiprocessing  # noqa: F401
 from . import opencv  # noqa: F401
+from . import pkg_resources  # noqa: F401
 from . import platformdirs  # noqa: F401
 from . import pydoc  # noqa: F401
 from . import pydantic  # noqa: F401
