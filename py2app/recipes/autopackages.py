@@ -23,11 +23,6 @@ AUTO_PACKAGES=[
     # completely and in the filesystem.
     'Crypto',
 
-    # PyZMQ is a package that contains
-    # a shared library.
-    # XXX: Check if this is still needed.
-    'zmq',
-
     # Swig using packages
     'sentencepiece',
 

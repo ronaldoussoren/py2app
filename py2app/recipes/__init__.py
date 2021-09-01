@@ -33,3 +33,4 @@ from . import virtualenv  # noqa: F401
 from . import wx  # noqa: F401
 from . import xml  # noqa: F401
 from . import detect_dunder_file  # noqa: F401
+from . import zmq  # noqa: F401
