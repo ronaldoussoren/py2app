@@ -6,6 +6,7 @@ AUTO_PACKAGES=[
     'botocore',
     'alabaster',
     'astroid',
+    'debugpy',
     'docutils',
     'jedi',
     'parso',
