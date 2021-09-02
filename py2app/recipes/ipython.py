@@ -3,4 +3,4 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-    return {"includes": ['_sitebuiltins']}
+    return {"includes": ["_sitebuiltins"], "packages": ["IPython"]}
