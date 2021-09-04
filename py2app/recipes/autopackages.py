@@ -8,6 +8,7 @@ AUTO_PACKAGES=[
     'astroid',
     'debugpy',
     'docutils',
+    'IPython',
     'jedi',
     'parso',
     'pylint',
