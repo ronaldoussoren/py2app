@@ -53,3 +53,29 @@ Frequently Asked Questions
 
   See examples/PyQt/cython_app in the repository for an 
   example of the latter.
+
+* Dark mode support
+
+  The stub executables from py2app were compiled on an 
+  old version of macOS and therefore the system assumes
+  that applications build with py2app do not support Dark Mode
+  unless you're building a "Universal 2" or "Apple Silicon" 
+  application.
+
+  To enable Dark Mode support for other builds of Python you
+  need to add a key to the Info.plist file. The easiest way
+  to do this is using the following option in setup.py:
+
+  .. sourcecode:: python
+  
+     setup(
+         ...
+         options=dict(
+           py2app=dict(
+             plist=dict(
+               NSRequiresAquaSystemAppearance=False
+             )
+           )
+         )
+     )
+  
