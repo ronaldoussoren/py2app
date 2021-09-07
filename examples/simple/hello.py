@@ -1,5 +1,4 @@
 import sys, os
-import botocore.httpsession
 import pprint
 
 print(__file__)
