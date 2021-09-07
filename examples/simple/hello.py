@@ -1,5 +1,8 @@
 import sys, os
+import botocore.httpsession
 import pprint
+
+print(__file__)
 
 __version__ = '1.0'
 

@@ -6,6 +6,17 @@ py2app 0.26
 
 * ``py2app.filters.not_stdlib_filter`` now knows about Python's "venv"
 
+* #368: Add recipe "detect_dunder_file"
+
+  This recipe will ensure that a Python package is stored outside
+  of site-packages.zip when a module in that package uses the
+  ``__file__`` variable. 
+  
+  This variable is most commonly used to load resources stored in
+  the package (instead of the newer ``importlib.resources`` and ``pkg_resources``
+  libraries).
+
+
 py2app 0.25
 -----------
 
