@@ -4,16 +4,8 @@ AUTO_PACKAGES=[
     # Embbedded datafiles accessed using
     # ``__file__`` relative paths.
     'botocore',
-    'alabaster',
-    'astroid',
-    'debugpy',
     'docutils',
-    'IPython',
-    'jedi',
-    'parso',
     'pylint',
-    'qtawesome',
-    'textdistance',
 
     # Import dependencies between C extensions
     'h5py',
