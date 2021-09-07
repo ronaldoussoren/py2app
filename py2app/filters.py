@@ -55,6 +55,19 @@ def not_stdlib_filter(module, prefix=None):
                 else:
                     return False
 
+    if hasattr(sys, "base_prefix"):
+        # Venv
+        prefix = os.path.join(os.path.realpath(sys.base_prefix), "")
+        if rp.startswith(prefix):
+            rest = rp[len(prefix) :]  # noqa: E203
+            if "/site-python/" in rest:
+                return True
+            elif "/site-packages/" in rest:
+                return True
+            else:
+                return False
+
+
     return True
 
 

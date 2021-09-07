@@ -1,6 +1,11 @@
 Release history
 ===============
 
+py2app 0.26
+-----------
+
+* ``py2app.filters.not_stdlib_filter`` now knows about Python's "venv"
+
 py2app 0.25
 -----------
 
