@@ -22,6 +22,8 @@ py2app 0.26
   all sources (including the package ``__init__``) and therefore
   hides imports from the dependency analyzer.
 
+* #338: Add "imageio_ffmpeg" to autopackages
+
 py2app 0.25
 -----------
 

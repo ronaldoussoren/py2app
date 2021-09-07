@@ -23,6 +23,11 @@ AUTO_PACKAGES=[
     # Swig using packages
     'sentencepiece',
 
+    # Uses pkg_resources to load resources,
+    # and that doesn't work when the package
+    # is a zipfile...
+    "imageio_ffmpeg",
+
     # Various
     'numpy',
     'scipy',
