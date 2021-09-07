@@ -16,6 +16,11 @@ py2app 0.26
   the package (instead of the newer ``importlib.resources`` and ``pkg_resources``
   libraries).
 
+* #339: Add recipe for pydantic
+
+  The recipe is needed because pydantic uses Cython to compile
+  all sources (including the package ``__init__``) and therefore
+  hides imports from the dependency analyzer.
 
 py2app 0.25
 -----------

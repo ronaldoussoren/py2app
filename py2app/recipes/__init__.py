@@ -11,6 +11,7 @@ from . import multiprocessing  # noqa: F401
 from . import opencv  # noqa: F401
 from . import platformdirs  # noqa: F401
 from . import pydoc  # noqa: F401
+from . import pydantic  # noqa: F401
 from . import pyenchant  # noqa: F401
 from . import pygame  # noqa: F401
 from . import pyopengl  # noqa: F401
