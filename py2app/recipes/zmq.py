@@ -8,8 +8,4 @@ def check(cmd, mf):
     dylibs = os.scandir(os.path.join(m.packagepath[0], '.dylibs'))
     frameworks = [lib.path for lib in dylibs]
 
-    includes = [
-        "zmq.backend.cython",
-    ]
-
-    return {"frameworks": frameworks, "includes": includes}
+    return {"frameworks": frameworks}
