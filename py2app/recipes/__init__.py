@@ -14,7 +14,6 @@ from . import pydoc  # noqa: F401
 from . import pydantic  # noqa: F401
 from . import pyenchant  # noqa: F401
 from . import pygame  # noqa: F401
-from . import pygments  # noqa: F401
 from . import pylsp  # noqa: F401
 from . import pyopengl  # noqa: F401
 from . import pyside  # noqa: F401
