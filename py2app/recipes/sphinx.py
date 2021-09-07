@@ -1,6 +1,3 @@
-import os
-
-
 def check(cmd, mf):
     m = mf.findNode("sphinx")
     if m is None or m.filename is None:
@@ -15,4 +12,4 @@ def check(cmd, mf):
         'sphinxcontrib.serializinghtml',
     ]
 
-    return {"includes": includes, "packages": ["sphinx"]}
+    return {"includes": includes}
