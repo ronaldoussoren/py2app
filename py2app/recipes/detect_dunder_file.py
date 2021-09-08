@@ -37,9 +37,6 @@ if sys.version_info[:2] >= (3,4):
             if not not_stdlib_filter(node):
                 continue
 
-            if node.identifier == "unittest":
-                print(node, node.filename, not_stdlib_filter(node))
-
             if node.code is None:
                 continue
 
