@@ -24,6 +24,12 @@ py2app 0.26
 
 * #338: Add "imageio_ffmpeg" to autopackages
 
+* PR367: Add recipes for pandas, pylsp, and zmq
+
+* PR367: Add docutils and pylint to autopackages
+
+  PR by Ryan Clary (mrclary on GitHub)
+
 py2app 0.25
 -----------
 
