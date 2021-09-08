@@ -37,7 +37,7 @@ if sys.version_info[:2] >= (3,4):
             if not not_stdlib_filter(node):
                 continue
 
-            if node.identifier is "unittest":
+            if node.identifier == "unittest":
                 print(node, node.filename, not_stdlib_filter(node))
 
             if node.code is None:
@@ -48,7 +48,7 @@ if sys.version_info[:2] >= (3,4):
 
             if not hasattr(node, "_py2app_global_reads"):
                 names = set()
-                scan_bytecode_loads(names, node.code) 
+                scan_bytecode_loads(names, node.code)
                 node._py2app_global_reads = names
 
 

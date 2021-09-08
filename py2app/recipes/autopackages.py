@@ -1,10 +1,12 @@
 import os
 
 AUTO_PACKAGES=[
-    # Embbedded datafiles accessed using 
+    # Embbedded datafiles accessed using
     # ``__file__`` relative paths.
     'botocore',
-    
+    'docutils',
+    'pylint',
+
     # Import dependencies between C extensions
     'h5py',
 
@@ -14,11 +16,6 @@ AUTO_PACKAGES=[
     # Just bail out and include this package
     # completely and in the filesystem.
     'Crypto',
-
-    # PyZMQ is a package that contains
-    # a shared library.
-    # XXX: Check if this is still needed.
-    'zmq',
 
     # Swig using packages
     'sentencepiece',
