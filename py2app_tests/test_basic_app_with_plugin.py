@@ -51,9 +51,6 @@ class TestBasicAppWithPlugins (unittest.TestCase):
     # a base-class.
     @classmethod
     def setUpClass(cls):
-        if [int(x) for x in platform.mac_ver()[0].split('.')[:2]] >= [10,16] and sysconfig.get_platform().split('-')[-1] in ('universal2', 'arm64'):
-           raise unittest.SkipTest("Test won't work on macOS 11 or later with Arm64")
-
         kill_child_processes()
 
         env=os.environ.copy()
@@ -67,6 +64,20 @@ class TestBasicAppWithPlugins (unittest.TestCase):
         if 'LANG' not in env:
             # Ensure that testing though SSH works
             env['LANG'] = 'en_US.UTF-8'
+
+        p = subprocess.Popen([
+                sys.executable ] + cls.python_args + [
+                    'setup.py', 'pluginexe'],
+            cwd = cls.app_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=False,
+            env=env
+            )
+        lines = p.communicate()[0]
+        if p.wait() != 0:
+            print (lines)
+            raise AssertionError("Creating plugin executable failed")
 
         p = subprocess.Popen([
                 sys.executable ] + cls.python_args + [
@@ -97,6 +108,19 @@ class TestBasicAppWithPlugins (unittest.TestCase):
 
         if os.path.exists(os.path.join(cls.app_dir, 'dist')):
             shutil.rmtree(os.path.join(cls.app_dir, 'dist'))
+
+        p = subprocess.Popen([
+                sys.executable ] + cls.python_args + [
+                    'setup.py', 'cleanup'],
+            cwd = cls.app_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            close_fds=False,
+            )
+        lines = p.communicate()[0]
+        if p.wait() != 0:
+            print (lines)
+            raise AssertionError("Cleanup failed")
 
         time.sleep(2)
 
