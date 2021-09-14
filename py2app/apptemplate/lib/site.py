@@ -143,6 +143,8 @@ except ImportError:
 if hasattr(sys, "setdefaultencoding"):
     del sys.setdefaultencoding
 
-import builtins
-import _sitebuiltins
+import builtins  # noqa: E402
+
+import _sitebuiltins  # noqa: E402
+
 builtins.help = _sitebuiltins._Helper()

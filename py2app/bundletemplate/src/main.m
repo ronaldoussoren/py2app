@@ -19,6 +19,8 @@
 
 #include <objc/objc-class.h>
 
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 //
 // Constants
 //
@@ -45,9 +47,7 @@ typedef int PyThreadState;
 typedef enum {PyGILState_LOCKED, PyGILState_UNLOCKED} PyGILState_STATE;
 typedef PyGILState_STATE (*PyGILState_EnsurePtr)(void);
 typedef void (*PyGILState_ReleasePtr)(PyGILState_STATE);
-typedef PyThreadState *(*PyThreadState_SwapPtr)(PyThreadState *);
 typedef PyThreadState *(*PyEval_SaveThreadPtr)(void);
-typedef void (*PyEval_ReleaseLockPtr)(void);
 typedef void (*PyErr_ClearPtr)(void);
 typedef void (*PyErr_PrintPtr)(void);
 typedef int (*PyErr_OccurredPtr)(void);
@@ -71,7 +71,8 @@ typedef PyObject *(*PyModule_AddStringConstantPtr)(PyObject *, char *, char *);
 typedef PyObject *(*PyModule_AddObjectPtr)(PyObject *, char *, PyObject *);
 typedef PyObject *(*PyModule_GetDictPtr)(PyObject *);
 typedef void (*PyObject_SetItemPtr)(PyObject *, PyObject *, PyObject *);
-typedef wchar_t* (*_Py_DecodeUTF8_surrogateescapePtr)(const char *s, ssize_t size);
+typedef wchar_t* (*_Py_DecodeUTF8_surrogateescapePtr)(const char *s, ssize_t size, ssize_t*);
+typedef wchar_t* (*Py_DecodeLocalePtr)(const char *s, ssize_t* size);
 
 
 //
@@ -384,14 +385,13 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
 	}
 
     LOOKUP_SYMBOL(Py_DecRef);
-    LOOKUP_DEFINEADDRESS(Py_DecRef, (tmpSymbol ? NSAddressOfSymbol(tmpSymbol) : &DefaultDecRef));
+    LOOKUP_DEFINEADDRESS(Py_DecRef, (tmpSymbol ? (void(*)(PyObject*))NSAddressOfSymbol(tmpSymbol) : &DefaultDecRef));
     LOOKUP(Py_SetProgramName);
     LOOKUP(Py_IsInitialized);
     LOOKUP(Py_Initialize);
     LOOKUP(PyErr_Clear);
     LOOKUP(PyErr_Print);
     LOOKUP(PyErr_Occurred);
-    LOOKUP(PyEval_ReleaseLock);
     LOOKUP(PyGILState_Ensure);
     LOOKUP(PyGILState_Release);
     LOOKUP(PyEval_InitThreads);
@@ -408,9 +408,9 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
     LOOKUP(PyModule_AddStringConstant);
     LOOKUP(PyModule_AddObject);
     LOOKUP(PyModule_GetDict);
-    LOOKUP(PyThreadState_Swap);
     LOOKUP(PyEval_SaveThread);
     OPT_LOOKUP(_Py_DecodeUTF8_surrogateescape);
+    OPT_LOOKUP(Py_DecodeLocale);
 
 
     /* PyBytes / PyString lookups depend of if we're on py3k or not */
@@ -581,13 +581,21 @@ int pyobjc_main(int argc, char * const *argv, char * const *envp) {
 	NSMutableData *data_argv = [NSMutableData dataWithCapacity:(sizeof(char *) * argc)];
 	char **argv_new = [data_argv mutableBytes];
 	if (isPy3k) {
-		argv_new[0] = (char*)_Py_DecodeUTF8_surrogateescape(c_mainPyPath, strlen(c_mainPyPath));
+                if (Py_DecodeLocale) {
+		    argv_new[0] = (char*)Py_DecodeLocale(c_mainPyPath, NULL);
+                } else {
+		    argv_new[0] = (char*)_Py_DecodeUTF8_surrogateescape(c_mainPyPath, strlen(c_mainPyPath), NULL);
+                }
 	} else  {
 		argv_new[0] = c_mainPyPath;
 	}
 	for (i = 1; i < argc; i++) {
 		if (isPy3k) {
-			argv_new[i] = (char*)_Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]));
+                        if (Py_DecodeLocale) {
+			     argv_new[i] = (char*)Py_DecodeLocale(argv[i], NULL);
+                        } else {
+			     argv_new[i] = (char*)_Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]), NULL);
+                        }
 		} else {
 			argv_new[i] = argv[i];
 		}
@@ -672,8 +680,6 @@ cleanup:
     PyErr_Clear();
     PyGILState_Release(gilState);
     if (gilState == PyGILState_LOCKED) {
-        /*PyThreadState_Swap(NULL);*/
-        /*PyEval_ReleaseLock(); */
         PyEval_SaveThread();
     }
 

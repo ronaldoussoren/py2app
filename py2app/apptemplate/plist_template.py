@@ -5,10 +5,10 @@ import py2app
 __all__ = ["infoPlistDict"]
 
 
-def infoPlistDict(CFBundleExecutable, plist={}):
+def infoPlistDict(CFBundleExecutable, plist={}):  # noqa: B006, M511
     CFBundleExecutable = CFBundleExecutable
     version = sys.version[:3]
-    pdict = dict(
+    pdict = dict(  # noqa: C408
         CFBundleDevelopmentRegion="English",
         CFBundleDisplayName=plist.get("CFBundleName", CFBundleExecutable),
         CFBundleExecutable=CFBundleExecutable,
@@ -45,7 +45,7 @@ def infoPlistDict(CFBundleExecutable, plist={}):
     pdict.update(plist)
     pythonInfo = pdict.setdefault("PythonInfoDict", {})
     pythonInfo.update(
-        dict(
+        dict(  # noqa: C408
             PythonLongVersion=sys.version,
             PythonShortVersion=sys.version[:3],
             PythonExecutable=sys.executable,
@@ -53,7 +53,7 @@ def infoPlistDict(CFBundleExecutable, plist={}):
     )
     py2appInfo = pythonInfo.setdefault("py2app", {})
     py2appInfo.update(
-        dict(
+        dict(  # noqa: C408
             version=py2app.__version__,
             template="app",
         )

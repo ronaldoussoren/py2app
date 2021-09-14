@@ -28,6 +28,7 @@ typedef PyObject *(*PySys_GetObjectPtr)(const char *);
 typedef int *(*PySys_SetArgvPtr)(int argc, char **argv);
 typedef PyObject *(*PyObject_GetAttrStringPtr)(PyObject *, const char *);
 typedef wchar_t* (*_Py_DecodeUTF8_surrogateescapePtr)(const char *s, ssize_t size, ssize_t* outsize);
+typedef wchar_t* (*Py_DecodeLocalePtr)(const char *s, ssize_t* outsize);
 
 
 typedef CFTypeRef id;
@@ -67,8 +68,12 @@ static CFMutableArrayRef py2app_pool;
 /* ApplicationServices */
 USES(LSOpenFSRef);
 USES(LSFindApplicationForInfo);
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 USES(GetCurrentProcess);
 USES(SetFrontProcess);
+#pragma clang diagnostic pop
 /* CoreFoundation */
 USES(CFArrayRemoveValueAtIndex);
 USES(CFStringCreateFromExternalRepresentation);
@@ -458,7 +463,7 @@ static void py2app_setPythonPath(void) {
     resPackages = py2app_getKey("PyResourcePackages");
     if (resPackages) {
         int i;
-        int cnt = py2app_CFArrayGetCount(resPackages);
+        CFIndex cnt = py2app_CFArrayGetCount(resPackages);
         for (i = 0; i < cnt; i++) {
             resPath = tildeExpand(py2app_CFArrayGetValueAtIndex(resPackages, i));
             if (py2app_CFStringGetLength(resPath)) {
@@ -548,7 +553,7 @@ static CFStringRef getMainScript(void) {
     CFMutableArrayRef possibleMains;
     CFBundleRef bndl;
     CFStringRef e_py, e_pyc, e_pyo, path;
-    int i, cnt;
+    CFIndex i, cnt;
     possibleMains = py2app_CFArrayCreateMutable(NULL, 0, py2app_kCFTypeArrayCallBacks);
     CFArrayRef firstMains = py2app_getKey("PyMainFileNames");
     if (firstMains) {
@@ -626,7 +631,7 @@ static CFStringRef getErrorScript(void) {
     CFMutableArrayRef errorScripts;
     CFBundleRef bndl;
     CFStringRef path;
-    int i, cnt;
+    CFIndex i, cnt;
     errorScripts = py2app_CFArrayCreateMutable(NULL, 0, py2app_kCFTypeArrayCallBacks);
     CFArrayRef firstErrorScripts = py2app_getKey("PyErrorScripts");
     if (firstErrorScripts) {
@@ -972,6 +977,7 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
     OPT_LOOKUP(Py_SetPath);
 #endif
     OPT_LOOKUP(_Py_DecodeUTF8_surrogateescape);
+    OPT_LOOKUP(Py_DecodeLocale);
     LOOKUP(PySys_SetObject);
 
 
@@ -1039,12 +1045,20 @@ static int py2app_main(int argc, char * const *argv, char * const *envp) {
 
        argv_new = alloca((argc+1) * sizeof(wchar_t*));
        argv_new[argc] = NULL;
-       argv_new[0] = (char*)py2app__Py_DecodeUTF8_surrogateescape(c_mainScript, strlen(c_mainScript), NULL);
+       if (py2app_Py_DecodeLocale != NULL) { /* 3.5 or later */
+           argv_new[0] = (char*)py2app_Py_DecodeLocale(c_mainScript, NULL);
 
-       for (i = 1; i < argc; i++) {
-	  argv_new[i] = (char*)py2app__Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]), NULL);
+           for (i = 1; i < argc; i++) {
+	      argv_new[i] = (char*)py2app_Py_DecodeLocale(argv[i], NULL);
+           }
+
+       } else {
+           argv_new[0] = (char*)py2app__Py_DecodeUTF8_surrogateescape(c_mainScript, strlen(c_mainScript), NULL);
+
+           for (i = 1; i < argc; i++) {
+	      argv_new[i] = (char*)py2app__Py_DecodeUTF8_surrogateescape(argv[i], strlen(argv[i]), NULL);
+           }
        }
-
     } else {
        argv_new = alloca((argc + 1) * sizeof(char *));
        argv_new[argc] = NULL;
