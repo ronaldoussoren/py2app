@@ -56,6 +56,12 @@ Frequently Asked Questions
 
 * Dark mode support
 
+  .. note::
+
+     As of py2app 0.26 the stub executables are compiled with
+     a modern SDK, with an automatic fallback to the older binaries
+     for old builds of Tkinter.
+
   The stub executables from py2app were compiled on an 
   old version of macOS and therefore the system assumes
   that applications build with py2app do not support Dark Mode

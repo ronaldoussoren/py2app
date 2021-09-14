@@ -20,6 +20,7 @@ def create_appbundle(
     condition=skipscm,
     plist=None,
     arch=None,
+    use_old_sdk=False,
     redirect_stdout=False,
 ):
     if plist is None:
@@ -60,7 +61,7 @@ def create_appbundle(
         else:
             plistlib.writePlist(plist, fp)
 
-    srcmain = module.setup.main(arch=arch, redirect_asl=redirect_stdout)
+    srcmain = module.setup.main(arch=arch, redirect_asl=redirect_stdout, use_old_sdk=use_old_sdk)
     if sys.version_info[0] == 2 and isinstance(
         kw["CFBundleExecutable"], unicode  # noqa: F821
     ):

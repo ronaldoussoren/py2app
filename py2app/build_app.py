@@ -610,6 +610,7 @@ class py2app(Command):
         self.no_report_missing_conditional_import = False
         self.redirect_stdout_to_asl = False
         self._python_app = None
+        self.use_old_sdk = False
         self.expected_missing_imports = None
 
     def finalize_options(self):
@@ -1067,7 +1068,7 @@ class py2app(Command):
                 elif fn.endswith(".pyw"):
                     fn = fn[:-4]
 
-                src_fn = script_executable(arch=self.arch, secondary=True)
+                src_fn = script_executable(arch=self.arch, secondary=True, use_old_sdk=self.use_old_sdk)
                 tgt_fn = os.path.join(
                     target.appdir, "Contents", "MacOS", os.path.basename(fn)
                 )
@@ -1136,6 +1137,9 @@ class py2app(Command):
 
                 if rval.get("frameworks"):
                     self.frameworks.extend(rval["frameworks"])
+ 
+                if rval.get("use_old_sdk"):
+                   self.use_old_sdk=True
 
                 for fn in newbootstraps:
                     if isinstance(fn, basestring):
@@ -2134,6 +2138,7 @@ class py2app(Command):
             extension=self.extension,
             arch=self.arch,
             redirect_stdout=self.redirect_stdout_to_asl,
+            use_old_sdk=self.use_old_sdk,
         )
         appdir = fsencoding(appdir)
         resdir = os.path.join(appdir, "Contents", "Resources")
@@ -2275,7 +2280,7 @@ class py2app(Command):
             elif fn.endswith(".pyw"):
                 fn = fn[:-4]
 
-            src_fn = script_executable(arch=self.arch, secondary=False)
+            src_fn = script_executable(arch=self.arch, secondary=False, use_old_sdk=self.use_old_sdk)
             tgt_fn = os.path.join(
                 self.appdir, "Contents", "MacOS", os.path.basename(fn)
             )

@@ -70,7 +70,7 @@ gPreBuildVariants = [
 ]
 
 
-def main(all=False, arch=None, secondary=False, redirect_asl=False):
+def main(all=False, arch=None, secondary=False, redirect_asl=False, use_old_sdk=False):
     basepath = os.path.dirname(__file__)
     builddir = os.path.join(basepath, "prebuilt")
     if not os.path.exists(builddir):
@@ -160,6 +160,10 @@ def main(all=False, arch=None, secondary=False, redirect_asl=False):
     if not os.path.exists(dest) and name == "main-asl-":
         name = "main-"
         dest = os.path.join(builddir, name + arch)
+
+    if use_old_sdk:
+       if os.path.exists(dest + "-oldsdk"):
+           dest = dest + "-oldsdk"
 
     return dest
 

@@ -11,6 +11,19 @@ try:
 except ImportError:
     from io import StringIO
 
+# New enough Tk version to skip using the oldsdk
+# binaries.
+NEW_TK=(8, 6, 11)
+
+def tk_version():
+    # Returns tk version as a tuple, including micro version
+    import _tkinter
+
+    tk = _tkinter.create()
+    version_string =  tk.call("info", "patchlevel")
+    return tuple(int(x) for x in version_string.split("."))
+
+
 
 def check(cmd, mf):
     m = mf.findNode("_tkinter")
@@ -34,6 +47,8 @@ def check(cmd, mf):
             paths.append(os.path.join(lib, fn))
 
     if not paths:
+        if tk_version() < NEW_TK:
+            return {"use_old_sdk": True}
         return None
 
     prescript = (
@@ -51,4 +66,4 @@ def check(cmd, mf):
         % {"tcl_path": tcl_path, "tk_path": tk_path}
     )
 
-    return {"resources": [("lib", paths)], "prescripts": [StringIO(prescript)]}
+    return {"resources": [("lib", paths)], "prescripts": [StringIO(prescript)], "use_old_sdk": tk_version() < NEW_TK}

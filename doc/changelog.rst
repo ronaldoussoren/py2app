@@ -4,6 +4,14 @@ Release history
 py2app 0.26
 -----------
 
+* Stub executables were recompiled on macOS 11
+
+  This means support for light mode/dark mode should now work out of the
+  box.
+
+  The old stub executables are still used when detecting that Tkinter
+  is used with an old build of Tk.
+
 * ``py2app.filters.not_stdlib_filter`` now knows about Python's "venv"
 
 * #368: Add recipe "detect_dunder_file"
