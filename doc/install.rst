@@ -10,7 +10,7 @@ of py2app:
 
 .. code-block:: sh
 
-  $ pip install -U py2app
+  $ pip3 install -U py2app
 
 
 Installing from source
