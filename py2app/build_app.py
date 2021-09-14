@@ -861,7 +861,7 @@ class py2app(Command):
             dylib = info["name"]
             runtime = os.path.join(info["location"], info["name"])
         else:
-            dylib = "libpython%d.%d.dylib" % (sys.version_info[:2],)
+            dylib = "libpython%d.%d.dylib" % (sys.version_info[:2])
             runtime = os.path.join(prefix, "lib", dylib)
 
         return dylib, runtime
@@ -1465,7 +1465,9 @@ class py2app(Command):
         bdist_base = self.bdist_base
         if self.semi_standalone:
             self.bdist_dir = os.path.join(
-                bdist_base, "python%d.%d-semi_standalone" % (sys.version_info[:2]), "app"
+                bdist_base,
+                "python%d.%d-semi_standalone" % (sys.version_info[:2]),
+                "app",
             )
         else:
             self.bdist_dir = os.path.join(
@@ -2165,7 +2167,9 @@ class py2app(Command):
 
         # make PYTHONHOME
         pyhome = os.path.join(resdir, "lib", "python%d.%d" % (sys.version_info[:2]))
-        realhome = os.path.join(sys.prefix, "lib", "python%d.%d" %(sys.version_info[:2]))
+        realhome = os.path.join(
+            sys.prefix, "lib", "python%d.%d" % (sys.version_info[:2])
+        )
         makedirs(pyhome)
         if self.optimize:
             make_symlink("../../site.pyo", os.path.join(pyhome, "site.pyo"))
@@ -2335,10 +2339,12 @@ class py2app(Command):
         pydir = os.path.join(resdir, "lib", "python%s.%s" % (sys.version_info[:2]))
 
         if sys.version_info[0] == 2 or self.semi_standalone:
-            arcdir = os.path.join(resdir, "lib", "python%d.%d" %(sys.version_info[:2]))
+            arcdir = os.path.join(resdir, "lib", "python%d.%d" % (sys.version_info[:2]))
         else:
             arcdir = os.path.join(resdir, "lib")
-        realhome = os.path.join(sys.prefix, "lib", "python%d.%d" %(sys.version_info[:2]))
+        realhome = os.path.join(
+            sys.prefix, "lib", "python%d.%d" % (sys.version_info[:2])
+        )
         self.mkpath(pydir)
 
         # The site.py file needs to be a two locations
