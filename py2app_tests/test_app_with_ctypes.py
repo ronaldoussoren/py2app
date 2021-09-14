@@ -12,6 +12,7 @@ import os
 import signal
 import py2app
 import hashlib
+import platform
 from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
@@ -160,8 +161,19 @@ class TestBasicAppWithCTypes (unittest.TestCase):
         ln = p.stdout.readline().strip()
         if sys.version_info[0] == 3:
             ln = ln.decode('utf-8')
-        self.assertEqual(os.path.realpath(ln), os.path.realpath('/usr/lib/libSystem.dylib'))
 
+        if [int(x) for x in platform.mac_ver()[0].split('.')] >= [10, 16]:
+            self.assertIn(ln, ["None", "/usr/lib/libSystem.dylib"])
+
+        else:
+            self.assertEqual(os.path.realpath(ln), os.path.realpath('/usr/lib/libSystem.dylib'))
+
+        p.stdin.close()
+
+        exit = self.wait_with_timeout(p)
+        self.assertEqual(exit, 0)
+
+        p.stdout.close()
 
 
 
@@ -183,55 +195,69 @@ class TestBasicAppWithCTypes (unittest.TestCase):
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"8")
 
+        p.stdin.close()
+        p.stdout.close()
+
+        exit = self.wait_with_timeout(p)
+        self.assertEqual(exit, 0)
+
+
     def test_simple_imports(self):
         p = self.start_app()
 
-        # Basic module that is always present:
-        p.stdin.write('import_module("os")\n'.encode('latin1'))
-        p.stdin.flush()
-        ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), b"os")
-
-        can_import_stdlib = False
-        if '--alias' in self.py2app_args:
-            can_import_stdlib = True
-
-        if '--semi-standalone' in self.py2app_args:
-            can_import_stdlib = True
-
-        if sys.prefix.startswith('/System/'):
-            can_import_stdlib = True
-
-        if not can_import_stdlib:
-            # Not a dependency of the module (stdlib):
-            p.stdin.write('import_module("xdrlib")\n'.encode('latin1'))
-            p.stdin.flush()
-            ln = p.stdout.readline().decode('utf-8')
-            self.assertTrue(ln.strip().startswith("* import failed"), ln)
-
-        else:
-            p.stdin.write('import_module("xdrlib")\n'.encode('latin1'))
+        try:
+            # Basic module that is always present:
+            p.stdin.write('import_module("os")\n'.encode('latin1'))
             p.stdin.flush()
             ln = p.stdout.readline()
-            self.assertEqual(ln.strip(), b"xdrlib")
+            self.assertEqual(ln.strip(), b"os")
 
-        if sys.prefix.startswith('/System') or '--alias' in self.py2app_args:
-            # py2app is included as part of the system install
-            p.stdin.write('import_module("py2app")\n'.encode('latin1'))
-            p.stdin.flush()
-            ln = p.stdout.readline()
-            self.assertEqual(ln.strip(), b"py2app")
+            can_import_stdlib = False
+            if '--alias' in self.py2app_args:
+                can_import_stdlib = True
+
+            if '--semi-standalone' in self.py2app_args:
+                can_import_stdlib = True
+
+            if sys.prefix.startswith('/System/'):
+                can_import_stdlib = True
+
+            if not can_import_stdlib:
+                # Not a dependency of the module (stdlib):
+                p.stdin.write('import_module("xdrlib")\n'.encode('latin1'))
+                p.stdin.flush()
+                ln = p.stdout.readline().decode('utf-8')
+                self.assertTrue(ln.strip().startswith("* import failed"), ln)
+
+            else:
+                p.stdin.write('import_module("xdrlib")\n'.encode('latin1'))
+                p.stdin.flush()
+                ln = p.stdout.readline()
+                self.assertEqual(ln.strip(), b"xdrlib")
+
+            if sys.prefix.startswith('/System') or '--alias' in self.py2app_args:
+                # py2app is included as part of the system install
+                p.stdin.write('import_module("py2app")\n'.encode('latin1'))
+                p.stdin.flush()
+                ln = p.stdout.readline()
+                self.assertEqual(ln.strip(), b"py2app")
 
 
-        else:
-            # Not a dependency of the module (external):
-            p.stdin.write('import_module("py2app")\n'.encode('latin1'))
-            p.stdin.flush()
-            ln = p.stdout.readline().decode('utf-8')
-            self.assertTrue(ln.strip().startswith("* import failed"), ln)
+            else:
+                # Not a dependency of the module (external):
+                p.stdin.write('import_module("py2app")\n'.encode('latin1'))
+                p.stdin.flush()
+                ln = p.stdout.readline().decode('utf-8')
+                self.assertTrue(ln.strip().startswith("* import failed"), ln)
 
-        p.stdin.close()
-        p.stdout.close()
+        finally:
+            p.stdin.close()
+            p.stdout.close()
+
+            exit = self.wait_with_timeout(p)
+            self.assertEqual(exit, 0)
+
+            p.stdout.close()
 
     def test_app_structure(self):
         path = os.path.join(self.app_dir, 'dist/BasicApp.app')

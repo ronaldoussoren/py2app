@@ -1,4 +1,7 @@
+from __future__ import absolute_import
+
 import os
+
 from pkg_resources import packaging
 
 
@@ -30,7 +33,7 @@ def check(cmd, mf):
     result = {
         "resources": [os.path.join(os.path.dirname(m.filename), "mpl-data")],
     }
-    if packaging.version.parse(VER) < packaging.version.parse('3.1'):
+    if packaging.version.parse(VER) < packaging.version.parse("3.1"):
         result.update({"prescripts": ["py2app.recipes.matplotlib_prescript"]})
 
     result.update(backends)

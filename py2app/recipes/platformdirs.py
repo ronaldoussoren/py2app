@@ -3,6 +3,6 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-    includes = ['platformdirs.macos']
+    includes = ["platformdirs.macos"]
 
     return {"includes": includes}

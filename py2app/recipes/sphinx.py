@@ -4,12 +4,12 @@ def check(cmd, mf):
         return None
 
     includes = [
-        'sphinxcontrib.applehelp',
-        'sphinxcontrib.devhelp',
-        'sphinxcontrib.htmlhelp',
-        'sphinxcontrib.jsmath',
-        'sphinxcontrib.qthelp',
-        'sphinxcontrib.serializinghtml',
+        "sphinxcontrib.applehelp",
+        "sphinxcontrib.devhelp",
+        "sphinxcontrib.htmlhelp",
+        "sphinxcontrib.jsmath",
+        "sphinxcontrib.qthelp",
+        "sphinxcontrib.serializinghtml",
     ]
 
     return {"includes": includes}

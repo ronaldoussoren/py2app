@@ -9,7 +9,7 @@ def _site_packages():
         prefixes.append(sys.exec_prefix)
     for prefix in prefixes:
         paths.append(
-            os.path.join(prefix, "lib", "python" + sys.version[:3], "site-packages")
+            os.path.join(prefix, "lib", "python%d.%d" %(sys.version_info[:2]), "site-packages")
         )
 
     if os.path.join(".framework", "") in os.path.join(sys.prefix, ""):
@@ -21,7 +21,7 @@ def _site_packages():
                     home,
                     "Library",
                     "Python",
-                    sys.version[:3],
+                    "%d.%d"%(sys.version_info[:2]),
                     "lib",
                     "python",
                     "site-packages",
@@ -31,7 +31,7 @@ def _site_packages():
             # Before Sierra
             paths.append(
                 os.path.join(
-                    home, "Library", "Python", sys.version[:3], "site-packages"
+                    home, "Library", "Python", "%d.%d"%(sys.version_info[:2]), "site-packages"
                 )
             )
 

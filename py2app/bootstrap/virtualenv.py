@@ -8,10 +8,10 @@ def _fixup_virtualenv(real_prefix):
     # installed by virtualenv 1.8.2 (but simplified by removing support
     # for platforms that aren't supported by py2app)
 
-    paths = [os.path.join(sys.real_prefix, "lib", "python" + sys.version[:3])]
+    paths = [os.path.join(sys.real_prefix, "lib", "python%d.%d"%(sys.version_info[:2]))]
     hardcoded_relative_dirs = paths[:]
     plat_path = os.path.join(
-        sys.real_prefix, "lib", "python" + sys.version[:3], "plat-%s" % sys.platform
+        sys.real_prefix, "lib", "python%d.%d" %( sys.version_info[:2]), "plat-%s" % sys.platform
     )
     if os.path.exists(plat_path):
         paths.append(plat_path)

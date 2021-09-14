@@ -16,10 +16,7 @@ import os
 import signal
 import py2app
 import zipfile
-if __name__ == "__main__":
-    from tools import kill_child_processes
-else:
-    from .tools import kill_child_processes
+from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -153,6 +150,8 @@ class TestBasicApp (unittest.TestCase):
 
         p.stdin.close()
         p.stdout.close()
+
+        self.wait_with_timeout(p)
 
     def test_zip_contents(self):
         if '--alias' in self.py2app_args:

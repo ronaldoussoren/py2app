@@ -6,14 +6,14 @@ def _site_packages(prefix, real_prefix, global_site_packages):
     paths = []
 
     paths.append(
-        os.path.join(prefix, "lib", "python" + sys.version[:3], "site-packages")
+        os.path.join(prefix, "lib", "python%d.%d"%(sys.version_info[:2]), "site-packages")
     )
     if os.path.join(".framework", "") in os.path.join(prefix, ""):
         home = os.environ.get("HOME")
         if home:
             paths.append(
                 os.path.join(
-                    home, "Library", "Python", sys.version[:3], "site-packages"
+                    home, "Library", "Python", "%d.%d"%(sys.version_info[:2]), "site-packages"
                 )
             )
 
@@ -34,6 +34,6 @@ def _site_packages(prefix, real_prefix, global_site_packages):
     if global_site_packages:
         site.addsitedir(
             os.path.join(
-                real_prefix, "lib", "python" + sys.version[:3], "site-packages"
+                real_prefix, "lib", "python%d.%d" %( sys.version_info[:2]), "site-packages"
             )
         )

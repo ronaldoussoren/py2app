@@ -646,9 +646,10 @@ def copy_tree(
 
         # Note: using zipio's internal _locate function throws an IOError on
         # dead symlinks, so handle it here.
-        if os.path.islink(src_name) and not os.path.exists(os.path.join(src, os.readlink(src_name))):
+        if os.path.islink(src_name) and not os.path.exists(
+            os.path.join(src, os.readlink(src_name))
+        ):
             continue
-
 
         if preserve_symlinks and zipio.islink(src_name):
             link_dest = zipio.readlink(src_name)
@@ -786,20 +787,23 @@ def _macho_find(path):
 def _dosign(*path):
     subprocess.check_call(
         (
-	    "codesign",
-	        "-s",
-	    "-",
-	    "--preserve-metadata=identifier,entitlements,flags,runtime",
-	    "-f",
-        ) + path
+            "codesign",
+            "-s",
+            "-",
+            "--preserve-metadata=identifier,entitlements,flags,runtime",
+            "-f",
+            "-vvvv",
+        )
+        + path,
     )
+
 
 def codesign_adhoc(bundle):
     """
     (Re)sign a bundle
 
-    Signing should be done "depth-first", sign 
-    libraries before signing the libraries/executables 
+    Signing should be done "depth-first", sign
+    libraries before signing the libraries/executables
     linking to them.
 
     The current implementation is a crude hack,
@@ -809,10 +813,10 @@ def codesign_adhoc(bundle):
     "codesign" will resign the entire bundle, but only
     if partial signatures are valid.
     """
-    #try:
+    # try:
     #    _dosign(bundle)
     #    return
-    #except subprocess.CalledProcessError:
+    # except subprocess.CalledProcessError:
     #    pass
 
     platfiles = list(_macho_find(bundle))
@@ -825,8 +829,13 @@ def codesign_adhoc(bundle):
             except subprocess.CalledProcessError:
                 failed.append(file)
         if failed == platfiles:
-            raise RuntimeError("Cannot sign bundle %r"%(bundle,))
+            raise RuntimeError("Cannot sign bundle %r" % (bundle,))
         platfiles = failed
-    
 
-    _dosign(bundle)
+    for _ in range(5):
+        try:
+            _dosign(bundle)
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(1)
+            continue

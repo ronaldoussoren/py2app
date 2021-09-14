@@ -3,6 +3,6 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-    includes = ['pandas._libs.tslibs.base']
+    includes = ["pandas._libs.tslibs.base"]
 
     return {"includes": includes}

@@ -1,18 +1,22 @@
+import dis
 import os
 import sys
+
 from modulegraph import modulegraph
-import dis
+
 from py2app.filters import not_stdlib_filter
+
 
 def get_toplevel_package_name(node):
     if isinstance(node, modulegraph.Package):
         return node.identifier.split(".")[0]
     elif isinstance(node, modulegraph.BaseModule):
         name = node.identifier
-        if '.' in name:
-            return name.split('.')[0]
+        if "." in name:
+            return name.split(".")[0]
 
     return None
+
 
 def scan_bytecode_loads(names, co):
     constants = co.co_consts
@@ -27,7 +31,7 @@ def scan_bytecode_loads(names, co):
             scan_bytecode_loads(names, c)
 
 
-if sys.version_info[:2] >= (3,4):
+if sys.version_info[:2] >= (3, 4):
     # Only activate this recipe for Python 3.4 or later because
     # scan_bytecode_loads doesn't work on older versions.
 
@@ -40,7 +44,9 @@ if sys.version_info[:2] >= (3,4):
             if node.code is None:
                 continue
 
-            if node.identifier.startswith(os.path.dirname(os.path.dirname(__file__)) + "/"):
+            if node.identifier.startswith(
+                os.path.dirname(os.path.dirname(__file__)) + "/"
+            ):
                 continue
 
             if not hasattr(node, "_py2app_global_reads"):
@@ -48,12 +54,11 @@ if sys.version_info[:2] >= (3,4):
                 scan_bytecode_loads(names, node.code)
                 node._py2app_global_reads = names
 
-
             if "__file__" in node._py2app_global_reads:
                 pkg = get_toplevel_package_name(node)
                 if pkg is not None:
                     packages.add(pkg)
 
         if packages:
-            return { "packages": packages }
+            return {"packages": packages}
         return None

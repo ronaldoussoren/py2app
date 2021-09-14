@@ -4,11 +4,11 @@
 import os
 import sys
 import unittest
-from setuptools import Command, find_packages, setup
-from setuptools.command import egg_info
 from distutils import log
 from fnmatch import fnmatch
 
+from setuptools import Command, find_packages, setup
+from setuptools.command import egg_info
 
 fp = open("README.rst")
 try:
@@ -38,6 +38,7 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Objective C",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: User Interfaces",

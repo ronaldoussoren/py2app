@@ -1,13 +1,18 @@
-import os
-
-AUTO_MISSING=[
-    ('importlib', ('_frozen_importlib_external', )),
-    ('mimetypes', ('winreg', )),
-    ('os', ('nt', )),
-    ('re', ('sys.getwindowsversion', )),
-    ('subprocess', ('_winapi', )),
-    ('uuid', ('netbios', 'win32wnet', )),
+AUTO_MISSING = [
+    ("importlib", ("_frozen_importlib_external",)),
+    ("mimetypes", ("winreg",)),
+    ("os", ("nt",)),
+    ("re", ("sys.getwindowsversion",)),
+    ("subprocess", ("_winapi",)),
+    (
+        "uuid",
+        (
+            "netbios",
+            "win32wnet",
+        ),
+    ),
 ]
+
 
 def check(cmd, mf):
     to_return = []
@@ -19,5 +24,5 @@ def check(cmd, mf):
         to_return.extend(expected_missing)
 
     if to_return:
-        return { "expected_missing_imports": set(to_return) }
+        return {"expected_missing_imports": set(to_return)}
     return None

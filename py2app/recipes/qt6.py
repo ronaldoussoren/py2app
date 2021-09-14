@@ -1,5 +1,3 @@
-import sys
-
 from modulegraph.modulegraph import MissingModule
 
 

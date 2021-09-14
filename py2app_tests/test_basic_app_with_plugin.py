@@ -5,6 +5,7 @@ if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2,7)) or \
 else:
     import unittest2 as unittest
 
+import platform
 import subprocess
 import shutil
 import time
@@ -12,10 +13,8 @@ import os
 import signal
 import py2app
 import hashlib
-if __name__ == "__main__":
-    from tools import kill_child_processes
-else:
-    from .tools import kill_child_processes
+import sysconfig
+from .tools import kill_child_processes
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -52,6 +51,9 @@ class TestBasicAppWithPlugins (unittest.TestCase):
     # a base-class.
     @classmethod
     def setUpClass(cls):
+        if [int(x) for x in platform.mac_ver()[0].split('.')[:2]] >= [10,16] and sysconfig.get_platform().split('-')[-1] in ('universal2', 'arm64'):
+           raise unittest.SkipTest("Test won't work on macOS 11 or later with Arm64")
+
         kill_child_processes()
 
         env=os.environ.copy()

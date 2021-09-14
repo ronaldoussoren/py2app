@@ -85,6 +85,12 @@ class TestLSEnvironment (unittest.TestCase):
         p = subprocess.Popen(["/usr/bin/open", path])
         exit = p.wait()
 
+        if exit == 1:
+            print("/usr/bin/open failed, retry")
+            time.sleep(5)
+            p = subprocess.Popen(["/usr/bin/open", path])
+            exit = p.wait()
+
         self.assertEqual(exit, 0)
 
         path = os.path.join( self.app_dir, 'dist/env.txt')

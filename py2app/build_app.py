@@ -24,7 +24,7 @@ import macholib.dyld
 import macholib.MachO
 import macholib.MachOStandalone
 import pkg_resources
-from macholib.util import flipwritable, is_platform_file
+from macholib.util import flipwritable
 from modulegraph import modulegraph, zipio
 from modulegraph.find_modules import find_modules, find_needed_modules, parse_mf_results
 from modulegraph.modulegraph import Package, Script, SourceModule
@@ -103,7 +103,6 @@ def loader_paths(sourcefn, destfn):
                 continue
             relpath = other[13:]
             yield os.path.join(sourcedir, relpath), os.path.join(destdir, relpath)
-
 
 
 def rewrite_tkinter_load_commands(tkinter_path):
@@ -225,7 +224,6 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
                 (e.identifier.replace(".", os.sep) + os.path.splitext(e.filename)[1]),
             )
             self.ext_map[fn] = os.path.dirname(e.filename)
-
 
     def update_node(self, m):
         if isinstance(m, macholib.MachO.MachO):
@@ -359,9 +357,9 @@ def installation_info(version=None):
         version = sys.version
 
     if is_system():
-        return version[:3] + " (FORCED: Using vendor Python)"
+        return ".".join(version.split(".")[:2]) + " (FORCED: Using vendor Python)"
     else:
-        return version[:3]
+        return ".".join(version.split(".")[:2])
 
 
 class py2app(Command):
@@ -616,8 +614,10 @@ class py2app(Command):
 
     def finalize_options(self):
         if self.prefer_ppc:
-            print("WARNING: Option --prefer-ppc is deprecated an will be removed "
-                  "in a future version. Use --arch instead")
+            print(
+                "WARNING: Option --prefer-ppc is deprecated an will be removed "
+                "in a future version. Use --arch instead"
+            )
 
         if sys_base_prefix != sys.prefix:
             self._python_app = os.path.join(sys_base_prefix, "Resources", "Python.app")
@@ -823,7 +823,7 @@ class py2app(Command):
             prefix = sys.prefix
         if version is None:
             version = sys.version
-        version = version[:3]
+        version = ".".join(version.split(".")[:2])
         info = None
         if sys_base_prefix != sys.prefix:
             prefix = sys_base_prefix
@@ -861,7 +861,7 @@ class py2app(Command):
             dylib = info["name"]
             runtime = os.path.join(info["location"], info["name"])
         else:
-            dylib = "libpython%s.dylib" % (sys.version[:3],)
+            dylib = "libpython%d.%d.dylib" % (sys.version_info[:2],)
             runtime = os.path.join(prefix, "lib", dylib)
 
         return dylib, runtime
@@ -1465,11 +1465,11 @@ class py2app(Command):
         bdist_base = self.bdist_base
         if self.semi_standalone:
             self.bdist_dir = os.path.join(
-                bdist_base, "python%s-semi_standalone" % (sys.version[:3],), "app"
+                bdist_base, "python%d.%d-semi_standalone" % (sys.version_info[:2]), "app"
             )
         else:
             self.bdist_dir = os.path.join(
-                bdist_base, "python%s-standalone" % (sys.version[:3],), "app"
+                bdist_base, "python%d.%d-standalone" % (sys.version_info[:2]), "app"
             )
 
         if os.path.exists(self.bdist_dir):
@@ -1665,7 +1665,11 @@ class py2app(Command):
                     platfiles = self.strip_dsym(platfiles)
                     self.strip_files(platfiles)
 
-                arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
+                arch = (
+                    self.arch
+                    if self.arch is not None
+                    else get_platform().split("-")[-1]
+                )
 
                 if arch in ("universal2", "arm64"):
                     codesign_adhoc(target.appdir)
@@ -1736,7 +1740,7 @@ class py2app(Command):
                     copy_file(pth, os.path.join(target_dir, fname))
 
     def strip_dsym(self, platfiles):
-        """ Remove .dSYM directories in the bundled application """
+        """Remove .dSYM directories in the bundled application"""
 
         #
         # .dSYM directories are contain detached debugging information and
@@ -2160,8 +2164,8 @@ class py2app(Command):
         make_symlink(pyExecutable, execdst)
 
         # make PYTHONHOME
-        pyhome = os.path.join(resdir, "lib", "python" + sys.version[:3])
-        realhome = os.path.join(sys.prefix, "lib", "python" + sys.version[:3])
+        pyhome = os.path.join(resdir, "lib", "python%d.%d" % (sys.version_info[:2]))
+        realhome = os.path.join(sys.prefix, "lib", "python%d.%d" %(sys.version_info[:2]))
         makedirs(pyhome)
         if self.optimize:
             make_symlink("../../site.pyo", os.path.join(pyhome, "site.pyo"))
@@ -2243,11 +2247,12 @@ class py2app(Command):
             next = []
             for item in todo:
                 for s, d in loader_paths(*item):
-                    if os.path.exists(d): continue
+                    if os.path.exists(d):
+                        continue
                     next.append((s, d))
                     if not self.dry_run:
-                       if not os.path.exists(os.path.dirname(d)):
-                          os.makedirs(os.path.dirname(d))
+                        if not os.path.exists(os.path.dirname(d)):
+                            os.makedirs(os.path.dirname(d))
                     copy_file(s, d, dry_run=self.dry_run)
             todo = next
 
@@ -2330,10 +2335,10 @@ class py2app(Command):
         pydir = os.path.join(resdir, "lib", "python%s.%s" % (sys.version_info[:2]))
 
         if sys.version_info[0] == 2 or self.semi_standalone:
-            arcdir = os.path.join(resdir, "lib", "python" + sys.version[:3])
+            arcdir = os.path.join(resdir, "lib", "python%d.%d" %(sys.version_info[:2]))
         else:
             arcdir = os.path.join(resdir, "lib")
-        realhome = os.path.join(sys.prefix, "lib", "python" + sys.version[:3])
+        realhome = os.path.join(sys.prefix, "lib", "python%d.%d" %(sys.version_info[:2]))
         self.mkpath(pydir)
 
         # The site.py file needs to be a two locations

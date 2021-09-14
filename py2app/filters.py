@@ -14,7 +14,6 @@ def has_filename_filter(module):
         return True
     return getattr(module, "filename", None) is not None
 
-
 def not_stdlib_filter(module, prefix=None):
     """
     Return False if the module is located in the standard library
@@ -66,7 +65,6 @@ def not_stdlib_filter(module, prefix=None):
                 return True
             else:
                 return False
-
 
     return True
 

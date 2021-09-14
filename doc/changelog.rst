@@ -30,6 +30,18 @@ py2app 0.26
 
   PR by Ryan Clary (mrclary on GitHub)
 
+* #344: Invocation of codesign on the whole bundle sometimes fails
+
+  Py2app will now try this a number of times before giving up. This
+  is at best a workaround for and doesn't completely fix the problem.
+
+* #370: py2app now works with Python 3.10
+
+  Python 3.10 no longer exports a (private) symbol used by the py2app
+  stub executable. Switched to a public API to accomplish the same task where
+  available.
+
+
 py2app 0.25
 -----------
 

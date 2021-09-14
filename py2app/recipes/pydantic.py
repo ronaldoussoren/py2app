@@ -1,4 +1,4 @@
-PYDANTIC_IMPORTS=[
+PYDANTIC_IMPORTS = [
     "abc",
     "collections",
     "collections.abc",
@@ -29,12 +29,12 @@ PYDANTIC_IMPORTS=[
     "weakref",
 ]
 
+
 def check(cmd, mf):
     m = mf.findNode("pydantic")
     if m is None or m.filename is None:
         return None
 
-
     # Pydantic Cython and therefore hides imports from the
     # modulegraph machinery
-    return {"packages": ["pydantic"], "includes": PYDANTIC_IMPORTS }
+    return {"packages": ["pydantic"], "includes": PYDANTIC_IMPORTS}
