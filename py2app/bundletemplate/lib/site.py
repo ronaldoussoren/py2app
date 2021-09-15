@@ -127,13 +127,14 @@ def addpackage(sitedir, name):
     if reset:
         _dirs_in_sys_path = None
 
+
 def _get_path(userbase):
     version = sys.version_info
 
-    if sys.platform == 'darwin' and getattr(sys, '_framework', None):
-        return '%s/lib/python/site-packages'%(userbase,)
+    if sys.platform == "darwin" and getattr(sys, "_framework", None):
+        return "%s/lib/python/site-packages" % (userbase,)
 
-    return '%s/lib/python{version[0]}.{version[1]}/site-packages'%(userbase,)
+    return "%s/lib/python{version[0]}.{version[1]}/site-packages" % (userbase,)
 
 
 def getuserbase():
@@ -156,12 +157,13 @@ def getusersitepackages():
     function will also set it.
     """
     global USER_SITE
-    userbase = getuserbase() # this will also set USER_BASE
+    userbase = getuserbase()  # this will also set USER_BASE
 
     if USER_SITE is None:
         USER_SITE = _get_path(userbase)
 
     return USER_SITE
+
 
 #
 # Run custom site specific code, if available.

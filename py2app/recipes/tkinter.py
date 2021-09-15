@@ -13,16 +13,16 @@ except ImportError:
 
 # New enough Tk version to skip using the oldsdk
 # binaries.
-NEW_TK=(8, 6, 11)
+NEW_TK = (8, 6, 11)
+
 
 def tk_version():
     # Returns tk version as a tuple, including micro version
     import _tkinter
 
     tk = _tkinter.create()
-    version_string =  tk.call("info", "patchlevel")
+    version_string = tk.call("info", "patchlevel")
     return tuple(int(x) for x in version_string.split("."))
-
 
 
 def check(cmd, mf):
@@ -66,4 +66,8 @@ def check(cmd, mf):
         % {"tcl_path": tcl_path, "tk_path": tk_path}
     )
 
-    return {"resources": [("lib", paths)], "prescripts": [StringIO(prescript)], "use_old_sdk": tk_version() < NEW_TK}
+    return {
+        "resources": [("lib", paths)],
+        "prescripts": [StringIO(prescript)],
+        "use_old_sdk": tk_version() < NEW_TK,
+    }

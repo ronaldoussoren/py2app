@@ -1,29 +1,31 @@
 from __future__ import absolute_import
-import sys
-from pkg_resources import packaging
+
 import os
+import sys
+
+from pkg_resources import packaging
 
 # __import__ in sqlalchemy.dialects
-ENGINE_DEPS={
-   "asyncpg": ("asyncpg",),
-   "psycopg2cffi": ("psycopg2cffi",),
-   "pg8000": ("pg8000",),
-   "firebird": ("sqlalchemy_firebird",),
-   "sybase": "sqlalchemy_sybase",
-   "aiosqlite": ("aiosqlite", "sqlite3"),
-   "oursql": ("oursql",),
-   "aiomysql": ("oursql", "pymysql"),
-   "mariadb": ("mariadb", ),
-   "mysqldb": ("MySQLdb", ),
-   "cymysql": ("cymysql", ),
-   "pymssql": ("pymssql", ),
-   "fdb": ("fdb", ),
-   "kinterbasdb": ("kinterbasdb", ),
+ENGINE_DEPS = {
+    "asyncpg": ("asyncpg",),
+    "psycopg2cffi": ("psycopg2cffi",),
+    "pg8000": ("pg8000",),
+    "firebird": ("sqlalchemy_firebird",),
+    "sybase": "sqlalchemy_sybase",
+    "aiosqlite": ("aiosqlite", "sqlite3"),
+    "oursql": ("oursql",),
+    "aiomysql": ("oursql", "pymysql"),
+    "mariadb": ("mariadb",),
+    "mysqldb": ("MySQLdb",),
+    "cymysql": ("cymysql",),
+    "pymssql": ("pymssql",),
+    "fdb": ("fdb",),
+    "kinterbasdb": ("kinterbasdb",),
 }
 
 # __import__ in sqlalchemy.connectors
-CONNECTOR_DEPS={
-   "pyodbc": ("pyodbc",),
+CONNECTOR_DEPS = {
+    "pyodbc": ("pyodbc",),
 }
 
 
@@ -45,6 +47,5 @@ def check(cmd, mf):
                 mf.import_hook(mod, m)
             except ImportError:
                 pass
-        
 
-    return { "packages": ["sqlalchemy"] }
+    return {"packages": ["sqlalchemy"]}

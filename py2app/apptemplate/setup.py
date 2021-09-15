@@ -162,8 +162,8 @@ def main(all=False, arch=None, secondary=False, redirect_asl=False, use_old_sdk=
         dest = os.path.join(builddir, name + arch)
 
     if use_old_sdk:
-       if os.path.exists(dest + "-oldsdk"):
-           dest = dest + "-oldsdk"
+        if os.path.exists(dest + "-oldsdk"):
+            dest = dest + "-oldsdk"
 
     return dest
 
