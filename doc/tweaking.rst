@@ -100,4 +100,4 @@ will try and launch natively by default.
 Alternatively, the ``--prefer-ppc`` option can be used as a shortcut to
 ensure that this Info.plist key is set.
 
-.. _`Runtime Configuration Guidelines`: http://developer.apple.com/documentation/MacOSX/Conceptual/BPRuntimeConfig/index.html
+.. _`Runtime Configuration Guidelines`: https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPRuntimeConfig/000-Introduction/introduction.html#//apple_ref/doc/uid/10000170i
