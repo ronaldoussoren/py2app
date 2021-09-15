@@ -49,6 +49,10 @@ py2app 0.26
   stub executable. Switched to a public API to accomplish the same task where
   available.
 
+* #110: Add recipe for SQLAlchemy
+
+  The recipe includes all dialects and connectors, including implicit 
+  dependencies, because SQLAlchemy uses ``__import__`` to load dependencies.
 
 py2app 0.25
 -----------

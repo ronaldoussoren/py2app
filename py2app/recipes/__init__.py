@@ -26,6 +26,7 @@ from . import shiboken2  # noqa: F401
 from . import sip  # noqa: F401
 from . import six  # noqa: F401
 from . import sphinx  # noqa: F401
+from . import sqlalchemy  # noqa: F401
 from . import sysconfig_module  # noqa: F401
 from . import tkinter  # noqa: F401
 from . import virtualenv  # noqa: F401
