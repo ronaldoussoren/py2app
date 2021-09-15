@@ -1587,7 +1587,7 @@ class py2app(Command):
                 if fn in IGNORED_DISTINFO: continue
                 src = os.path.join(pkg_info_path, fn) 
                 dst = os.path.join(base, fn) 
-                if os.path.isdir(fn):
+                if os.path.isdir(src):
                     self.copy_tree(src, dst, preserve_symlinks=False)
                 else:
                     self.copy_file(src, dst)
