@@ -57,6 +57,7 @@ from py2app.util import (
     skipscm,
     strip_files,
 )
+from py2app._pkg_meta import scan_for_metadata, IGNORED_DISTINFO
 
 try:
     from cStringIO import StringIO
@@ -1508,6 +1509,9 @@ class py2app(Command):
         pkgexts = []
         copyexts = []
         extmap = {}
+        included_metadata = set()
+
+        metadata_infos = scan_for_metadata(sys.path)
 
         def packagefilter(mod, pkgdirs=pkgdirs):
             fn = os.path.realpath(getattr(mod, "filename", None))
@@ -1517,6 +1521,33 @@ class py2app(Command):
                 if fn.startswith(pkgdir):
                     return None
             return fn
+
+        for mod in py_files + extensions:
+            fn = os.path.realpath(getattr(mod, "filename", None))
+            if fn is None:
+                return None
+
+            dist_info_path = metadata_infos.get(fn, None)
+            if dist_info_path is None and (fn.endswith(".pyc") or fn.endswith(".pyo")):
+                dist_info_path = metadata_infos.get(fn[:-1], None)
+            if dist_info_path is not None:
+                included_metadata.add(dist_info_path)
+
+        def files_in_dir(toplevel):
+            for dirname, dirs, fns in os.walk(toplevel):
+                for fn in fns:
+                    yield os.path.realpath(os.path.join(dirname, fn))
+
+        for pd in pkgdirs:
+            # Ensure that packages included through the packages option
+            # get their metadata included as well, even if the python
+            # package contains files from multiple package distributions
+            for fn in files_in_dir(pd):
+                dist_info_path = metadata_infos.get(fn, None)
+                if dist_info_path is None and (fn.endswith(".pyc") or fn.endswith(".pyo")):
+                    dist_info_path = metadata_infos.get(fn[:-1], None)
+                if dist_info_path is not None:
+                    included_metadata.add(dist_info_path)
 
         if pkgdirs:
             py_files = list(filter(packagefilter, py_files))
@@ -1546,6 +1577,20 @@ class py2app(Command):
             if not isinstance(item, Package):
                 continue
             self.copy_package_data(item, self.collect_dir)
+
+        # copy package metadata
+        for pkg_info_path in included_metadata:
+            base = os.path.join(self.collect_dir, os.path.basename(pkg_info_path))
+            os.mkdir(base)
+
+            for fn in os.listdir(pkg_info_path):
+                if fn in IGNORED_DISTINFO: continue
+                src = os.path.join(pkg_info_path, fn) 
+                dst = os.path.join(base, fn) 
+                if os.path.isdir(fn):
+                    self.copy_tree(src, dst, preserve_symlinks=False)
+                else:
+                    self.copy_file(src, dst)
 
         self.lib_files = []
         self.app_files = []

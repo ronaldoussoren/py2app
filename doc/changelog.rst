@@ -12,6 +12,11 @@ py2app 0.26
   The old stub executables are still used when detecting that Tkinter
   is used with an old build of Tk.
 
+* #1: Include ".egg-info" and ".dist-info" information in the bundled application
+
+  This fixes any python package that uses ``pkg_resources`` to look for 
+  specific distributions.
+
 * ``py2app.filters.not_stdlib_filter`` now knows about Python's "venv"
 
 * #368: Add recipe "detect_dunder_file"
@@ -53,6 +58,8 @@ py2app 0.26
 
   The recipe includes all dialects and connectors, including implicit 
   dependencies, because SQLAlchemy uses ``__import__`` to load dependencies.
+
+* #328: Add recipe for gcloud
 
 py2app 0.25
 -----------
