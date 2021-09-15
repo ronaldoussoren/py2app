@@ -1,6 +1,6 @@
 import os
 
-IGNORED_DISTINFO = set(["installed-files.txt", "RECORD"])
+IGNORED_DISTINFO = set(["installed-files.txt", "RECORD"])  # noqa: C405
 
 
 def update_metadata_cache(infos, dist_info_path):

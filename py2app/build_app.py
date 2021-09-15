@@ -32,6 +32,7 @@ from modulegraph.util import imp_find_module
 from setuptools import Command
 
 from py2app import recipes
+from py2app._pkg_meta import IGNORED_DISTINFO, scan_for_metadata
 from py2app.apptemplate.setup import main as script_executable
 from py2app.create_appbundle import create_appbundle
 from py2app.create_pluginbundle import create_pluginbundle
@@ -57,7 +58,6 @@ from py2app.util import (
     skipscm,
     strip_files,
 )
-from py2app._pkg_meta import scan_for_metadata, IGNORED_DISTINFO
 
 try:
     from cStringIO import StringIO
@@ -1069,7 +1069,9 @@ class py2app(Command):
                 elif fn.endswith(".pyw"):
                     fn = fn[:-4]
 
-                src_fn = script_executable(arch=self.arch, secondary=True, use_old_sdk=self.use_old_sdk)
+                src_fn = script_executable(
+                    arch=self.arch, secondary=True, use_old_sdk=self.use_old_sdk
+                )
                 tgt_fn = os.path.join(
                     target.appdir, "Contents", "MacOS", os.path.basename(fn)
                 )
@@ -1138,9 +1140,9 @@ class py2app(Command):
 
                 if rval.get("frameworks"):
                     self.frameworks.extend(rval["frameworks"])
- 
+
                 if rval.get("use_old_sdk"):
-                   self.use_old_sdk=True
+                    self.use_old_sdk = True
 
                 for fn in newbootstraps:
                     if isinstance(fn, basestring):
@@ -1534,7 +1536,7 @@ class py2app(Command):
                 included_metadata.add(dist_info_path)
 
         def files_in_dir(toplevel):
-            for dirname, dirs, fns in os.walk(toplevel):
+            for dirname, _, fns in os.walk(toplevel):
                 for fn in fns:
                     yield os.path.realpath(os.path.join(dirname, fn))
 
@@ -1544,7 +1546,9 @@ class py2app(Command):
             # package contains files from multiple package distributions
             for fn in files_in_dir(pd):
                 dist_info_path = metadata_infos.get(fn, None)
-                if dist_info_path is None and (fn.endswith(".pyc") or fn.endswith(".pyo")):
+                if dist_info_path is None and (
+                    fn.endswith(".pyc") or fn.endswith(".pyo")
+                ):
                     dist_info_path = metadata_infos.get(fn[:-1], None)
                 if dist_info_path is not None:
                     included_metadata.add(dist_info_path)
@@ -1584,9 +1588,10 @@ class py2app(Command):
             os.mkdir(base)
 
             for fn in os.listdir(pkg_info_path):
-                if fn in IGNORED_DISTINFO: continue
-                src = os.path.join(pkg_info_path, fn) 
-                dst = os.path.join(base, fn) 
+                if fn in IGNORED_DISTINFO:
+                    continue
+                src = os.path.join(pkg_info_path, fn)
+                dst = os.path.join(base, fn)
                 if os.path.isdir(src):
                     self.copy_tree(src, dst, preserve_symlinks=False)
                 else:
@@ -2325,7 +2330,9 @@ class py2app(Command):
             elif fn.endswith(".pyw"):
                 fn = fn[:-4]
 
-            src_fn = script_executable(arch=self.arch, secondary=False, use_old_sdk=self.use_old_sdk)
+            src_fn = script_executable(
+                arch=self.arch, secondary=False, use_old_sdk=self.use_old_sdk
+            )
             tgt_fn = os.path.join(
                 self.appdir, "Contents", "MacOS", os.path.basename(fn)
             )

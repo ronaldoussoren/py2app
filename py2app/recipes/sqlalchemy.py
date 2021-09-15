@@ -1,10 +1,5 @@
 from __future__ import absolute_import
 
-import os
-import sys
-
-from pkg_resources import packaging
-
 # __import__ in sqlalchemy.dialects
 ENGINE_DEPS = {
     "asyncpg": ("asyncpg",),
