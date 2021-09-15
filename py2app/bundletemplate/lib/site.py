@@ -19,6 +19,7 @@ sys.path.append(_parent + "/site-packages.zip")
 sys.path.append(_parent + "/site-packages")
 
 USER_SITE = None
+USER_BASE = None
 
 
 def _import_os():
@@ -126,6 +127,41 @@ def addpackage(sitedir, name):
     if reset:
         _dirs_in_sys_path = None
 
+def _get_path(userbase):
+    version = sys.version_info
+
+    if sys.platform == 'darwin' and getattr(sys, '_framework', None):
+        return '%s/lib/python/site-packages'%(userbase,)
+
+    return '%s/lib/python{version[0]}.{version[1]}/site-packages'%(userbase,)
+
+
+def getuserbase():
+    """Returns the `user base` directory path.
+
+    The `user base` directory can be used to store data. If the global
+    variable ``USER_BASE`` is not initialized yet, this function will also set
+    it.
+    """
+    global USER_BASE
+    if USER_BASE is None:
+        USER_BASE = _getuserbase()
+    return USER_BASE
+
+
+def getusersitepackages():
+    """Returns the user-specific site-packages directory path.
+
+    If the global variable ``USER_SITE`` is not initialized yet, this
+    function will also set it.
+    """
+    global USER_SITE
+    userbase = getuserbase() # this will also set USER_BASE
+
+    if USER_SITE is None:
+        USER_SITE = _get_path(userbase)
+
+    return USER_SITE
 
 #
 # Run custom site specific code, if available.

@@ -61,6 +61,9 @@ py2app 0.26
 
 * #328: Add recipe for gcloud
 
+* #195: Add ``USER_BASE``, ``getuserbase()`` and ``getusersitepackages()``  to 
+  py2app's version of ``site.py``.
+
 py2app 0.25
 -----------
 
