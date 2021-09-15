@@ -134,7 +134,21 @@ def _get_path(userbase):
     if sys.platform == "darwin" and getattr(sys, "_framework", None):
         return "%s/lib/python/site-packages" % (userbase,)
 
-    return "%s/lib/python{version[0]}.{version[1]}/site-packages" % (userbase,)
+    return "%s/lib/python%d.%d/site-packages" % (userbase, version[0], version[1])
+
+
+def _getuserbase():
+    env_base = os.environ.get("PYTHONUSERBASE", None)
+    if env_base:
+        return env_base
+
+    def joinuser(*args):
+        return os.path.expanduser(os.path.join(*args))
+
+    if getattr(sys, "_framework", None):
+        return joinuser("~", "Library", sys._framework, "%d.%d" % sys.version_info[:2])
+
+    return joinuser("~", ".local")
 
 
 def getuserbase():
