@@ -1,6 +1,5 @@
 def _import_encodings():
     import encodings
-    import imp
     import os
     import pkgutil
     import sys
@@ -17,8 +16,13 @@ def _import_encodings():
         "aliases.py" + encodings.mac_roman.__file__[:-1],
     )
 
-    imp.reload(encodings.aliases)
-    imp.reload(encodings)
+    if sys.version_info[:2] < (3,4):
+        from imp import reload
+    else:
+        from importlib import reload
+
+    reload(encodings.aliases)
+    reload(encodings)
 
 
 _import_encodings()
