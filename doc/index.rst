@@ -16,6 +16,7 @@ Contents
    tutorial
    debugging
    dependencies
+   environment
    faq
    tweaking
    examples
