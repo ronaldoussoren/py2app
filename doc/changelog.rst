@@ -64,6 +64,13 @@ py2app 0.26
 * #195: Add ``USER_BASE``, ``getuserbase()`` and ``getusersitepackages()``  to 
   py2app's version of ``site.py``.
 
+* Add recipe for 'ssl'
+
+  This recipe is only used for Python 3.4 or later and ensures that the 
+  CA bundle used by Python's ssl module is included in the app bundle and OpenSSL 
+  is configured to look for that bundle in the application bundle.
+
+
 py2app 0.25
 -----------
 
