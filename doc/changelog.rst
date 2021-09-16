@@ -70,6 +70,11 @@ py2app 0.26
   CA bundle used by Python's ssl module is included in the app bundle and OpenSSL 
   is configured to look for that bundle in the application bundle.
 
+* #371: change default error message on launch problems
+
+  The default error message shown when the application cannot be launched is now
+  slightly more useful and refers the 
+  `py2app debug page <https://py2app.readthedocs.io/en/latest/debugging.html>`_.
 
 py2app 0.25
 -----------
