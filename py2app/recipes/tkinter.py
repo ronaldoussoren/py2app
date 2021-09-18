@@ -30,6 +30,11 @@ def check(cmd, mf):
     if m is None:
         return None
 
+    try:
+        import _tkinter  # noqa: F401
+    except ImportError:
+        return None
+
     prefix = sys.prefix if not hasattr(sys, "real_prefix") else sys.real_prefix
 
     paths = []
