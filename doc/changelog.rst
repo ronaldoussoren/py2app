@@ -76,7 +76,7 @@ py2app 0.26
   slightly more useful and refers the 
   `py2app debug page <https://py2app.readthedocs.io/en/latest/debugging.html>`_.
 
-* #345: Adjust qt5 and qt6 recipes for non-PyPI installations
+* #345, #169: Adjust qt5 and qt6 recipes for non-PyPI installations
 
   The qt5 and qt6 recipes now should work when the Qt installation prefix
   is outside of the PyQt package, for example when PyQt was installed through
