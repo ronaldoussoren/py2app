@@ -52,6 +52,7 @@ class Sip(object):
             raise ImportError
 
         # Qt is GHETTO!
+        # This looks wrong, setting DYLD_LIBRARY_PATH should not be needed!
         dyld_library_path = os.environ.get("DYLD_LIBRARY_PATH", "").split(":")
 
         if qtdir not in dyld_library_path:

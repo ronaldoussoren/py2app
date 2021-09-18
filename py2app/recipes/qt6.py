@@ -1,4 +1,5 @@
 from modulegraph.modulegraph import MissingModule
+import os
 
 
 def check(cmd, mf):
@@ -14,6 +15,26 @@ def check(cmd, mf):
         except ImportError:
             pass
 
+        import PyQt6
+        from PyQt6.QtCore import QLibraryInfo
+
+        qtdir = QLibraryInfo.location(QLibraryInfo.LibrariesPath)
+        if qtdir != os.path.dirname(PyQt6.__file__):
+            # Qt6's prefix is not the PyQt6 package, which means
+            # the "packages" directive below won't include everything
+            # needed, and in particular won't include the plugins
+            # folder.
+            print("System install of Qt6")
+
+            # Ensure that the Qt plugins are copied into the "Contents/plugins" folder,
+            # that's where the bundles Qt expects them to be
+            extra = {
+                "resources": [("..", [QLibraryInfo.location(QLibraryInfo.PluginsPath)])]
+            }
+
+        else:
+            extra = {}
+
         # All imports are done from C code, hence not visible
         # for modulegraph
         # 1. Use of 'sip'
@@ -24,6 +45,6 @@ def check(cmd, mf):
         except ImportError:
             mf.import_hook("sip", m, level=1)
 
-        return {"packages": ["PyQt6"]}
+        return {"packages": ["PyQt6"], **extra}
 
     return None

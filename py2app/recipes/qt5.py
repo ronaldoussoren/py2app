@@ -1,3 +1,4 @@
+import os
 import sys
 
 from modulegraph.modulegraph import MissingModule
@@ -26,12 +27,33 @@ def check(cmd, mf):
         except ImportError:
             mf.import_hook("sip", m, level=1)
 
+        import PyQt5
+        from PyQt5.QtCore import QLibraryInfo
+
+        qtdir = QLibraryInfo.location(QLibraryInfo.LibrariesPath)
+        if qtdir != os.path.dirname(PyQt5.__file__):
+            # Qt5's prefix is not the PyQt5 package, which means
+            # the "packages" directive below won't include everything
+            # needed, and in particular won't include the plugins
+            # folder.
+            print("System install of Qt5")
+
+            # Ensure that the Qt plugins are copied into the "Contents/plugins"
+            # folder, that's where the bundles Qt expects them to be
+            extra = {
+                "resources": [("..", [QLibraryInfo.location(QLibraryInfo.PluginsPath)])]
+            }
+
+        else:
+            extra = {}
+
         if sys.version[0] != 2:
             return {
                 "packages": ["PyQt5"],
                 "expected_missing_imports": {"copy_reg", "cStringIO", "StringIO"},
+                **extra,
             }
         else:
-            return {"packages": ["PyQt5"]}
+            return {"packages": ["PyQt5"], **extra}
 
     return None
