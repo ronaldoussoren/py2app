@@ -1,5 +1,6 @@
-from modulegraph.modulegraph import MissingModule
 import os
+
+from modulegraph.modulegraph import MissingModule
 
 
 def check(cmd, mf):
