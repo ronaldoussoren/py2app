@@ -1,6 +1,12 @@
 Release history
 ===============
 
+py2app 0.26.1
+-------------
+
+* #374: Actually ship the "old" stub executables introduced in version 0.26
+
+
 py2app 0.26
 -----------
 
