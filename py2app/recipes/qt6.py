@@ -16,8 +16,13 @@ def check(cmd, mf):
         except ImportError:
             pass
 
-        import PyQt6
-        from PyQt6.QtCore import QLibraryInfo
+        try:
+            import PyQt6
+            from PyQt6.QtCore import QLibraryInfo
+        except ImportError:
+            # Dependency in the graph, but PyQt6 isn't
+            # installed.
+            return None
 
         qtdir = QLibraryInfo.location(QLibraryInfo.LibrariesPath)
         if qtdir != os.path.dirname(PyQt6.__file__):

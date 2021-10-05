@@ -17,6 +17,13 @@ def check(cmd, mf):
         except ImportError:
             pass
 
+        try:
+            import PyQt5
+            from PyQt5.QtCore import QLibraryInfo
+        except ImportError:
+            # PyQt5 in the graph, but not instaled
+            return None
+
         # All imports are done from C code, hence not visible
         # for modulegraph
         # 1. Use of 'sip'
@@ -27,8 +34,6 @@ def check(cmd, mf):
         except ImportError:
             mf.import_hook("sip", m, level=1)
 
-        import PyQt5
-        from PyQt5.QtCore import QLibraryInfo
 
         qtdir = QLibraryInfo.location(QLibraryInfo.LibrariesPath)
         if qtdir != os.path.dirname(PyQt5.__file__):
