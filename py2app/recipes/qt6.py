@@ -24,7 +24,7 @@ def check(cmd, mf):
             # installed.
             return None
 
-        qtdir = QLibraryInfo.location(QLibraryInfo.LibrariesPath)
+        qtdir = QLibraryInfo.path(QLibraryInfo.LibraryPath.LibrariesPath)
         if qtdir != os.path.dirname(PyQt6.__file__):
             # Qt6's prefix is not the PyQt6 package, which means
             # the "packages" directive below won't include everything
@@ -35,7 +35,7 @@ def check(cmd, mf):
             # Ensure that the Qt plugins are copied into the "Contents/plugins" folder,
             # that's where the bundles Qt expects them to be
             extra = {
-                "resources": [("..", [QLibraryInfo.location(QLibraryInfo.PluginsPath)])]
+                "resources": [("..", [QLibraryInfo.path(QLibraryInfo.LibraryPath.PluginsPath)])]
             }
 
         else:
