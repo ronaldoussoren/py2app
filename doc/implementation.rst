@@ -21,7 +21,7 @@ directory will be added to ``sys.path`` so that ``modulegraph`` will find
 the extensions built during this command.
 
 
-Depdency resolution via modulegraph
+Dependency resolution via modulegraph
 -----------------------------------
 
 The main script is compiled to Python bytecode and analyzed by modulegraph
