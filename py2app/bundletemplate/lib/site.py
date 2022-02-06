@@ -18,6 +18,8 @@ sys.path.append(_parent + "/site-packages.zip")
 # add the uncompressed site-packages to the path to compensate for that.
 sys.path.append(_parent + "/site-packages")
 
+ENABLE_USER_SITE = False
+
 USER_SITE = None
 USER_BASE = None
 

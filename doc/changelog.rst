@@ -11,6 +11,10 @@ py2app 0.27
 
 * #391: Drop usage of tempfile.mktemp
 
+* #387: Add ``site.ENABLE_USER_SITE`` in the site.py file
+  for applications (value is always ``False``).
+  
+
 py2app 0.26.1
 -------------
 
