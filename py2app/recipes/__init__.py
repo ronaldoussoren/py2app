@@ -19,11 +19,13 @@ from . import pylsp  # noqa: F401
 from . import pyopengl  # noqa: F401
 from . import pyside  # noqa: F401
 from . import pyside2  # noqa: F401
+from . import pyside6  # noqa: F401
 from . import qt5  # noqa: F401
 from . import qt6  # noqa: F401
 from . import rtree  # noqa: F401
 from . import setuptools  # noqa: F401
 from . import shiboken2  # noqa: F401
+from . import shiboken6  # noqa: F401
 from . import sip  # noqa: F401
 from . import six  # noqa: F401
 from . import sphinx  # noqa: F401
