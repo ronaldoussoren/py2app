@@ -7,6 +7,8 @@ py2app 0.27
 * #377: The qt5 and qt6 recipes caused a py2app crash when
   the PyQt5 or PyQt6 is not installed.
 
+* #401: Fix incompatibility with setuptools 60.7 and later
+
 py2app 0.26.1
 -------------
 
