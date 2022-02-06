@@ -9,6 +9,8 @@ py2app 0.27
 
 * #401: Fix incompatibility with setuptools 60.7 and later
 
+* #391: Drop usage of tempfile.mktemp
+
 py2app 0.26.1
 -------------
 

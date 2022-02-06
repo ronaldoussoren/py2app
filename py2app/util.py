@@ -388,13 +388,13 @@ def byte_compile(
     # run it with the appropriate flags.
     if not direct:
         from distutils.util import execute, spawn
-        from tempfile import mktemp
+        from tempfile import NamedTemporaryFile
 
-        script_name = mktemp(".py")
         if verbose:
-            print("writing byte-compilation script '%s'" % script_name)
+            print("writing byte-compilation script")
         if not dry_run:
-            with open(script_name, "w") as script:
+            with NamedTemporaryFile(sufix=".py", delete=False) as script:
+                script_name = script.name
                 script.write(
                     """
 from py2app.util import byte_compile
