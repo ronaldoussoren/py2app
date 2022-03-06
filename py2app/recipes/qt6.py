@@ -25,7 +25,7 @@ def check(cmd, mf):
             return None
 
         qtdir = QLibraryInfo.path(QLibraryInfo.LibraryPath.LibrariesPath)
-        if qtdir != os.path.dirname(PyQt6.__file__):
+        if os.path.dirname(PyQt6.__file__) not in qtdir:
             # Qt6's prefix is not the PyQt6 package, which means
             # the "packages" directive below won't include everything
             # needed, and in particular won't include the plugins
