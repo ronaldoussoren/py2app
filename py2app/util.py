@@ -393,7 +393,8 @@ def byte_compile(
         if verbose:
             print("writing byte-compilation script")
         if not dry_run:
-            with NamedTemporaryFile(suffix=".py", delete=False) as script:
+            with NamedTemporaryFile(suffix=".py", delete=False, mode="w", 
+                    encoding="utf-8") as script:
                 script_name = script.name
                 script.write(
                     """
