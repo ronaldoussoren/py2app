@@ -198,7 +198,8 @@ if hasattr(sys, "setdefaultencoding"):
     del sys.setdefaultencoding
 
 import builtins  # noqa: E402
-
 import _sitebuiltins  # noqa: E402
 
 builtins.help = _sitebuiltins._Helper()
+builtins.quit = _sitebuiltins.Quitter('quit', 'Ctrl-D (i.e. EOF)')
+builtins.exit = _sitebuiltins.Quitter('exit', 'Ctrl-D (i.e. EOF)')
