@@ -9,5 +9,5 @@ def check(cmd, mf):
     def addpath(f):
         return os.path.join(os.path.dirname(m.filename), f)
 
-    RESOURCES = ["freesansbold.ttf", "pygame_icon.tiff", "pygame_icon.icns"]
+    RESOURCES = ["freesansbold.ttf", "pygame_icon.icns"]
     return {"loader_files": [("pygame", map(addpath, RESOURCES))]}
