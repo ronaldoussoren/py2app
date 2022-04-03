@@ -4,6 +4,14 @@ Release history
 py2app 0.28
 -----------
 
+* #413: Find dist-info in included pythonXX.zip
+
+  By default the ``working_set`` of pkg_resources does not contain
+  distribution information from packages included in zip files, such
+  as the zipped-up stdlib + site-pakckages in py2app bundles.
+
+  Add some monkey patching to apps using ``pkg_resources`` to fix this.
+
 * Fix hard crash in "rtree" recipe when the package contents doesn't
   match the recipe expectations.
 

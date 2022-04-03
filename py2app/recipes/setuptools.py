@@ -1,5 +1,45 @@
 import sys
+import textwrap
 import os
+
+if sys.version_info[0] == 2:
+    from cStringIO import StringIO
+else:
+    from io import StringIO
+
+PRESCRIPT=textwrap.dedent("""\
+    import pkg_resources, zipimport, os
+
+    def find_eggs_in_zip(importer, path_item, only=False):
+        print(f"override", path_item)
+        if importer.archive.endswith('.whl'):
+            # wheels are not supported with this finder
+            # they don't have PKG-INFO metadata, and won't ever contain eggs
+            return
+
+        metadata = pkg_resources.EggMetadata(importer)
+        if metadata.has_metadata('PKG-INFO'):
+            yield Distribution.from_filename(path_item, metadata=metadata)
+        for subitem in metadata.resource_listdir(''):
+            if not only and pkg_resources._is_egg_path(subitem):
+                subpath = os.path.join(path_item, subitem)
+                dists = find_eggs_in_zip(zipimport.zipimporter(subpath), subpath)
+                for dist in dists:
+                    yield dist
+            elif subitem.lower().endswith(('.dist-info', '.egg-info')):
+                print(f"nested", path_item)
+                subpath = os.path.join(path_item, subitem)
+                submeta = pkg_resources.EggMetadata(zipimport.zipimporter(subpath))
+                submeta.egg_info = subpath
+                yield pkg_resources.Distribution.from_location(path_item, subitem, submeta)
+
+    def _fixup_pkg_resources():
+        pkg_resources.register_finder(zipimport.zipimporter, find_eggs_in_zip)
+        pkg_resources.working_set.entries = []
+        list(map(pkg_resources.working_set.add_entry, sys.path))
+
+    _fixup_pkg_resources()
+""")
 
 
 def check(cmd, mf):
@@ -43,4 +83,4 @@ def check(cmd, mf):
     if sys.version[0] != 2:
         expected_missing_imports.add("__builtin__")
 
-    return {"expected_missing_imports": expected_missing_imports}
+    return {"expected_missing_imports": expected_missing_imports, "prescripts": [StringIO(PRESCRIPT)]}
