@@ -11,7 +11,6 @@ PRESCRIPT=textwrap.dedent("""\
     import pkg_resources, zipimport, os
 
     def find_eggs_in_zip(importer, path_item, only=False):
-        print(f"override", path_item)
         if importer.archive.endswith('.whl'):
             # wheels are not supported with this finder
             # they don't have PKG-INFO metadata, and won't ever contain eggs
@@ -27,7 +26,6 @@ PRESCRIPT=textwrap.dedent("""\
                 for dist in dists:
                     yield dist
             elif subitem.lower().endswith(('.dist-info', '.egg-info')):
-                print(f"nested", path_item)
                 subpath = os.path.join(path_item, subitem)
                 submeta = pkg_resources.EggMetadata(zipimport.zipimporter(subpath))
                 submeta.egg_info = subpath
