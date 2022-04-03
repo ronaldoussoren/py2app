@@ -4,7 +4,8 @@ Release history
 py2app 0.28
 -----------
 
-* ...
+* Fix hard crash in "rtree" recipe when the package contents doesn't
+  match the recipe expectations.
 
 py2app 0.27
 -----------

@@ -6,7 +6,11 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-    rtree_dylibs = os.scandir(os.path.join(m.packagepath[0], "lib"))
+    try:
+        rtree_dylibs = os.scandir(os.path.join(m.packagepath[0], "lib"))
+    except OSError:
+        return None
+
     frameworks = [lib.path for lib in rtree_dylibs]
 
     return {"frameworks": frameworks}
