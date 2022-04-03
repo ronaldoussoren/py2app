@@ -4,6 +4,10 @@ Release history
 py2app 0.28
 -----------
 
+* The qt5 and qt6 recipes used dodge logic to detect
+  if the Qt library itself is inside the python package,
+  resulting in duplicate copies of Qt.
+
 * #406: Fix incompatibility with python 2.7
 
   py2app 0.24 accidently broke compatibility with Python 2.7, and

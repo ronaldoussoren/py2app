@@ -36,7 +36,7 @@ def check(cmd, mf):
 
 
         qtdir = QLibraryInfo.location(QLibraryInfo.LibrariesPath)
-        if qtdir != os.path.dirname(PyQt5.__file__):
+        if os.path.relpath(qtdir, os.path.dirname(PyQt5.__file__)).startswith("../"):
             # Qt5's prefix is not the PyQt5 package, which means
             # the "packages" directive below won't include everything
             # needed, and in particular won't include the plugins
