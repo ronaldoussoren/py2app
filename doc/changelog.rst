@@ -7,6 +7,11 @@ py2app 0.28
 * Fix hard crash in "rtree" recipe when the package contents doesn't
   match the recipe expectations.
 
+* #412: Fix incompatibility with setuptools 60.8.1 
+
+  The setuptools recipe did not recoginize all vendored dependencies 
+  in ``pkg_resources`` and that breaks app bundles that use ``pkg_resoures``.
+
 * PR #388: Add builtin definitions for 'quit' and 'exit' in site.py
 
   PR by mcclary

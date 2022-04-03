@@ -17,22 +17,28 @@ def check(cmd, mf):
     }
 
     if os.path.exists(vendor_dir):
-        for nm in os.listdir(vendor_dir):
-            if nm in ("__pycache__", "__init__.py"): continue
-            if nm.endswith(".py"):
-                mf.import_hook("pkg_resources._vendor." + (nm[:-3]), m, ["*"])
-                expected_missing_imports.add("pkg_resources.extern." + (nm[:3]))
-            elif os.path.isdir(os.path.join(vendor_dir)):
-                mf.import_hook("pkg_resources._vendor." + nm, m, ["*"])
-                expected_missing_imports.add("pkg_resources.extern." + nm)
+        for topdir, dirs, files in os.walk(vendor_dir):
+            for fn in files:
+                if fn in ("__pycache__", "__init__.py"): continue
+
+                relnm = os.path.relpath(os.path.join(topdir, fn), vendor_dir)
+                if relnm.endswith(".py"):
+                    relnm = relnm[:-3]
+                relnm = relnm.replace("/", ".")
+
+                if fn.endswith(".py"):
+                    mf.import_hook("pkg_resources._vendor." + relnm, m, ["*"])
+                    expected_missing_imports.add("pkg_resources.extern." + relnm)
+            for dn in dirs:
+                if not os.path.exists(os.path.join(topdir, dn, "__init__.py")):
+                    continue
+                relnm = os.path.relpath(os.path.join(topdir, dn), vendor_dir)
+                relnm = relnm.replace("/", ".")
+
+                mf.import_hook("pkg_resources._vendor." + relnm, m, ["*"])
+                expected_missing_imports.add("pkg_resources.extern." + relnm)
 
         mf.import_hook("pkg_resources._vendor", m)
-
-    #for node in mf.nodes():
-    #    if node.name and node.name.startswith("pkg_resources.extern"):
-    #        suffix = node.name[len("pkg_resources.extern."):]
-    #        mf.import_hook("pkg_resources._vendor." + suffix, node, ["*"])
-
 
     if sys.version[0] != 2:
         expected_missing_imports.add("__builtin__")
