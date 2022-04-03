@@ -7,6 +7,18 @@ py2app 0.28
 * Fix hard crash in "rtree" recipe when the package contents doesn't
   match the recipe expectations.
 
+* PR #388: Add builtin definitions for 'quit' and 'exit' in site.py
+
+  PR by mcclary
+
+* PR #388: Set "ENABLE_USER_SITE=False" in site.py
+
+  PR by mcclary
+
+* PR #396: Update pygame recipe to remove missing icon
+
+  PR by glyph
+
 py2app 0.27
 -----------
 
