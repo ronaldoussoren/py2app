@@ -7,6 +7,8 @@ py2app 0.28
 * Fix hard crash in "rtree" recipe when the package contents doesn't
   match the recipe expectations.
 
+* #408: Add definition of ``site.PREFIXES``
+
 * #412: Fix incompatibility with setuptools 60.8.1 
 
   The setuptools recipe did not recoginize all vendored dependencies 
