@@ -53,12 +53,15 @@ def check(cmd, mf):
             extra = {}
 
         if sys.version[0] != 2:
-            return {
+            result = {
                 "packages": ["PyQt5"],
                 "expected_missing_imports": {"copy_reg", "cStringIO", "StringIO"},
-                **extra,
             }
+            result.update(extra)
+            return result
         else:
-            return {"packages": ["PyQt5"], **extra}
+            result = {"packages": ["PyQt5"]}
+            result.update(extra)
+            return result
 
     return None

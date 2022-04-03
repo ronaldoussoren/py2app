@@ -4,6 +4,15 @@ Release history
 py2app 0.28
 -----------
 
+* #406: Fix incompatibility with python 2.7
+
+  py2app 0.24 accidently broke compatibility with Python 2.7, and
+  this release fixes this.
+
+  This is the last release with Python 2.7 support, the next
+  release will contain package metadata that ensures it can 
+  only be installed on Python 3.
+
 * #413: Find dist-info in included pythonXX.zip
 
   By default the ``working_set`` of pkg_resources does not contain
