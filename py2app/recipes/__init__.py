@@ -1,6 +1,7 @@
 from . import PIL  # noqa: F401
 from . import automissing  # noqa: F401
 from . import autopackages  # noqa: F401
+from . import black  # noqa: F401
 from . import ctypes  # noqa: F401
 from . import detect_dunder_file  # noqa: F401
 from . import ftplib  # noqa: F401
