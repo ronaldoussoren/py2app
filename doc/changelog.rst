@@ -4,6 +4,8 @@ Release history
 py2app 0.28
 -----------
 
+* #417: Also include package dist-info for editable installs
+
 * The qt5 and qt6 recipes used dodge logic to detect
   if the Qt library itself is inside the python package,
   resulting in duplicate copies of Qt.
