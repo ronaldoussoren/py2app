@@ -4,6 +4,21 @@ Release history
 py2app 0.28
 -----------
 
+.. warning:: incompatibility with setuptools 61.0
+
+   Setuptools 61.0 introduces autodiscovery of distribution
+   attributes, and this might affect users of py2app. Two
+   related error scenario's are:
+
+   - The name of the generated application is not based on
+     the script name, but some other value.
+
+   - Calling ``python setup.py py2app`` results in an error
+     mentioning ``Multiple top-level modules discovered``.
+
+   To disable autodiscovery by setuptools update the setup.py
+   file and add ``py_modules=[]`` to the call to setup().
+
 * #417: Also include package dist-info for editable installs
 
 * The qt5 and qt6 recipes used dodge logic to detect
