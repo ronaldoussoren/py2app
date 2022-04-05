@@ -1,10 +1,25 @@
+from pkg_resources import get_distribution
+from pathlib import Path
+
 
 def check(cmd, mf):
     m = mf.findNode("black")
     if m is None or m.filename is None:
         return None
 
-    includes = ["610faff656c4cfcbb4a3__mypyc", "blackd", "pathspec"]
+    egg = Path(get_distribution('black').egg_info)
+    top = egg / 'top_level.txt'
+
+    # These cannot be in zip
     packages = ["black", "blib2to3"]
+
+    # black may include optimized platform specific C extension which has
+    # unusual name, e.g. 610faff656c4cfcbb4a3__mypyc; best to determine it from
+    # the egg-info/top_level.txt
+    includes = set(top.read_text().strip().split('\n'))
+    includes = list(includes.difference(packages))
+
+    # Missed dependency
+    includes.append('pathspec')
 
     return {"includes": includes, "packages": packages}
