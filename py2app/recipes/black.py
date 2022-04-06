@@ -1,5 +1,5 @@
+import os
 from pkg_resources import get_distribution
-from pathlib import Path
 
 
 def check(cmd, mf):
@@ -7,8 +7,8 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-    egg = Path(get_distribution('black').egg_info)
-    top = egg / 'top_level.txt'
+    egg = get_distribution('black').egg_info
+    top = os.path.join(egg, 'top_level.txt')
 
     # These cannot be in zip
     packages = ["black", "blib2to3"]
@@ -16,7 +16,8 @@ def check(cmd, mf):
     # black may include optimized platform specific C extension which has
     # unusual name, e.g. 610faff656c4cfcbb4a3__mypyc; best to determine it from
     # the egg-info/top_level.txt
-    includes = set(top.read_text().strip().split('\n'))
+    with open(top, 'r') as f:
+        includes = set(f.read().strip().split('\n'))
     includes = list(includes.difference(packages))
 
     # Missed dependency
