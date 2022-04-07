@@ -17,7 +17,11 @@ py2app 0.28
      mentioning ``Multiple top-level modules discovered``.
 
    To disable autodiscovery by setuptools update the setup.py
-   file and add ``py_modules=[]`` to the call to setup().
+   file and add ``name=`` and ``py_modules=[]`` to the call to setup().
+
+* PR #418: Add recipe for black
+
+  PR by mrclary
 
 * #417: Also include package dist-info for editable installs
 
