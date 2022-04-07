@@ -24,13 +24,13 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-    if mf.findNode("PIL.Image"):
-        have_PIL = True
-    else:
-        have_PIL = False
+    have_PIL = bool(mf.findNode("PIL.Image"))
 
     plugins = set()
     visited = set()
+
+    # XXX: Most users should now use Pillow, which always uses
+    # "PIL.Image", which can simply the code below.
     for folder in sys.path:
         if not isinstance(folder, basestring):
             continue
@@ -54,6 +54,9 @@ def check(cmd, mf):
                     plugins.add(mod)
         visited.add(folder)
     s = StringIO("_recipes_pil_prescript(%r)\n" % list(plugins))
+    print(plugins)
+    plugins = set()
+    #sys.exit(1)
     for plugin in plugins:
         if have_PIL:
             mf.implyNodeReference(m, "PIL." + plugin)
@@ -88,7 +91,13 @@ def check(cmd, mf):
         # numpy data passed into the filter. Remove
         # this reference to ensure numpy is only copied
         # when it is actually used in the application.
-        mf.removeReference(sip, "numpy")
+        mf.removeReference(imagefilter, "numpy")
+
+    image = mf.findNode("PIL.Image")
+    if image is not None:
+        # Optional dependency on numpy to convert
+        # to a numpy array.
+        mf.removeReference(image, "numpy")
 
     return {
         "prescripts": ["py2app.recipes.PIL.prescript", s],
