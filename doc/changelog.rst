@@ -4,20 +4,25 @@ Release history
 py2app 0.28
 -----------
 
-.. warning:: incompatibility with setuptools 61.0
+* #414 Workaround for autodiscovery in setuptools 61.0
 
-   Setuptools 61.0 introduces autodiscovery of distribution
-   attributes, and this might affect users of py2app. Two
-   related error scenario's are:
+  Setuptools 61.0 introduces autodiscovery of distribution
+  attributes, and that broke py2app. This version introduces
+  a ``setuptools.finalize_distribution_options`` entrypoint 
+  in py2app that will set the distributions's *name* and
+  *py_modules* attributes in a way that is compatible with 
+  the main code of py2app when they are not yet set (before
+  autodiscovery kicks in).
 
-   - The name of the generated application is not based on
-     the script name, but some other value.
+  In older versions of py2app buildin an app can fail in two
+  ways with setuptools 61.0 or later:
 
-   - Calling ``python setup.py py2app`` results in an error
-     mentioning ``Multiple top-level modules discovered``.
+  - The name of the generated application is not based on
+    the script name, but some other value.
 
-   To disable autodiscovery by setuptools update the setup.py
-   file and add ``name=`` and ``py_modules=[]`` to the call to setup().
+  - Calling ``python setup.py py2app`` results in an error
+    mentioning ``Multiple top-level modules discovered``.
+
 
 * PR #418: Add recipe for black
 

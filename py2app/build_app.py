@@ -90,6 +90,36 @@ elif hasattr(sys, "base_prefix"):
 else:
     sys_base_prefix = sys.prefix
 
+def finalize_distribution_options(dist):
+    """
+    setuptools.finalize_distribution_options extension
+    point for py2app, to deail with autodiscovery in
+    setuptools 61.
+
+    This addin will set the name and py_modules attributes
+    when a py2app distribution is detected that does not 
+    yet have these attributes.
+    are not already set
+    """
+    if (getattr(dist, "app", None) is None and
+        getattr(dist, "plugin", None) is None):
+        return
+
+    if getattr(dist.metadata, "py_modules", None) is None:
+        dist.py_modules = []
+
+    name = getattr(dist.metadata, "name", None)
+    if name is None or name == "UNKNOWN":
+        if dist.app:
+            targets = FixupTargets(dist.app, "script")
+        else:
+            targets = FixupTargets(dist.plugin, "script")
+
+        base = targets[0].get_dest_base()
+        name = os.path.basename(base)
+
+        dist.metadata.name = name
+
 
 def loader_paths(sourcefn, destfn):
     # Yield (sourcefn, destfn) pairs for all
@@ -107,7 +137,6 @@ def loader_paths(sourcefn, destfn):
 
 
 def rewrite_tkinter_load_commands(tkinter_path):
-    print("rewrite_tk", tkinter_path)
     m = macholib.MachO.MachO(tkinter_path)
     tcl_path = None
     tk_path = None
@@ -279,6 +308,9 @@ class Target(object):
         m = self.__dict__.get("modules")
         if m and isinstance(m, basestring):
             self.modules = [m]
+
+    def __repr__(self):
+        return "<Target %s>"%(self.__dict__,)
 
     def get_dest_base(self):
         dest_base = getattr(self, "dest_base", None)
@@ -1154,6 +1186,7 @@ class py2app(Command):
             else:
                 break
 
+
     def _run(self):
         try:
             if self.alias:
@@ -1533,6 +1566,7 @@ class py2app(Command):
             if dist_info_path is None and (fn.endswith(".pyc") or fn.endswith(".pyo")):
                 dist_info_path = metadata_infos.get(fn[:-1], None)
             if dist_info_path is not None:
+                print("ADD INFO", dist_info_path)
                 included_metadata.add(dist_info_path)
 
         def files_in_dir(toplevel):
@@ -1592,11 +1626,11 @@ class py2app(Command):
                     continue
                 src = os.path.join(pkg_info_path, fn)
                 dst = os.path.join(base, fn)
+
                 if os.path.isdir(src):
                     self.copy_tree(src, dst, preserve_symlinks=False)
                 else:
                     self.copy_file(src, dst)
-
         self.lib_files = []
         self.app_files = []
 

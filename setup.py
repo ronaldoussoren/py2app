@@ -351,6 +351,7 @@ setup(
         ],
     },
     entry_points={
+        "setuptools.finalize_distribution_options": ["py2app = py2app.build_app:finalize_distribution_options"],
         "distutils.commands": ["py2app = py2app.build_app:py2app"],
         "distutils.setup_keywords": [
             "app =    py2app.build_app:validate_target",
