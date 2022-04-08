@@ -4,6 +4,10 @@ Release history
 py2app 0.28
 -----------
 
+* PR #410: Fix typo in NamedTemporyFile call
+
+  PR by MAKOMO
+
 * #414 Workaround for autodiscovery in setuptools 61.0
 
   Setuptools 61.0 introduces autodiscovery of distribution
