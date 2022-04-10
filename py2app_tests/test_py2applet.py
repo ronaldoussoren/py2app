@@ -40,20 +40,20 @@ class TestPy2Applet(unittest.TestCase):
             stdin=subprocess.PIPE,
             env=env,
         )
-        p.stdin.write("y\n".encode("ascii"))
+        p.stdin.write(b"y\n")
         data = p.communicate()[0]
 
         xit = p.wait()
         if xit != 0:
             sys.stdout.write(data.decode("latin1"))
-            self.fail("Running py2applet %s failed" % (" ".join(args),))
+            self.fail("Running py2applet {} failed".format(" ".join(args)))
 
     def test_generate_setup(self):
         self.run_py2applet("--make-setup", "foo.py")
 
         setupfn = os.path.join(self.testdir, "setup.py")
         self.assertTrue(os.path.exists(setupfn))
-        fp = open(setupfn, "r")
+        fp = open(setupfn)
         contents = fp.read()
         fp.close()
 

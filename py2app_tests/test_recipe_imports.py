@@ -43,7 +43,7 @@ class TestRecipeImports(unittest.TestCase):
 
             else:
 
-                self.fail("Can import %r" % (mod,))
+                self.fail(f"Can import {mod!r}")
 
 
 if __name__ == "__main__":

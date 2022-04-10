@@ -94,7 +94,7 @@ class TestShellEnvironment(unittest.TestCase):
             if os.path.exists(path):
                 break
 
-        self.assertTrue(os.path.isfile(path), "%r is not a file" % (path,))
+        self.assertTrue(os.path.isfile(path), f"{path!r} is not a file")
 
         fp = open(path)
         data = fp.read().strip()

@@ -31,13 +31,13 @@ def _run():
 
     sys.argv[0] = __file__ = script
     if sys.version_info[0] == 2:
-        with open(script, "rU") as fp:
+        with open(script) as fp:
             source = fp.read() + "\n"
     else:
         with open(script, "rb") as fp:
             encoding = guess_encoding(fp)
 
-        with open(script, "r", encoding=encoding) as fp:
+        with open(script, encoding=encoding) as fp:
             source = fp.read() + "\n"
 
         BOM = b"\xef\xbb\xbf".decode("utf-8")

@@ -131,25 +131,25 @@ class TestBasicApp(unittest.TestCase):
         self.assertEqual(ln.strip(), b"False")
 
         # Basic module that is always present:
-        p.stdin.write('import_module("os")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("os")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"os")
 
         # Dependency of the main module:
-        p.stdin.write('import_module("quot")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("quot")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"quot")
 
         # - verify that the right one gets loaded
         if "--alias" not in self.py2app_args:
-            p.stdin.write("import quot;print(quot.__file__)\n".encode("latin1"))
+            p.stdin.write(b"import quot;print(quot.__file__)\n")
             p.stdin.flush()
             ln = p.stdout.readline()
             self.assertTrue(b"Contents/Resources/lib" in ln.strip())
 
-        p.stdin.write('import_module("quot.queue")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("quot.queue")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"quot.queue")

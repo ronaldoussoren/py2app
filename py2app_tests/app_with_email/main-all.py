@@ -4,7 +4,7 @@ from email import *
 
 def import_module(name):
     try:
-        exec("import %s" % (name,))
+        exec(f"import {name}")
         m = eval(name)
     except ImportError:
         print("* import failed")

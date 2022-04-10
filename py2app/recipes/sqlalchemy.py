@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 # __import__ in sqlalchemy.dialects
 ENGINE_DEPS = {
     "asyncpg": ("asyncpg",),

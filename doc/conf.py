@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # py2app documentation build configuration file, created by
 # sphinx-quickstart on Sat Jul 31 09:59:24 2010.
@@ -18,7 +17,7 @@ def get_version():
     setup_py = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "setup.py"
     )
-    for ln in open(setup_py, "rU"):
+    for ln in open(setup_py):
         ln = ln.strip()
         if ln.startswith("version="):
             return ln.split('"')[1]

@@ -6,7 +6,6 @@ distutils instead
 This recipe is rather compilicated and definitely not a
 good model for other recipes!!!
 """
-from __future__ import absolute_import
 
 import imp
 import os
@@ -76,7 +75,7 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-    with open(m.filename, "rU") as fp:
+    with open(m.filename) as fp:
         contents = fp.read()
     if "virtualenv" in contents:
         # This is the virtualenv version

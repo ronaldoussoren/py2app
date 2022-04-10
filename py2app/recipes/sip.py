@@ -9,7 +9,6 @@ The problem with SIP is that all inter-module depedencies (for example from
 PyQt4.Qt to PyQt4.QtCore) are handled in C code and therefore cannot be
 detected by the python code in py2app).
 """
-from __future__ import absolute_import
 
 import glob
 import os
@@ -18,7 +17,7 @@ import sys
 import pkg_resources
 
 
-class Sip(object):
+class Sip:
     def __init__(self):
         self.packages = None
         self.plugin_dir = None
@@ -70,9 +69,11 @@ class Sip(object):
                     # subpackage to ensure everything get seen.
                     for sub in os.listdir(fullpath):
                         if ".py" not in sub:
-                            self.packages.add("%s.%s" % (fn, sub.replace(".so", "")))
+                            self.packages.add(
+                                "{}.{}".format(fn, sub.replace(".so", ""))
+                            )
 
-        print("sip: packages: %s" % (self.packages,))
+        print(f"sip: packages: {self.packages}")
 
         return self.packages
 
@@ -119,7 +120,7 @@ class Sip(object):
             try:
                 mf.import_hook(pkg, m)
             except ImportError as exc:
-                print("WARNING: ImportError in sip recipe ignored: %s" % (exc,))
+                print(f"WARNING: ImportError in sip recipe ignored: {exc}")
 
         if mf.findNode("PyQt4") is not None or mf.findNode("PyQt5") is not None:
             resources = [pkg_resources.resource_filename("py2app", "recipes/qt.conf")]

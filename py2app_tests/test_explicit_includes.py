@@ -113,13 +113,13 @@ class TestExplicitIncludes(unittest.TestCase):
         p = self.start_app()
 
         # Basic module that is always present:
-        p.stdin.write('import_module("package1.subpackage.module")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("package1.subpackage.module")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"package1.subpackage.module")
 
         if sys.version_info[:2] >= (3, 3):
-            p.stdin.write('import_module("package3.mod")\n'.encode("latin1"))
+            p.stdin.write(b'import_module("package3.mod")\n')
             p.stdin.flush()
             ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"package3.mod")

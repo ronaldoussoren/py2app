@@ -8,7 +8,7 @@ from setuptools import setup
 import os
 
 VERSION = "3.10.1"
-PATH = "drpython-%s" % (VERSION,)
+PATH = f"drpython-{VERSION}"
 script = []
 includes = []
 data_files = []

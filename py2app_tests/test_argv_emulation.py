@@ -139,7 +139,7 @@ class TestArgvEmulation(unittest.TestCase):
 
         self.assertTrue(os.path.isfile(path))
 
-        fp = open(path, "r")
+        fp = open(path)
         data = fp.read().strip()
         fp.close()
 
@@ -185,7 +185,7 @@ class TestArgvEmulation(unittest.TestCase):
 
         self.assertTrue(os.path.isfile(path))
 
-        fp = open(path, "r")
+        fp = open(path)
         data = fp.read().strip()
         fp.close()
 

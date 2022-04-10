@@ -127,7 +127,7 @@ class TestBasicApp(unittest.TestCase):
         self.assertEqual(
             src_st.st_mode,
             dst_st.st_mode,
-            "%o != %o" % (src_st.st_mode, dst_st.st_mode),
+            f"{src_st.st_mode:o} != {dst_st.st_mode:o}",
         )
 
     def test_data_files(self):
@@ -150,7 +150,7 @@ class TestBasicApp(unittest.TestCase):
 
             if chk_link and "--alias" in self.py2app_args:
                 self.assertTrue(
-                    os.path.islink(dst_file), "%s is not a symlink" % (dst_file,)
+                    os.path.islink(dst_file), f"{dst_file} is not a symlink"
                 )
 
         # if '--alias' in self.py2app_args:

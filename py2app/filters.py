@@ -43,7 +43,7 @@ def not_stdlib_filter(module, prefix=None):
         )
 
         if os.path.exists(fn):
-            with open(fn, "rU") as fp:
+            with open(fn) as fp:
                 prefix = fp.read().strip()
 
             if rp.startswith(prefix):

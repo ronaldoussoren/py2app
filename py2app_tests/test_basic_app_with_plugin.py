@@ -141,12 +141,12 @@ class TestBasicAppWithPlugins(unittest.TestCase):
         path = os.path.join(
             root, "Contents", "Library", "QuickLook", "dummy1.qlgenerator"
         )
-        self.assertTrue(os.path.exists(path), "%r does not exist" % (path,))
+        self.assertTrue(os.path.exists(path), f"{path!r} does not exist")
 
         path = os.path.join(
             root, "Contents", "Library", "Spotlight", "dummy2.mdimporter"
         )
-        self.assertTrue(os.path.exists(path), "%r does not exist" % (path,))
+        self.assertTrue(os.path.exists(path), f"{path!r} does not exist")
 
 
 class TestBasicAliasAppWithPlugins(TestBasicAppWithPlugins):

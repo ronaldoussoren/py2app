@@ -143,13 +143,13 @@ class TestEmailCompat(unittest.TestCase):
         p = self.start_app()
 
         # Compatibility alias:
-        p.stdin.write('import_module("email.MIMEText")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("email.MIMEText")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"email.mime.text")
 
         # Compatibility alias:
-        p.stdin.write('import_module("email.Encoders")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("email.Encoders")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"email.encoders")

@@ -119,7 +119,7 @@ def main(all=False, arch=None, secondary=False, redirect_asl=False, use_old_sdk=
                         root = fp.read().strip()
                         fp.close()
 
-                    print("rebuilding %s" % (os.path.basename(dest),))
+                    print(f"rebuilding {os.path.basename(dest)}")
 
                     CC = os.path.join(root, "usr", "bin", entry["cc"])
                     CFLAGS = (

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import os
 
 from pkg_resources import packaging
@@ -25,7 +23,7 @@ def check(cmd, mf):
                 mf.import_hook("matplotlib.backends", m, ["*"])
 
             else:
-                mf.import_hook("matplotlib.backends.backend_%s" % (backend,), m)
+                mf.import_hook(f"matplotlib.backends.backend_{backend}", m)
 
     else:
         backends = {"packages": ["matplotlib"]}

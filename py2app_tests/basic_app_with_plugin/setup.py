@@ -37,10 +37,10 @@ class pluginexe(Command):
             os.mkdir("lib")
         cflags = get_config_var("CFLAGS")
         arch_flags = sum(
-            [shlex.split(x) for x in re.findall("-arch\s+\S+", cflags)], []
+            (shlex.split(x) for x in re.findall(r"-arch\s+\S+", cflags)), []
         )
         root_flags = sum(
-            [shlex.split(x) for x in re.findall("-isysroot\s+\S+", cflags)], []
+            (shlex.split(x) for x in re.findall(r"-isysroot\s+\S+", cflags)), []
         )
 
         for plugin_name in PLUGIN_NAMES:

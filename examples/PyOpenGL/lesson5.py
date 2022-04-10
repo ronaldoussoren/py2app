@@ -1,7 +1,6 @@
 #!/usr/bin/env pythonw
 
 # This is statement is required by the build system to query build info
-from __future__ import print_function
 
 if __name__ == "__build__":
     raise Exception

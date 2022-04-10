@@ -10,7 +10,7 @@ else:
 from py2app import filters
 
 
-class Node(object):
+class Node:
     def __init__(self, filename):
         self.filename = filename
 

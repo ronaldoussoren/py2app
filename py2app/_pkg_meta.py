@@ -1,6 +1,6 @@
 import os
 
-IGNORED_DISTINFO = set(["installed-files.txt", "RECORD"])  # noqa: C405
+IGNORED_DISTINFO = {"installed-files.txt", "RECORD"}  # noqa: C405
 
 
 def update_metadata_cache_distinfo(infos, dist_info_path):
@@ -11,7 +11,7 @@ def update_metadata_cache_distinfo(infos, dist_info_path):
     """
     fn = os.path.join(dist_info_path, "installed-files.txt")
     if os.path.exists(fn):
-        with open(fn, "r") as stream:
+        with open(fn) as stream:
             for line in stream:
                 infos[
                     os.path.realpath(os.path.join(dist_info_path, line.rstrip()))
@@ -19,7 +19,7 @@ def update_metadata_cache_distinfo(infos, dist_info_path):
 
     fn = os.path.join(dist_info_path, "RECORD")
     if os.path.exists(fn):
-        with open(fn, "r") as stream:
+        with open(fn) as stream:
             for ln in stream:
                 # The RECORD file is a CSV file according to PEP 376, but
                 # the wheel spec is silent on this and the wheel tool
@@ -50,7 +50,7 @@ def update_metadata_cache_distlink(infos, dist_link_path):
     """
     # An editable install does not contain a listing of installed
     # files.
-    with open(dist_link_path, "r") as fp:
+    with open(dist_link_path) as fp:
         dn = fp.readline()[:-1]
 
     # The list of files and directories that would have been
@@ -63,7 +63,7 @@ def update_metadata_cache_distlink(infos, dist_link_path):
             dist_info_path = os.path.join(dn, fn)
             to_include.append(dist_info_path)
             try:
-                with open(os.path.join(dist_info_path, "top_level.txt"), "r") as fp:
+                with open(os.path.join(dist_info_path, "top_level.txt")) as fp:
                     toplevels = fp.read().splitlines()
             except OSError:
                 continue

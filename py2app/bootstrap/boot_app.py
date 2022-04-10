@@ -33,13 +33,13 @@ def _run():
     path = os.path.join(base, script)
     sys.argv[0] = __file__ = path
     if sys.version_info[0] == 2:
-        with open(path, "rU") as fp:
+        with open(path) as fp:
             source = fp.read() + "\n"
     else:
         with open(path, "rb") as fp:
             encoding = guess_encoding(fp)
 
-        with open(path, "r", encoding=encoding) as fp:
+        with open(path, encoding=encoding) as fp:
             source = fp.read() + "\n"
 
         BOM = b"\xef\xbb\xbf".decode("utf-8")

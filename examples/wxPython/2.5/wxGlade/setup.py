@@ -16,7 +16,7 @@ except NameError:
 
 NAME = "wxGlade"
 VERSION = "0.3.4"
-WXDIR = "%s-%s" % (NAME, VERSION)
+WXDIR = f"{NAME}-{VERSION}"
 
 # these are files and packages
 WIDGETS = os.path.join(WXDIR, "widgets", "")
@@ -36,7 +36,7 @@ def data_files_as_code(mf, wxdir):
 sys.path[:0] = [WXDIR, WIDGETS, CODEGEN]
 
 
-class wxglade_recipe(object):
+class wxglade_recipe:
     def check(self, dist, mf):
         m = mf.findNode("wxglade")
         if m is None:

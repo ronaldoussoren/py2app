@@ -11,7 +11,13 @@ py2app.0.29
   which means pip will install py2app 0.28 for users of older
   version of Python.
 
-* #423: The code is now formatted with black
+* #423: The code is now formatted with black.
+
+  This is enforced by pre-commit configuration.
+
+* #425: Use pyupgrade to modernize some code patterns
+
+  This is enforced by the pre-commit configuration
 
 py2app 0.28
 -----------

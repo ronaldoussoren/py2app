@@ -118,7 +118,7 @@ def addpackage(sitedir, name):
                 if dircase not in _dirs_in_sys_path and os.path.exists(dir):
                     sys.path.append(dir)
                     _dirs_in_sys_path[dircase] = 1
-    except IOError:
+    except OSError:
         return
     if reset:
         _dirs_in_sys_path = None
@@ -128,7 +128,7 @@ def _get_path(userbase):
     version = sys.version_info
 
     if sys.platform == "darwin" and getattr(sys, "_framework", None):
-        return "%s/lib/python/site-packages" % (userbase,)
+        return f"{userbase}/lib/python/site-packages"
 
     return "%s/lib/python%d.%d/site-packages" % (userbase, version[0], version[1])
 

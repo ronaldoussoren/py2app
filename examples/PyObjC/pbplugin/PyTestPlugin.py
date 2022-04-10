@@ -1,4 +1,3 @@
-from __future__ import print_function
 from Foundation import *
 import objc
 import sys
@@ -6,7 +5,7 @@ import sys
 
 class PyTestPlugin(NSObject):
     def init(self):
-        self = super(PyTestPlugin, self).init()
+        self = super().init()
         print("class load!!")
         print("Hello from py2app")
         print("frozen", repr(getattr(sys, "frozen", None)))
@@ -18,4 +17,4 @@ class PyTestPlugin2(NSObject):
 
 
 print("PyTestPlugin", __name__)
-print("[inside] currentBundle %r" % (objc.currentBundle(),))
+print(f"[inside] currentBundle {objc.currentBundle()!r}")

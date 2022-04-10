@@ -20,7 +20,7 @@ def _setup_pkgresources():
     appname = pl.get("CFBundleIdentifier")
     if appname is None:
         appname = pl["CFBundleDisplayName"]
-    path = os.path.expanduser("~/Library/Caches/%s/python-eggs" % (appname,))
+    path = os.path.expanduser(f"~/Library/Caches/{appname}/python-eggs")
     pkg_resources.set_extraction_path(path)
 
 

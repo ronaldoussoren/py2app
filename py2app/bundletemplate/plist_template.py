@@ -16,7 +16,7 @@ def infoPlistDict(CFBundleExecutable, plist=None):
         "CFBundleDisplayName": plist.get("CFBundleName", CFBundleExecutable),
         "CFBundleExecutable": CFBundleExecutable,
         "CFBundleIconFile": CFBundleExecutable,
-        "CFBundleIdentifier": "org.pythonmac.unspecified.%s" % (NSPrincipalClass,),
+        "CFBundleIdentifier": f"org.pythonmac.unspecified.{NSPrincipalClass}",
         "CFBundleInfoDictionaryVersion": "6.0",
         "CFBundleName": CFBundleExecutable,
         "CFBundlePackageType": "BNDL",

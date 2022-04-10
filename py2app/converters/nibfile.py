@@ -1,7 +1,6 @@
 """
 Automatic compilation of XIB files
 """
-from __future__ import print_function
 
 import os
 import subprocess
@@ -28,7 +27,7 @@ def _run_nibtool(source, destination):
     else:
         pid, status = os.waitpid(pid, 0)
         if os.WEXITSTATUS(status) != 0:
-            raise RuntimeError("ibtool failed (%r -> %r)" % (source, destination))
+            raise RuntimeError(f"ibtool failed ({source!r} -> {destination!r})")
 
 
 gTool = None
@@ -41,7 +40,7 @@ def _get_ibtool():
             try:
                 gTool = check_output(["/usr/bin/xcrun", "-find", "ibtool"])[:-1]
             except subprocess.CalledProcessError:
-                raise IOError("Tool 'ibtool' not found")
+                raise OSError("Tool 'ibtool' not found")
         else:
             gTool = "ibtool"
 
@@ -52,7 +51,7 @@ def _get_ibtool():
 def convert_xib(source, destination, dry_run=0):
     destination = destination[:-4] + ".nib"
 
-    print("compile %s -> %s" % (source, destination))
+    print(f"compile {source} -> {destination}")
     if dry_run:
         return
 
@@ -65,7 +64,7 @@ def convert_xib(source, destination, dry_run=0):
 @converts(suffix=".nib")
 def convert_nib(source, destination, dry_run=0):
     destination = destination[:-4] + ".nib"
-    print("compile %s -> %s" % (source, destination))
+    print(f"compile {source} -> {destination}")
 
     if dry_run:
         return

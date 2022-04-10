@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import errno
 import os
 import stat
@@ -64,18 +62,18 @@ def path_to_zip(path):
         while not os.path.exists(path):
             path, r = os.path.split(path)
             if not path:
-                raise DistutilsFileError("File doesn't exist: %s" % (orig_path,))
+                raise DistutilsFileError(f"File doesn't exist: {orig_path}")
             rest = os.path.join(r, rest)
 
         if not os.path.isfile(path):
             # Directory really doesn't exist
-            raise DistutilsFileError("File doesn't exist: %s" % (orig_path,))
+            raise DistutilsFileError(f"File doesn't exist: {orig_path}")
 
         try:
             zf = zipfile.ZipFile(path)
             zf.close()
         except zipfile.BadZipfile:
-            raise DistutilsFileError("File doesn't exist: %s" % (orig_path,))
+            raise DistutilsFileError(f"File doesn't exist: {orig_path}")
 
         if rest.endswith("/"):
             rest = rest[:-1]
@@ -91,7 +89,7 @@ def get_mtime(path, mustExist=True):
     try:
         return zipio.getmtime(path)
 
-    except IOError:
+    except OSError:
         if not mustExist:
             return -1
 
@@ -167,7 +165,7 @@ def copy_file(
                 source, destination, preserve_mode, preserve_times, update, dry_run
             )
             return
-        except IOError as exc:
+        except OSError as exc:
             if exc.errno != errno.EAGAIN:
                 raise
 
@@ -228,7 +226,7 @@ def newer(source, target):
     """
     try:
         return zipio.getmtime(source) > zipio.getmtime(target)
-    except IOError:
+    except OSError:
         return True
 
 
@@ -321,7 +319,7 @@ def fancy_split(s, sep=","):
     return s
 
 
-class FileSet(object):
+class FileSet:
     # A case insensitive but case preserving set of files
     def __init__(self, iterable=None):
         self._dict = {}
@@ -330,7 +328,7 @@ class FileSet(object):
                 self.add(arg)
 
     def __repr__(self):
-        return "<FileSet %s at %x>" % (self._dict.values(), id(self))
+        return f"<FileSet {self._dict.values()} at {id(self):x}>"
 
     def add(self, fname):
         self._dict[fname.upper()] = fname
@@ -424,9 +422,9 @@ byte_compile(files, optimize=%r, force=%r,
 
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
         if "PYTHONPATH" in os.environ:
-            pp = "%s:%s" % (pp, os.environ["PYTHONPATH"])
+            pp = "{}:{}".format(pp, os.environ["PYTHONPATH"])
 
-        cmd = ["/usr/bin/env", "PYTHONPATH=%s" % (pp,), sys.executable, script_name]
+        cmd = ["/usr/bin/env", f"PYTHONPATH={pp}", sys.executable, script_name]
 
         if optimize == 1:
             cmd.insert(3, "-O")
@@ -472,7 +470,7 @@ byte_compile(files, optimize=%r, force=%r,
 
             if force or newer(mod.filename, cfile):
                 if verbose:
-                    print("byte-compiling %s to %s" % (mod.filename, dfile))
+                    print(f"byte-compiling {mod.filename} to {dfile}")
 
                 if not dry_run:
                     mkpath(os.path.dirname(cfile))
@@ -498,9 +496,7 @@ byte_compile(files, optimize=%r, force=%r,
                         raise RuntimeError("Don't know how to handle %r" % mod.filename)
             else:
                 if verbose:
-                    print(
-                        "skipping byte-compilation of %s to %s" % (mod.filename, dfile)
-                    )
+                    print(f"skipping byte-compilation of {mod.filename} to {dfile}")
 
 
 SCMDIRS = ["CVS", ".svn", ".hg", ".git"]
@@ -632,7 +628,7 @@ def copy_tree(
         if dry_run:
             names = []
         else:
-            raise DistutilsFileError("error listing files in '%s': %s" % (src, errstr))
+            raise DistutilsFileError(f"error listing files in '{src}': {errstr}")
 
     if not dry_run:
         mkpath(dst)
@@ -693,8 +689,7 @@ def copy_tree(
 
 def walk_files(path):
     for _root, _dirs, files in os.walk(path):
-        for f in files:
-            yield f
+        yield from files
 
 
 def find_app(app):
@@ -731,7 +726,7 @@ def _get_tool(toolname):
                     :-1
                 ]
             except subprocess.CalledProcessError:
-                raise IOError("Tool %r not found" % (toolname,))
+                raise OSError(f"Tool {toolname!r} not found")
 
         else:
             # Support for Xcode 3.x and earlier
@@ -758,14 +753,14 @@ def _get_tool(toolname):
                     "/Developer/usr/bin/mapc",
                 ]
             else:
-                raise IOError("Tool %r not found" % (toolname,))
+                raise OSError(f"Tool {toolname!r} not found")
 
             for fn in choices:
                 if os.path.exists(fn):
                     _tools[toolname] = fn
                     break
             else:
-                raise IOError("Tool %r not found" % (toolname,))
+                raise OSError(f"Tool {toolname!r} not found")
     return _tools[toolname]
 
 
@@ -830,7 +825,7 @@ def codesign_adhoc(bundle):
             except subprocess.CalledProcessError:
                 failed.append(file)
         if failed == platfiles:
-            raise RuntimeError("Cannot sign bundle %r" % (bundle,))
+            raise RuntimeError(f"Cannot sign bundle {bundle!r}")
         platfiles = failed
 
     for _ in range(5):

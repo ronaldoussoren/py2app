@@ -1,3 +1,3 @@
 import curses
 
-print("Helper 1: %s" % (curses.__name__,))
+print(f"Helper 1: {curses.__name__}")

@@ -4,5 +4,5 @@ import Foundation
 
 class BasicPlugin(Foundation.NSObject):
     def performCommand_(self, cmd):
-        print("+ %s" % (cmd,))
+        print(f"+ {cmd}")
         sys.stdout.flush()

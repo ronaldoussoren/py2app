@@ -17,7 +17,7 @@ def check(cmd, mf):
     # black may include optimized platform specific C extension which has
     # unusual name, e.g. 610faff656c4cfcbb4a3__mypyc; best to determine it from
     # the egg-info/top_level.txt
-    with open(top, "r") as f:
+    with open(top) as f:
         includes = set(f.read().strip().split("\n"))
     includes = list(includes.difference(packages))
 

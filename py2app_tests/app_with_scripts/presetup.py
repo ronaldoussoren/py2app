@@ -24,7 +24,7 @@ class build_dylib(Command):
     def get_arch_flags(self):
         cflags = sysconfig.get_config_var("CFLAGS")
         result = []
-        for item in re.findall("(-arch\s+\S+)", cflags):
+        for item in re.findall(r"(-arch\s+\S+)", cflags):
             result.extend(item.split())
         return result
 
@@ -77,7 +77,7 @@ setup(
         Extension(
             "foo",
             ["src/modfoo.c"],
-            extra_link_args=["-L%s" % (os.path.abspath("build/libdir"),), "-lfoo"],
+            extra_link_args=["-L{}".format(os.path.abspath("build/libdir")), "-lfoo"],
         )
     ],
     options={

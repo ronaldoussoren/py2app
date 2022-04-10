@@ -59,7 +59,7 @@ def test_loader():
         try:
             module = __import__(modName)
         except ImportError:
-            print("SKIP %s: %s" % (modName, sys.exc_info()[1]))
+            print(f"SKIP {modName}: {sys.exc_info()[1]}")
             continue
 
         s = unittest.defaultTestLoader.loadTestsFromModule(module)
@@ -100,7 +100,7 @@ def importExternalTestCases(unittest, pathPattern="test_*.py", root=".", package
         try:
             module = __import__(modName)
         except ImportError:
-            print("SKIP %s: %s" % (modName, sys.exc_info()[1]))
+            print(f"SKIP {modName}: {sys.exc_info()[1]}")
             continue
 
         if "." in modName:
@@ -156,7 +156,7 @@ class test(Command):
                 to_remove.append(dirname)
 
         for dirname in to_remove:
-            log.info("removing installed %r from sys.path before testing" % (dirname,))
+            log.info(f"removing installed {dirname!r} from sys.path before testing")
             sys.path.remove(dirname)
 
     def add_project_to_sys_path(self):
@@ -193,7 +193,7 @@ class test(Command):
         # Reset pkg_resources state:
         add_activation_listener(lambda dist: dist.activate())
         working_set.__init__()
-        require("%s==%s" % (ei_cmd.egg_name, ei_cmd.egg_version))
+        require(f"{ei_cmd.egg_name}=={ei_cmd.egg_version}")
 
     def remove_from_sys_path(self):
         from pkg_resources import working_set
@@ -233,7 +233,7 @@ class test(Command):
                 "xpass": len(getattr(result, "expectedSuccesses", [])),
                 "skip": len(getattr(result, "skipped", [])),
             }
-            print("SUMMARY: %s" % (summary,))
+            print(f"SUMMARY: {summary}")
             if summary["fails"] or summary["errors"]:
                 sys.exit(1)
 
@@ -258,7 +258,7 @@ if sys.platform != "darwin":
 
     class no_test(test):
         def run(self):
-            print("WARNING: %s\n" % (msg,))
+            print(f"WARNING: {msg}\n")
             print(
                 "SUMMARY: {'count': 0, 'fails': 0, 'errors': 0, "
                 "'xfails': 0, 'skip': 65, 'xpass': 0, 'message': msg }\n"

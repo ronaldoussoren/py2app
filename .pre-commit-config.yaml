@@ -8,6 +8,12 @@ repos:
         files: \.pyi?$
         types: []
 
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.31.0
+    hooks:
+    -   id: pyupgrade
+        args: ['--py36-plus']
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.2.0
     hooks:

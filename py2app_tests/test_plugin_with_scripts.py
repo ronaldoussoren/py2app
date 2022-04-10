@@ -181,7 +181,7 @@ class TestBasicPlugin(unittest.TestCase):
 
     def run_script(self, name):
         path = os.path.join(
-            self.plugin_dir, "dist/BasicPlugin.bundle/Contents/MacOS/%s" % (name,)
+            self.plugin_dir, f"dist/BasicPlugin.bundle/Contents/MacOS/{name}"
         )
 
         p = subprocess.Popen(
@@ -217,7 +217,7 @@ class TestBasicPlugin(unittest.TestCase):
 
         self.assertFalse(v.startswith(b"** Cannot load bundle"))
 
-        p.stdin.write("BasicPlugin.bundle:test startup\n".encode("latin1"))
+        p.stdin.write(b"BasicPlugin.bundle:test startup\n")
         p.stdin.flush()
 
         v = p.stdout.readline()
@@ -257,7 +257,7 @@ class TestBasicPluginUnicodePath(TestBasicPlugin):
             assert not os.path.exists(cls.plugin_dir)
             shutil.copytree(TestBasicPlugin.plugin_dir, cls.plugin_dir)
 
-            super(TestBasicPluginUnicodePath, cls).setUpClass()
+            super().setUpClass()
 
         except:
             if os.path.exists(cls.plugin_dir):
@@ -269,7 +269,7 @@ class TestBasicPluginUnicodePath(TestBasicPlugin):
         if os.path.exists(cls.plugin_dir):
             shutil.rmtree(cls.plugin_dir)
 
-        super(TestBasicPluginUnicodePath, cls).tearDownClass()
+        super().tearDownClass()
 
 
 class TestBasicAliasPluginUnicodePath(TestBasicPluginUnicodePath):

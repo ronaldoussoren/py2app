@@ -6,13 +6,13 @@ def _included_subpackages(packages):
         pass
 
 
-class Finder(object):
+class Finder:
     def find_module(self, fullname, path=None):
         if fullname in _path_hooks:  # noqa: F821
             return Loader()
 
 
-class Loader(object):
+class Loader:
     def load_module(self, fullname):
         import imp
         import os

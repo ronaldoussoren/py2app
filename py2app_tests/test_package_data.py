@@ -147,13 +147,13 @@ class TestExplicitIncludes(unittest.TestCase):
 
     def test_package_data(self):
         p = self.start_app()
-        p.stdin.write('import_module("package2.sub")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("package2.sub")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"package2.sub")
 
-        p.stdin.write("import package2.sub\n".encode("latin1"))
-        p.stdin.write("print(package2.sub.__file__)\n".encode("latin1"))
+        p.stdin.write(b"import package2.sub\n")
+        p.stdin.write(b"print(package2.sub.__file__)\n")
         p.stdin.flush()
         ln = p.stdout.readline()
         path = ln.decode("utf-8")[:-1]
@@ -172,7 +172,7 @@ class TestExplicitIncludes(unittest.TestCase):
         p = self.start_app()
 
         # Basic module that is always present:
-        p.stdin.write('import_module("package2.sub")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("package2.sub")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"package2.sub")

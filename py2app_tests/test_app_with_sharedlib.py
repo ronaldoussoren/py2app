@@ -143,17 +143,17 @@ class TestBasicAppWithExtension(unittest.TestCase):
     def test_extension_use(self):
         p = self.start_app()
 
-        p.stdin.write("print(double(9))\n".encode("latin1"))
+        p.stdin.write(b"print(double(9))\n")
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"18")
 
-        p.stdin.write("print(square(9))\n".encode("latin1"))
+        p.stdin.write(b"print(square(9))\n")
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"81")
 
-        p.stdin.write("print(half(16))\n".encode("latin1"))
+        p.stdin.write(b"print(half(16))\n")
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"8")
@@ -169,13 +169,13 @@ class TestBasicAppWithExtension(unittest.TestCase):
         p = self.start_app()
 
         # Basic module that is always present:
-        p.stdin.write('import_module("os")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("os")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"os")
 
         # Dependency of the main module:
-        p.stdin.write('import_module("decimal")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("decimal")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"decimal")
@@ -192,27 +192,27 @@ class TestBasicAppWithExtension(unittest.TestCase):
 
         if not can_import_stdlib:
             # Not a dependency of the module (stdlib):
-            p.stdin.write('import_module("xdrlib")\n'.encode("latin1"))
+            p.stdin.write(b'import_module("xdrlib")\n')
             p.stdin.flush()
             ln = p.stdout.readline().decode("utf-8")
             self.assertTrue(ln.strip().startswith("* import failed"), ln)
 
         else:
-            p.stdin.write('import_module("xdrlib")\n'.encode("latin1"))
+            p.stdin.write(b'import_module("xdrlib")\n')
             p.stdin.flush()
             ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"xdrlib")
 
         if sys.prefix.startswith("/System") or "--alias" in self.py2app_args:
             # py2app is included as part of the system install
-            p.stdin.write('import_module("py2app")\n'.encode("latin1"))
+            p.stdin.write(b'import_module("py2app")\n')
             p.stdin.flush()
             ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"py2app")
 
         else:
             # Not a dependency of the module (external):
-            p.stdin.write('import_module("py2app")\n'.encode("latin1"))
+            p.stdin.write(b'import_module("py2app")\n')
             p.stdin.flush()
             ln = p.stdout.readline().decode("utf-8")
             self.assertTrue(ln.strip().startswith("* import failed"), ln)

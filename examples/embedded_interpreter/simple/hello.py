@@ -1,4 +1,3 @@
-from __future__ import print_function
 import sys, os
 import pprint
 
@@ -10,11 +9,11 @@ except NameError:
 
 def print_sys():
     for arg in "prefix", "exec_prefix", "executable":
-        print("%s: %s" % (arg, getattr(sys, arg)))
+        print(f"{arg}: {getattr(sys, arg)}")
 
 
 def host_main():
-    print("Hello from main executable (pid: %s)" % (os.getpid(),))
+    print(f"Hello from main executable (pid: {os.getpid()})")
     print_sys()
     print("")
     os.spawnv(
@@ -25,7 +24,7 @@ def host_main():
 
 
 def spawned_main():
-    print("Hello from spawned executable (pid: %s)" % (os.getpid(),))
+    print(f"Hello from spawned executable (pid: {os.getpid()})")
     print_sys()
     print("")
     otherpaths = set(filter(os.path.exists, eval(sys.argv[2])))

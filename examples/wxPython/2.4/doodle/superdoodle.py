@@ -87,7 +87,7 @@ class DoodleFrame(wx.Frame):
     def ReadFile(self):
         if self.filename:
             try:
-                f = open(self.filename, "r")
+                f = open(self.filename)
                 data = cPickle.load(f)
                 f.close()
                 self.doodle.SetLinesData(data)

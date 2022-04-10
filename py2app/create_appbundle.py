@@ -74,7 +74,7 @@ def create_appbundle(
     with open(os.path.join(contents, "PkgInfo"), "w") as fp:
         fp.write(kw["CFBundlePackageType"] + kw["CFBundleSignature"])
 
-    print("Copy %r -> %r" % (srcmain, destmain))
+    print(f"Copy {srcmain!r} -> {destmain!r}")
     copy(srcmain, destmain)
     make_exec(destmain)
     mergetree(

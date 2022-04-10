@@ -3,7 +3,6 @@ Mac OS X .app build command for distutils
 
 Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 """
-from __future__ import print_function
 
 import collections
 import imp
@@ -185,7 +184,7 @@ def rewrite_tkinter_load_commands(tkinter_path):
 
         rewrite_map[
             tcl_path
-        ] = "/System/Library/Frameworks/Tcl.framework/Versions/%s/Tcl" % (ver,)
+        ] = f"/System/Library/Frameworks/Tcl.framework/Versions/{ver}/Tcl"
 
     if not tk_path.startswith("/System/Library/Frameworks"):
         # ../Versions/8.5/Tk
@@ -197,7 +196,7 @@ def rewrite_tkinter_load_commands(tkinter_path):
 
         rewrite_map[
             tk_path
-        ] = "/System/Library/Frameworks/Tk.framework/Versions/%s/Tk" % (ver,)
+        ] = f"/System/Library/Frameworks/Tk.framework/Versions/{ver}/Tk"
 
     if rewrite_map:
         print("Relinking _tkinter.so to system Tcl/Tk")
@@ -245,7 +244,7 @@ def framework_copy_condition(src):
 
 class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
     def __init__(self, appbuilder, ext_dir, copyexts, *args, **kwargs):
-        super(PythonStandalone, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.appbuilder = appbuilder
         self.ext_map = {}
         for e in copyexts:
@@ -301,7 +300,7 @@ def iterRecipes(module=recipes):
 
 # A very loosely defined "target".  We assume either a "script" or "modules"
 # attribute.  Some attributes will be target specific.
-class Target(object):
+class Target:
     def __init__(self, **kw):
         self.__dict__.update(kw)
         # If modules is a simple string, assume they meant list
@@ -310,7 +309,7 @@ class Target(object):
             self.modules = [m]
 
     def __repr__(self):
-        return "<Target %s>" % (self.__dict__,)
+        return f"<Target {self.__dict__}>"
 
     def get_dest_base(self):
         dest_base = getattr(self, "dest_base", None)
@@ -329,7 +328,7 @@ class Target(object):
         for r_filename in resources:
             if not os.path.isfile(r_filename):
                 raise DistutilsOptionError(
-                    "Resource filename '%s' does not exist" % (r_filename,)
+                    f"Resource filename '{r_filename}' does not exist"
                 )
 
 
@@ -379,7 +378,7 @@ def is_system():
             prefix, "lib", "python%d.%d" % (sys.version_info[:2]), "orig-prefix.txt"
         )
         if os.path.exists(fn):
-            with open(fn, "rU") as fp:
+            with open(fn) as fp:
                 prefix = fp.read().strip()
 
     return in_system_path(prefix)
@@ -685,7 +684,7 @@ class py2app(Command):
                 "orig-prefix.txt",
             )
             if os.path.exists(fn):
-                with open(fn, "rU") as fp:
+                with open(fn) as fp:
                     prefix = fp.read().strip()
                     self._python_app = os.path.join(prefix, "Resources", "Python.app")
             else:
@@ -821,7 +820,7 @@ class py2app(Command):
         #   only one import per line
         #
         expected_missing_imports = set()
-        with open(filename, "r") as f:
+        with open(filename) as f:
             for line in f:
                 line = line.strip()
                 if line.startswith("#") or line == "":
@@ -844,7 +843,7 @@ class py2app(Command):
         if not isinstance(version, basestring):
             raise DistutilsOptionError("Version must be a string")
 
-        if sys.version_info[0] > 2 and isinstance(version, type("a".encode("ascii"))):
+        if sys.version_info[0] > 2 and isinstance(version, bytes):
             raise DistutilsOptionError("Version must be a string")
 
         plist["CFBundleVersion"] = version
@@ -888,7 +887,7 @@ class py2app(Command):
             )
 
             if os.path.exists(fn):
-                with open(fn, "rU") as fp:
+                with open(fn) as fp:
                     prefix = fp.read().strip()
 
         try:
@@ -1023,7 +1022,7 @@ class py2app(Command):
                     path = item
                 except KeyError:
                     raise DistutilsOptionError(
-                        "Cannot determine subdirectory for plugin %s" % (item,)
+                        f"Cannot determine subdirectory for plugin {item}"
                     )
 
             yield path, os.path.join(subdir, os.path.basename(path))
@@ -1080,9 +1079,7 @@ class py2app(Command):
             if not os.path.exists(iconfile):
                 iconfile = iconfile + ".icns"
             if not os.path.exists(iconfile):
-                raise DistutilsOptionError(
-                    "icon file must exist: %r" % (self.iconfile,)
-                )
+                raise DistutilsOptionError(f"icon file must exist: {self.iconfile!r}")
             self.resources.append(iconfile)
             plist["CFBundleIconFile"] = os.path.basename(iconfile)
         if self.prefer_ppc:
@@ -1146,11 +1143,11 @@ class py2app(Command):
             for name, check in rdict.items():
                 rval = check(self, mf)
                 if rval is None:
-                    print("--- Skipping recipe %s ---" % (name,))
+                    print(f"--- Skipping recipe {name} ---")
                     continue
                 # we can pull this off so long as we stop the iter
                 del rdict[name]
-                print("*** using recipe: %s ***" % (name,), rval)
+                print(f"*** using recipe: {name} ***", rval)
 
                 if "expected_missing_imports" in rval:
                     self.expected_missing_imports |= rval.get(
@@ -1227,7 +1224,7 @@ class py2app(Command):
             appdir = os.path.join(self.dist_dir, os.path.dirname(base))
             appname = self.get_appname()
             dgraph = os.path.join(appdir, appname + ".html")
-            print("*** creating dependency html: %s ***" % (os.path.basename(dgraph),))
+            print(f"*** creating dependency html: {os.path.basename(dgraph)} ***")
             with open(dgraph, "w") as fp:
                 mf.create_xref(fp)
 
@@ -1237,7 +1234,7 @@ class py2app(Command):
             appdir = os.path.join(self.dist_dir, os.path.dirname(base))
             appname = self.get_appname()
             dgraph = os.path.join(appdir, appname + ".dot")
-            print("*** creating dependency graph: %s ***" % (os.path.basename(dgraph),))
+            print(f"*** creating dependency graph: {os.path.basename(dgraph)} ***")
             with open(dgraph, "w") as fp:
                 mf.graphreport(fp, flatpackages=flatpackages)
 
@@ -1471,7 +1468,7 @@ class py2app(Command):
                 log.warn("Modules not found ('from ... import y'):")
                 for m in sorted(missing_fromimport):
                     log.warn(
-                        " * %s (%s)" % (m, ", ".join(sorted(missing_fromimport[m])))
+                        " * {} ({})".format(m, ", ".join(sorted(missing_fromimport[m])))
                     )
 
                 if (
@@ -1505,7 +1502,7 @@ class py2app(Command):
 
             for mod in sorted(imports):
                 log.warn(
-                    " * %s (importing %s)" % (mod, ", ".join(sorted(imports[mod])))
+                    " * {} (importing {})".format(mod, ", ".join(sorted(imports[mod])))
                 )
 
         if invalid_bytecode:
@@ -1704,7 +1701,7 @@ class py2app(Command):
                     )
 
                     if os.path.exists(fn):
-                        with open(fn, "rU") as fp:
+                        with open(fn) as fp:
                             prefix = fp.read().strip()
 
                     rest_path = os.path.normpath(sys.executable)[
@@ -1855,7 +1852,7 @@ class py2app(Command):
         for dirpath, dnames, _fnames in os.walk(self.appdir):
             for nm in list(dnames):
                 if nm.endswith(".dSYM"):
-                    print("removing debug info: %s/%s" % (dirpath, nm))
+                    print(f"removing debug info: {dirpath}/{nm}")
                     shutil.rmtree(os.path.join(dirpath, nm))
                     dnames.remove(nm)
         return [file for file in platfiles if ".dSYM" not in file]
@@ -1998,7 +1995,7 @@ class py2app(Command):
             "include/%s/pyconfig.h" % (includedir),
         ]
         if "_sysconfigdata" not in sys.modules:
-            fmwkfiles.append("lib/%s/%s/Makefile" % (pydir, configdir))
+            fmwkfiles.append(f"lib/{pydir}/{configdir}/Makefile")
 
         for fn in fmwkfiles:
             self.copy_file(os.path.join(indir, fn), os.path.join(outdir, fn))
@@ -2044,14 +2041,12 @@ class py2app(Command):
 
         if len(paths) > 1:
             raise DistutilsOptionError(
-                "all targets must use the same directory: %s" % (list(paths),)
+                f"all targets must use the same directory: {list(paths)}"
             )
         if paths:
             app_dir = paths.pop()  # the only element
             if os.path.isabs(app_dir):
-                raise DistutilsOptionError(
-                    "app directory must be relative: %s" % (app_dir,)
-                )
+                raise DistutilsOptionError(f"app directory must be relative: {app_dir}")
             self.app_dir = os.path.join(self.dist_dir, app_dir)
             self.mkpath(self.app_dir)
         else:
@@ -2108,9 +2103,7 @@ class py2app(Command):
             # it.
             if self.alias or self.semi_standalone:
                 prescripts.append("virtualenv")
-                prescripts.append(
-                    StringIO("_fixup_virtualenv(%r)" % (sys.real_prefix,))
-                )
+                prescripts.append(StringIO(f"_fixup_virtualenv({sys.real_prefix!r})"))
 
             if self.site_packages or self.alias:
                 import site
@@ -2155,7 +2148,7 @@ class py2app(Command):
 
         if self.argv_inject is not None:
             prescripts.append("argv_inject")
-            prescripts.append(StringIO("_argv_inject(%r)\n" % (self.argv_inject,)))
+            prescripts.append(StringIO(f"_argv_inject({self.argv_inject!r})\n"))
 
         if self.style == "app" and not self.no_chdir:
             prescripts.append("chdir_resource")
@@ -2173,7 +2166,7 @@ class py2app(Command):
             if self.additional_paths:
                 prescripts.append("path_inject")
                 prescripts.append(
-                    StringIO("_path_inject(%r)\n" % (self.additional_paths,))
+                    StringIO(f"_path_inject({self.additional_paths!r})\n")
                 )
             prescripts.append("boot_alias" + self.style)
         newprescripts = []
@@ -2198,14 +2191,14 @@ class py2app(Command):
         if not isinstance(bootstrap, basestring):
             return bootstrap.getvalue()
         else:
-            with open(bootstrap, "rU") as fp:
+            with open(bootstrap) as fp:
                 return fp.read()
 
     def create_pluginbundle(self, target, script, use_runtime_preference=True):
         base = target.get_dest_base()
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
-        print("*** creating plugin bundle: %s ***" % (appname,))
+        print(f"*** creating plugin bundle: {appname} ***")
         if self.runtime_preferences and use_runtime_preference:
             self.plist.setdefault("PyRuntimeLocations", self.runtime_preferences)
         appdir, plist = create_pluginbundle(
@@ -2223,7 +2216,7 @@ class py2app(Command):
         base = target.get_dest_base()
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
-        print("*** creating application bundle: %s ***" % (appname,))
+        print(f"*** creating application bundle: {appname} ***")
         if self.runtime_preferences and use_runtime_preference:
             self.plist.setdefault("PyRuntimeLocations", self.runtime_preferences)
         pythonInfo = self.plist.setdefault("PythonInfoDict", {})
@@ -2243,7 +2236,7 @@ class py2app(Command):
         return appdir, resdir, plist
 
     def create_bundle(self, target, script, use_runtime_preference=True):
-        fn = getattr(self, "create_%sbundle" % (self.style,))
+        fn = getattr(self, f"create_{self.style}bundle")
         return fn(target, script, use_runtime_preference=use_runtime_preference)
 
     def iter_frameworks(self):
@@ -2325,7 +2318,7 @@ class py2app(Command):
         for fn in target.prescripts:
             bootfile.write(self.get_bootstrap_data(fn))
             bootfile.write("\n\n")
-        bootfile.write("DEFAULT_SCRIPT=%r\n" % (os.path.realpath(script),))
+        bootfile.write(f"DEFAULT_SCRIPT={os.path.realpath(script)!r}\n")
         script_map = {}
         for fn in extra_scripts:
             tgt = os.path.realpath(fn)
@@ -2337,7 +2330,7 @@ class py2app(Command):
             else:
                 script_map[fn] = tgt
 
-        bootfile.write("SCRIPT_MAP=%r\n" % (script_map,))
+        bootfile.write(f"SCRIPT_MAP={script_map!r}\n")
         bootfile.write("try:\n")
         bootfile.write("    _run()\n")
         bootfile.write("except KeyboardInterrupt:\n")
@@ -2421,7 +2414,7 @@ class py2app(Command):
             bootfile.write(self.get_bootstrap_data(fn))
             bootfile.write("\n\n")
 
-        bootfile.write("DEFAULT_SCRIPT=%r\n" % (os.path.basename(script),))
+        bootfile.write(f"DEFAULT_SCRIPT={os.path.basename(script)!r}\n")
 
         script_map = {}
         for fn in extra_scripts:
@@ -2433,7 +2426,7 @@ class py2app(Command):
             else:
                 script_map[fn] = fn
 
-        bootfile.write("SCRIPT_MAP=%r\n" % (script_map,))
+        bootfile.write(f"SCRIPT_MAP={script_map!r}\n")
         bootfile.write("_run()\n")
         bootfile.close()
 
@@ -2560,12 +2553,12 @@ class py2app(Command):
         pathname = os.path.join(self.temp_dir, "%s.py" % slashname)
         if os.path.exists(pathname):
             if self.verbose:
-                print("skipping python loader for extension %r" % (item.identifier,))
+                print(f"skipping python loader for extension {item.identifier!r}")
         else:
             self.mkpath(os.path.dirname(pathname))
             # and what about dry_run?
             if self.verbose:
-                print("creating python loader for extension %r" % (item.identifier,))
+                print(f"creating python loader for extension {item.identifier!r}")
 
             fname = slashname + os.path.splitext(item.filename)[1]
             source = make_loader(fname)

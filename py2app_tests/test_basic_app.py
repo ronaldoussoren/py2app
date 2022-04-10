@@ -172,13 +172,13 @@ class TestBasicApp(unittest.TestCase):
         p = self.start_app()
 
         # Basic module that is always present:
-        p.stdin.write('import_module("os")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("os")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"os")
 
         # Dependency of the main module:
-        p.stdin.write('import_module("decimal")\n'.encode("latin1"))
+        p.stdin.write(b'import_module("decimal")\n')
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"decimal")
@@ -195,27 +195,27 @@ class TestBasicApp(unittest.TestCase):
 
         if not can_import_stdlib:
             # Not a dependency of the module (stdlib):
-            p.stdin.write('import_module("xdrlib")\n'.encode("latin1"))
+            p.stdin.write(b'import_module("xdrlib")\n')
             p.stdin.flush()
             ln = p.stdout.readline().decode("utf-8")
             self.assertTrue(ln.strip().startswith("* import failed"), ln)
 
         else:
-            p.stdin.write('import_module("xdrlib")\n'.encode("latin1"))
+            p.stdin.write(b'import_module("xdrlib")\n')
             p.stdin.flush()
             ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"xdrlib")
 
         if sys.prefix.startswith("/System") or "--alias" in self.py2app_args:
             # py2app is included as part of the system install
-            p.stdin.write('import_module("py2app")\n'.encode("latin1"))
+            p.stdin.write(b'import_module("py2app")\n')
             p.stdin.flush()
             ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"py2app")
 
         else:
             # Not a dependency of the module (external):
-            p.stdin.write('import_module("py2app")\n'.encode("latin1"))
+            p.stdin.write(b'import_module("py2app")\n')
             p.stdin.flush()
             ln = p.stdout.readline().decode("utf-8")
             self.assertTrue(ln.strip().startswith("* import failed"), ln)
@@ -230,7 +230,7 @@ class TestBasicApp(unittest.TestCase):
         p = self.start_app()
 
         try:
-            p.stdin.write("print(__debug__)\n".encode("latin1"))
+            p.stdin.write(b"print(__debug__)\n")
             p.stdin.flush()
             ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"True")
@@ -246,7 +246,7 @@ class TestBasicApp(unittest.TestCase):
     def test_framework_versions(self):
         fwk = get_config_var("PYTHONFRAMEWORK")
         path = os.path.join(
-            self.app_dir, "dist/BasicApp.app/Contents/Frameworks/%s.framework" % (fwk,)
+            self.app_dir, f"dist/BasicApp.app/Contents/Frameworks/{fwk}.framework"
         )
         if not os.path.exists(path):
             return
@@ -280,7 +280,7 @@ class TestBasicApp(unittest.TestCase):
         p = self.start_app()
 
         try:
-            p.stdin.write("run_python()\n".encode("latin1"))
+            p.stdin.write(b"run_python()\n")
             p.stdin.flush()
             ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"ok")
@@ -356,7 +356,7 @@ class TestBasicAppWindowsLineEnd(TestBasicApp):
                 with open(path, "wb") as fp:
                     fp.write(data_out)
 
-            super(TestBasicAppWindowsLineEnd, cls).setUpClass()
+            super().setUpClass()
 
         except:
             if os.path.exists(cls.app_dir):
@@ -397,7 +397,7 @@ class TestBasicAppUnicodePath(TestBasicApp):
             assert not os.path.exists(cls.app_dir)
             shutil.copytree(TestBasicApp.app_dir, cls.app_dir)
 
-            super(TestBasicAppUnicodePath, cls).setUpClass()
+            super().setUpClass()
 
         except:
             if os.path.exists(cls.app_dir):
@@ -434,7 +434,7 @@ class TestOptimized1(TestBasicApp):
         p = self.start_app()
 
         try:
-            p.stdin.write("print(__debug__)\n".encode("latin1"))
+            p.stdin.write(b"print(__debug__)\n")
             p.stdin.flush()
             ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"False")
@@ -455,7 +455,7 @@ class TestOptimized2(TestBasicApp):
         p = self.start_app()
 
         try:
-            p.stdin.write("print(__debug__)\n".encode("latin1"))
+            p.stdin.write(b"print(__debug__)\n")
             p.stdin.flush()
             ln = p.stdout.readline()
             self.assertEqual(ln.strip(), b"False")
