@@ -23,6 +23,8 @@ py2app.0.29
 
   This is enforced by the pre-commit configuration
 
+* #432: Switch from setuptools to flit for building wheels and sdists
+
 py2app 0.28
 -----------
 

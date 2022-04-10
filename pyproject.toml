@@ -1,0 +1,68 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "py2app"
+authors = [
+  #{ name = "Bob Ippolito", email = "bob@redivi.com" }
+  { name = "Ronald Oussoren", email = "ronaldoussoren@mac.com" }
+]
+description = "Create standalone macOS applications with Python"
+dynamic = [ "version"]
+requires-python = ">=3.6,<4"
+readme = "README.rst"
+license = { text = "MIT" }
+keywords=[".app", "standalone"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: MacOS X :: Cocoa",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Objective C",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: Software Development :: Build Tools",
+]
+dependencies=[
+    "altgraph>=0.16",
+    "modulegraph>=0.17",
+    "macholib>=1.16",
+]
+
+[project.urls]
+"Documentation" = "https://py2app.readthedocs.io/"
+"Source Code" = "https://github.com/ronaldoussoren/py2app/"
+"Issue Tracker" = "https://github.com/ronaldoussoren/py2app/issues"
+"Supporting" = "https://blog.ronaldoussoren.net/support/"
+
+[project.scripts]
+py2applet = "py2app.script_py2applet:main"
+
+[project.entry-points."setuptools.finalize_distribution_options"]
+py2app = "py2app.build_app:finalize_distribution_options"
+
+[project.entry-points."distutils.commands"]
+py2app = "py2app.build_app:py2app"
+
+[project.entry-points."distutils.setup_keywords"]
+app =    "py2app.build_app:validate_target"
+plugin = "py2app.build_app:validate_target"
+
+[project.entry-points."py2app.converter"]
+xib          = "py2app.converters.nibfile:convert_xib"
+datamodel    = "py2app.converters.coredata:convert_datamodel"
+mappingmodel = "py2app.converters.coredata:convert_mappingmodel"
+
+[project.entry-points."py2app.recipe"]
