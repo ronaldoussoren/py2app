@@ -196,10 +196,7 @@ def _run_argvemulator(timeout=60):
                 print("argvemulator warning: cannot extract open document event")
                 continue
 
-            if sys.version_info[0] > 2:
-                sys.argv.append(buf.value.decode("utf-8"))
-            else:
-                sys.argv.append(buf.value)
+            sys.argv.append(buf.value.decode("utf-8"))
 
         running[0] = False
         return 0
@@ -243,10 +240,7 @@ def _run_argvemulator(timeout=60):
                 print("argvemulator warning: cannot extract open URL event")
 
             else:
-                if sys.version_info[0] > 2:
-                    sys.argv.append(buf.value.decode("utf-8"))
-                else:
-                    sys.argv.append(buf.value)
+                sys.argv.append(buf.value.decode("utf-8"))
 
         running[0] = False
         return 0

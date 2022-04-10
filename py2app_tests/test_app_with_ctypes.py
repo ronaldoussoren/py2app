@@ -144,9 +144,7 @@ class TestBasicAppWithCTypes(unittest.TestCase):
         p = self.start_app()
         p.stdin.write(b'find_library("shared")\n')
         p.stdin.flush()
-        ln = p.stdout.readline().strip()
-        if sys.version_info[0] == 3:
-            ln = ln.decode("utf-8")
+        ln = p.stdout.readline().strip().decode("utf-8")
         self.assertEqual(
             os.path.realpath(ln),
             os.path.realpath(
@@ -161,10 +159,7 @@ class TestBasicAppWithCTypes(unittest.TestCase):
         )
         p.stdin.write(b'find_library("System")\n')
         p.stdin.flush()
-        ln = p.stdout.readline().strip()
-        if sys.version_info[0] == 3:
-            ln = ln.decode("utf-8")
-
+        ln = p.stdout.readline().strip().decode("utf-8")
         if [int(x) for x in platform.mac_ver()[0].split(".")] >= [10, 16]:
             self.assertIn(ln, ["None", "/usr/lib/libSystem.dylib"])
 

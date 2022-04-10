@@ -82,10 +82,6 @@ class TestBasicPlugin(unittest.TestCase):
                     pass
                 raise AssertionError("Fetching Xcode root failed")
 
-            root = lines.strip()
-            if sys.version_info[0] != 2:
-                root = root.decode("utf-8")
-
             if LooseVersion(platform.mac_ver()[0]) < LooseVersion("10.7"):
                 cc = [get_config_var("CC")]
                 env = dict(os.environ)
@@ -232,12 +228,7 @@ class TestBasicSemiStandalonePlugin(TestBasicPlugin):
 
 
 class TestBasicPluginUnicodePath(TestBasicPlugin):
-    if sys.version_info[0] == 2:
-        plugin_dir = os.path.join(
-            DIR_NAME, "basic_plugin " + unichr(2744).encode("utf-8")
-        )
-    else:
-        plugin_dir = os.path.join(DIR_NAME, "basic_plugin " + chr(2744))
+    plugin_dir = os.path.join(DIR_NAME, "basic_plugin " + chr(2744))
 
     @classmethod
     def setUpClass(cls):

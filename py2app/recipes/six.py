@@ -1,67 +1,61 @@
-import sys
-
 SIX_TAB = {
-    # six.moves:  (py2, py3)
-    "configparser": ("ConfigParser", "configparser"),
-    "copyreg": ("copy_reg", "copyreg"),
-    "cPickle": ("cPickle", "pickle"),
-    "cStringIO": ("cStringIO", "io"),
-    "dbm_gnu": ("gdbm", "dbm.gnu"),
-    "_dummy_thread": ("dummy_thread", "_dummy_thread"),
-    "email_mime_multipart": ("email.MIMEMultipart", "email.mime.multipart"),
-    "email_mime_nonmultipart": ("email.MIMENonMultipart", "email.mime.nonmultipart"),
-    "email_mime_text": ("email.MIMEText", "email.mime.text"),
-    "email_mime_base": ("email.MIMEBase", "email.mime.base"),
-    "filter": ("itertools", None),
-    "filterfalse": ("itertools", "itertools"),
-    "getcwd": ("os", "os"),
-    "getcwdb": ("os", "os"),
-    "http_cookiejar": ("cookielib", "http.cookiejar"),
-    "http_cookies": ("Cookie", "http.cookies"),
-    "html_entities": ("htmlentitydefs", "html.entities"),
-    "html_parser": ("HTMLParser", "html.parser"),
-    "http_client": ("httplib", "http.client"),
-    "BaseHTTPServer": ("BaseHTTPServer", "http.server"),
-    "CGIHTTPServer": ("CGIHTTPServer", "http.server"),
-    "SimpleHTTPServer": ("SimpleHTTPServer", "http.server"),
-    "intern": (None, "sys"),
-    "map": ("itertools", None),
-    "queue": ("Queue", "queue"),
-    "reduce": (None, "functools"),
-    "reload_module": (None, "importlib"),
-    "reprlib": ("repr", "reprlib"),
-    "shlex_quote": ("pipes", "shlex"),
-    "socketserver": ("SocketServer", "socketserver"),
-    "_thread": ("thread", "_thread"),
-    "tkinter": ("Tkinter", "tkinter"),
-    "tkinter_dialog": ("Dialog", "tkinter.dialog"),
-    "tkinter_filedialog": ("FileDialog", "tkinter.FileDialog"),
-    "tkinter_scrolledtext": ("ScrolledText", "tkinter.scrolledtext"),
-    "tkinter_simpledialog": ("SimpleDialog", "tkinter.simpledialog"),
-    "tkinter_ttk": ("ttk", "tkinter.ttk"),
-    "tkinter_tix": ("Tix", "tkinter.tix"),
-    "tkinter_constants": ("Tkconstants", "tkinter.constants"),
-    "tkinter_dnd": ("Tkdnd", "tkinter.dnd"),
-    "tkinter_colorchooser": ("tkColorChooser", "tkinter.colorchooser"),
-    "tkinter_commondialog": ("tkCommonDialog", "tkinter.commondialog"),
-    "tkinter_tkfiledialog": ("tkFileDialog", "tkinter.filedialog"),
-    "tkinter_font": ("tkFont", "tkinter.font"),
-    "tkinter_messagebox": ("tkMessageBox", "tkinter.messagebox"),
-    "tkinter_tksimpledialog": ("tkSimpleDialog", "tkinter.simpledialog"),
-    "urllib.robotparser": ("robotparser", "urllib.robotparser"),
-    "urllib_robotparser": ("robotparser", "urllib.robotparser"),
-    "UserDict": ("UserDict", "collections"),
-    "UserList": ("UserList", "collections"),
-    "UserString": ("UserString", "collections"),
-    "winreg": ("_winreg", "winreg"),
-    "xmlrpc_client": ("xmlrpclib", "xmlrpc.client"),
-    "xmlrpc_server": ("SimpleXMLRPCServer", "xmlrpc.server"),
-    "zip": ("itertools", None),
-    "zip_longest": ("itertools", "itertools"),
-    "urllib.parse": (("urlparse", "urllib"), "urllib.parse"),
-    "urllib.error": (("urllib", "urllib2"), "urllib.error"),
-    "urllib.request": (("urllib", "urllib2"), "urllib.request"),
-    "urllib.response": ("urllib", "urllib.request"),
+    "configparser": "configparser",
+    "copyreg": "copyreg",
+    "cPickle": "pickle",
+    "cStringIO": "io",
+    "dbm_gnu": "dbm.gnu",
+    "_dummy_thread": "_dummy_thread",
+    "email_mime_multipart": "email.mime.multipart",
+    "email_mime_nonmultipart": "email.mime.nonmultipart",
+    "email_mime_text": "email.mime.text",
+    "email_mime_base": "email.mime.base",
+    "filterfalse": "itertools",
+    "getcwd": "os",
+    "getcwdb": "os",
+    "http_cookiejar": "http.cookiejar",
+    "http_cookies": "http.cookies",
+    "html_entities": "html.entities",
+    "html_parser": "html.parser",
+    "http_client": "http.client",
+    "BaseHTTPServer": "http.server",
+    "CGIHTTPServer": "http.server",
+    "SimpleHTTPServer": "http.server",
+    "intern": "sys",
+    "queue": "queue",
+    "reduce": "functools",
+    "reload_module": "importlib",
+    "reprlib": "reprlib",
+    "shlex_quote": "shlex",
+    "socketserver": "socketserver",
+    "_thread": "_thread",
+    "tkinter": "tkinter",
+    "tkinter_dialog": "tkinter.dialog",
+    "tkinter_filedialog": "tkinter.FileDialog",
+    "tkinter_scrolledtext": "tkinter.scrolledtext",
+    "tkinter_simpledialog": "tkinter.simpledialog",
+    "tkinter_ttk": "tkinter.ttk",
+    "tkinter_tix": "tkinter.tix",
+    "tkinter_constants": "tkinter.constants",
+    "tkinter_dnd": "tkinter.dnd",
+    "tkinter_colorchooser": "tkinter.colorchooser",
+    "tkinter_commondialog": "tkinter.commondialog",
+    "tkinter_tkfiledialog": "tkinter.filedialog",
+    "tkinter_font": "tkinter.font",
+    "tkinter_messagebox": "tkinter.messagebox",
+    "tkinter_tksimpledialog": "tkinter.simpledialog",
+    "urllib.robotparser": "urllib.robotparser",
+    "urllib_robotparser": "urllib.robotparser",
+    "UserDict": "collections",
+    "UserList": "collections",
+    "UserString": "collections",
+    "winreg": "winreg",
+    "xmlrpc_client": "xmlrpc.client",
+    "xmlrpc_server": "xmlrpc.server",
+    "zip_longest": "itertools",
+    "urllib.parse": "urllib.parse",
+    "urllib.error": "urllib.error",
+    "urllib.request": "urllib.request",
+    "urllib.response": "urllib.request",
 }
 
 
@@ -99,15 +93,9 @@ def check(cmd, mf):
                 # in significantly larger bundles
                 continue
 
-            if sys.version_info[0] == 2:
-                alt = SIX_TAB[submod][0]
-            else:
-                alt = SIX_TAB[submod][1]
+            alt = SIX_TAB[submod]
 
-            if alt is None:
-                continue
-
-            elif not isinstance(alt, tuple):
+            if not isinstance(alt, tuple):
                 alt = (alt,)
 
             for nm in alt:
@@ -126,15 +114,8 @@ def check(cmd, mf):
             name = mod + "." + submod
             m = mf.findNode(name)
             if m is not None:
-                if sys.version_info[0] == 2:
-                    alt = SIX_TAB[submod][0]
-                else:
-                    alt = SIX_TAB[submod][1]
-
-                if alt is None:
-                    continue
-
-                elif not isinstance(alt, tuple):
+                alt = SIX_TAB[submod]
+                if not isinstance(alt, tuple):
                     alt = (alt,)
 
                 for nm in alt:

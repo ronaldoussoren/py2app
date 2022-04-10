@@ -10,7 +10,6 @@ import shutil
 import platform
 import shlex
 import re
-import sys
 
 
 class sharedlib(Command):
@@ -135,11 +134,7 @@ setup(
                 "-Isrc",
                 "-DNAME=double",
                 "-DFUNC_NAME=doubled",
-                (
-                    "-DINITFUNC=initdouble"
-                    if sys.version_info[0] == 2
-                    else "-DINITFUNC=PyInit_double"
-                ),
+                "-DINITFUNC=PyInit_double",
             ],
             extra_link_args=["-Llib", "-lshared"],
         ),
@@ -150,11 +145,7 @@ setup(
                 "-Isrc",
                 "-DNAME=square",
                 "-DFUNC_NAME=squared",
-                (
-                    "-DINITFUNC=initsquare"
-                    if sys.version_info[0] == 2
-                    else "-DINITFUNC=PyInit_square"
-                ),
+                "-DINITFUNC=PyInit_square",
             ],
             extra_link_args=["-Llib", "-lshared.1"],
         ),
@@ -165,11 +156,7 @@ setup(
                 "-Isrc",
                 "-DNAME=half",
                 "-DFUNC_NAME=half",
-                (
-                    "-DINITFUNC=inithalf"
-                    if sys.version_info[0] == 2
-                    else "-DINITFUNC=PyInit_half"
-                ),
+                "-DINITFUNC=PyInit_half",
             ],
             extra_link_args=["-Llib", "-lhalf"],
         ),

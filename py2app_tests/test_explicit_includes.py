@@ -16,9 +16,7 @@ DIR_NAME = os.path.dirname(os.path.abspath(__file__))
 
 
 class TestExplicitIncludes(unittest.TestCase):
-    py2app_args = ["--includes=package1.subpackage.module"]
-    if sys.version_info[:2] >= (3, 3):
-        py2app_args = ["--includes=package1.subpackage.module,package3.mod"]
+    py2app_args = ["--includes=package1.subpackage.module,package3.mod"]
 
     python_args = []
     app_dir = os.path.join(DIR_NAME, "basic_app")
@@ -111,11 +109,10 @@ class TestExplicitIncludes(unittest.TestCase):
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"package1.subpackage.module")
 
-        if sys.version_info[:2] >= (3, 3):
-            p.stdin.write(b'import_module("package3.mod")\n')
-            p.stdin.flush()
-            ln = p.stdout.readline()
-            self.assertEqual(ln.strip(), b"package3.mod")
+        p.stdin.write(b'import_module("package3.mod")\n')
+        p.stdin.flush()
+        ln = p.stdout.readline()
+        self.assertEqual(ln.strip(), b"package3.mod")
 
 
 if __name__ == "__main__":

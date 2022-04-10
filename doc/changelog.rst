@@ -31,6 +31,8 @@ py2app.0.29
 
 * flake8 status is enforced in the  pre-commit configuration
 
+* #426: Remove code that supports Python 3.5 or earlier
+
 py2app 0.28
 -----------
 

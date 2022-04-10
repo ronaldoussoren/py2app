@@ -25,11 +25,6 @@ USER_BASE = None
 
 import os  # noqa: E402
 
-try:
-    basestring
-except NameError:
-    basestring = str
-
 
 def makepath(*paths):
     dirname = os.path.abspath(os.path.join(*paths))
@@ -38,7 +33,7 @@ def makepath(*paths):
 
 for m in sys.modules.values():
     f = getattr(m, "__file__", None)
-    if isinstance(f, basestring) and os.path.exists(f):
+    if isinstance(f, str) and os.path.exists(f):
         m.__file__ = os.path.abspath(m.__file__)
 del m
 

@@ -59,12 +59,7 @@ def create_pluginbundle(
         else:
             plistlib.writePlist(plist, fp)
     srcmain = module.setup.main(arch=arch)
-    if sys.version_info[0] == 2 and isinstance(
-        kw["CFBundleExecutable"], unicode  # noqa: F821
-    ):
-        destmain = os.path.join(platdir, kw["CFBundleExecutable"].encode("utf-8"))
-    else:
-        destmain = os.path.join(platdir, kw["CFBundleExecutable"])
+    destmain = os.path.join(platdir, kw["CFBundleExecutable"])
     with open(os.path.join(contents, "PkgInfo"), "w") as fp:
         fp.write(kw["CFBundlePackageType"] + kw["CFBundleSignature"])
     copy(srcmain, destmain)

@@ -2,10 +2,7 @@ import os
 import sys
 import textwrap
 
-if sys.version_info[0] == 2:
-    from cStringIO import StringIO
-else:
-    from io import StringIO
+from io import StringIO
 
 PRESCRIPT = textwrap.dedent(
     """\

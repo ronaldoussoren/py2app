@@ -1,12 +1,8 @@
 def _emulate_shell_environ():
     import os
-    import sys
     import time
 
-    if sys.version_info[0] > 2:
-        env = os.environb
-    else:
-        env = os.environ
+    env = os.environb
 
     split_char = b"="
 

@@ -2,10 +2,7 @@ import re
 import sys
 
 cookie_re = re.compile(rb"coding[:=]\s*([-\w.]+)")
-if sys.version_info[0] == 2:
-    default_encoding = "ascii"
-else:
-    default_encoding = "utf-8"
+default_encoding = "utf-8"
 
 
 def guess_encoding(fp):
@@ -32,18 +29,14 @@ def _run():
 
     path = os.path.join(base, script)
     sys.argv[0] = __file__ = path
-    if sys.version_info[0] == 2:
-        with open(path) as fp:
-            source = fp.read() + "\n"
-    else:
-        with open(path, "rb") as fp:
-            encoding = guess_encoding(fp)
+    with open(path, "rb") as fp:
+        encoding = guess_encoding(fp)
 
-        with open(path, encoding=encoding) as fp:
-            source = fp.read() + "\n"
+    with open(path, encoding=encoding) as fp:
+        source = fp.read() + "\n"
 
-        BOM = b"\xef\xbb\xbf".decode("utf-8")
-        if source.startswith(BOM):
-            source = source[1:]
+    BOM = b"\xef\xbb\xbf".decode("utf-8")
+    if source.startswith(BOM):
+        source = source[1:]
 
     exec(compile(source, path, "exec"), globals(), globals())

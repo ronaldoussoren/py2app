@@ -269,17 +269,6 @@ def in_system_path(filename):
     return macholib.util.in_system_path(filename)
 
 
-if sys.version_info[0] == 2:
-
-    def fsencoding(s, encoding=sys.getfilesystemencoding()):  # noqa: M511,B008
-        return macholib.util.fsencoding(s, encoding=encoding)
-
-else:
-
-    def fsencoding(s, encoding=sys.getfilesystemencoding()):  # noqa: M511,B008
-        return s
-
-
 def make_exec(path):
     mask = os.umask(0)
     os.umask(mask)
@@ -287,7 +276,6 @@ def make_exec(path):
 
 
 def makedirs(path):
-    path = fsencoding(path)
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -503,7 +491,6 @@ SCMDIRS = ["CVS", ".svn", ".hg", ".git"]
 
 
 def skipscm(ofn):
-    ofn = fsencoding(ofn)
     fn = os.path.basename(ofn)
     if fn in SCMDIRS:
         return False
@@ -612,9 +599,6 @@ def copy_tree(
     from distutils.dep_util import newer
     from distutils.dir_util import mkpath
     from distutils.errors import DistutilsFileError
-
-    src = fsencoding(src)
-    dst = fsencoding(dst)
 
     if condition is None:
         condition = skipscm

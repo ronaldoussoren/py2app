@@ -64,12 +64,7 @@ def create_appbundle(
     srcmain = module.setup.main(
         arch=arch, redirect_asl=redirect_stdout, use_old_sdk=use_old_sdk
     )
-    if sys.version_info[0] == 2 and isinstance(
-        kw["CFBundleExecutable"], unicode  # noqa: F821
-    ):
-        destmain = os.path.join(platdir, kw["CFBundleExecutable"].encode("utf-8"))
-    else:
-        destmain = os.path.join(platdir, kw["CFBundleExecutable"])
+    destmain = os.path.join(platdir, kw["CFBundleExecutable"])
 
     with open(os.path.join(contents, "PkgInfo"), "w") as fp:
         fp.write(kw["CFBundlePackageType"] + kw["CFBundleSignature"])

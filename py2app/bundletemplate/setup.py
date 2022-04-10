@@ -2,7 +2,7 @@ import distutils.sysconfig
 import distutils.util
 import os
 import re
-import sys
+
 
 gPreBuildVariants = [
     {
@@ -97,8 +97,6 @@ def main(buildall=False, arch=None):
 
     if arch is None:
         arch = distutils.util.get_platform().split("-")[-1]
-        if sys.prefix.startswith("/System") and sys.version_info[:2] == (2, 5):
-            arch = "fat"
 
     name = "main-" + arch
     root = None

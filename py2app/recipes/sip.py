@@ -12,7 +12,6 @@ detected by the python code in py2app).
 
 import glob
 import os
-import sys
 
 import pkg_resources
 
@@ -88,17 +87,11 @@ class Sip:
             # support. Exclude the variant that won't be ussed, this avoids
             # compilation errors on Python 2 (because some of the Python 3
             # code is not valid Python 2 code)
-            if sys.version_info[0] == 2:
-                ref = "PyQt4.uic.port_v3"
-            else:
-                ref = "PyQt4.uic.port_v2"
+            ref = "PyQt4.uic.port_v2"
 
         if "PyQt5.uic" in packages:
             # ditto
-            if sys.version_info[0] == 2:
-                ref = "PyQt5.uic.port_v3"
-            else:
-                ref = "PyQt5.uic.port_v2"
+            ref = "PyQt5.uic.port_v2"
 
             # Exclude...
             mf.lazynodes[ref] = None

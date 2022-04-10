@@ -131,26 +131,6 @@ class TestEmailCompat(unittest.TestCase):
     # End of setup code
     #
 
-    @unittest.skipUnless(sys.version_info[0] == 2, "Python 2.x only")
-    def test_imports(self):
-        p = self.start_app()
-
-        # Compatibility alias:
-        p.stdin.write(b'import_module("email.MIMEText")\n')
-        p.stdin.flush()
-        ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), b"email.mime.text")
-
-        # Compatibility alias:
-        p.stdin.write(b'import_module("email.Encoders")\n')
-        p.stdin.flush()
-        ln = p.stdout.readline()
-        self.assertEqual(ln.strip(), b"email.encoders")
-
-        p.stdin.close()
-        p.stdout.close()
-        self.assertChecksumsSame()
-
 
 class TestEmailFull(TestEmailCompat):
     setup_file = "setup-all.py"

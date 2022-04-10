@@ -98,10 +98,7 @@ class TestBasicApp(unittest.TestCase):
         )
         lines = p.communicate()[0]
         if p.wait() != 0:
-            if sys.version_info[0] == 2:
-                sys.stdout.write(lines)
-            else:
-                sys.stdout.write(lines.decode("utf-8"))
+            sys.stdout.write(lines.decode("utf-8"))
             print("Creating basic_app extension failed")
             try:
                 os.waitpid(0, 0)
@@ -329,10 +326,7 @@ class TestBasicSemiStandaloneApp(TestBasicApp):
 
 
 class TestBasicAppUnicodePath(TestBasicApp):
-    if sys.version_info[0] == 2:
-        app_dir = os.path.join(DIR_NAME, "basic_app " + unichr(2744).encode("utf-8"))
-    else:
-        app_dir = os.path.join(DIR_NAME, "basic_app " + chr(2744))
+    app_dir = os.path.join(DIR_NAME, "basic_app " + chr(2744))
 
     @classmethod
     def setUpClass(cls):

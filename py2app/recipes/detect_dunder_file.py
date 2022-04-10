@@ -1,6 +1,5 @@
 import dis
 import os
-import sys
 
 from modulegraph import modulegraph
 
@@ -31,34 +30,32 @@ def scan_bytecode_loads(names, co):
             scan_bytecode_loads(names, c)
 
 
-if sys.version_info[:2] >= (3, 4):
-    # Only activate this recipe for Python 3.4 or later because
-    # scan_bytecode_loads doesn't work on older versions.
+# Only activate this recipe for Python 3.4 or later because
+# scan_bytecode_loads doesn't work on older versions.
 
-    def check(cmd, mf):
-        packages = set()
-        for node in mf.flatten():
-            if not not_stdlib_filter(node):
-                continue
 
-            if node.code is None:
-                continue
+def check(cmd, mf):
+    packages = set()
+    for node in mf.flatten():
+        if not not_stdlib_filter(node):
+            continue
 
-            if node.identifier.startswith(
-                os.path.dirname(os.path.dirname(__file__)) + "/"
-            ):
-                continue
+        if node.code is None:
+            continue
 
-            if not hasattr(node, "_py2app_global_reads"):
-                names = set()
-                scan_bytecode_loads(names, node.code)
-                node._py2app_global_reads = names
+        if node.identifier.startswith(os.path.dirname(os.path.dirname(__file__)) + "/"):
+            continue
 
-            if "__file__" in node._py2app_global_reads:
-                pkg = get_toplevel_package_name(node)
-                if pkg is not None:
-                    packages.add(pkg)
+        if not hasattr(node, "_py2app_global_reads"):
+            names = set()
+            scan_bytecode_loads(names, node.code)
+            node._py2app_global_reads = names
 
-        if packages:
-            return {"packages": packages}
-        return None
+        if "__file__" in node._py2app_global_reads:
+            pkg = get_toplevel_package_name(node)
+            if pkg is not None:
+                packages.add(pkg)
+
+    if packages:
+        return {"packages": packages}
+    return None

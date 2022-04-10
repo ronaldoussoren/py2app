@@ -5,6 +5,7 @@ Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 """
 
 import collections
+import zlib
 import imp
 import os
 import plistlib
@@ -44,7 +45,6 @@ from py2app.util import (
     copy_tree,
     fancy_split,
     find_version,
-    fsencoding,
     in_system_path,
     iter_platform_files,
     make_exec,
@@ -76,11 +76,6 @@ PLUGIN_SUFFIXES = {
     ".iaplugin": "InternetAccounts",
     ".action": "Automator",
 }
-
-try:
-    basestring
-except NameError:
-    basestring = str
 
 if hasattr(sys, "real_prefix"):
     sys_base_prefix = sys.real_prefix
@@ -228,13 +223,10 @@ def rewrite_tkinter_load_commands(tkinter_path):
 
 
 def get_zipfile(dist, semi_standalone=False):
-    if sys.version_info[0] == 3:
-        if semi_standalone:
-            return "python%d.%d/site-packages.zip" % (sys.version_info[:2])
-        else:
-            return "python%d%d.zip" % (sys.version_info[:2])
-
-    return getattr(dist, "zipfile", None) or "site-packages.zip"
+    if semi_standalone:
+        return "python%d.%d/site-packages.zip" % (sys.version_info[:2])
+    else:
+        return "python%d%d.zip" % (sys.version_info[:2])
 
 
 def framework_copy_condition(src):
@@ -305,7 +297,7 @@ class Target:
         self.__dict__.update(kw)
         # If modules is a simple string, assume they meant list
         m = self.__dict__.get("modules")
-        if m and isinstance(m, basestring):
+        if m and isinstance(m, str):
             self.modules = [m]
 
     def __repr__(self):
@@ -348,7 +340,7 @@ def FixupTargets(targets, default_attribute):
         pass
     ret = []
     for target_def in targets:
-        if isinstance(target_def, basestring):
+        if isinstance(target_def, str):
             # Create a default target object, with the string as the attribute
             target = Target(**{default_attribute: target_def})
         else:
@@ -365,7 +357,7 @@ def FixupTargets(targets, default_attribute):
 
 
 def normalize_data_file(fn):
-    if isinstance(fn, basestring):
+    if isinstance(fn, str):
         fn = convert_path(fn)
         return ("", [fn])
     return fn
@@ -705,7 +697,7 @@ class py2app(Command):
         elif self.no_strip:
             self.strip = False
         self.optimize = int(self.optimize)
-        if self.argv_inject and isinstance(self.argv_inject, basestring):
+        if self.argv_inject and isinstance(self.argv_inject, str):
             self.argv_inject = shlex.split(self.argv_inject)
         self.includes = set(fancy_split(self.includes))
         self.includes.add("encodings.*")
@@ -753,7 +745,7 @@ class py2app(Command):
             self.frameworks.append(res)
         if not self.plist:
             self.plist = {}
-        if isinstance(self.plist, basestring):
+        if isinstance(self.plist, str):
 
             if hasattr(plistlib, "load"):
                 with open(self.plist, "rb") as fp:
@@ -840,10 +832,10 @@ class py2app(Command):
             except ValueError:
                 pass
 
-        if not isinstance(version, basestring):
+        if not isinstance(version, str):
             raise DistutilsOptionError("Version must be a string")
 
-        if sys.version_info[0] > 2 and isinstance(version, bytes):
+        if isinstance(version, bytes):
             raise DistutilsOptionError("Version must be a string")
 
         plist["CFBundleVersion"] = version
@@ -919,28 +911,6 @@ class py2app(Command):
                     "This python does not have a shared library or framework"
                 )
 
-            else:
-                # Issue .. in py2app's tracker, and issue .. in python's
-                # tracker: a unix-style shared library build did not read the
-                # application environment correctly. The collection of
-                # if statements below gives a clean error message when py2app
-                # is started, instead of building a bundle that will give a
-                # confusing error message when started.
-                msg = (
-                    "py2app is not supported for a shared library build "
-                    "with this version of python"
-                )
-                if sys.version_info[:2] < (2, 7):
-                    raise DistutilsPlatformError(msg)
-                elif sys.version_info[:2] == (2, 7) and sys.version_info[3] < 4:
-                    raise DistutilsPlatformError(msg)
-                elif sys.version_info[0] == 3 and sys.version_info[1] < 2:
-                    raise DistutilsPlatformError(msg)
-                elif sys.version_info[:2] == (3, 2) and sys.version_info[3] < 3:
-                    raise DistutilsPlatformError(msg)
-                elif sys.version_info[:2] == (3, 3) and sys.version_info[3] < 1:
-                    raise DistutilsPlatformError(msg)
-
         if (
             hasattr(self.distribution, "install_requires")
             and self.distribution.install_requires
@@ -975,9 +945,7 @@ class py2app(Command):
         for (path, files) in (
             normalize_data_file(fn) for fn in (self.datamodels or ())
         ):
-            path = fsencoding(path)
             for fn in files:
-                fn = fsencoding(fn)
                 basefn, ext = os.path.splitext(fn)
                 if ext != ".xcdatamodel":
                     basefn = fn
@@ -995,9 +963,7 @@ class py2app(Command):
         for (path, files) in (
             normalize_data_file(fn) for fn in (self.mappingmodels or ())
         ):
-            path = fsencoding(path)
             for fn in files:
-                fn = fsencoding(fn)
                 basefn, ext = os.path.splitext(fn)
                 if ext != ".xcmappingmodel":
                     basefn = fn
@@ -1031,9 +997,7 @@ class py2app(Command):
         dist = self.distribution
         allres = chain(getattr(dist, "data_files", ()) or (), self.resources)
         for (path, files) in (normalize_data_file(fn) for fn in allres):
-            path = fsencoding(path)
             for fn in files:
-                fn = fsencoding(fn)
                 yield fn, os.path.join(path, os.path.basename(fn))
 
     def collect_scripts(self):
@@ -1042,7 +1006,7 @@ class py2app(Command):
 
         for target in self.targets:
             scripts.add(target.script)
-            scripts.update([k for k in target.prescripts if isinstance(k, basestring)])
+            scripts.update([k for k in target.prescripts if isinstance(k, str)])
             if hasattr(target, "extra_scripts"):
                 scripts.update(target.extra_scripts)
 
@@ -1159,7 +1123,7 @@ class py2app(Command):
                     find_needed_modules(mf, packages=rval["packages"])
 
                 for pkg in rval.get("flatpackages", ()):
-                    if isinstance(pkg, basestring):
+                    if isinstance(pkg, str):
                         pkg = (os.path.basename(pkg), pkg)
                     flatpackages[pkg[0]] = pkg[1]
                 filters.extend(rval.get("filters", ()))
@@ -1181,7 +1145,7 @@ class py2app(Command):
                     self.use_old_sdk = True
 
                 for fn in newbootstraps:
-                    if isinstance(fn, basestring):
+                    if isinstance(fn, str):
                         mf.run_script(fn)
 
                 for target in self.targets:
@@ -1254,17 +1218,15 @@ class py2app(Command):
                 # funcionality because that causes problems with our support
                 # for loading C extensions.
                 #
-                # if sys.version_info[:2] <= (3,3):
-                if 1:
-                    fn = os.path.join(self.temp_dir, "empty_package", "__init__.py")
-                    if not os.path.exists(fn):
-                        dn = os.path.dirname(fn)
-                        if not os.path.exists(dn):
-                            os.makedirs(dn)
-                        with open(fn, "w"):
-                            pass
+                fn = os.path.join(self.temp_dir, "empty_package", "__init__.py")
+                if not os.path.exists(fn):
+                    dn = os.path.dirname(fn)
+                    if not os.path.exists(dn):
+                        os.makedirs(dn)
+                    with open(fn, "w"):
+                        pass
 
-                    item.filename = fn
+                item.filename = fn
 
         py_files, extensions = parse_mf_results(mf)
 
@@ -2061,11 +2023,6 @@ class py2app(Command):
         if self.semi_standalone:
             prescripts.append("semi_standalone_path")
 
-        if 0 and sys.version_info[:2] >= (3, 2) and not self.alias:
-            # Python 3.2 or later requires a more complicated
-            # bootstrap
-            prescripts.append("import_encodings")
-
         if os.path.exists(os.path.join(sys.prefix, "pyvenv.cfg")):
             # We're in a venv, which means sys.path
             # will be broken in alias builds unless we fix
@@ -2172,7 +2129,7 @@ class py2app(Command):
             prescripts.append("boot_alias" + self.style)
         newprescripts = []
         for s in prescripts:
-            if isinstance(s, basestring):
+            if isinstance(s, str):
                 newprescripts.append(self.get_bootstrap("py2app.bootstrap." + s))
             else:
                 newprescripts.append(s)
@@ -2182,14 +2139,14 @@ class py2app(Command):
             target.prescripts = newprescripts + prescripts
 
     def get_bootstrap(self, bootstrap):
-        if isinstance(bootstrap, basestring):
+        if isinstance(bootstrap, str):
             if not os.path.exists(bootstrap):
                 bootstrap = imp_find_module(bootstrap)[1]
         return bootstrap
 
     def get_bootstrap_data(self, bootstrap):
         bootstrap = self.get_bootstrap(bootstrap)
-        if not isinstance(bootstrap, basestring):
+        if not isinstance(bootstrap, str):
             return bootstrap.getvalue()
         else:
             with open(bootstrap) as fp:
@@ -2209,7 +2166,6 @@ class py2app(Command):
             extension=self.extension,
             arch=self.arch,
         )
-        appdir = fsencoding(appdir)
         resdir = os.path.join(appdir, "Contents", "Resources")
         return appdir, resdir, plist
 
@@ -2232,7 +2188,6 @@ class py2app(Command):
             redirect_stdout=self.redirect_stdout_to_asl,
             use_old_sdk=self.use_old_sdk,
         )
-        appdir = fsencoding(appdir)
         resdir = os.path.join(appdir, "Contents", "Resources")
         return appdir, resdir, plist
 
@@ -2437,7 +2392,7 @@ class py2app(Command):
 
         pydir = os.path.join(resdir, "lib", "python%s.%s" % (sys.version_info[:2]))
 
-        if sys.version_info[0] == 2 or self.semi_standalone:
+        if self.semi_standalone:
             arcdir = os.path.join(resdir, "lib", "python%d.%d" % (sys.version_info[:2]))
         else:
             arcdir = os.path.join(resdir, "lib")
@@ -2480,10 +2435,8 @@ class py2app(Command):
             self.copy_file(get_config_h_filename(), os.path.join(inc_dir, "pyconfig.h"))
 
         self.copy_file(arcname, arcdir)
-        if sys.version_info[0] != 2:
-            import zlib
 
-            self.copy_file(zlib.__file__, os.path.dirname(arcdir))
+        self.copy_file(zlib.__file__, os.path.dirname(arcdir))
 
         ext_dir = os.path.join(pydir, os.path.basename(self.ext_dir))
         self.copy_tree(self.ext_dir, ext_dir, preserve_symlinks=True)

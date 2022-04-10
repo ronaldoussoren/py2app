@@ -31,20 +31,15 @@ def _import_os():
 
 _import_os()
 
-try:
-    basestring
-except NameError:
-    basestring = str
-
 
 def makepath(*paths):
     dirname = os.path.abspath(os.path.join(*paths))
-    return dirname, os.path.normcase(dir)
+    return dirname, os.path.normcase(dirname)
 
 
 for m in sys.modules.values():
     f = getattr(m, "__file__", None)
-    if isinstance(f, basestring) and os.path.exists(f):
+    if isinstance(f, str) and os.path.exists(f):
         m.__file__ = os.path.abspath(m.__file__)
 del m
 

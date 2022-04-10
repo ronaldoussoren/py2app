@@ -14,11 +14,7 @@ def check(cmd, mf):
         mf.import_hook("os.path", m)
         mf.import_hook("re", m)
         mf.import_hook("gzip", m)
-
-        if sys.version_info[0] == 2:
-            mf.import_hook("StringIO", m)
-        else:
-            mf.import_hook("io", m)
+        mf.import_hook("io", m)
 
     m = mf.findNode("lxml.objectify")
     if m is not None and m.filename is not None:

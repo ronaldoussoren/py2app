@@ -378,10 +378,7 @@ class TestBasicSemiStandaloneAppWindowsLineEnd(TestBasicAppWindowsLineEnd):
 
 
 class TestBasicAppUnicodePath(TestBasicApp):
-    if sys.version_info[0] == 2:
-        app_dir = os.path.join(DIR_NAME, "basic_app " + unichr(2744).encode("utf-8"))
-    else:
-        app_dir = os.path.join(DIR_NAME, "basic_app " + chr(2744))
+    app_dir = os.path.join(DIR_NAME, "basic_app " + chr(2744))
 
     @classmethod
     def setUpClass(cls):
