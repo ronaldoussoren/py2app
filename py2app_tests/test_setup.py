@@ -41,7 +41,3 @@ class TestSetupArguments(unittest.TestCase):
         pl = cmd.get_default_plist()
         self.assertEqual(pl["CFBundleVersion"], "1")
         self.assertEqual(cmd.distribution.get_version(), "1")
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -7,10 +7,7 @@ import unittest
 
 import py2app
 
-if __name__ == "__main__":
-    from tools import kill_child_processes
-else:
-    from .tools import kill_child_processes
+from .tools import kill_child_processes
 
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))
 
@@ -29,7 +26,6 @@ class TestBasicApp(unittest.TestCase):
 
         env = os.environ.copy()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
-        env["TMPDIR"] = os.getcwd()
         if "PYTHONPATH" in env:
             env["PYTHONPATH"] = pp + ":" + env["PYTHONPATH"]
         else:
@@ -95,7 +91,3 @@ class TestBasicSemiStandaloneApp(TestBasicApp):
     py2app_args = [
         "--semi-standalone",
     ]
-
-
-if __name__ == "__main__":
-    unittest.main()

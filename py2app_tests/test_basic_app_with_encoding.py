@@ -27,10 +27,7 @@ from distutils.sysconfig import get_config_var
 
 import py2app
 
-if __name__ == "__main__":
-    from tools import kill_child_processes
-else:
-    from .tools import kill_child_processes
+from .tools import kill_child_processes
 
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))
 
@@ -72,7 +69,6 @@ class TestBasicAppWithEncoding(unittest.TestCase):
 
         env = os.environ.copy()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
-        env["TMPDIR"] = os.getcwd()
         if "PYTHONPATH" in env:
             env["PYTHONPATH"] = pp + ":" + env["PYTHONPATH"]
         else:
@@ -274,7 +270,3 @@ class TestBasicSemiStandaloneAppWithEncoding(TestBasicAppWithEncoding):
         )
         if os.path.exists(os.path.join(path, "email")):
             self.fail("'email' package copied into a semi-standalone build")
-
-
-if __name__ == "__main__":
-    unittest.main()

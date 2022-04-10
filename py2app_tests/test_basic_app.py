@@ -69,7 +69,6 @@ class TestBasicApp(unittest.TestCase):
 
         env = os.environ.copy()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
-        env["TMPDIR"] = os.getcwd()
         if "PYTHONPATH" in env:
             env["PYTHONPATH"] = pp + ":" + env["PYTHONPATH"]
         else:
@@ -454,7 +453,3 @@ class TestOptimized2(TestBasicApp):
             self.assertEqual(status, 0)
 
         self.assertChecksumsSame()
-
-
-if __name__ == "__main__":
-    unittest.main()

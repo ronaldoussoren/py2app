@@ -60,7 +60,3 @@ class FilterTest(unittest.TestCase):
 
         node.filetype = "dylib"
         self.assertTrue(filters.bundle_or_dylib_filter(node))
-
-
-if __name__ == "__main__":
-    unittest.main()

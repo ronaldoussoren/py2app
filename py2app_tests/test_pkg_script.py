@@ -32,7 +32,6 @@ class TestBasicApp(unittest.TestCase):
         kill_child_processes()
 
         env = os.environ.copy()
-        env["TMPDIR"] = os.getcwd()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
         if "PYTHONPATH" in env:
             env["PYTHONPATH"] = pp + ":" + env["PYTHONPATH"]
@@ -192,7 +191,3 @@ class TestBasicSemiStandaloneApp(TestBasicApp):
     py2app_args = [
         "--semi-standalone",
     ]
-
-
-if __name__ == "__main__":
-    unittest.main()

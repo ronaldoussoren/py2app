@@ -11,10 +11,7 @@ from distutils.version import LooseVersion
 
 import py2app
 
-if __name__ == "__main__":
-    from tools import kill_child_processes
-else:
-    from .tools import kill_child_processes
+from .tools import kill_child_processes
 
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))
 
@@ -39,7 +36,6 @@ class TestBasicPlugin(unittest.TestCase):
             cmd = [sys.executable, "setup.py", "py2app"] + cls.py2app_args
 
             env = os.environ.copy()
-            env["TMPDIR"] = os.getcwd()
             pp = os.path.dirname(os.path.dirname(py2app.__file__))
             if "PYTHONPATH" in env:
                 env["PYTHONPATH"] = pp + ":" + env["PYTHONPATH"]
@@ -257,7 +253,3 @@ class TestBasicAliasPluginUnicodePath(TestBasicPluginUnicodePath):
 
 class TestBasicSemiStandalonePluginUnicodePath(TestBasicPluginUnicodePath):
     py2app_args = ["--semi-standalone"]
-
-
-if __name__ == "__main__":
-    unittest.main()

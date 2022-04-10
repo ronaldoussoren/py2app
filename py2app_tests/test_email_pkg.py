@@ -9,10 +9,7 @@ import unittest
 
 import py2app
 
-if __name__ == "__main__":
-    from tools import kill_child_processes
-else:
-    from .tools import kill_child_processes
+from .tools import kill_child_processes
 
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))
 
@@ -139,7 +136,3 @@ class TestEmailFull(TestEmailCompat):
 
 class TestEmailPlainImport(TestEmailCompat):
     setup_file = "setup-plain.py"
-
-
-if __name__ == "__main__":
-    unittest.main()

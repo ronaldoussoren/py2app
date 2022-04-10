@@ -30,7 +30,6 @@ class TestBasicAppWithExtension(unittest.TestCase):
 
         env = os.environ.copy()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
-        env["TMPDIR"] = os.getcwd()
         if "PYTHONPATH" in env:
             env["PYTHONPATH"] = pp + ":" + env["PYTHONPATH"]
         else:
@@ -267,7 +266,3 @@ class TestBasicSemiStandaloneAppWithExtension(TestBasicAppWithExtension):
     py2app_args = [
         "--semi-standalone",
     ]
-
-
-if __name__ == "__main__":
-    unittest.main()

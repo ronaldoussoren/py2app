@@ -10,10 +10,7 @@ import unittest
 
 import py2app
 
-if __name__ == "__main__":
-    from tools import kill_child_processes
-else:
-    from .tools import kill_child_processes
+from .tools import kill_child_processes
 
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,7 +31,6 @@ class TestShellEnvironment(unittest.TestCase):
         kill_child_processes()
 
         env = os.environ.copy()
-        env["TMPDIR"] = os.getcwd()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
         if "PYTHONPATH" in env:
             env["PYTHONPATH"] = pp + ":" + env["PYTHONPATH"]
@@ -100,7 +96,3 @@ class TestShellEnvironment(unittest.TestCase):
 
         elems = path.split(":")
         self.assertIn("/usr/bin", elems)
-
-
-if __name__ == "__main__":
-    unittest.main()

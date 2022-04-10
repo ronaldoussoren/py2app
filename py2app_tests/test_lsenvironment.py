@@ -32,7 +32,6 @@ class TestLSEnvironment(unittest.TestCase):
         kill_child_processes()
 
         env = os.environ.copy()
-        env["TMPDIR"] = os.getcwd()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
         if "PYTHONPATH" in env:
             env["PYTHONPATH"] = pp + ":" + env["PYTHONPATH"]
@@ -107,7 +106,3 @@ class TestLSEnvironment(unittest.TestCase):
         self.assertEqual(env["EXTRA_VAR"], "hello world")
         self.assertEqual(env["LANG"], "nl_NL.latin1")
         self.assertEqual(env["LC_CTYPE"], "nl_NL.UTF-8")
-
-
-if __name__ == "__main__":
-    unittest.main()
