@@ -25,6 +25,10 @@ py2app.0.29
 
 * #432: Switch from setuptools to flit for building wheels and sdists
 
+* Add a "maybe_packages" option that lists packages that
+  should be excluded from the zipfile when they are found
+  by the dependency checker.
+
 py2app 0.28
 -----------
 

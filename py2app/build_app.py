@@ -1240,7 +1240,10 @@ class py2app(Command):
 
     def finalize_modulefinder(self, mf):
         for item in mf.flatten():
-            if item.name in self.maybe_packages and item.name not in self.packages:
+            if (
+                item.identifier in self.maybe_packages
+                and item.identifier not in self.packages
+            ):
                 # Include all "maybe_packages" that are reachable from
                 # the root of the graph.
                 self.packages.append(item)
