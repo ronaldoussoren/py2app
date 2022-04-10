@@ -10,14 +10,13 @@ menu that DoodleWindow provides.  There is also a nice About dialog
 implemented using an wx.html.HtmlWindow.
 """
 
-import wx  # This module uses the new wx namespace
-import wx.html
-from wx.lib import buttons  # for generic button classes
-from doodle import DoodleWindow
-
 import os
 import pickle
 
+import wx  # This module uses the new wx namespace
+import wx.html
+from doodle import DoodleWindow
+from wx.lib import buttons  # for generic button classes
 
 # ----------------------------------------------------------------------
 

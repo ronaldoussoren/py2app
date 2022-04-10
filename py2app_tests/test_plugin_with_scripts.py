@@ -1,14 +1,15 @@
-import sys
-import unittest
-import subprocess
-import shutil
-import time
 import os
+import platform
+import shutil
 import signal
+import subprocess
+import sys
+import time
+import unittest
 from distutils.sysconfig import get_config_var
 from distutils.version import LooseVersion
+
 import py2app
-import platform
 
 if __name__ == "__main__":
     from tools import kill_child_processes

@@ -1,6 +1,5 @@
-import sys
 import os
-
+import sys
 
 root = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

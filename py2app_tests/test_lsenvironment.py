@@ -1,16 +1,18 @@
 """
 Testcase for checking argv_emulation
 """
-import sys
-import unittest
-import subprocess
-import shutil
-import time
-import os
-import signal  # noqa: F401
-import platform  # noqa: F401
-import py2app  # noqa: F401
 import ast  # noqa: F401
+import os
+import platform  # noqa: F401
+import shutil
+import signal  # noqa: F401
+import subprocess
+import sys
+import time
+import unittest
+
+import py2app  # noqa: F401
+
 from .tools import kill_child_processes
 
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))

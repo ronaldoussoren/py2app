@@ -1,6 +1,6 @@
-import sys
 import os
 import pprint
+import sys
 
 print(__file__)
 

@@ -1,9 +1,10 @@
 import os
 import sys
-import wxglade
-import common
 import webbrowser
+
+import common
 import main
+import wxglade
 
 common.wxglade_path = os.getcwd()
 

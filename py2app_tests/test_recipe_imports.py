@@ -1,6 +1,6 @@
-import unittest
 import os
 import re
+import unittest
 
 
 class TestRecipeImports(unittest.TestCase):

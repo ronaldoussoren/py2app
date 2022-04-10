@@ -1,12 +1,12 @@
-from distutils.core import setup, Extension, Command
+import os
+import platform
+import re
+import shutil
+import subprocess
 from distutils import sysconfig
 from distutils.command.build_ext import build_ext
+from distutils.core import Command, Extension, setup
 from distutils.version import LooseVersion
-import os
-import shutil
-import re
-import subprocess
-import platform
 
 
 class my_build_ext(build_ext):

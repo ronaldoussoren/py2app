@@ -1,9 +1,10 @@
 """TinyTinyEdit -- A minimal Document-based Cocoa application."""
 
+import sys
+
+import objc
 from Cocoa import NSDocument
 from PyObjCTools import AppHelper
-import objc
-import sys
 
 try:
     unicode

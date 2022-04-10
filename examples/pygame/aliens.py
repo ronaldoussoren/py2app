@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-import random
 import os.path
+import random
 
 # import basic pygame modules
 import pygame
-from pygame.locals import Rect, Color, QUIT, KEYDOWN, K_ESCAPE, K_RIGHT, K_LEFT, K_SPACE
+from pygame.locals import K_ESCAPE, K_LEFT, K_RIGHT, K_SPACE, KEYDOWN, QUIT, Color, Rect
 
 # see if we can load more than standard BMP
 if not pygame.image.get_extended():

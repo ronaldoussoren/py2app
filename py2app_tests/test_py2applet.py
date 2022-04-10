@@ -1,10 +1,11 @@
-import unittest
-import subprocess
 import os
 import shutil
+import subprocess
 import sys
-from py2app import script_py2applet
+import unittest
+
 import py2app
+from py2app import script_py2applet
 
 if __name__ == "__main__":
     from tools import kill_child_processes

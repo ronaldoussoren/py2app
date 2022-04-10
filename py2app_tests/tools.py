@@ -1,6 +1,6 @@
-import subprocess
 import os
 import signal
+import subprocess
 
 
 def kill_child_processes():

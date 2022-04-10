@@ -15,18 +15,18 @@ The app itself:
     - add another test that does something simular, using virtualenv to
       manage a python installation
 """
-import sys
-
-import unittest
-
-import subprocess
-import shutil
-import time
-import os
-import signal
-import py2app
 import hashlib
+import os
+import shutil
+import signal
+import subprocess
+import sys
+import time
+import unittest
 from distutils.sysconfig import get_config_var
+
+import py2app
+
 from .tools import kill_child_processes
 
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))

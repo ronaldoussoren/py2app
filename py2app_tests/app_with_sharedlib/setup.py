@@ -1,15 +1,15 @@
-from setuptools import setup, Command, Extension
+import glob
+import os
+import platform
+import re
+import shlex
+import shutil
+import subprocess
 from distutils.command import build_ext as mod_build_ext
-
 from distutils.sysconfig import get_config_var
 from distutils.version import LooseVersion
-import subprocess
-import os
-import glob
-import shutil
-import platform
-import shlex
-import re
+
+from setuptools import Command, Extension, setup
 
 
 class sharedlib(Command):

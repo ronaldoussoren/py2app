@@ -1,7 +1,8 @@
 import sys
-from square import square  # noqa: F401
+
 from double import double  # noqa: F401
 from half import half  # noqa: F401
+from square import square  # noqa: F401
 
 
 def function():

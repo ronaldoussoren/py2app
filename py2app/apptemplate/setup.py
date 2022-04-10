@@ -3,7 +3,6 @@ import distutils.util
 import os
 import re
 
-
 gPreBuildVariants = [
     {
         "name": "main-universal2",

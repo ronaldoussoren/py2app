@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+
 import PIL.Image
 
 PATH = "/System/Library//Automator/Crop Images.action/Contents/Resources/shark-tall-no-scale.jpg"

@@ -11,10 +11,9 @@ contains an "includes" option to tell py2app about the
 dependency.
 """
 
-from setuptools import setup
 from Cython.Build import cythonize
 from Cython.Distutils import build_ext
-
+from setuptools import setup
 
 setup(
     name="test",

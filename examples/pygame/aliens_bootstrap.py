@@ -1,12 +1,12 @@
-from AppKit import NSTerminateNow, NSApp, NSRunAlertPanel
+from AppKit import NSApp, NSRunAlertPanel, NSTerminateNow
 from Foundation import NSObject
 from PyObjCTools import AppHelper
 
 
 def exception_handler():
-    import traceback
-    import sys
     import os
+    import sys
+    import traceback
 
     typ, info, trace = sys.exc_info()
     if typ in (KeyboardInterrupt, SystemExit):

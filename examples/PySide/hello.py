@@ -1,4 +1,5 @@
 import sys
+
 from PySide import QtGui
 
 # We instantiate a QApplication passing the arguments of the script to it:

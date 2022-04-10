@@ -1,17 +1,16 @@
 """
 Testcase for checking argv_emulation
 """
-import sys
-
-import unittest
-
-import subprocess
-import shutil
-import time
 import os
 import platform
-import py2app
+import shutil
+import subprocess
+import sys
+import time
+import unittest
 from distutils.version import LooseVersion
+
+import py2app
 
 if __name__ == "__main__":
     from tools import kill_child_processes

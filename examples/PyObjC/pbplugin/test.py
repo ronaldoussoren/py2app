@@ -1,7 +1,8 @@
 import os
+import sys
+
 import objc
 from Foundation import NSBundle, NSLog
-import sys
 
 old_path = set(sys.path)
 old_modules = set(sys.modules)

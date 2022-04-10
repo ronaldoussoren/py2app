@@ -1,7 +1,7 @@
 import os
 import sys
-import time
 import tempfile
+import time
 
 SCRIPT = """#!%s
 import os

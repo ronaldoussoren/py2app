@@ -33,6 +33,8 @@ py2app.0.29
 
 * #426: Remove code that supports Python 3.5 or earlier
 
+* Add 'isort' to pre-commit configuration
+
 py2app 0.28
 -----------
 

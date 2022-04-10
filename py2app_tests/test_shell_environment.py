@@ -1,12 +1,13 @@
 """
 Testcase for checking emulate_shell_environment
 """
-import sys
-import unittest
-import subprocess
-import shutil
-import time
 import os
+import shutil
+import subprocess
+import sys
+import time
+import unittest
+
 import py2app
 
 if __name__ == "__main__":

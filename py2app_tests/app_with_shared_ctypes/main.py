@@ -1,6 +1,6 @@
-import sys
 import ctypes
 import ctypes.util
+import sys
 
 
 def find_library(name):

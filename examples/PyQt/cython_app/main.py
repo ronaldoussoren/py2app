@@ -1,5 +1,6 @@
-import testLoad
 from logging import basicConfig  # noqa: F401
+
+import testLoad
 
 
 def main():

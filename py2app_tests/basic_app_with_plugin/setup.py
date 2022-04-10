@@ -1,12 +1,13 @@
-from setuptools import setup, Command
+import os
+import platform
+import re
+import shlex
+import shutil
+import subprocess
 from distutils.sysconfig import get_config_var
 from distutils.version import LooseVersion
-import subprocess
-import os
-import shutil
-import platform
-import shlex
-import re
+
+from setuptools import Command, setup
 
 PLUGIN_NAMES = ["dummy1.qlgenerator", "dummy2.mdimporter"]
 

@@ -5,7 +5,6 @@ Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 """
 
 import collections
-import zlib
 import imp
 import os
 import plistlib
@@ -14,6 +13,7 @@ import shutil
 import sys
 import types
 import zipfile
+import zlib
 from distutils import log
 from distutils.errors import DistutilsOptionError, DistutilsPlatformError
 from distutils.sysconfig import get_config_h_filename, get_config_var

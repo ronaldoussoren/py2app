@@ -4,10 +4,11 @@ Script for building the example.
 Usage:
     python setup.py py2app
 """
-from setuptools import setup
 import glob
 import os
 import sys
+
+from setuptools import setup
 
 NAME = "wxGlade"
 VERSION = "0.3.4"

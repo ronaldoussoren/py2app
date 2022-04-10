@@ -1,4 +1,5 @@
 import sys
+
 from PyQt5 import Qt
 
 # We instantiate a QApplication passing the arguments of the script to it:

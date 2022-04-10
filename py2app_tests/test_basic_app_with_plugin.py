@@ -1,11 +1,13 @@
-import sys
-import unittest
-import subprocess
-import shutil
-import time
-import os
-import py2app
 import hashlib
+import os
+import shutil
+import subprocess
+import sys
+import time
+import unittest
+
+import py2app
+
 from .tools import kill_child_processes
 
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))

@@ -2,8 +2,8 @@ import sys
 
 
 def function():
-    from email import MIMEText  # noqa: F401
     import email.Encoders as enc  # noqa: F401
+    from email import MIMEText  # noqa: F401
 
 
 function()

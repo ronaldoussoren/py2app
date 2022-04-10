@@ -2,8 +2,9 @@
 Tests for typechecking of input arguments
 """
 import unittest
-from py2app.build_app import py2app as py2app_cmd
 from distutils.core import Distribution
+
+from py2app.build_app import py2app as py2app_cmd
 
 
 class TestSetupArguments(unittest.TestCase):

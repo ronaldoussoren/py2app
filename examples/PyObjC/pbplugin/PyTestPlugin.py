@@ -1,6 +1,7 @@
-from Foundation import NSObject
-import objc
 import sys
+
+import objc
+from Foundation import NSObject
 
 
 class PyTestPlugin(NSObject):

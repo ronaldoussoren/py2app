@@ -1,4 +1,5 @@
 import unittest
+
 from py2app import filters
 
 

@@ -2,15 +2,17 @@
 Test case for a project that includes a script that has the same
 base-name as a package used by the script.
 """
-import sys
-import unittest
-import subprocess
-import shutil
-import time
 import os
+import shutil
 import signal
-import py2app
+import subprocess
+import sys
+import time
+import unittest
 import zipfile
+
+import py2app
+
 from .tools import kill_child_processes
 
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))

@@ -1,5 +1,5 @@
-import sys
 import email  # noqa: F401
+import sys
 
 
 def import_module(name):

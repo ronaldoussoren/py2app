@@ -3,16 +3,18 @@ Testcase that tests a python package that contains data files
 
 See also issue #53 on the py2app tracker
 """
-import sys
-import unittest
-import subprocess
-import shutil
-import time
-import os
-import signal
-import py2app
 import hashlib
+import os
+import shutil
+import signal
+import subprocess
+import sys
+import time
+import unittest
+
 from modulegraph import zipio
+
+import py2app
 
 if __name__ == "__main__":
     from tools import kill_child_processes

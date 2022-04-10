@@ -1,7 +1,8 @@
 import os
-from Cocoa import NSObject, NSTimer, NSApp
-import objc
+
 import leases
+import objc
+from Cocoa import NSApp, NSObject, NSTimer
 
 FILENAME = "/var/db/dhcpd_leases"
 

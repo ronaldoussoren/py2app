@@ -1,7 +1,6 @@
 import os
 import sys
 import textwrap
-
 from io import StringIO
 
 PRESCRIPT = textwrap.dedent(

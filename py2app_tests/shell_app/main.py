@@ -1,6 +1,5 @@
-import sys  # noqa: F401
 import os
-
+import sys  # noqa: F401
 
 root = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
