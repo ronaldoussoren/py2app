@@ -2,8 +2,8 @@ import sys
 
 
 def function():
-    import quot
-    import quot.queue
+    import quot  # noqa: F401
+    import quot.queue  # noqa: F401
 
 
 def import_module(name):

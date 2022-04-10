@@ -1,4 +1,4 @@
-import needsthis
+import needsthis  # noqa: F401
 
 
 def somefunc():

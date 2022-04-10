@@ -1,5 +1,4 @@
-from setuptools import setup, Command, Extension
-from distutils.command import build_ext as mod_build_ext
+from setuptools import setup, Command
 
 from distutils.sysconfig import get_config_var
 from distutils.version import LooseVersion
@@ -9,7 +8,6 @@ import shutil
 import platform
 import shlex
 import re
-import sys
 
 
 class sharedlib(Command):
@@ -104,13 +102,13 @@ class cleanup(Command):
 setup(
     name="BasicApp",
     app=["main.py"],
-    cmdclass=dict(
-        sharedlib=sharedlib,
-        cleanup=cleanup,
-    ),
-    options=dict(
-        py2app=dict(
-            frameworks=["lib/libshared.dylib"],
-        ),
-    ),
+    cmdclass={
+        "sharedlib": sharedlib,
+        "cleanup": cleanup,
+    },
+    options={
+        "py2app": {
+            "frameworks": ["lib/libshared.dylib"],
+        }
+    },
 )

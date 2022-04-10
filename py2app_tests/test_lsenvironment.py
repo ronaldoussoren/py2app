@@ -2,22 +2,15 @@
 Testcase for checking argv_emulation
 """
 import sys
-
-if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2, 7)) or (
-    sys.version_info[0] == 3 and sys.version_info[:2] >= (3, 2)
-):
-    import unittest
-else:
-    import unittest2 as unittest
-
+import unittest
 import subprocess
 import shutil
 import time
 import os
-import signal
-import platform
-import py2app
-import ast
+import signal  # noqa: F401
+import platform  # noqa: F401
+import py2app  # noqa: F401
+import ast  # noqa: F401
 from .tools import kill_child_processes
 
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))
@@ -84,19 +77,19 @@ class TestLSEnvironment(unittest.TestCase):
 
         path = os.path.join(self.app_dir, "dist/BasicApp.app")
 
-        p = subprocess.Popen(["/usr/bin/open", path])
-        exit = p.wait()
+        proc = subprocess.Popen(["/usr/bin/open", path])
+        status = proc.wait()
 
-        if exit == 1:
+        if status == 1:
             print("/usr/bin/open failed, retry")
             time.sleep(5)
-            p = subprocess.Popen(["/usr/bin/open", path])
-            exit = p.wait()
+            proc = subprocess.Popen(["/usr/bin/open", path])
+            status = proc.wait()
 
-        self.assertEqual(exit, 0)
+        self.assertEqual(status, 0)
 
         path = os.path.join(self.app_dir, "dist/env.txt")
-        for x in range(70):  # Argv emulation can take up-to 60 seconds
+        for _ in range(70):  # Argv emulation can take up-to 60 seconds
             time.sleep(0.1)
             if os.path.exists(path):
                 break

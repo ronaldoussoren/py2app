@@ -29,11 +29,11 @@ for name in os.listdir(PATH):
 setup(
     app=script,
     data_files=data_files,
-    options=dict(
-        py2app=dict(
-            includes=includes,
-            argv_emulation=True,
-        )
-    ),
+    options={
+        "py2app": {
+            "includes": includes,
+            "argv_emulation": True,
+        }
+    },
     setup_requires=["py2app"],
 )

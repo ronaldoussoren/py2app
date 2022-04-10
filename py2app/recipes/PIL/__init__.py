@@ -8,16 +8,6 @@ try:
 except ImportError:
     from io import StringIO
 
-try:
-    set
-except NameError:
-    from sets import Set as set
-
-try:
-    basestring
-except NameError:
-    basestring = str
-
 
 def check(cmd, mf):
     m = mf.findNode("Image") or mf.findNode("PIL.Image")
@@ -32,7 +22,7 @@ def check(cmd, mf):
     # XXX: Most users should now use Pillow, which always uses
     # "PIL.Image", which can simply the code below.
     for folder in sys.path:
-        if not isinstance(folder, basestring):
+        if not isinstance(folder, str):
             continue
 
         for extra in ("", "PIL"):

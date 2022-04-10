@@ -1,9 +1,11 @@
-from Foundation import *
+from Foundation import NSObject
 import objc
 import sys
 
 
 class PyTestPlugin(NSObject):
+    """docstring"""
+
     def init(self):
         self = super().init()
         print("class load!!")
@@ -13,6 +15,8 @@ class PyTestPlugin(NSObject):
 
 
 class PyTestPlugin2(NSObject):
+    """docstring"""
+
     pass
 
 

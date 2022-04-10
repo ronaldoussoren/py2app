@@ -2,7 +2,11 @@ from distutils.core import setup, Extension, Command
 from distutils import sysconfig
 from distutils.command.build_ext import build_ext
 from distutils.version import LooseVersion
-import os, shutil, re, subprocess, platform, time
+import os
+import shutil
+import re
+import subprocess
+import platform
 
 
 class my_build_ext(build_ext):

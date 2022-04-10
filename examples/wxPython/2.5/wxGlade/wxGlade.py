@@ -7,8 +7,9 @@ import main
 
 common.wxglade_path = os.getcwd()
 
-# fix bug in show_tutorial
+
 def show_tutorial(self, event):
+    # fix bug in show_tutorial
     webbrowser.open_new(
         "file://" + os.path.join(common.wxglade_path, "docs", "index.html")
     )

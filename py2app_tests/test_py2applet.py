@@ -1,6 +1,8 @@
 import unittest
 import subprocess
-import os, shutil, sys
+import os
+import shutil
+import sys
 from py2app import script_py2applet
 import py2app
 

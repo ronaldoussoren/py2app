@@ -1276,8 +1276,6 @@ class py2app(Command):
         return py_files, extensions
 
     def collect_packagedirs(self):
-        result = []
-
         return list(
             filter(
                 os.path.exists,
@@ -2347,17 +2345,17 @@ class py2app(Command):
         todo = [(sourcefn, destfn)]
 
         while todo:
-            next = []
+            upcoming = []
             for item in todo:
                 for s, d in loader_paths(*item):
                     if os.path.exists(d):
                         continue
-                    next.append((s, d))
+                    upcoming.append((s, d))
                     if not self.dry_run:
                         if not os.path.exists(os.path.dirname(d)):
                             os.makedirs(os.path.dirname(d))
                     copy_file(s, d, dry_run=self.dry_run)
-            todo = next
+            todo = upcoming
 
     def build_executable(
         self, target, arcname, pkgexts, copyexts, script, extra_scripts

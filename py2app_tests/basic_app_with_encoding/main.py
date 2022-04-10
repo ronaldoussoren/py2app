@@ -8,7 +8,7 @@ import sys
 
 
 def function():
-    import decimal
+    import decimal  # noqa: F401
 
 
 def import_module(name):

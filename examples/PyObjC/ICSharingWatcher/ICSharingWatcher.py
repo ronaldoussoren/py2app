@@ -8,7 +8,7 @@ Internet Connection Sharing
 from PyObjCTools import AppHelper
 
 # import classes required to start application
-import TableModelAppDelegate
+import TableModelAppDelegate  # noqa: F401
 
 # start the event loop
 AppHelper.runEventLoop(argv=[], installInterrupt=False)

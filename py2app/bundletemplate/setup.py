@@ -71,7 +71,7 @@ gPreBuildVariants = [
 ]
 
 
-def main(all=False, arch=None):
+def main(buildall=False, arch=None):
     basepath = os.path.dirname(__file__)
     builddir = os.path.join(basepath, "prebuilt")
     if not os.path.exists(builddir):
@@ -103,9 +103,9 @@ def main(all=False, arch=None):
     name = "main-" + arch
     root = None
 
-    if all:
+    if buildall:
         for entry in gPreBuildVariants:
-            if (not all) and entry["name"] != name:
+            if (not buildall) and entry["name"] != name:
                 continue
 
             dest = os.path.join(builddir, entry["name"])
@@ -132,4 +132,4 @@ def main(all=False, arch=None):
 
 
 if __name__ == "__main__":
-    main(all=True)
+    main(buildall=True)

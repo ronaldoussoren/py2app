@@ -1,5 +1,5 @@
 import os
-from Cocoa import *
+from Cocoa import NSObject, NSTimer, NSApp
 import objc
 import leases
 
@@ -8,7 +8,7 @@ FILENAME = "/var/db/dhcpd_leases"
 
 def getLeases(fn):
     if os.path.exists(fn):
-        lines = file(fn, "U")
+        lines = open(fn)
     else:
         lines = leases.EXAMPLE.splitlines()
     return list(leases.leases(lines))

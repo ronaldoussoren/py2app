@@ -1,21 +1,11 @@
 import sys
-
-if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2, 7)) or (
-    sys.version_info[0] == 3 and sys.version_info[:2] >= (3, 2)
-):
-    import unittest
-else:
-    import unittest2 as unittest
-
-import platform
+import unittest
 import subprocess
 import shutil
 import time
 import os
-import signal
 import py2app
 import hashlib
-import sysconfig
 from .tools import kill_child_processes
 
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))

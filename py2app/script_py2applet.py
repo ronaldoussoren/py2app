@@ -19,14 +19,6 @@ import py2app  # noqa: F401
 from py2app import build_app
 from py2app.util import copy_tree
 
-try:
-    set
-except NameError:
-    from sets import Set as set
-
-if sys.version_info[0] == 3:
-    raw_input = input
-
 HELP_TEXT = """
 usage: py2applet --make-setup [options...] script.py [data files...]
    or: py2applet [options...] script.py [data files...]
@@ -161,7 +153,7 @@ def make_setup(args, scripts, data_files, options):
     if os.path.exists("setup.py"):
         res = ""
         while res.lower() not in ("y", "n"):
-            res = raw_input("Existing setup.py detected, replace? [Y/n] ")
+            res = input("Existing setup.py detected, replace? [Y/n] ")
             if not res:
                 break
         if res == "n":

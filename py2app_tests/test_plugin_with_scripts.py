@@ -1,12 +1,5 @@
 import sys
-
-if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2, 7)) or (
-    sys.version_info[0] == 3 and sys.version_info[:2] >= (3, 2)
-):
-    import unittest
-else:
-    import unittest2 as unittest
-
+import unittest
 import subprocess
 import shutil
 import time
@@ -77,7 +70,6 @@ class TestBasicPlugin(unittest.TestCase):
                 ["xcode-select", "-print-path"], stdout=subprocess.PIPE
             )
             lines = p.communicate()[0]
-            xit = p.wait()
             if p.wait() != 0:
                 raise AssertionError("Fetching Xcode root failed")
 
@@ -131,7 +123,7 @@ class TestBasicPlugin(unittest.TestCase):
                 print(lines)
                 raise AssertionError("Creating bundle_loader failed")
 
-        except:
+        except:  # noqa: E722, B001
             cls.tearDownClass()
             raise
 
@@ -169,7 +161,7 @@ class TestBasicPlugin(unittest.TestCase):
         return p
 
     def wait_with_timeout(self, proc, timeout=10):
-        for i in range(timeout):
+        for _ in range(timeout):
             x = proc.poll()
             if x is None:
                 time.sleep(1)
@@ -226,8 +218,8 @@ class TestBasicPlugin(unittest.TestCase):
         p.stdin.close()
         p.stdout.close()
 
-        exit = self.wait_with_timeout(p)
-        self.assertEqual(exit, 0)
+        status = self.wait_with_timeout(p)
+        self.assertEqual(status, 0)
 
 
 class TestBasicAliasPlugin(TestBasicPlugin):
@@ -259,7 +251,7 @@ class TestBasicPluginUnicodePath(TestBasicPlugin):
 
             super().setUpClass()
 
-        except:
+        except:  # noqa: E722, B001
             if os.path.exists(cls.plugin_dir):
                 shutil.rmtree(cls.plugin_dir)
             raise

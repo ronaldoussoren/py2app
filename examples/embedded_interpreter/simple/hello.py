@@ -1,10 +1,5 @@
-import sys, os
-import pprint
-
-try:
-    set
-except NameError:
-    from sets import Set as set
+import sys
+import os
 
 
 def print_sys():

@@ -5,14 +5,9 @@ Usage:
     python setup.py py2app
 """
 from setuptools import setup
-from itertools import imap, chain
 import glob
-import os, sys
-
-try:
-    set
-except NameError:
-    from sets import Set as set
+import os
+import sys
 
 NAME = "wxGlade"
 VERSION = "0.3.4"
@@ -51,9 +46,9 @@ class wxglade_recipe:
                     return False
             return True
 
-        return dict(
-            filters=[filterfunc],
-        )
+        return {
+            "filters": [filterfunc],
+        }
 
 
 def get_data_files(paths):
@@ -63,18 +58,18 @@ def get_data_files(paths):
     return [("", lst)]
 
 
-import py2app.recipes
+import py2app.recipes  # noqa: E402
 
 py2app.recipes.wxglade = wxglade_recipe()
 
 setup(
     app=["wxGlade.py"],
     data_files=get_data_files(["*.txt", "docs", "res", "widgets", "codegen", "icons"]),
-    options=dict(
-        py2app=dict(
-            argv_emulation=True,
-            compressed=True,
-        )
-    ),
+    options={
+        "py2app": {
+            "argv_emulation": True,
+            "compressed": True,
+        }
+    },
     setup_requires=["py2app"],
 )

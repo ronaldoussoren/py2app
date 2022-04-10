@@ -5,8 +5,6 @@ Usage:
     python setup.py py2app
 """
 from distutils.core import setup
-import py2app
-
 
 OPTIONS = {
     "arch": "i386",

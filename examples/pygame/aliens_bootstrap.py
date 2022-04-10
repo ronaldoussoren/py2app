@@ -1,10 +1,12 @@
 from AppKit import NSTerminateNow, NSApp, NSRunAlertPanel
 from Foundation import NSObject
-from PyObjCTools import AppHelper, NSObject
+from PyObjCTools import AppHelper
 
 
 def exception_handler():
-    import traceback, sys, os
+    import traceback
+    import sys
+    import os
 
     typ, info, trace = sys.exc_info()
     if typ in (KeyboardInterrupt, SystemExit):
@@ -26,12 +28,13 @@ class PygameAppDelegate(NSObject):
             import aliens
 
             aliens.main()
-        except:
+        except:  # noqa: E722, B001
             exception_handler()
         NSApp().terminate_(self)
 
     def applicationShouldTerminate_(self, app):
-        import pygame, pygame.event
+        import pygame
+        import pygame.event
 
         pygame.event.post(pygame.event.Event(pygame.QUIT))
         return NSTerminateNow

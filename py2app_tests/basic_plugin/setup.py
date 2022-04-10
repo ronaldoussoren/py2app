@@ -1,14 +1,14 @@
 from setuptools import setup
 
-plist = dict(NSPrincipleClass="BasicPlugin")
+plist = {"NSPrincipleClass": "BasicPlugin"}
 
 setup(
     name="BasicPlugin",
     plugin=["main.py"],
-    options=dict(
-        py2app=dict(
-            extension=".bundle",
-            plist=plist,
-        )
-    ),
+    options={
+        "py2app": {
+            "extension": ".bundle",
+            "plist": plist,
+        }
+    },
 )

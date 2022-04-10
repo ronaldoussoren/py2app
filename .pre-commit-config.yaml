@@ -21,6 +21,23 @@ repos:
         args: ["--config", ".codespellrc"]
         exclude: PyObjCTest|_metadata\.py$|\.fwinfo$|\.rtf$|\.mht$
 
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.9.2
+    hooks:
+      - id: flake8
+        args: ["--config", ".flake8" ]
+        language_version: python3.9
+        additional_dependencies:
+        - flake8-bugbear
+        - flake8-deprecated
+        - flake8-comprehensions
+        - flake8-isort
+        - flake8-quotes
+        - flake8-mutable
+        - flake8-todo
+        - flake8-builtins
+        - flake8-raise
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.2.0
     hooks:

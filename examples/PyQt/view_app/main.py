@@ -1,5 +1,5 @@
 from PyQt4.QtCore import QUrl
-from PyQt4.QtGui import QPushButton, QApplication
+from PyQt4.QtGui import QApplication
 from PyQt4.QtDeclarative import QDeclarativeView
 
 # This example uses a QML file to show a scrolling list containing

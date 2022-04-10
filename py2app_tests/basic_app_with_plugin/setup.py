@@ -3,12 +3,10 @@ from distutils.sysconfig import get_config_var
 from distutils.version import LooseVersion
 import subprocess
 import os
-import glob
 import shutil
 import platform
 import shlex
 import re
-import sys
 
 PLUGIN_NAMES = ["dummy1.qlgenerator", "dummy2.mdimporter"]
 
@@ -76,13 +74,13 @@ class cleanup(Command):
 setup(
     name="BasicApp",
     app=["main.py"],
-    options=dict(
-        py2app=dict(
-            include_plugins=["dummy1.qlgenerator", "dummy2.mdimporter"],
-        )
-    ),
-    cmdclass=dict(
-        pluginexe=pluginexe,
-        cleanup=cleanup,
-    ),
+    options={
+        "py2app": {
+            "include_plugins": ["dummy1.qlgenerator", "dummy2.mdimporter"],
+        }
+    },
+    cmdclass={
+        "pluginexe": pluginexe,
+        "cleanup": cleanup,
+    },
 )

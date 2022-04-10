@@ -3,18 +3,12 @@ Testcase for checking argv_emulation
 """
 import sys
 
-if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2, 7)) or (
-    sys.version_info[0] == 3 and sys.version_info[:2] >= (3, 2)
-):
-    import unittest
-else:
-    import unittest2 as unittest
+import unittest
 
 import subprocess
 import shutil
 import time
 import os
-import signal
 import platform
 import py2app
 from distutils.version import LooseVersion
@@ -90,12 +84,12 @@ class TestArgvEmulation(unittest.TestCase):
         path = os.path.join(self.app_dir, "dist/BasicApp.app")
 
         p = subprocess.Popen(["/usr/bin/open", "-a", path])
-        exit = p.wait()
+        status = p.wait()
 
-        self.assertEqual(exit, 0)
+        self.assertEqual(status, 0)
 
         path = os.path.join(self.app_dir, "dist/argv.txt")
-        for x in range(70):  # Argv emulation can take up-to 60 seconds
+        for _ in range(70):  # Argv emulation can take up-to 60 seconds
             time.sleep(1)
             if os.path.exists(path):
                 break
@@ -127,12 +121,12 @@ class TestArgvEmulation(unittest.TestCase):
         path = os.path.join(self.app_dir, "dist/BasicApp.app")
 
         p = subprocess.Popen(["/usr/bin/open", "-a", path, self.open_argument])
-        exit = p.wait()
+        status = p.wait()
 
-        self.assertEqual(exit, 0)
+        self.assertEqual(status, 0)
 
         path = os.path.join(self.app_dir, "dist/argv.txt")
-        for x in range(90):  # Argv emulation can take up-to 60 seconds
+        for _ in range(90):  # Argv emulation can take up-to 60 seconds
             time.sleep(1)
             if os.path.exists(path):
                 break
@@ -173,11 +167,11 @@ class TestArgvEmulation(unittest.TestCase):
         p = subprocess.Popen(
             ["/usr/bin/open", "-a", path, "--args", "one", "two", "three"]
         )
-        exit = p.wait()
-        self.assertEqual(exit, 0)
+        status = p.wait()
+        self.assertEqual(status, 0)
 
         path = os.path.join(self.app_dir, "dist/argv.txt")
-        for x in range(70):  # Argv emulation can take up-to 60 seconds
+        for _ in range(70):  # Argv emulation can take up-to 60 seconds
             time.sleep(1)
             if os.path.exists(path):
                 time.sleep(5)

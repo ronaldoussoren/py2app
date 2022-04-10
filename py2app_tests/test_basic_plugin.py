@@ -2,20 +2,13 @@
 Simular to test_basic_app, but for plugin bundles
 """
 import sys
-
-if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2, 7)) or (
-    sys.version_info[0] == 3 and sys.version_info[:2] >= (3, 2)
-):
-    import unittest
-else:
-    import unittest2 as unittest
-
+import unittest
 import subprocess
 import shutil
 import time
 import os
 import signal
-from distutils.sysconfig import get_config_var, get_config_vars
+from distutils.sysconfig import get_config_var
 from distutils.version import LooseVersion
 import py2app
 import platform
@@ -82,7 +75,6 @@ class TestBasicPlugin(unittest.TestCase):
                 ["xcode-select", "-print-path"], stdout=subprocess.PIPE
             )
             lines = p.communicate()[0]
-            xit = p.wait()
             if p.wait() != 0:
                 try:
                     os.waitpid(0, 0)
@@ -149,7 +141,7 @@ class TestBasicPlugin(unittest.TestCase):
             except os.error:
                 pass
 
-        except:
+        except:  # noqa: E722, B001
             cls.tearDownClass()
             raise
 
@@ -187,7 +179,7 @@ class TestBasicPlugin(unittest.TestCase):
         time.sleep(1)
 
     def wait_with_timeout(self, proc, timeout=10):
-        for i in range(timeout):
+        for _ in range(timeout):
             x = proc.poll()
             if x is None:
                 time.sleep(1)
@@ -216,8 +208,8 @@ class TestBasicPlugin(unittest.TestCase):
         p.stdin.close()
         p.stdout.close()
 
-        exit = self.wait_with_timeout(p)
-        self.assertEqual(exit, 0)
+        status = self.wait_with_timeout(p)
+        self.assertEqual(status, 0)
 
     def test_python_executable_mode(self):
         path = os.path.join(
@@ -258,7 +250,7 @@ class TestBasicPluginUnicodePath(TestBasicPlugin):
 
             super().setUpClass()
 
-        except:
+        except:  # noqa: E722, B001
             if os.path.exists(cls.plugin_dir):
                 shutil.rmtree(cls.plugin_dir)
             raise

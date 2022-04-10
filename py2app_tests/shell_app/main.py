@@ -1,4 +1,4 @@
-import sys
+import sys  # noqa: F401
 import os
 
 

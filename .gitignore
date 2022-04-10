@@ -13,5 +13,5 @@ syntax: glob
 *.dSYM
 *.pyc
 *.pyo
+*.so
 .coverage*
-unittest2-*.egg

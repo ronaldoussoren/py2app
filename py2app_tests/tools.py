@@ -1,4 +1,7 @@
-import subprocess, os, signal, sys
+import subprocess
+import os
+import signal
+import sys
 
 
 def kill_child_processes():
@@ -8,7 +11,7 @@ def kill_child_processes():
         "ps -o pid,ppid -ax", shell=True, stdout=subprocess.PIPE
     )
     ps_output = ps_command.stdout.read()
-    retcode = ps_command.wait()
+    ps_command.wait()
     ps_command.stdout.close()
     if sys.version_info[0] != 2:
         ps_output = ps_output.decode("utf-8")
@@ -23,10 +26,9 @@ def kill_child_processes():
 
     ps_command = subprocess.Popen("ps -ax", shell=True, stdout=subprocess.PIPE)
     ps_output = ps_command.stdout.read()
-    retcode = ps_command.wait()
+    ps_command.wait()
     ps_command.stdout.close()
-    if sys.version_info[0] != 2:
-        ps_output = ps_output.decode("utf-8")
+    ps_output = ps_output.decode("utf-8")
 
     my_dir = os.path.dirname(__file__) + "/"
     for line in ps_output.splitlines():

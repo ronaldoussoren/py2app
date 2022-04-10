@@ -29,6 +29,8 @@ py2app.0.29
   should be excluded from the zipfile when they are found
   by the dependency checker.
 
+* flake8 status is enforced in the  pre-commit configuration
+
 py2app 0.28
 -----------
 

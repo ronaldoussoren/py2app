@@ -1,11 +1,11 @@
 import sys
-from square import square
-from double import double
-from half import half
+from square import square  # noqa: F401
+from double import double  # noqa: F401
+from half import half  # noqa: F401
 
 
 def function():
-    import decimal
+    import decimal  # noqa: F401
 
 
 def import_module(name):

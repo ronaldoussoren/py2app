@@ -10,21 +10,13 @@ menu that DoodleWindow provides.  There is also a nice About dialog
 implemented using an wx.html.HtmlWindow.
 """
 
-import sys
-
-try:
-    import wx  # This module uses the new wx namespace
-    import wx.html
-except:
-    import pdb
-    import traceback
-
-    traceback.print_exc()
-    pdb.post_mortem(sys.exc_info()[2])
+import wx  # This module uses the new wx namespace
+import wx.html
 from wx.lib import buttons  # for generic button classes
 from doodle import DoodleWindow
 
-import os, cPickle
+import os
+import pickle
 
 
 # ----------------------------------------------------------------------
@@ -81,17 +73,17 @@ class DoodleFrame(wx.Frame):
         if self.filename:
             data = self.doodle.GetLinesData()
             f = open(self.filename, "w")
-            cPickle.dump(data, f)
+            pickle.dump(data, f)
             f.close()
 
     def ReadFile(self):
         if self.filename:
             try:
                 f = open(self.filename)
-                data = cPickle.load(f)
+                data = pickle.load(f)
                 f.close()
                 self.doodle.SetLinesData(data)
-            except cPickle.UnpicklingError:
+            except pickle.UnpicklingError:
                 wx.MessageBox(
                     "%s is not a doodle file." % self.filename,
                     "oops!",

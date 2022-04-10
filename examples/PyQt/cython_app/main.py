@@ -1,5 +1,5 @@
 import testLoad
-from logging import basicConfig
+from logging import basicConfig  # noqa: F401
 
 
 def main():
@@ -8,8 +8,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-def main():
-    app = QApplication(sys.argv)
-    QMessageBox(text="Hello World").exec()

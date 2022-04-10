@@ -199,7 +199,7 @@ class DoodleWindow(wx.Window):
         # wx.PaintDC and then blit the bitmap to it when dc is
         # deleted.  Since we don't need to draw anything else
         # here that's all there is to it.
-        dc = wx.BufferedPaintDC(self, self.buffer)
+        wx.BufferedPaintDC(self, self.buffer)
 
     def DrawLines(self, dc):
         """
@@ -242,7 +242,7 @@ class DoodleFrame(wx.Frame):
             size=(800, 600),
             style=wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE,
         )
-        doodle = DoodleWindow(self, -1)
+        self.doodle = DoodleWindow(self, -1)
 
 
 # ----------------------------------------------------------------------

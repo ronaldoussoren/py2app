@@ -1,12 +1,4 @@
-import sys
-
-if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2, 7)) or (
-    sys.version_info[0] == 3 and sys.version_info[:2] >= (3, 2)
-):
-    import unittest
-else:
-    import unittest2 as unittest
-
+import unittest
 from py2app import filters
 
 

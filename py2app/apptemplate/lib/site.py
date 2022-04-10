@@ -23,7 +23,7 @@ ENABLE_USER_SITE = False
 USER_SITE = None
 USER_BASE = None
 
-import os
+import os  # noqa: E402
 
 try:
     basestring
@@ -32,8 +32,8 @@ except NameError:
 
 
 def makepath(*paths):
-    dir = os.path.abspath(os.path.join(*paths))
-    return dir, os.path.normcase(dir)
+    dirname = os.path.abspath(os.path.join(*paths))
+    return dirname, os.path.normcase(dirname)
 
 
 for m in sys.modules.values():
@@ -46,28 +46,28 @@ del m
 # only absolute pathnames, even if we're running from the build directory.
 L = []
 _dirs_in_sys_path = {}
-dir = dircase = None  # sys.path may be empty at this point
-for dir in sys.path:
+dirname = dircase = None  # sys.path may be empty at this point
+for dirname in sys.path:
     # Filter out duplicate paths (on case-insensitive file systems also
     # if they only differ in case); turn relative paths into absolute
     # paths.
-    dir, dircase = makepath(dir)
+    dirname, dircase = makepath(dirname)
     if dircase not in _dirs_in_sys_path:
-        L.append(dir)
+        L.append(dirname)
         _dirs_in_sys_path[dircase] = 1
 
 sys.path[:] = L
-del dir, dircase, L
+del dirname, dircase, L
 _dirs_in_sys_path = None
 
 
 def _init_pathinfo():
     global _dirs_in_sys_path
     _dirs_in_sys_path = d = {}
-    for dir in sys.path:
-        if dir and not os.path.isdir(dir):
+    for dirname in sys.path:
+        if dirname and not os.path.isdir(dirname):
             continue
-        dir, dircase = makepath(dir)
+        dirname, dircase = makepath(dirname)
         d[dircase] = 1
 
 
@@ -104,19 +104,19 @@ def addpackage(sitedir, name):
     try:
         with open(fullname) as f:
             while 1:
-                dir = f.readline()
-                if not dir:
+                dirname = f.readline()
+                if not dirname:
                     break
-                if dir[0] == "#":
+                if dirname[0] == "#":
                     continue
-                if dir.startswith("import"):
-                    exec(dir)
+                if dirname.startswith("import"):
+                    exec(dirname)
                     continue
-                if dir[-1] == "\n":
-                    dir = dir[:-1]
-                dir, dircase = makepath(sitedir, dir)
-                if dircase not in _dirs_in_sys_path and os.path.exists(dir):
-                    sys.path.append(dir)
+                if dirname[-1] == "\n":
+                    dirname = dirname[:-1]
+                dirname, dircase = makepath(sitedir, dirname)
+                if dircase not in _dirs_in_sys_path and os.path.exists(dirname):
+                    sys.path.append(dirname)
                     _dirs_in_sys_path[dircase] = 1
     except OSError:
         return

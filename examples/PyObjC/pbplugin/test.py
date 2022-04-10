@@ -1,12 +1,8 @@
 import os
 import objc
-from Foundation import *
+from Foundation import NSBundle, NSLog
 import sys
 
-try:
-    set
-except NameError:
-    from sets import Set as set
 old_path = set(sys.path)
 old_modules = set(sys.modules)
 bndl = NSBundle.bundleWithPath_(os.path.abspath("dist/PyTestPlugin.pbplugin"))
@@ -15,5 +11,5 @@ PyTestPlugin = bndl.classNamed_("PyTestPlugin")
 NSLog(f"PyTestPlugin = {PyTestPlugin!r}")
 PyTestPlugin.alloc().init()
 NSLog(f"currentBundle = {objc.currentBundle()!r}")
-NSLog("paths changed: %r" % (set(sys.path) - old_path))
-NSLog("new modules: %r" % (set(sys.modules) - old_modules))
+NSLog(f"paths changed: {set(sys.path) - old_path!r}")
+NSLog(f"new modules: {set(sys.modules) - old_modules!r}")

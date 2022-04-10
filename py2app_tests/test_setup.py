@@ -1,18 +1,9 @@
 """
 Tests for typechecking of input arguments
 """
-import sys
-
-if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2, 7)) or (
-    sys.version_info[0] == 3 and sys.version_info[:2] >= (3, 2)
-):
-    import unittest
-else:
-    import unittest2 as unittest
-
+import unittest
 from py2app.build_app import py2app as py2app_cmd
 from distutils.core import Distribution
-from distutils.errors import *
 
 
 class TestSetupArguments(unittest.TestCase):

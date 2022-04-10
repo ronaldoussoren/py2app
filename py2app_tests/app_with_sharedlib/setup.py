@@ -126,7 +126,7 @@ class my_build_ext(mod_build_ext.build_ext):
 setup(
     name="BasicApp",
     app=["main.py"],
-    cmdclass=dict(sharedlib=sharedlib, cleanup=cleanup, build_ext=my_build_ext),
+    cmdclass={"sharedlib": sharedlib, "cleanup": cleanup, "build_ext": my_build_ext},
     ext_modules=[
         Extension(
             "double",
@@ -174,5 +174,5 @@ setup(
             extra_link_args=["-Llib", "-lhalf"],
         ),
     ],
-    options=dict(build_ext=dict(inplace=True)),
+    options={"build_ext": {"inplace": True}},
 )

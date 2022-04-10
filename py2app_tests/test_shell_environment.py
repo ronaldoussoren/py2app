@@ -2,19 +2,11 @@
 Testcase for checking emulate_shell_environment
 """
 import sys
-
-if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2, 7)) or (
-    sys.version_info[0] == 3 and sys.version_info[:2] >= (3, 2)
-):
-    import unittest
-else:
-    import unittest2 as unittest
-
+import unittest
 import subprocess
 import shutil
 import time
 import os
-import signal
 import py2app
 
 if __name__ == "__main__":
@@ -84,12 +76,12 @@ class TestShellEnvironment(unittest.TestCase):
         path = os.path.join(self.app_dir, "dist/BasicApp.app")
 
         p = subprocess.Popen(["/usr/bin/open", "-a", path])
-        exit = p.wait()
+        status = p.wait()
 
-        self.assertEqual(exit, 0)
+        self.assertEqual(status, 0)
 
         path = os.path.join(self.app_dir, "dist/env.txt")
-        for x in range(25):
+        for _ in range(25):
             time.sleep(1)
             if os.path.exists(path):
                 break

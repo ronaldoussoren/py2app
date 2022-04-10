@@ -4,14 +4,7 @@ Testcase that tests a python package that contains data files
 See also issue #53 on the py2app tracker
 """
 import sys
-
-if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2, 7)) or (
-    sys.version_info[0] == 3 and sys.version_info[:2] >= (3, 2)
-):
-    import unittest
-else:
-    import unittest2 as unittest
-
+import unittest
 import subprocess
 import shutil
 import time
@@ -131,7 +124,7 @@ class TestExplicitIncludes(unittest.TestCase):
         return p
 
     def wait_with_timeout(self, proc, timeout=10):
-        for i in range(timeout):
+        for _ in range(timeout):
             x = proc.poll()
             if x is None:
                 time.sleep(1)

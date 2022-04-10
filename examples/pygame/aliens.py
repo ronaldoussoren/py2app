@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-import random, os.path
+import random
+import os.path
 
 # import basic pygame modules
 import pygame
-from pygame.locals import *
+from pygame.locals import Rect, Color, QUIT, KEYDOWN, K_ESCAPE, K_RIGHT, K_LEFT, K_SPACE
 
 # see if we can load more than standard BMP
 if not pygame.image.get_extended():
@@ -23,7 +24,7 @@ main_dir = os.path.split(os.path.abspath(__file__))[0]
 
 
 def load_image(file):
-    "loads an image, prepares it for play"
+    """loads an image, prepares it for play"""
     file = os.path.join(main_dir, "data", file)
     try:
         surface = pygame.image.load(file)
@@ -233,21 +234,20 @@ def main(winstyle=0):
     aliens = pygame.sprite.Group()
     shots = pygame.sprite.Group()
     bombs = pygame.sprite.Group()
-    all = pygame.sprite.RenderUpdates()
+    allthings = pygame.sprite.RenderUpdates()
     lastalien = pygame.sprite.GroupSingle()
 
     # assign default groups to each sprite class
-    Player.containers = all
-    Alien.containers = aliens, all, lastalien
-    Shot.containers = shots, all
-    Bomb.containers = bombs, all
-    Explosion.containers = all
-    Score.containers = all
+    Player.containers = allthings
+    Alien.containers = aliens, allthings, lastalien
+    Shot.containers = shots, allthings
+    Bomb.containers = bombs, allthings
+    Explosion.containers = allthings
+    Score.containers = allthings
 
     # Create Some Starting Values
     global score
     alienreload = ALIEN_RELOAD
-    kills = 0
     clock = pygame.time.Clock()
 
     # initialize our starting sprites
