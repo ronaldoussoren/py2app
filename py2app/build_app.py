@@ -411,6 +411,7 @@ class py2app(Command):
         ),
         ("includes=", "i", "comma-separated list of modules to include"),
         ("packages=", "p", "comma-separated list of packages to include"),
+        ("maybe-packages=", "p", "comma-separated list of packages that will be added outside of the zip file when detected as a dependency"),
         ("iconfile=", None, "Icon file to use"),
         ("excludes=", "e", "comma-separated list of modules to exclude"),
         (
@@ -619,6 +620,7 @@ class py2app(Command):
         self.verbose_interpreter = False
         self.includes = None
         self.packages = None
+        self.maybe_packages = None
         self.excludes = None
         self.dylib_excludes = None
         self.frameworks = None
@@ -709,6 +711,7 @@ class py2app(Command):
         if self.use_faulthandler:
             self.includes.add("faulthandler")
         self.packages = set(fancy_split(self.packages))
+        self.maybe_packages = set(fancy_split(self.maybe_packages))
 
         self.excludes = set(fancy_split(self.excludes))
         self.excludes.add("readline")
@@ -1151,7 +1154,7 @@ class py2app(Command):
                     )
 
                 if rval.get("packages"):
-                    self.packages.update(rval["packages"])
+                    self.maybe_packages.update(rval["packages"])
                     find_needed_modules(mf, packages=rval["packages"])
 
                 for pkg in rval.get("flatpackages", ()):
@@ -1236,6 +1239,11 @@ class py2app(Command):
 
     def finalize_modulefinder(self, mf):
         for item in mf.flatten():
+            if item.name in self.maybe_packages and item.name not in self.packages:
+                # Include all "maybe_packages" that are reachable from
+                # the root of the graph.
+                self.packages.append(item)
+
             if isinstance(item, Package) and item.filename == "-":
                 # In python3.3 or later the default importer supports namespace
                 # packages without an __init__ file, don't use that
@@ -1264,6 +1272,8 @@ class py2app(Command):
         return py_files, extensions
 
     def collect_packagedirs(self):
+        result = []
+
         return list(
             filter(
                 os.path.exists,
@@ -1303,6 +1313,7 @@ class py2app(Command):
             self.build_xref(mf, flatpackages)
 
         py_files, extensions = self.finalize_modulefinder(mf)
+
         pkgdirs = self.collect_packagedirs()
         self.create_binaries(py_files, pkgdirs, extensions, loader_files)
 

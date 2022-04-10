@@ -71,6 +71,12 @@ Options for 'py2app' command:
        not detected by dependency checker. The whole package will
        be included.
 
+   * - ``--maybe-packages``
+     - maybe_packages
+     - list of package names
+     - A list of Python packages to include outside of the zipfile
+       when detected as a dependency by the dependency checker.
+
    * - ``--excludes``
      - excludes
      - list of module or package names
