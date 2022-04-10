@@ -35,6 +35,12 @@ py2app.0.29
 
 * Add 'isort' to pre-commit configuration
 
+* #433: Py2app now only ships with stub executables for
+  arm64, x86_64 and "Universal 2" (fat binaries with x86_64 and arm64)
+
+  Stub executables for PowerPC and 32-bit Intel were removed.
+
+
 py2app 0.28
 -----------
 

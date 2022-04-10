@@ -17,55 +17,10 @@ gPreBuildVariants = [
         "cc": "/usr/bin/clang",
     },
     {
-        "name": "main-universal",
-        "target": "10.5",
-        "cflags": "-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.5.sdk "
-        "-arch i386 -arch ppc -arch ppc64 -arch x86_64",
-        "cc": "gcc-4.2",
-    },
-    {
-        "name": "main-ppc64",
-        "target": "10.5",
-        "cflags": "-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.5.sdk -arch ppc64",
-        "cc": "gcc-4.2",
-    },
-    {
         "name": "main-x86_64",
         "target": "10.5",
         "cflags": "-arch x86_64 -g",
         "cc": "clang",
-    },
-    {
-        "name": "main-fat3",
-        "target": "10.5",
-        "cflags": "-isysroot / -arch i386 -arch ppc -arch x86_64",
-        "cc": "gcc-4.2",
-    },
-    {
-        "name": "main-intel",
-        "target": "10.5",
-        "cflags": "-isysroot / -arch i386 -arch x86_64",
-        "cc": "clang",
-    },
-    {
-        "name": "main-i386",
-        "target": "10.3",
-        # 'cflags': '-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.4u.sdk -arch i386',
-        "cflags": "-arch i386 -isysroot /",
-        "cc": "clang",
-    },
-    {
-        "name": "main-ppc",
-        "target": "10.3",
-        "cflags": "-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.4u.sdk -arch ppc",
-        "cc": "gcc-4.0",
-    },
-    {
-        "name": "main-fat",
-        "target": "10.3",
-        "cflags": "-isysroot @@XCODE_ROOT@@/SDKs/MacOSX10.4u.sdk "
-        "-arch i386 -arch ppc",
-        "cc": "gcc-4.0",
     },
 ]
 
