@@ -14,12 +14,6 @@ from macholib.util import is_platform_file
 from modulegraph import zipio
 from modulegraph.find_modules import PY_SUFFIXES
 
-try:
-    unicode
-except NameError:
-    unicode = str
-
-
 # Deprecated functionality
 
 
@@ -592,8 +586,8 @@ def copy_tree(
     (the default), the destination of the symlink will be copied.
     'update' and 'verbose' are the same as for 'copy_file'.
     """
-    assert isinstance(src, (str, unicode)), repr(src)
-    assert isinstance(dst, (str, unicode)), repr(dst)
+    assert isinstance(src, str), repr(src)
+    assert isinstance(dst, str), repr(dst)
 
     from distutils import log
     from distutils.dep_util import newer

@@ -14,11 +14,6 @@ import py2app
 import platform
 from .tools import kill_child_processes
 
-try:
-    unichr
-except NameError:
-    unichr = chr
-
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))
 
 

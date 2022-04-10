@@ -29,11 +29,6 @@ import hashlib
 from distutils.sysconfig import get_config_var
 from .tools import kill_child_processes
 
-try:
-    unichr
-except NameError:
-    unichr = chr
-
 DIR_NAME = os.path.dirname(os.path.abspath(__file__))
 
 
