@@ -193,11 +193,12 @@ if hasattr(sys, "setdefaultencoding"):
 
 if sys.version_info[0] == 3:
     import builtins  # noqa: E402
+
     import _sitebuiltins  # noqa: E402
 
     builtins.help = _sitebuiltins._Helper()
-    builtins.quit = _sitebuiltins.Quitter('quit', 'Ctrl-D (i.e. EOF)')
-    builtins.exit = _sitebuiltins.Quitter('exit', 'Ctrl-D (i.e. EOF)')
+    builtins.quit = _sitebuiltins.Quitter("quit", "Ctrl-D (i.e. EOF)")
+    builtins.exit = _sitebuiltins.Quitter("exit", "Ctrl-D (i.e. EOF)")
 
 # Prefixes for site-packages; add additional prefixes like /usr/local here
 PREFIXES = [sys.prefix, sys.exec_prefix]

@@ -4,6 +4,11 @@ Release history
 py2app 0.28
 -----------
 
+.. note:: 
+
+   This is the last version of py2app with compatibility with 
+   Python 2.7. Future versions will require Python 3.6 or later.
+
 * PR #410: Fix typo in NamedTemporyFile call
 
   PR by MAKOMO

@@ -56,7 +56,7 @@ def check(cmd, mf):
     s = StringIO("_recipes_pil_prescript(%r)\n" % list(plugins))
     print(plugins)
     plugins = set()
-    #sys.exit(1)
+    # sys.exit(1)
     for plugin in plugins:
         if have_PIL:
             mf.implyNodeReference(m, "PIL." + plugin)

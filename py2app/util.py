@@ -276,7 +276,6 @@ if sys.version_info[0] == 2:
     def fsencoding(s, encoding=sys.getfilesystemencoding()):  # noqa: M511,B008
         return macholib.util.fsencoding(s, encoding=encoding)
 
-
 else:
 
     def fsencoding(s, encoding=sys.getfilesystemencoding()):  # noqa: M511,B008
@@ -393,8 +392,9 @@ def byte_compile(
         if verbose:
             print("writing byte-compilation script")
         if not dry_run:
-            with NamedTemporaryFile(suffix=".py", delete=False, mode="w", 
-                    encoding="utf-8") as script:
+            with NamedTemporaryFile(
+                suffix=".py", delete=False, mode="w", encoding="utf-8"
+            ) as script:
                 script_name = script.name
                 script.write(
                     """

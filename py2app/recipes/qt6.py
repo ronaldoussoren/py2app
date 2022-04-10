@@ -35,7 +35,9 @@ def check(cmd, mf):
             # Ensure that the Qt plugins are copied into the "Contents/plugins" folder,
             # that's where the bundles Qt expects them to be
             extra = {
-                "resources": [("..", [QLibraryInfo.path(QLibraryInfo.LibraryPath.PluginsPath)])]
+                "resources": [
+                    ("..", [QLibraryInfo.path(QLibraryInfo.LibraryPath.PluginsPath)])
+                ]
             }
 
         else:
@@ -51,7 +53,7 @@ def check(cmd, mf):
         except ImportError:
             mf.import_hook("sip", m, level=1)
 
-        reslt = {"packages": ["PyQt6"] }
+        reslt = {"packages": ["PyQt6"]}
         result.update(extra)
         return result
 

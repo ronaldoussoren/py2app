@@ -34,7 +34,6 @@ def check(cmd, mf):
         except ImportError:
             mf.import_hook("sip", m, level=1)
 
-
         qtdir = QLibraryInfo.location(QLibraryInfo.LibrariesPath)
         if os.path.relpath(qtdir, os.path.dirname(PyQt5.__file__)).startswith("../"):
             # Qt5's prefix is not the PyQt5 package, which means

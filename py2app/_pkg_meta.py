@@ -40,6 +40,7 @@ def update_metadata_cache_distinfo(infos, dist_info_path):
                     )
                 ] = dist_info_path
 
+
 def update_metadata_cache_distlink(infos, dist_link_path):
     """
     Update mapping from filename to dist_info directory
@@ -51,7 +52,6 @@ def update_metadata_cache_distlink(infos, dist_link_path):
     # files.
     with open(dist_link_path, "r") as fp:
         dn = fp.readline()[:-1]
-
 
     # The list of files and directories that would have been
     # in the list of installed items.
@@ -81,15 +81,21 @@ def update_metadata_cache_distlink(infos, dist_link_path):
     # the cache.
     add_recursive(infos, dist_info_path, to_include)
 
+
 def add_recursive(infos, dist_info_path, to_include):
-    """ Add items from to_include to infos, recursively 
-        walking into directories """
+    """Add items from to_include to infos, recursively
+    walking into directories"""
     for item in to_include:
         if os.path.isdir(item):
-            add_recursive(infos, dist_info_path, [os.path.join(item, fn) for fn in os.listdir(item)])
+            add_recursive(
+                infos,
+                dist_info_path,
+                [os.path.join(item, fn) for fn in os.listdir(item)],
+            )
 
         else:
             infos[item] = dist_info_path
+
 
 def scan_for_metadata(path):
     """
@@ -103,7 +109,7 @@ def scan_for_metadata(path):
             continue
         for nm in os.listdir(dirname):
             if nm.endswith(".egg-link"):
-                # Editable install, these will be found later on in 
+                # Editable install, these will be found later on in
                 # *path* as well, but contain metadata without a list
                 # of installed files.
                 update_metadata_cache_distlink(infos, os.path.join(dirname, nm))

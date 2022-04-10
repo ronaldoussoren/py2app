@@ -90,6 +90,7 @@ elif hasattr(sys, "base_prefix"):
 else:
     sys_base_prefix = sys.prefix
 
+
 def finalize_distribution_options(dist):
     """
     setuptools.finalize_distribution_options extension
@@ -97,12 +98,11 @@ def finalize_distribution_options(dist):
     setuptools 61.
 
     This addin will set the name and py_modules attributes
-    when a py2app distribution is detected that does not 
+    when a py2app distribution is detected that does not
     yet have these attributes.
     are not already set
     """
-    if (getattr(dist, "app", None) is None and
-        getattr(dist, "plugin", None) is None):
+    if getattr(dist, "app", None) is None and getattr(dist, "plugin", None) is None:
         return
 
     if getattr(dist.metadata, "py_modules", None) is None:
@@ -310,7 +310,7 @@ class Target(object):
             self.modules = [m]
 
     def __repr__(self):
-        return "<Target %s>"%(self.__dict__,)
+        return "<Target %s>" % (self.__dict__,)
 
     def get_dest_base(self):
         dest_base = getattr(self, "dest_base", None)
@@ -1185,7 +1185,6 @@ class py2app(Command):
                 break
             else:
                 break
-
 
     def _run(self):
         try:

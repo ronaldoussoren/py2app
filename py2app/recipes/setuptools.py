@@ -1,13 +1,14 @@
+import os
 import sys
 import textwrap
-import os
 
 if sys.version_info[0] == 2:
     from cStringIO import StringIO
 else:
     from io import StringIO
 
-PRESCRIPT=textwrap.dedent("""\
+PRESCRIPT = textwrap.dedent(
+    """\
     import pkg_resources, zipimport, os
 
     def find_eggs_in_zip(importer, path_item, only=False):
@@ -37,7 +38,8 @@ PRESCRIPT=textwrap.dedent("""\
         list(map(pkg_resources.working_set.add_entry, sys.path))
 
     _fixup_pkg_resources()
-""")
+"""
+)
 
 
 def check(cmd, mf):
@@ -57,7 +59,8 @@ def check(cmd, mf):
     if os.path.exists(vendor_dir):
         for topdir, dirs, files in os.walk(vendor_dir):
             for fn in files:
-                if fn in ("__pycache__", "__init__.py"): continue
+                if fn in ("__pycache__", "__init__.py"):
+                    continue
 
                 relnm = os.path.relpath(os.path.join(topdir, fn), vendor_dir)
                 if relnm.endswith(".py"):
@@ -81,4 +84,7 @@ def check(cmd, mf):
     if sys.version[0] != 2:
         expected_missing_imports.add("__builtin__")
 
-    return {"expected_missing_imports": expected_missing_imports, "prescripts": [StringIO(PRESCRIPT)]}
+    return {
+        "expected_missing_imports": expected_missing_imports,
+        "prescripts": [StringIO(PRESCRIPT)],
+    }

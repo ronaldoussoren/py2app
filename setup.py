@@ -4,11 +4,11 @@
 import os
 import sys
 import unittest
-from distutils import log
 from fnmatch import fnmatch
 
 from setuptools import Command, find_packages, setup
 from setuptools.command import egg_info
+from distutils import log
 
 fp = open("README.rst")
 try:
@@ -23,7 +23,7 @@ finally:
     fp.close()
 
 CLASSIFIERS = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Environment :: MacOS X :: Cocoa",
     "Intended Audience :: Developers",
@@ -291,7 +291,8 @@ setup(
     long_description_content_type="text/x-rst; charset=UTF-8",
     classifiers=CLASSIFIERS,
     keywords=[".app", "standalone"],
-    install_requires=["altgraph>=0.16", "modulegraph>=0.17", "macholib>=1.11"],
+    install_requires=["altgraph>=0.16", "modulegraph>=0.17", "macholib>=1.16"],
+    setup_requires=["altgraph>=0.16", "modulegraph>=0.17", "macholib>=1.16"],
     tests_require=["pyobjc"],
     cmdclass=cmdclass,
     packages=find_packages(exclude=["py2app_tests"]),
@@ -351,7 +352,9 @@ setup(
         ],
     },
     entry_points={
-        "setuptools.finalize_distribution_options": ["py2app = py2app.build_app:finalize_distribution_options"],
+        "setuptools.finalize_distribution_options": [
+            "py2app = py2app.build_app:finalize_distribution_options"
+        ],
         "distutils.commands": ["py2app = py2app.build_app:py2app"],
         "distutils.setup_keywords": [
             "app =    py2app.build_app:validate_target",
