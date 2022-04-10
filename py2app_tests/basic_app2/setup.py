@@ -1,6 +1,6 @@
 from setuptools import setup
 
 setup(
-    name='BasicApp',
-    app=['main-script'],
+    name="BasicApp",
+    app=["main-script"],
 )

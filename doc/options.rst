@@ -56,14 +56,14 @@ Options for 'py2app' command:
        level 0 to disable, level 1 for ``python -O``, and level 2
        for ``python -OO``. Defaults to the optimation level of the
        process running py2app.
-  
+
    * - ``--includes``
      - includes
      - list of module names
      - A list of Python modules to include even if they are
        not detected by dependency checker. Packages in this list
        are ignored.
- 
+
    * - ``--packages``
      - packages
      - list of package names
@@ -81,28 +81,28 @@ Options for 'py2app' command:
      - excludes
      - list of module or package names
      - A list of Python modules or packages to exclude even if they are
-       detected by dependency checker. 
+       detected by dependency checker.
 
    * - ``--matplotlib-backends``
-     - matplotlib_backends  
+     - matplotlib_backends
      - List of matplotlib backend names
      - The matplotlib backends that will be included when matplotlib is
        one of the included libraries. The default is to include all of
-       matplotlib. 
-       
-       Use '*' to include all backends, and "-" to only include backends that 
+       matplotlib.
+
+       Use '*' to include all backends, and "-" to only include backends that
        are explicitly included.
 
    * - ``--qt-plugins``
      - qt_plugins
      - List of Qt plugins
      - Specifies plugins to include in an application using PyQt4.
- 
+
    * - ``--dylib-excludes``
      - dylib_excludes
      - A list of shared libraries or frameworks
      - The specified libraries and frameworks will not be included
-       in the output. 
+       in the output.
 
    * - ``--frameworks``
      - frameworks
@@ -121,7 +121,7 @@ Options for 'py2app' command:
      - Path to a plist template, or (in setup.py) a Python dictionary.
      - Specify the contents of the Info.plist. Py2app will add some information
        to the file when it is copied into the output.
-   
+
    * - ``--datamodels``
      - datamodels
      - List of xcdatamodels
@@ -152,14 +152,14 @@ Options for 'py2app' command:
      - The (set of) architecture(s) to use for the main executable in the
        output. This should be a subset of the architectures supported by the
        python interpreter.
-  
+
    * - ``--no-strip``
      - no_strip
      - None (use ``True`` in setup.py)
      - Don't strip debug information and local symbols from the output. Default
        is to strip.
 
-   * - ``--semi-standalone``   
+   * - ``--semi-standalone``
      - semi_standalone
      - None (use ``True`` in setup.py)
      - Create output that depends on an existing installation of Python, but
@@ -169,29 +169,29 @@ Options for 'py2app' command:
      - alias
      - None (use ``True`` in setup.py)
      - Create output that depends on an existing installation of Python and
-       uses the sources outside of the bundle.  
-       
+       uses the sources outside of the bundle.
+
        This is only useful during development, you can update source files
-       and relaunche the application without rebuilding the bundle.  
-       
+       and relaunche the application without rebuilding the bundle.
+
        **Do not use for distribution**
 
    * - ``--graph``
      - -
-     - None 
-     - Emit a ".dot" file with the module dependency graph after the build. The output 
+     - None
+     - Emit a ".dot" file with the module dependency graph after the build. The output
        will be stored next to the  regular output.
 
    * - ``--xref``
      - xref
-     - None 
+     - None
      - Emit a module cross reference as HTML. The output
        will be stored next to the  regular output.
 
    * - ``--report-missing-from-imports``
      - -
      - None (use ``True`` in setup.py)
-     - Include a list of missing names for ``from module import name`` in 
+     - Include a list of missing names for ``from module import name`` in
        the output at the end of the py2app run.
 
    * - ``--no-report-missing-conditional-import``
@@ -211,32 +211,32 @@ Options for 'py2app' command:
      - Don't change the working directory to the bundle Resource
        directory. This option is always enabled in plugins.
 
-   * - ``--argv-emulation``   
+   * - ``--argv-emulation``
      -  argv_emulation
      - None (use ``True`` in setup.py)
-     - Fill ``sys.argv`` during program launch. 
+     - Fill ``sys.argv`` during program launch.
 
        The argv emulator runs a small event loop during program launch
        to intercept file-open and url-open events. The to-be-opened
        resources will be added to ``sys.argv``
 
        **WARNING**: Do no use this option when the program uses a
-       GUI toolkit. The emulator tends to confuse GUI toolkits, and 
+       GUI toolkit. The emulator tends to confuse GUI toolkits, and
        most GUI toolkits have APIs to react to these events at runtime
        (for example to open a file when your program is already running).
-     
+
        This option cannot be enabled for plugins.
 
    * - ``--emulate-shell-environment``
      - emulate_shell_environment
      - None (use ``True`` in setup.py)
-     - Set up environment variables as if the program was launched from 
+     - Set up environment variables as if the program was launched from
        a fresh Terminal window. Don't use this with plugins.
 
        By default applications inherit the environment from the application
        launcher (when double clicking the application in the Finder), which
        is does not include environment variables set in the users shell profile.
-       
+
        Only use this when the application needs to access environment varialbes
        set in the Terminal. This option is not meant for general use.
 
@@ -244,7 +244,7 @@ Options for 'py2app' command:
      - use_pythonpath
      - None (use ``True`` in setup.py)
      - Allow the PYTHONPATH environment varialble to affect the interpreter's
-       search path. 
+       search path.
 
        This is generally not useful, PYTHONPATH is not included in the minimal
        shell environment used by the application launcher.
@@ -262,22 +262,22 @@ Options for 'py2app' command:
      - extra_scripts
      - List of file names for scripts
      - The mentioned scripts will be included in the ``Contents/MacOS``.
-       
+
        For Python scripts the file in ``Contents/MacOS`` will be a binary
        that launches the script using the Python interpreter and environment
-       from the bundle. 
+       from the bundle.
 
    * - ``--argv-inject``
      - argv_inject
      - values to inject, a single string will be split using ``shlex.split``
      - The values will be inserted in to ``sys.argv`` after ``argv[0]``.
 
-   * - ``--bdist-base``       
+   * - ``--bdist-base``
      - bdist_base
      - directory name
      - base directory for build library (default is build)
 
-   * - ``--dist-dir``       
+   * - ``--dist-dir``
      - dist_dir
      - directory name
      - directory to put the final built distributions in (default is dist)
@@ -293,11 +293,11 @@ Options for 'py2app' command:
      - None (use ``True`` in setup.py)
      - Forward the stdout/stderr streams to Console.app using ASL
 
-   * - ``--force-system-tk``  
+   * - ``--force-system-tk``
      - force_system_tk
      - None (use ``True`` in setup.py)
-     - Ensures that Tkinter will be linked to the system copy 
-       of Tcl and Tk. 
+     - Ensures that Tkinter will be linked to the system copy
+       of Tcl and Tk.
 
        This makes the bundle smaller, but the system version of Tcl/Tk
        is ancient an buggy. Don't use this option.
@@ -328,6 +328,5 @@ Options for 'py2app' command:
 Options to specify which objects to include or exclude (the first part of the table
 above) are used to finetune the behaviour of py2app and should generally not be
 necessary. Please file an issue on the py2app tracker if a package on PyPI requires
-one of these options, which allows me to change py2app to do the right thing 
+one of these options, which allows me to change py2app to do the right thing
 automatically.
-

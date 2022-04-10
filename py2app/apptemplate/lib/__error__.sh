@@ -15,5 +15,3 @@ echo "See the py2app website for debugging launch issues"
 echo ""
 echo "ERRORURL: https://py2app.readthedocs.io/en/latest/debugging.html"
 exit
-
-

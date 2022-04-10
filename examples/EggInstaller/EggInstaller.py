@@ -27,22 +27,25 @@ if __name__ == '__main__':
     main()
 """
 
+
 def log(*args):
-    print('[EggInstaller]', ' '.join(map(str, args)))
+    print("[EggInstaller]", " ".join(map(str, args)))
+
 
 def main():
-    fd, name = tempfile.mkstemp(suffix='.py', prefix='EggInstaller')
-    script = os.fdopen(fd, 'w+b')
-    script.write(SCRIPT % (sys.executable, ['--'] + sys.argv[1:]))
+    fd, name = tempfile.mkstemp(suffix=".py", prefix="EggInstaller")
+    script = os.fdopen(fd, "w+b")
+    script.write(SCRIPT % (sys.executable, ["--"] + sys.argv[1:]))
     script.flush()
     script.close()
     os.chmod(name, 0o700)
-    cmd = ['/usr/bin/open', '-a', 'Terminal', name]
+    cmd = ["/usr/bin/open", "-a", "Terminal", name]
     os.spawnv(os.P_WAIT, cmd[0], cmd)
-    log('waiting for', name)
+    log("waiting for", name)
     while os.path.exists(name):
         time.sleep(0.1)
-    log('done')
+    log("done")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

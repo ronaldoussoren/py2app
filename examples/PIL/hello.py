@@ -3,9 +3,11 @@ import sys, os
 import pprint
 import PIL.Image
 
-PATH="/System/Library//Automator/Crop Images.action/Contents/Resources/shark-tall-no-scale.jpg"
+PATH = "/System/Library//Automator/Crop Images.action/Contents/Resources/shark-tall-no-scale.jpg"
 
 print("globals() is %r" % id(globals()))
+
+
 def somefunc():
     print("globals() is %r" % id(globals()))
     print("Hello from py2app")
@@ -19,7 +21,7 @@ def somefunc():
     print("os.getcwd()", os.getcwd())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     somefunc()
     img = PIL.Image.open(PATH)
     print(type(img))

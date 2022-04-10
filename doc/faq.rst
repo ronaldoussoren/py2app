@@ -20,7 +20,7 @@ Frequently Asked Questions
   A lot of libraries are not yet available as arm64 or
   universal2 libraries.
 
-  For applications using those libraries you can 
+  For applications using those libraries you can
   create an x86_64 (Intel) application instead:
 
   1. Create a new virtual environment and activate this
@@ -46,12 +46,12 @@ Frequently Asked Questions
   Cython generates C extensions. Because of that the dependency
   walker in py2app cannot find import statements in ".pyx" files".
 
-  To create working applications you have to ensure that 
+  To create working applications you have to ensure that
   dependencies are made visible to py2app, either by adding
-  import statements to a python file that is included in the 
+  import statements to a python file that is included in the
   application, or by using the "includes" option.
 
-  See examples/PyQt/cython_app in the repository for an 
+  See examples/PyQt/cython_app in the repository for an
   example of the latter.
 
 * Dark mode support
@@ -62,10 +62,10 @@ Frequently Asked Questions
      a modern SDK, with an automatic fallback to the older binaries
      for old builds of Tkinter.
 
-  The stub executables from py2app were compiled on an 
+  The stub executables from py2app were compiled on an
   old version of macOS and therefore the system assumes
   that applications build with py2app do not support Dark Mode
-  unless you're building a "Universal 2" or "Apple Silicon" 
+  unless you're building a "Universal 2" or "Apple Silicon"
   application.
 
   To enable Dark Mode support for other builds of Python you
@@ -73,7 +73,7 @@ Frequently Asked Questions
   to do this is using the following option in setup.py:
 
   .. sourcecode:: python
-  
+
      setup(
          ...
          options=dict(
@@ -84,4 +84,3 @@ Frequently Asked Questions
            )
          )
      )
-  

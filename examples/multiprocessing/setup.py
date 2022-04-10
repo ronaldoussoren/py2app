@@ -8,6 +8,6 @@ from setuptools import setup
 
 setup(
     name="MPExample",
-    app=['main.py'],
+    app=["main.py"],
     setup_requires=["py2app"],
 )

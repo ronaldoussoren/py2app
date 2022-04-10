@@ -43,7 +43,7 @@ static int loadBundle(NSString* bundlePath)
 }
 
 
-static int 
+static int
 perform_commands(void)
 {
 static char gBuf[1024];
@@ -91,4 +91,3 @@ int main(int argc, char** argv)
 	[pool release];
 	return perform_commands();
 }
-

@@ -8,7 +8,7 @@ setuptools:
    `setuptools`_ provides enhancements to `distutils`_.
 
 macholib:
-    `macholib`_ reads and writes the Mach-O object file format. 
+    `macholib`_ reads and writes the Mach-O object file format.
     Used by py2app to build a dependency graph of dyld and framework
     dependencies for your application, and then to copy them into your
     application and rewrite their load commands to be ``@executable_path``

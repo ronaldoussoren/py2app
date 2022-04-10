@@ -1,6 +1,8 @@
 import sys
-if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2,7)) or \
-        (sys.version_info[0] == 3 and sys.version_info[:2] >= (3,2)):
+
+if (sys.version_info[0] == 2 and sys.version_info[:2] >= (2, 7)) or (
+    sys.version_info[0] == 3 and sys.version_info[:2] >= (3, 2)
+):
     import unittest
 else:
     import unittest2 as unittest
@@ -12,12 +14,14 @@ import os
 import signal
 import py2app
 import hashlib
+
 if __name__ == "__main__":
     from tools import kill_child_processes
 else:
     from .tools import kill_child_processes
 
-DIR_NAME=os.path.dirname(os.path.abspath(__file__))
+DIR_NAME = os.path.dirname(os.path.abspath(__file__))
+
 
 def make_checksums(path):
     result = {}
@@ -32,7 +36,7 @@ def make_checksums(path):
                 result[p] = os.readlink(p)
 
             else:
-                with open(p, 'rb') as fp:
+                with open(p, "rb") as fp:
                     block = fp.read(10240)
                     while block:
                         h.update(block)
@@ -41,11 +45,11 @@ def make_checksums(path):
                 result[p] = h.hexdigest()
 
 
-class TestEmailCompat (unittest.TestCase):
+class TestEmailCompat(unittest.TestCase):
     py2app_args = []
     python_args = []
     setup_file = "setup-compat.py"
-    app_dir = os.path.join(DIR_NAME, 'app_with_email')
+    app_dir = os.path.join(DIR_NAME, "app_with_email")
 
     # Basic setup code
     #
@@ -55,47 +59,49 @@ class TestEmailCompat (unittest.TestCase):
     def setUpClass(cls):
         kill_child_processes()
 
-        env=os.environ.copy()
-        env['TMPDIR'] = os.getcwd()
+        env = os.environ.copy()
+        env["TMPDIR"] = os.getcwd()
         pp = os.path.dirname(os.path.dirname(py2app.__file__))
-        if 'PYTHONPATH' in env:
-            env['PYTHONPATH'] = pp + ':' + env['PYTHONPATH']
+        if "PYTHONPATH" in env:
+            env["PYTHONPATH"] = pp + ":" + env["PYTHONPATH"]
         else:
-            env['PYTHONPATH'] = pp
+            env["PYTHONPATH"] = pp
 
-        if 'LANG' not in env:
+        if "LANG" not in env:
             # Ensure that testing though SSH works
-            env['LANG'] = 'en_US.UTF-8'
+            env["LANG"] = "en_US.UTF-8"
 
-        p = subprocess.Popen([
-                sys.executable ] + cls.python_args + [
-                    cls.setup_file, 'py2app'] + cls.py2app_args,
-            cwd = cls.app_dir,
+        p = subprocess.Popen(
+            [sys.executable]
+            + cls.python_args
+            + [cls.setup_file, "py2app"]
+            + cls.py2app_args,
+            cwd=cls.app_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             close_fds=False,
-            env=env
-            )
+            env=env,
+        )
         lines = p.communicate()[0]
         if p.wait() != 0:
-            print (lines)
+            print(lines)
             raise AssertionError("Creating basic_app bundle failed")
 
-        cls.checksums = make_checksums(
-                os.path.join(cls.app_dir, 'dist/BasicApp.app'))
+        cls.checksums = make_checksums(os.path.join(cls.app_dir, "dist/BasicApp.app"))
 
     def assertChecksumsSame(self):
-        self.assertEqual(self.checksums,
-            make_checksums(
-                os.path.join(self.app_dir, 'dist/BasicApp.app')))
+        self.assertEqual(
+            self.checksums,
+            make_checksums(os.path.join(self.app_dir, "dist/BasicApp.app")),
+        )
 
     @classmethod
     def tearDownClass(cls):
-        if os.path.exists(os.path.join(cls.app_dir, 'build')):
-            shutil.rmtree(os.path.join(cls.app_dir, 'build'))
+        if os.path.exists(os.path.join(cls.app_dir, "build")):
+            shutil.rmtree(os.path.join(cls.app_dir, "build"))
 
-        if os.path.exists(os.path.join(cls.app_dir, 'dist')):
-            shutil.rmtree(os.path.join(cls.app_dir, 'dist'))
+        if os.path.exists(os.path.join(cls.app_dir, "dist")):
+            shutil.rmtree(os.path.join(cls.app_dir, "dist"))
 
         time.sleep(2)
 
@@ -106,16 +112,15 @@ class TestEmailCompat (unittest.TestCase):
     def start_app(self):
         # Start the test app, return a subprocess object where
         # stdin and stdout are connected to pipes.
-        path = os.path.join(
-                self.app_dir,
-            'dist/BasicApp.app/Contents/MacOS/BasicApp')
+        path = os.path.join(self.app_dir, "dist/BasicApp.app/Contents/MacOS/BasicApp")
 
-        p = subprocess.Popen([path],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                close_fds=False,
-                )
-                #stderr=subprocess.STDOUT)
+        p = subprocess.Popen(
+            [path],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            close_fds=False,
+        )
+        # stderr=subprocess.STDOUT)
         return p
 
     def wait_with_timeout(self, proc, timeout=10):
@@ -138,14 +143,13 @@ class TestEmailCompat (unittest.TestCase):
         p = self.start_app()
 
         # Compatibility alias:
-        p.stdin.write('import_module("email.MIMEText")\n'.encode('latin1'))
+        p.stdin.write('import_module("email.MIMEText")\n'.encode("latin1"))
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"email.mime.text")
 
-
         # Compatibility alias:
-        p.stdin.write('import_module("email.Encoders")\n'.encode('latin1'))
+        p.stdin.write('import_module("email.Encoders")\n'.encode("latin1"))
         p.stdin.flush()
         ln = p.stdout.readline()
         self.assertEqual(ln.strip(), b"email.encoders")
@@ -154,10 +158,12 @@ class TestEmailCompat (unittest.TestCase):
         p.stdout.close()
         self.assertChecksumsSame()
 
-class TestEmailFull (TestEmailCompat):
+
+class TestEmailFull(TestEmailCompat):
     setup_file = "setup-all.py"
 
-class TestEmailPlainImport (TestEmailCompat):
+
+class TestEmailPlainImport(TestEmailCompat):
     setup_file = "setup-plain.py"
 
 

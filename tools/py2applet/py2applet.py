@@ -7,4 +7,5 @@ It's expected that only one Python script is dragged in.
 """
 
 from py2app.scripts.script_py2applet import main
+
 main()

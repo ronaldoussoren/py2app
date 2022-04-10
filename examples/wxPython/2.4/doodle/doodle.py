@@ -6,30 +6,31 @@ can do simple drawings upon.
 """
 
 
-import wx                  # This module uses the new wx namespace
+import wx  # This module uses the new wx namespace
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+
 
 class DoodleWindow(wx.Window):
-    menuColours = { 100 : 'Black',
-                    101 : 'Yellow',
-                    102 : 'Red',
-                    103 : 'Green',
-                    104 : 'Blue',
-                    105 : 'Purple',
-                    106 : 'Brown',
-                    107 : 'Aquamarine',
-                    108 : 'Forest Green',
-                    109 : 'Light Blue',
-                    110 : 'Goldenrod',
-                    111 : 'Cyan',
-                    112 : 'Orange',
-                    113 : 'Navy',
-                    114 : 'Dark Grey',
-                    115 : 'Light Grey',
-                    }
+    menuColours = {
+        100: "Black",
+        101: "Yellow",
+        102: "Red",
+        103: "Green",
+        104: "Blue",
+        105: "Purple",
+        106: "Brown",
+        107: "Aquamarine",
+        108: "Forest Green",
+        109: "Light Blue",
+        110: "Goldenrod",
+        111: "Cyan",
+        112: "Orange",
+        113: "Navy",
+        114: "Dark Grey",
+        115: "Light Grey",
+    }
     maxThickness = 16
-
 
     def __init__(self, parent, ID):
         wx.Window.__init__(self, parent, ID, style=wx.NO_FULL_REPAINT_ON_RESIZE)
@@ -59,12 +60,10 @@ class DoodleWindow(wx.Window):
         # When the window is destroyed, clean up resources.
         wx.EVT_WINDOW_DESTROY(self, self.Cleanup)
 
-
     def Cleanup(self, evt):
         if hasattr(self, "menu"):
             self.menu.Destroy()
             del self.menu
-
 
     def InitBuffer(self):
         """Initialize the bitmap used for buffering the display."""
@@ -76,13 +75,11 @@ class DoodleWindow(wx.Window):
         self.DrawLines(dc)
         self.reInitBuffer = False
 
-
     def SetColour(self, colour):
         """Set a new colour and make a matching pen"""
         self.colour = colour
         self.pen = wx.Pen(self.colour, self.thickness, wx.SOLID)
         self.Notify()
-
 
     def SetThickness(self, num):
         """Set a new line thickness and make a matching pen"""
@@ -90,16 +87,13 @@ class DoodleWindow(wx.Window):
         self.pen = wx.Pen(self.colour, self.thickness, wx.SOLID)
         self.Notify()
 
-
     def GetLinesData(self):
         return self.lines[:]
-
 
     def SetLinesData(self, lines):
         self.lines = lines[:]
         self.InitBuffer()
         self.Refresh()
-
 
     def MakeMenu(self):
         """Make a menu that can be popped up later"""
@@ -113,12 +107,11 @@ class DoodleWindow(wx.Window):
         wx.EVT_UPDATE_UI_RANGE(self, 100, 200, self.OnCheckMenuColours)
         menu.Break()
 
-        for x in range(1, self.maxThickness+1):
+        for x in range(1, self.maxThickness + 1):
             menu.Append(x, str(x), kind=wx.ITEM_CHECK)
         wx.EVT_MENU_RANGE(self, 1, self.maxThickness, self.OnMenuSetThickness)
         wx.EVT_UPDATE_UI_RANGE(self, 1, self.maxThickness, self.OnCheckMenuThickness)
         self.menu = menu
-
 
     # These two event handlers are called before the menu is displayed
     # to determine which items should be checked.
@@ -137,28 +130,23 @@ class DoodleWindow(wx.Window):
         else:
             event.Check(False)
 
-
     def OnLeftDown(self, event):
         """called when the left mouse button is pressed"""
         self.curLine = []
         self.x, self.y = event.GetPositionTuple()
         self.CaptureMouse()
 
-
     def OnLeftUp(self, event):
         """called when the left mouse button is released"""
         if self.HasCapture():
-            self.lines.append( (self.colour, self.thickness, self.curLine) )
+            self.lines.append((self.colour, self.thickness, self.curLine))
             self.curLine = []
             self.ReleaseMouse()
-
 
     def OnRightUp(self, event):
         """called when the right mouse button is released, will popup the menu"""
         pt = event.GetPosition()
         self.PopupMenu(self.menu, pt)
-
-
 
     def OnMotion(self, event):
         """
@@ -177,14 +165,12 @@ class DoodleWindow(wx.Window):
             self.x, self.y = pos
             dc.EndDrawing()
 
-
     def OnSize(self, event):
         """
         Called when the window is resized.  We set a flag so the idle
         handler will resize the buffer.
         """
         self.reInitBuffer = True
-
 
     def OnIdle(self, event):
         """
@@ -197,7 +183,6 @@ class DoodleWindow(wx.Window):
             self.InitBuffer()
             self.Refresh(False)
 
-
     def OnPaint(self, event):
         """
         Called when the window is exposed.
@@ -207,7 +192,6 @@ class DoodleWindow(wx.Window):
         # deleted.  Since we don't need to draw anything else
         # here that's all there is to it.
         dc = wx.BufferedPaintDC(self, self.buffer)
-
 
     def DrawLines(self, dc):
         """
@@ -221,7 +205,6 @@ class DoodleWindow(wx.Window):
                 dc.DrawLine(*coords)
         dc.EndDrawing()
 
-
     # Event handlers for the popup menu, uses the event ID to determine
     # the colour or the thickness to set.
     def OnMenuSetColour(self, event):
@@ -229,7 +212,6 @@ class DoodleWindow(wx.Window):
 
     def OnMenuSetThickness(self, event):
         self.SetThickness(event.GetId())
-
 
     # Observer pattern.  Listeners are registered and then notified
     # whenever doodle settings change.
@@ -241,17 +223,25 @@ class DoodleWindow(wx.Window):
             other.Update(self.colour, self.thickness)
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+
 
 class DoodleFrame(wx.Frame):
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, -1, "Doodle Frame", size=(800,600),
-                         style=wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE)
+        wx.Frame.__init__(
+            self,
+            parent,
+            -1,
+            "Doodle Frame",
+            size=(800, 600),
+            style=wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE,
+        )
         doodle = DoodleWindow(self, -1)
 
-#----------------------------------------------------------------------
 
-if __name__ == '__main__':
+# ----------------------------------------------------------------------
+
+if __name__ == "__main__":
     app = wx.PySimpleApp()
     frame = DoodleFrame(None)
     frame.Show(True)

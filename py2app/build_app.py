@@ -411,7 +411,11 @@ class py2app(Command):
         ),
         ("includes=", "i", "comma-separated list of modules to include"),
         ("packages=", "p", "comma-separated list of packages to include"),
-        ("maybe-packages=", "p", "comma-separated list of packages that will be added outside of the zip file when detected as a dependency"),
+        (
+            "maybe-packages=",
+            "p",
+            "comma-separated list of packages that will be added outside of the zip file when detected as a dependency",
+        ),
         ("iconfile=", None, "Icon file to use"),
         ("excludes=", "e", "comma-separated list of modules to exclude"),
         (

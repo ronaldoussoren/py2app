@@ -78,7 +78,7 @@ application and then your main script.
 
 If the ``--alias`` option is being used, the build procedure is finished.
 
-The main script of your application will be copied *as-is* to the 
+The main script of your application will be copied *as-is* to the
 ``Contents/Resources/`` folder of the application bundle. If you want to
 obfuscate anything (by having it as a ``.pyc`` in the zip), then you
 *must not* place it in the main script!
@@ -115,7 +115,7 @@ then the ``Python.framework`` is ignored. All other vendor files (those in
 Strip the result
 ----------------
 
-Unless the ``--no-strip`` option is specified, all Mach-O files in the 
+Unless the ``--no-strip`` option is specified, all Mach-O files in the
 application bundle are stripped using the ``strip`` tool. This removes
 debugging symbols to make your application smaller.
 

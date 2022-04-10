@@ -42,6 +42,6 @@ Some common problems are:
   itself.  There are often APIs to tell the library which location
   it should use for resources.
 
-  If this needed for a project on PyPI: Please file a bug 
+  If this needed for a project on PyPI: Please file a bug
   on GitHub, including the workaround, that way we can teach
   py2app to the the right thing.

@@ -13,9 +13,11 @@ from setuptools import setup
 
 setup(
     plugin=["PyTestPlugin.py"],
-    options=dict(py2app=dict(
-        extension='.pbplugin',
-    )),
+    options=dict(
+        py2app=dict(
+            extension=".pbplugin",
+        )
+    ),
     install_requires=["pyobjc"],
     setup_requires=["py2app"],
 )

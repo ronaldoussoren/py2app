@@ -18,7 +18,7 @@ plist = dict(
 )
 
 setup(
-    data_files=['MainMenu.nib', 'TinyTinyDocument.nib'],
+    data_files=["MainMenu.nib", "TinyTinyDocument.nib"],
     app=[
         dict(script="TinyTinyEdit.py", plist=plist),
     ],

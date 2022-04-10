@@ -41,7 +41,7 @@ Built-in recipes
 ``PIL``:
     Locates and includes all image plugins (Python modules that end with
     ``ImagePlugin.py``), removes unwanted dependencies on ``Tkinter``.
-    
+
 ``pydoc``:
     The implicit references on the several modules are removed (``Tkinter``,
     ``tty``, ``BaseHTTPServer``, ``mimetools``, ``select``, ``threading``,
@@ -89,7 +89,7 @@ If a recipe returns a ``dict`` instance, it will not be called again. The
 returned ``dict`` may have any of these optional string keys:
 
 ``filters``:
-    A list of filter functions to be called with every module in the 
+    A list of filter functions to be called with every module in the
     modulegraph during flattening. If the filter returns False, the module
     and any of its dependencies will not be included in the output. This is
     similar in purpose to the ``excludes`` option, but can be any predicate

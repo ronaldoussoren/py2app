@@ -6,31 +6,34 @@ Usage:
 """
 from setuptools import setup
 import os
-VERSION = '3.10.1'
-PATH = 'drpython-%s' % (VERSION,)
+
+VERSION = "3.10.1"
+PATH = "drpython-%s" % (VERSION,)
 script = []
 includes = []
 data_files = []
 for name in os.listdir(PATH):
-    if name.startswith('.') or name == 'CVS':
+    if name.startswith(".") or name == "CVS":
         continue
     fn = os.path.join(PATH, name)
     mod, ext = os.path.splitext(name)
-    if ext == '.pyw':
+    if ext == ".pyw":
         script.append(fn)
-    elif ext == '.py':
+    elif ext == ".py":
         includes.append(mod)
-    elif ext == '.pyc':
+    elif ext == ".pyc":
         continue
     else:
         data_files.append(fn)
 
 setup(
-    app = script,
-    data_files = data_files,
-    options = dict(py2app=dict(
-        includes = includes,
-        argv_emulation = True,
-    )),
+    app=script,
+    data_files=data_files,
+    options=dict(
+        py2app=dict(
+            includes=includes,
+            argv_emulation=True,
+        )
+    ),
     setup_requires=["py2app"],
 )

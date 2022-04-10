@@ -4,11 +4,15 @@ import wxglade
 import common
 import webbrowser
 import main
+
 common.wxglade_path = os.getcwd()
 
 # fix bug in show_tutorial
 def show_tutorial(self, event):
-    webbrowser.open_new('file://'+os.path.join(common.wxglade_path, 'docs', 'index.html'))
+    webbrowser.open_new(
+        "file://" + os.path.join(common.wxglade_path, "docs", "index.html")
+    )
+
 
 main.wxGladeFrame.show_tutorial = show_tutorial
 

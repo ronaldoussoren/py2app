@@ -7,8 +7,8 @@ Usage:
 from setuptools import setup
 
 setup(
-    data_files=['MainMenu.nib'],
-    app=['ICSharingWatcher.py'],
+    data_files=["MainMenu.nib"],
+    app=["ICSharingWatcher.py"],
     install_requires=["pyobjc"],
     setup_requires=["py2app"],
 )

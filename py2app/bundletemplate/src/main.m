@@ -697,5 +697,3 @@ void _py2app_bundle_load(void)
     (void)pyobjc_main(argc, argv, envp);
     [pool release];
 }
-
-

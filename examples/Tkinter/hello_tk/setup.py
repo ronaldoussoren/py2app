@@ -7,6 +7,6 @@ Usage:
 from setuptools import setup
 
 setup(
-    app=['hello.py'],
+    app=["hello.py"],
     setup_requires=["py2app"],
 )

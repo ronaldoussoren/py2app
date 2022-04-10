@@ -11,32 +11,33 @@ implmented using an wx.html.HtmlWindow.
 """
 
 import sys
+
 try:
-    import wx                  # This module uses the new wx namespace
+    import wx  # This module uses the new wx namespace
     import wx.html
 except:
     import pdb
     import traceback
+
     traceback.print_exc()
     pdb.post_mortem(sys.exc_info()[2])
-from wx.lib import buttons # for generic button classes
+from wx.lib import buttons  # for generic button classes
 from doodle import DoodleWindow
 
 import os, cPickle
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 wx.RegisterId(5000)  # Give a high starting value for the IDs, just for kicks
 
-idNEW    = wx.NewId()
-idOPEN   = wx.NewId()
-idSAVE   = wx.NewId()
+idNEW = wx.NewId()
+idOPEN = wx.NewId()
+idSAVE = wx.NewId()
 idSAVEAS = wx.NewId()
-idCLEAR  = wx.NewId()
-idEXIT   = wx.NewId()
-idABOUT  = wx.NewId()
-
+idCLEAR = wx.NewId()
+idEXIT = wx.NewId()
+idABOUT = wx.NewId()
 
 
 class DoodleFrame(wx.Frame):
@@ -45,10 +46,18 @@ class DoodleFrame(wx.Frame):
     their layout with a wx.BoxSizer.  A menu and associated event handlers
     provides for saving a doodle to a file, etc.
     """
+
     title = "Do a doodle"
+
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, -1, self.title, size=(800,600),
-                         style=wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE)
+        wx.Frame.__init__(
+            self,
+            parent,
+            -1,
+            self.title,
+            size=(800, 600),
+            style=wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE,
+        )
         self.CreateStatusBar()
         self.MakeMenu()
         self.filename = None
@@ -68,26 +77,26 @@ class DoodleFrame(wx.Frame):
         self.SetAutoLayout(True)
         self.SetSizer(box)
 
-
     def SaveFile(self):
         if self.filename:
             data = self.doodle.GetLinesData()
-            f = open(self.filename, 'w')
+            f = open(self.filename, "w")
             cPickle.dump(data, f)
             f.close()
-
 
     def ReadFile(self):
         if self.filename:
             try:
-                f = open(self.filename, 'r')
+                f = open(self.filename, "r")
                 data = cPickle.load(f)
                 f.close()
                 self.doodle.SetLinesData(data)
             except cPickle.UnpicklingError:
-                wx.MessageBox("%s is not a doodle file." % self.filename,
-                             "oops!", style=wx.OK|wx.ICON_EXCLAMATION)
-
+                wx.MessageBox(
+                    "%s is not a doodle file." % self.filename,
+                    "oops!",
+                    style=wx.OK | wx.ICON_EXCLAMATION,
+                )
 
     def MakeMenu(self):
         # create the file menu
@@ -106,7 +115,11 @@ class DoodleFrame(wx.Frame):
 
         # and the help menu
         menu2 = wx.Menu()
-        menu2.Append(idABOUT, "&About\tCtrl-H", "Display the gratuitous 'about this app' thingamajig")
+        menu2.Append(
+            idABOUT,
+            "&About\tCtrl-H",
+            "Display the gratuitous 'about this app' thingamajig",
+        )
 
         # and add them to a menubar
         menuBar = wx.MenuBar()
@@ -114,26 +127,28 @@ class DoodleFrame(wx.Frame):
         menuBar.Append(menu2, "&Help")
         self.SetMenuBar(menuBar)
 
-        wx.EVT_MENU(self, idOPEN,   self.OnMenuOpen)
-        wx.EVT_MENU(self, idSAVE,   self.OnMenuSave)
+        wx.EVT_MENU(self, idOPEN, self.OnMenuOpen)
+        wx.EVT_MENU(self, idSAVE, self.OnMenuSave)
         wx.EVT_MENU(self, idSAVEAS, self.OnMenuSaveAs)
-        wx.EVT_MENU(self, idCLEAR,  self.OnMenuClear)
-        wx.EVT_MENU(self, idEXIT,   self.OnMenuExit)
-        wx.EVT_MENU(self, idABOUT,  self.OnMenuAbout)
-
-
+        wx.EVT_MENU(self, idCLEAR, self.OnMenuClear)
+        wx.EVT_MENU(self, idEXIT, self.OnMenuExit)
+        wx.EVT_MENU(self, idABOUT, self.OnMenuAbout)
 
     wildcard = "Doodle files (*.ddl)|*.ddl|All files (*.*)|*.*"
 
     def OnMenuOpen(self, event):
-        dlg = wx.FileDialog(self, "Open doodle file...", os.getcwd(),
-                           style=wx.OPEN, wildcard = self.wildcard)
+        dlg = wx.FileDialog(
+            self,
+            "Open doodle file...",
+            os.getcwd(),
+            style=wx.OPEN,
+            wildcard=self.wildcard,
+        )
         if dlg.ShowModal() == wx.ID_OK:
             self.filename = dlg.GetPath()
             self.ReadFile()
-            self.SetTitle(self.title + ' -- ' + self.filename)
+            self.SetTitle(self.title + " -- " + self.filename)
         dlg.Destroy()
-
 
     def OnMenuSave(self, event):
         if not self.filename:
@@ -141,29 +156,29 @@ class DoodleFrame(wx.Frame):
         else:
             self.SaveFile()
 
-
     def OnMenuSaveAs(self, event):
-        dlg = wx.FileDialog(self, "Save doodle as...", os.getcwd(),
-                           style=wx.SAVE | wx.OVERWRITE_PROMPT,
-                           wildcard = self.wildcard)
+        dlg = wx.FileDialog(
+            self,
+            "Save doodle as...",
+            os.getcwd(),
+            style=wx.SAVE | wx.OVERWRITE_PROMPT,
+            wildcard=self.wildcard,
+        )
         if dlg.ShowModal() == wx.ID_OK:
             filename = dlg.GetPath()
             if not os.path.splitext(filename)[1]:
-                filename = filename + '.ddl'
+                filename = filename + ".ddl"
             self.filename = filename
             self.SaveFile()
-            self.SetTitle(self.title + ' -- ' + self.filename)
+            self.SetTitle(self.title + " -- " + self.filename)
         dlg.Destroy()
-
 
     def OnMenuClear(self, event):
         self.doodle.SetLinesData([])
         self.SetTitle(self.title)
 
-
     def OnMenuExit(self, event):
         self.Close()
-
 
     def OnMenuAbout(self, event):
         dlg = DoodleAbout(self)
@@ -171,8 +186,7 @@ class DoodleFrame(wx.Frame):
         dlg.Destroy()
 
 
-
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 
 class ControlPanel(wx.Panel):
@@ -193,8 +207,9 @@ class ControlPanel(wx.Panel):
         numCols = 4
         spacing = 4
 
-        btnSize = wx.Size(self.BMP_SIZE + 2*self.BMP_BORDER,
-                          self.BMP_SIZE + 2*self.BMP_BORDER)
+        btnSize = wx.Size(
+            self.BMP_SIZE + 2 * self.BMP_BORDER, self.BMP_SIZE + 2 * self.BMP_BORDER
+        )
 
         # Make a grid of buttons for each colour.  Attach each button
         # event to self.OnSetColour.  The button ID is the same as the
@@ -206,7 +221,7 @@ class ControlPanel(wx.Panel):
         cGrid = wx.GridSizer(cols=numCols, hgap=2, vgap=2)
         for k in keys:
             bmp = self.MakeBitmap(colours[k])
-            b = buttons.GenBitmapToggleButton(self, k, bmp, size=btnSize )
+            b = buttons.GenBitmapToggleButton(self, k, bmp, size=btnSize)
             b.SetBezelWidth(1)
             b.SetUseFocusIndicator(False)
             wx.EVT_BUTTON(self, k, self.OnSetColour)
@@ -214,13 +229,12 @@ class ControlPanel(wx.Panel):
             self.clrBtns[colours[k]] = b
         self.clrBtns[colours[keys[0]]].SetToggle(True)
 
-
         # Make a grid of buttons for the thicknesses.  Attach each button
         # event to self.OnSetThickness.  The button ID is the same as the
         # thickness value.
         self.thknsBtns = {}
         tGrid = wx.GridSizer(cols=numCols, hgap=2, vgap=2)
-        for x in range(1, doodle.maxThickness+1):
+        for x in range(1, doodle.maxThickness + 1):
             b = buttons.GenToggleButton(self, x, str(x), size=btnSize)
             b.SetBezelWidth(1)
             b.SetUseFocusIndicator(False)
@@ -242,15 +256,13 @@ class ControlPanel(wx.Panel):
         box = wx.BoxSizer(wx.VERTICAL)
         box.Add(cGrid, 0, wx.ALL, spacing)
         box.Add(tGrid, 0, wx.ALL, spacing)
-        box.Add(ci, 0, wx.EXPAND|wx.ALL, spacing)
+        box.Add(ci, 0, wx.EXPAND | wx.ALL, spacing)
         self.SetSizer(box)
         self.SetAutoLayout(True)
 
         # Resize this window so it is just large enough for the
         # minimum requirements of the sizer.
         box.Fit(self)
-
-
 
     def MakeBitmap(self, colour):
         """
@@ -266,7 +278,6 @@ class ControlPanel(wx.Panel):
         dc.SelectObject(wx.NullBitmap)
         return bmp
 
-
     def OnSetColour(self, event):
         """
         Use the event ID to get the colour, set that colour in the doodle.
@@ -277,7 +288,6 @@ class ControlPanel(wx.Panel):
             self.clrBtns[self.doodle.colour].SetToggle(False)
         # set the new colour
         self.doodle.SetColour(colour)
-
 
     def OnSetThickness(self, event):
         """
@@ -291,21 +301,21 @@ class ControlPanel(wx.Panel):
         self.doodle.SetThickness(thickness)
 
 
+# ----------------------------------------------------------------------
 
-#----------------------------------------------------------------------
 
 class ColourIndicator(wx.Window):
     """
     An instance of this class is used on the ControlPanel to show
     a sample of what the current doodle line will look like.
     """
+
     def __init__(self, parent):
         wx.Window.__init__(self, parent, -1, style=wx.SUNKEN_BORDER)
         self.SetBackgroundColour(wx.WHITE)
-        self.SetSize( (-1, 45) )
+        self.SetSize((-1, 45))
         self.colour = self.thickness = None
         wx.EVT_PAINT(self, self.OnPaint)
-
 
     def Update(self, colour, thickness):
         """
@@ -315,7 +325,6 @@ class ColourIndicator(wx.Window):
         self.colour = colour
         self.thickness = thickness
         self.Refresh()  # generate a paint event
-
 
     def OnPaint(self, event):
         """
@@ -328,16 +337,17 @@ class ColourIndicator(wx.Window):
             pen = wx.Pen(self.colour, self.thickness)
             dc.BeginDrawing()
             dc.SetPen(pen)
-            dc.DrawLine(10, sz.height/2, sz.width-10, sz.height/2)
+            dc.DrawLine(10, sz.height / 2, sz.width - 10, sz.height / 2)
             dc.EndDrawing()
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+
 
 class DoodleAbout(wx.Dialog):
-    """ An about box that uses an HTML window """
+    """An about box that uses an HTML window"""
 
-    text = '''
+    text = """
 <html>
 <body bgcolor="#ACAA60">
 <center><table bgcolor="#455481" width="100%" cellspacing="0"
@@ -362,11 +372,10 @@ instructions: </p>
 &copy; 1997-2003.</p>
 </body>
 </html>
-'''
+"""
 
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, 'About SuperDoodle',
-                          size=(420, 380) )
+        wx.Dialog.__init__(self, parent, -1, "About SuperDoodle", size=(420, 380))
 
         html = wx.html.HtmlWindow(self, -1)
         html.SetPage(self.text)
@@ -393,7 +402,8 @@ instructions: </p>
         self.CentreOnParent(wx.BOTH)
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+
 
 class DoodleApp(wx.App):
     def OnInit(self):
@@ -403,8 +413,8 @@ class DoodleApp(wx.App):
         return True
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = DoodleApp(0)
     app.MainLoop()

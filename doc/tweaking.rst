@@ -28,7 +28,7 @@ applications:
     An array of dictionaries describing URL schemes supported by the bundle.
 
 ``LSBackgroundOnly``:
-    If ``True``, the bundle will be a faceless background application. 
+    If ``True``, the bundle will be a faceless background application.
 
 ``LSUIElement``:
     If ``True``, the bundle will be an agent application. It will not appear

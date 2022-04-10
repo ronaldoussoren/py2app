@@ -3,19 +3,22 @@ parse a dhcpd leases file
 """
 
 import itertools
+
+
 def leases(lines):
-    lines = itertools.imap(lambda s:s.strip(), lines)
+    lines = itertools.imap(lambda s: s.strip(), lines)
     for line in lines:
-        if line == '{':
+        if line == "{":
             d = {}
             for line in lines:
-                if line == '}':
+                if line == "}":
                     yield d
                     break
                 if not line:
                     continue
-                k,v = line.split('=', 1)
+                k, v = line.split("=", 1)
                 d[k] = v
+
 
 EXAMPLE = """
 {
@@ -27,7 +30,8 @@ EXAMPLE = """
 }
 """
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import pprint
+
     for lease in leases(EXAMPLE.splitlines()):
         pprint.pprint(lease)

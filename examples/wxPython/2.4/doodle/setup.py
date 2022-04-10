@@ -15,15 +15,13 @@ Use this command to build the .app and collect the other needed files:
 
 from setuptools import setup
 import sys
-if sys.platform == 'darwin':
-    buildstyle = 'app'
-elif sys.platform == 'win32':
-    import py2exe
-    # buildstyle = 'console'
-    buildstyle = 'windows'
 
-setup(
-    name="superdoodle",
-    setup_requires=["py2app"],
-    **{buildstyle : ['superdoodle.py']}
-)
+if sys.platform == "darwin":
+    buildstyle = "app"
+elif sys.platform == "win32":
+    import py2exe
+
+    # buildstyle = 'console'
+    buildstyle = "windows"
+
+setup(name="superdoodle", setup_requires=["py2app"], **{buildstyle: ["superdoodle.py"]})

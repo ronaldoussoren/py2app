@@ -1,21 +1,25 @@
 import sys
 
+
 def function():
     import quot
     import quot.queue
 
+
 def import_module(name):
     try:
-        exec("import %s"%(name,))
+        exec("import %s" % (name,))
         m = eval(name)
     except ImportError as exc:
-        print("* import failed: %s path: %s"%(exc, sys.path))
+        print("* import failed: %s path: %s" % (exc, sys.path))
 
     else:
         print(m.__name__)
 
+
 def print_path():
     print(sys.path)
+
 
 if __name__ == "__main__":
     while True:
@@ -24,7 +28,7 @@ if __name__ == "__main__":
             break
 
         try:
-            exec (line)
+            exec(line)
         except SystemExit:
             raise
 

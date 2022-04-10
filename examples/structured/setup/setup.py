@@ -7,7 +7,7 @@ Usage:
 from setuptools import setup
 
 setup(
-    app = ['../python/myapp.py'],
-    data_files = ['../data'],
+    app=["../python/myapp.py"],
+    data_files=["../data"],
     setup_requires=["py2app"],
 )

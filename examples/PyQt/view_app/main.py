@@ -13,7 +13,9 @@ view = QDeclarativeView()
 ctxt = view.rootContext()
 ctxt.setContextProperty("myModel", dataList)
 
-url = QUrl('view.qml') # <-- Problem seems to be here, the file gets copied correctly to Resources folder
+url = QUrl(
+    "view.qml"
+)  # <-- Problem seems to be here, the file gets copied correctly to Resources folder
 view.setSource(url)
 view.show()
 app.exec_()

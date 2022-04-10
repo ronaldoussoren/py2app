@@ -10,6 +10,7 @@ try:
 except NameError:
     unicode = str
 
+
 class TinyTinyDocument(NSDocument):
     textView = objc.IBOutlet()
 
@@ -38,15 +39,17 @@ class TinyTinyDocument(NSDocument):
         if self.path:
             self.readFromUTF8_(self.path)
         else:
-            if hasattr(sys, 'maxint'):
+            if hasattr(sys, "maxint"):
                 maxint = sys.maxint
-                maxint_label = 'maxint'
+                maxint_label = "maxint"
             else:
                 maxint = sys.maxsize
-                maxint_label = 'maxsize'
+                maxint_label = "maxsize"
 
-            self.textView.setString_("Welcome to TinyTinyEdit in Python\nVersion: %s\nsys.%s: %d\nbyteorder: %s\nflags: %s"%(
-                sys.version, maxint_label, maxint, sys.byteorder, sys.flags))
+            self.textView.setString_(
+                "Welcome to TinyTinyEdit in Python\nVersion: %s\nsys.%s: %d\nbyteorder: %s\nflags: %s"
+                % (sys.version, maxint_label, maxint, sys.byteorder, sys.flags)
+            )
 
     def readFromUTF8_(self, path):
         f = open(path)

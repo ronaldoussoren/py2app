@@ -29,7 +29,7 @@ Cross-platform
 --------------
 
 Cross-platform applications can share a ``setup.py`` script for both
-`py2exe`_ and py2app. Here is an example 
+`py2exe`_ and py2app. Here is an example
 ``setup.py`` that will build an application on Windows or Mac OS X::
 
     """
@@ -46,7 +46,7 @@ Cross-platform applications can share a ``setup.py`` script for both
     """
     import sys
     from setuptools import setup
-    
+
     mainscript = 'MyApplication.py'
 
     if sys.platform == 'darwin':

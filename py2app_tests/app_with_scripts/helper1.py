@@ -1,2 +1,3 @@
 import curses
-print("Helper 1: %s"%(curses.__name__,))
+
+print("Helper 1: %s" % (curses.__name__,))
