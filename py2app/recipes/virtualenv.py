@@ -31,7 +31,7 @@ def retry_import(mf, m):
         parent = None
         partname = m.identifier
 
-    # This is basicly mf.find_module inlined and with a
+    # This is basically mf.find_module inlined and with a
     # check disabled.
     def fmod(name, path, parent):
         if path is None:

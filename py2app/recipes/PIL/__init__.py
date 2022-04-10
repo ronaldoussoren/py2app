@@ -70,7 +70,7 @@ def check(cmd, mf):
     if sip is not None:
         mf.removeReference(sip, "ImageTk")
 
-    # The ImageQt plugin should only be usefull when using PyQt, which
+    # The ImageQt plugin should only be useful when using PyQt, which
     # would then be explicitly imported.
     # Note: this code doesn't have the right side-effect at the moment
     # due to the way the PyQt5 recipe is structured.

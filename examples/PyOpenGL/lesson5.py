@@ -35,12 +35,12 @@ __author__ = "Tarn Weisner Burton <twburton@users.sourceforge.net>"
 #
 # To run this code get and install OpenGL, GLUT, PyOpenGL (see http:#www.python.org), and NumPy.
 # Installing PyNumeric means having a C compiler that is configured properly, or so I found.  For
-# Win32 this assumes VC++, I poked through the setup.py for Numeric, and chased through disutils code
+# Win32 this assumes VC++, I poked through the setup.py for Numeric, and chased through distutils code
 # and noticed what seemed to be hard coded preferences for VC++ in the case of a Win32 OS.  However,
-# I am new to Python and know little about disutils, so I may just be not using it right.
+# I am new to Python and know little about distutils, so I may just be not using it right.
 #
 # NumPy is not a hard requirement, as I am led to believe (based on skimming PyOpenGL sources) that
-# PyOpenGL could run without it. However preformance may be impacted since NumPy provides an efficient
+# PyOpenGL could run without it. However performance may be impacted since NumPy provides an efficient
 # multi-dimensional array type and a linear algebra library.
 #
 # BTW, since this is Python make sure you use tabs or spaces to indent, I had numerous problems since I

@@ -4,7 +4,7 @@ def check(cmd, mf):
         return None
 
     # Dependency in package metadata, but
-    # no runtime dependency. Explicity include
+    # no runtime dependency. Explicitly include
     # to ensure that the package metadata for
     # googleapis_common_protos is included.
     return {"includes": ["google.api"]}

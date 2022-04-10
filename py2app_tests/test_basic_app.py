@@ -3,7 +3,7 @@ Test case for building an app bundle with a command-line tool, that bundle
 is than queried in the various test methods to check if the app bundle
 is correct.
 
-This is basicly a black-box functional test of the core py2app functionality
+This is basically a black-box functional test of the core py2app functionality
 
 The app itself:
     - main script has 'if 0: import modules'

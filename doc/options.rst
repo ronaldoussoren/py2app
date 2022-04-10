@@ -27,7 +27,7 @@ must replace hyphens (``-``) with underscores (``_``). ``setup.cfg`` files
 may use either hyphens or underscores, but command-line options must always
 use the hyphens.
 
-Lists of values are a comma seperated sequence of names on the command-line and
+Lists of values are a comma separated sequence of names on the command-line and
 in setup.cfg, and regular python lists in setup.py (as shown in the earlier example).
 
 
@@ -54,7 +54,7 @@ Options for 'py2app' command:
      - level (integer)
      - Specifies the optimization level for the Pytho interpreter
        level 0 to disable, level 1 for ``python -O``, and level 2
-       for ``python -OO``. Defaults to the optimation level of the
+       for ``python -OO``. Defaults to the optimization level of the
        process running py2app.
 
    * - ``--includes``

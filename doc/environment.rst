@@ -19,7 +19,7 @@ shell environment, which does not pick up changes to the environment in the
 user's shell profile.
 
 The "emulate_shell_environment" option will run a login shell in the background
-to fetch exported environment varialbles and inject them into your application.
+to fetch exported environment variables and inject them into your application.
 
 It is also possible to inject extra variables into the environment by using
 the ``LSEnvironment`` key in the Info.plist file, for example like so:

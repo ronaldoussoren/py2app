@@ -43,7 +43,7 @@ class TestSetupArguments(unittest.TestCase):
         pl = cmd.get_default_plist()
         self.assertEqual(pl["CFBundleVersion"], "0.0.0")
 
-        # A bit annoyinly distutils will automaticly convert
+        # A bit annoyinly distutils will automatically convert
         # integers to strings:
         cmd = self.create_cmd(name="py2app_test", app=["main.py"], version=1)
         pl = cmd.get_default_plist()

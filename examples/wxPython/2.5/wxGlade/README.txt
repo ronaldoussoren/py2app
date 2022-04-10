@@ -1,5 +1,3 @@
-te: this information is relevant to `py2app`_ 0.1.2 - which is currently just on the `svn trunk`_)
-
 In order to see how hard it would be to package a complicated application such as `wxGlade`_, I decided to give it a try.  `wxGlade`_ is quite a dynamic beast with regard to code generation and widget plugins, so it was a bit of a pain to deal with.  I actually had to add several features to `py2app`_ in the process:
 
 * A feature where one module can be "aliased" to another module.  I needed this because wxPython.wx points to wx, but is not actually on the filesystem.

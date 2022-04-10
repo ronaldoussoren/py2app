@@ -27,7 +27,7 @@ def update_metadata_cache_distinfo(infos, dist_info_path):
                 # (See issue #280 at https://github.com/pypa/wheel)
                 #
                 # This code works for all filenames, except those containing
-                # line seperators.
+                # line separators.
                 relpath = ln.rsplit(",", 2)[0]
 
                 if relpath.startswith('"') and relpath.endswith('"'):

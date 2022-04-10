@@ -11,9 +11,9 @@ from py2app.util import check_output
 
 # _run_nibtool is an experiment while researching an odd
 # failure of py2app: when _run_nibtool is None py2app will often
-# (but for from everytime) fail when there are NIB files in the
+# (but for from every time) fail when there are NIB files in the
 # project.  The failure is very odd: writing to sys.stderr fails
-# with EGAIN as the errno, and subsequently the interpreter basicly
+# with EGAIN as the errno, and subsequently the interpreter basically
 # crashes.
 #
 # This workaround seems to fix that issue for now.

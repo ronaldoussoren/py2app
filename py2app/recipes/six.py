@@ -71,7 +71,7 @@ def check(cmd, mf):
     six_moves = ["six.moves"]
 
     # A number of libraries contain a vendored version
-    # of six. Automaticly detect those:
+    # of six. Automatically detect those:
     for nm in mf.graph.node_list():
         if not isinstance(nm, str):
             continue
@@ -117,7 +117,7 @@ def check(cmd, mf):
                 except ImportError:
                     pass
 
-        # Look for submodules that aren't automaticly
+        # Look for submodules that aren't automatically
         # processed.
         for submod in SIX_TAB:
             if not submod.startswith("tkinter"):

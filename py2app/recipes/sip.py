@@ -1,11 +1,11 @@
 """
-Py2app support for project using sip, which basicly means PyQt and wrappers
+Py2app support for project using sip, which basically means PyQt and wrappers
 for other Qt-based libraries.
 
 This will include all C modules that might be used when you import a package
 using sip because we have no way to fine-tune this.
 
-The problem with SIP is that all inter-module depedencies (for example from
+The problem with SIP is that all inter-module dependencies (for example from
 PyQt4.Qt to PyQt4.QtCore) are handled in C code and therefore cannot be
 detected by the python code in py2app).
 """

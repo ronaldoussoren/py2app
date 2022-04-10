@@ -14,7 +14,7 @@ def _emulate_shell_environ():
     # is required to get the right behavior from the shell, without
     # a tty the shell won't properly initialize the environment.
     #
-    # NOTE: The code is very carefull w.r.t. getting the login
+    # NOTE: The code is very careful w.r.t. getting the login
     # name, the application shouldn't crash when the shell information
     # cannot be retrieved
     try:

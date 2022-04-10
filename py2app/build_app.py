@@ -93,7 +93,7 @@ else:
 def finalize_distribution_options(dist):
     """
     setuptools.finalize_distribution_options extension
-    point for py2app, to deail with autodiscovery in
+    point for py2app, to deal with autodiscovery in
     setuptools 61.
 
     This addin will set the name and py_modules attributes
@@ -265,7 +265,7 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
         if os.path.islink(src):
             dest = os.path.join(self.dest, os.path.basename(os.path.realpath(src)))
 
-            # Ensure that the orginal name also exists, avoids problems when
+            # Ensure that the original name also exists, avoids problems when
             # the filename is used from Python (see issue #65)
             #
             # NOTE: The if statement checks that the target link won't
@@ -540,7 +540,7 @@ class py2app(Command):
         (
             "extra-scripts=",
             None,
-            "set of additonal scripts to include in the application bundle",
+            "set of additional scripts to include in the application bundle",
         ),
         ("include-plugins=", None, "List of plugins to include"),
         (
@@ -1248,7 +1248,7 @@ class py2app(Command):
             if isinstance(item, Package) and item.filename == "-":
                 # In python3.3 or later the default importer supports namespace
                 # packages without an __init__ file, don't use that
-                # funcionality because that causes problems with our suppport
+                # funcionality because that causes problems with our support
                 # for loading C extensions.
                 #
                 # if sys.version_info[:2] <= (3,3):

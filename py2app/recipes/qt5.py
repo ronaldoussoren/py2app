@@ -21,7 +21,7 @@ def check(cmd, mf):
             import PyQt5
             from PyQt5.QtCore import QLibraryInfo
         except ImportError:
-            # PyQt5 in the graph, but not instaled
+            # PyQt5 in the graph, but not installed
             return None
 
         # All imports are done from C code, hence not visible

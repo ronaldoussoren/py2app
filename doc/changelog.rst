@@ -19,6 +19,10 @@ py2app.0.29
 
   This is enforced by the pre-commit configuration
 
+* Use codespell to avoid common typos.
+
+  This is enforced by the pre-commit configuration
+
 py2app 0.28
 -----------
 
@@ -63,7 +67,7 @@ py2app 0.28
 
 * #406: Fix incompatibility with python 2.7
 
-  py2app 0.24 accidently broke compatibility with Python 2.7, and
+  py2app 0.24 accidentally broke compatibility with Python 2.7, and
   this release fixes this.
 
   This is the last release with Python 2.7 support, the next
@@ -272,7 +276,7 @@ py2app 0.23
 
 * #320: Process "@loader_path" in load commands
 
-  A popular pattern in C extensions with bindins to C library on PyPI is to
+  A popular pattern in C extensions with bindings to C library on PyPI is to
   copy those C libraries into the wheel and reference those using
   an "@loader_path" linker command in the C extension. Until this release
   py2app could not process those linker commands correctly.
@@ -448,7 +452,7 @@ py2app 0.11
 - Issue #174: clean up the summary about missing modules by removing warnings about things that aren't modules.
 
   Also notes when an module is likely an alias for some other module. These changes should remove a lot
-  of false postive warnings from the output of py2app.
+  of false positive warnings from the output of py2app.
 
 - Fix issue #161: opengl recipe uses "file" function that isn't present on Python 3
 
@@ -539,7 +543,7 @@ py2app 0.8 is a feature release
   linked to AppKit)
 
 - Don't copy Python's Makefile, Setup file and the like into a bundle when
-  sysconfig and distutils.sysconfig don't need these files (basicly, when
+  sysconfig and distutils.sysconfig don't need these files (basically, when
   using any recent python version).
 
 - Fix some issues with virtualenv support:
@@ -654,7 +658,7 @@ py2app 0.7.4
 
 - Issue #91: Added a recipe for `lxml <http://lxml.de/>`, needed because
   lxml performs a number of imports from an extension and those cannot
-  be detected automaticly by modulegraph.
+  be detected automatically by modulegraph.
 
 - Issue #94: The site-packages zipfile in the application bundle now contains
   zipfile entries for directories as well. This is needed to work around
@@ -714,7 +718,7 @@ py2app 0.7.3 is a bugfix release
 
 - Issue #88: Ensure that the fix for #65 won't try to create a symlink that
   points to itself. This could for example occur with homebrew, where the
-  exposed lib directory contains symlinks to a cellar, while tye install_name
+  exposed lib directory contains symlinks to a cellar, while type install_name
   does mention the "public" lib directory::
 
      $ ls -l /opt/homebrew/lib
@@ -747,7 +751,7 @@ py2app 0.7.2 is a bugfix release
 
   Reported by Steve Strassmann
 
-- Issue #76: Semi-standalone packages using extensions modules coudn't use
+- Issue #76: Semi-standalone packages using extensions modules couldn't use
   extensions unless they also used the ``--site-packages`` option (and
   the extensions are in the site-packages directory).
 
@@ -797,7 +801,7 @@ py2app 0.7
 py2app 0.7 is a bugfix release
 
 - Issue #65: generated bundle would crash when two libraries linked to the
-  same library using different names (one refering to the real name, the other
+  same library using different names (one referring to the real name, the other
   to a symlink).
 
   An example if this is an application using wxWidgets when wxWidgets is installed
@@ -907,7 +911,7 @@ py2app 0.7 is a bugfix release
   "open application" and "open documents" Apple Events during startup,
   which broke an assumption in argv_emulation.py.
 
-- py2app is more strict w.r.t. explictly closing files, this avoids
+- py2app is more strict w.r.t. explicitly closing files, this avoids
   ResourceWarnings for unclosed files.
 
 - fix test issue with semi-standalone builds on Python 3.2
@@ -947,7 +951,7 @@ py2app 0.6.4 is a bugfix and minor feature release
 
   * fat3:       i386, x86_64, ppc
 
-  * univeral:   i386, x86_64, ppc, ppc64
+  * universal:  i386, x86_64, ppc, ppc64
 
   * intel:      i386, x86_64
 
@@ -960,7 +964,7 @@ py2app 0.6.4 is a bugfix and minor feature release
 - The '-O' flag of py2app now defaults to the python optimization level
   when using python 2.6 or later.
 
-- Issue #31: honor optimze flag at runtime.
+- Issue #31: honor optimize flag at runtime.
 
   Until now an application bundle created by py2app would also run without
   the "-O" flag, even when the user specified it should. This is now fixed.
@@ -978,7 +982,7 @@ py2app 0.6.4 is a bugfix and minor feature release
 
   This fixes and issue reported by Sean Robinson: py2app used to create a non-working
   bundle when you used these packages because the packages didn't get included
-  (as intented), but were not available on ``sys.path`` either.
+  (as intended), but were not available on ``sys.path`` either.
 
 - Fixed the recipe for sip, which in turn ensures that PyQt4 applications
   work.
@@ -1020,7 +1024,7 @@ py2app 0.6.4 is a bugfix and minor feature release
 - Issue #22: py2app will give an error when the specified version is invalid,
   instead of causing a crash in the generated executable.
 
-- Issue #23: py2app failed to work when an .egg directory was implictly added
+- Issue #23: py2app failed to work when an .egg directory was implicitly added
   to ``sys.path`` by setuptools and the "-O" option was used (for example
   ``python setup.py py2app -O2``)
 
@@ -1086,8 +1090,8 @@ Bugfixes:
   stub executables, in particular not those that have support
   for the PPC architecture.
 
-- Don't rebuild the stub executables automaticly, that's
-  unsafe with Xcode 4 and could trigger accidently when
+- Don't rebuild the stub executables automatically, that's
+  unsafe with Xcode 4 and could trigger accidentally when
   files are installed in a different order than expected.
 
 - Small tweaks to the testsuite to ensure that they work
@@ -1105,7 +1109,7 @@ py2app 0.6 is a minor feature release
 Features:
 
 - it is now possible to specify which python distributions must
-  be availble when building the bundle by using the
+  be available when building the bundle by using the
   "install_requires" argument of the ``setup()`` function::
 
      setup(
@@ -1166,7 +1170,7 @@ Bug fixes:
 - Do not compile ``.nib`` files, it is not strictly needed and
   breaks PyObjC projects that still use the NibClassBuilder code.
 
-- Better error messsages when trying to include a non-existing
+- Better error messages when trying to include a non-existing
   file as a resource.
 
 - Don't drop into PDB when an exception occurs.
@@ -1338,7 +1342,7 @@ Bug fixes:
   code archives inside py2app-created bundles. This version has a workaround
   for this "feature" for Stuffit.
 
-- Be more carefull about passing non-constant strings as the template argumenti
+- Be more careful about passing non-constant strings as the template argumenti
   of string formatting functions (in the app and bundle templates), to avoid
   crashes under some conditions.
 
@@ -1827,7 +1831,7 @@ py2app 0.1.2
   applications.
 
 - Adds an "Alias" feature to modulegraph, so that ``sys.modules`` craziness
-  such as ``wxPython.wx -> wx`` can be accomodated (this particular craziness
+  such as ``wxPython.wx -> wx`` can be accommodated (this particular craziness
   is also now handled by default)
 
 - A ``sys.path`` alternative may be passed to ``find_modules`` now, though

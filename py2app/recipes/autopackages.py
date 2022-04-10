@@ -1,5 +1,5 @@
 AUTO_PACKAGES = [
-    # Embbedded datafiles accessed using
+    # Embedded datafiles accessed using
     # ``__file__`` relative paths.
     "botocore",
     "docutils",
