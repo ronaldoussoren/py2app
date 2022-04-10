@@ -18,6 +18,7 @@ from distutils import log
 from distutils.errors import DistutilsOptionError, DistutilsPlatformError
 from distutils.sysconfig import get_config_h_filename, get_config_var
 from distutils.util import convert_path, get_platform
+from io import StringIO
 from itertools import chain
 
 import macholib.dyld
@@ -57,12 +58,6 @@ from py2app.util import (
     skipscm,
     strip_files,
 )
-
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
-
 
 PYTHONFRAMEWORK = get_config_var("PYTHONFRAMEWORK")
 

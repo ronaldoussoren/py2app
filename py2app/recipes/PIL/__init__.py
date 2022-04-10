@@ -1,12 +1,8 @@
 import os
 import sys
+from io import StringIO
 
 from modulegraph.util import imp_find_module
-
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
 
 
 def check(cmd, mf):
