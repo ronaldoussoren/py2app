@@ -1,5 +1,4 @@
 import os
-import platform
 import shutil
 import signal
 import subprocess
@@ -7,7 +6,6 @@ import sys
 import time
 import unittest
 from distutils.sysconfig import get_config_var
-from distutils.version import LooseVersion
 
 import py2app
 
@@ -65,30 +63,11 @@ class TestBasicPlugin(unittest.TestCase):
             if p.wait() != 0:
                 raise AssertionError("Fetching Xcode root failed")
 
-            if LooseVersion(platform.mac_ver()[0]) < LooseVersion("10.7"):
-                cc = [get_config_var("CC")]
-                env = dict(os.environ)
-                env["MACOSX_DEPLOYMENT_TARGET"] = get_config_var(
-                    "MACOSX_DEPLOYMENT_TARGET"
-                )
-            else:
-                cc = ["xcrun", "clang"]
-                env = dict(os.environ)
+            cc = ["xcrun", "clang"]
+            env = dict(os.environ)
 
             cflags = get_config_var("CFLAGS").split()
             ldflags = get_config_var("LDFLAGS").split()
-            if LooseVersion(platform.mac_ver()[0]) >= LooseVersion("10.14"):
-                for idx, val in enumerate(cflags):
-                    if val == "-arch" and cflags[idx + 1] == "i386":
-                        del cflags[idx + 1]
-                        del cflags[idx]
-                        break
-
-                for idx, val in enumerate(ldflags):
-                    if val == "-arch" and ldflags[idx + 1] == "i386":
-                        del ldflags[idx + 1]
-                        del ldflags[idx]
-                        break
 
             p = subprocess.Popen(
                 cc

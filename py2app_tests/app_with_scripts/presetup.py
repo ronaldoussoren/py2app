@@ -1,12 +1,10 @@
 import os
-import platform
 import re
 import shutil
 import subprocess
 from distutils import sysconfig
 from distutils.command.build_ext import build_ext
 from distutils.core import Command, Extension, setup
-from distutils.version import LooseVersion
 
 
 class my_build_ext(build_ext):
@@ -40,18 +38,11 @@ class build_dylib(Command):
 
         os.makedirs(bdir)
         cflags = self.get_arch_flags()
-        if LooseVersion(platform.mac_ver()[0]) < LooseVersion("10.7"):
-            cc = [sysconfig.get_config_var("CC")]
-            env = dict(os.environ)
-            env["MACOSX_DEPLOYMENT_TARGET"] = sysconfig.get_config_var(
-                "MACOSX_DEPLOYMENT_TARGET"
-            )
-        else:
-            cc = ["xcrun", "clang"]
-            env = dict(os.environ)
-            env["MACOSX_DEPLOYMENT_TARGET"] = sysconfig.get_config_var(
-                "MACOSX_DEPLOYMENT_TARGET"
-            )
+        cc = ["xcrun", "clang"]
+        env = dict(os.environ)
+        env["MACOSX_DEPLOYMENT_TARGET"] = sysconfig.get_config_var(
+            "MACOSX_DEPLOYMENT_TARGET"
+        )
 
         subprocess.check_call(
             cc + cflags + ["-c", "-o", os.path.join(bdir, "libfoo.o"), "src/libfoo.c"],

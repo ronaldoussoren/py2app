@@ -1,11 +1,9 @@
 import os
-import platform
 import re
 import shlex
 import shutil
 import subprocess
 from distutils.sysconfig import get_config_var
-from distutils.version import LooseVersion
 
 from setuptools import Command, setup
 
@@ -21,14 +19,9 @@ class sharedlib(Command):
         pass
 
     def run(self):
-        if LooseVersion(platform.mac_ver()[0]) < LooseVersion("10.7"):
-            cc = [get_config_var("CC")]
-            env = dict(os.environ)
-            env["MACOSX_DEPLOYMENT_TARGET"] = get_config_var("MACOSX_DEPLOYMENT_TARGET")
-        else:
-            cc = ["xcrun", "clang"]
-            env = dict(os.environ)
-            env["MACOSX_DEPLOYMENT_TARGET"] = get_config_var("MACOSX_DEPLOYMENT_TARGET")
+        cc = ["xcrun", "clang"]
+        env = dict(os.environ)
+        env["MACOSX_DEPLOYMENT_TARGET"] = get_config_var("MACOSX_DEPLOYMENT_TARGET")
 
         if not os.path.exists("lib"):
             os.mkdir("lib")

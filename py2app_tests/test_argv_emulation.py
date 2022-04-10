@@ -2,13 +2,11 @@
 Testcase for checking argv_emulation
 """
 import os
-import platform
 import shutil
 import subprocess
 import sys
 import time
 import unittest
-from distutils.version import LooseVersion
 
 import py2app
 
@@ -144,10 +142,6 @@ class TestArgvEmulation(unittest.TestCase):
             ),
         )
 
-    @unittest.skipIf(
-        LooseVersion(platform.mac_ver()[0]) < LooseVersion("10.6"),
-        "Test cannot work on OSX 10.5 or earlier",
-    )
     def test_start_with_two_args(self):
         if not self.open_argument.startswith("/"):
             unittest.skip("Only relevant for base class")
