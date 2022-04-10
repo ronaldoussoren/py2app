@@ -1,6 +1,16 @@
 Release history
 ===============
 
+py2app.0.29
+-----------
+
+* Drop support for Python 3.5 or earlier, including
+  Python 2.7. 
+
+  The wheel metadata now contains "python_requires>=3.6",
+  which means pip will install py2app 0.28 for users of older 
+  version of Python.
+
 py2app 0.28
 -----------
 

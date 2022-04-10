@@ -31,9 +31,8 @@ CLASSIFIERS = [
     "Natural Language :: English",
     "Operating System :: MacOS :: MacOS X",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
@@ -275,7 +274,7 @@ if sys.platform != "darwin":
 setup(
     # metadata
     name="py2app",
-    version="0.28",
+    version="0.29",
     description="Create standalone Mac OS X applications with Python",
     # author='Bob Ippolito',
     # author_email='bob@redivi.com',
@@ -372,4 +371,5 @@ setup(
     # with a zipped egg.
     zip_safe=False,
     dependency_links=[],  # workaround for setuptools 0.6b4 bug
+    python_requires=">=3.6",
 )
