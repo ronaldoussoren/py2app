@@ -112,6 +112,15 @@ class TestBasicAppWithEncoding(unittest.TestCase):
         time.sleep(2)
 
     def tearDown(self):
+        if hasattr(self, "_p"):
+            self._p.stdout.close()
+            try:
+                self._p.communicate()
+            except ValueError:
+                pass
+
+            self._p.send_signal(9)
+            self._p.wait()
         kill_child_processes()
         time.sleep(1)
 
@@ -120,7 +129,7 @@ class TestBasicAppWithEncoding(unittest.TestCase):
         # stdin and stdout are connected to pipes.
         path = os.path.join(self.app_dir, "dist/BasicApp.app/Contents/MacOS/BasicApp")
 
-        p = subprocess.Popen(
+        self._p = p = subprocess.Popen(
             [path],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,

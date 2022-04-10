@@ -166,6 +166,13 @@ class TestBasicApp(unittest.TestCase):
         return p
 
     def tearDown(self):
+        if hasattr(self, "_p"):
+            self._p.send_signal(9)
+            try:
+                self._p.communicate()
+            except ValueError:
+                pass
+            self._p.wait()
         kill_child_processes()
         time.sleep(1)
 
