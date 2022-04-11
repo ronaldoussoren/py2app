@@ -36,8 +36,8 @@ classifiers = [
     "Topic :: Software Development :: Build Tools",
 ]
 dependencies=[
-    "altgraph>=0.16",
-    "modulegraph>=0.17",
+    "altgraph>=0.17",
+    "modulegraph>=0.19",
     "macholib>=1.16",
 ]
 
@@ -64,5 +64,3 @@ plugin = "py2app.build_app:validate_target"
 xib          = "py2app.converters.nibfile:convert_xib"
 datamodel    = "py2app.converters.coredata:convert_datamodel"
 mappingmodel = "py2app.converters.coredata:convert_mappingmodel"
-
-[project.entry-points."py2app.recipe"]
