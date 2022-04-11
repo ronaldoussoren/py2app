@@ -15,13 +15,15 @@ import sys
 
 
 def get_version():
-    setup_py = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "setup.py"
+    fn = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "py2app",
+        "__init__.py",
     )
-    for ln in open(setup_py):
-        ln = ln.strip()
-        if ln.startswith("version="):
-            return ln.split('"')[1]
+    for ln in open(fn):
+        if ln.startswith("__version__"):
+            version = ln.split("=")[-1].strip().strip('"')
+            return version
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
