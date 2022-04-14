@@ -64,3 +64,6 @@ plugin = "py2app.build_app:validate_target"
 xib          = "py2app.converters.nibfile:convert_xib"
 datamodel    = "py2app.converters.coredata:convert_datamodel"
 mappingmodel = "py2app.converters.coredata:convert_mappingmodel"
+
+[tool.flit.sdist]
+exclude = [".github"]
