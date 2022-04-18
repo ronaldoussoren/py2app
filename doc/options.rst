@@ -1,23 +1,123 @@
-py2app Options
-==============
+py2app Configuration
+====================
+
+Setup function arguments
+------------------------
+
+The primary way to configure py2app is to use a "setup.py" script that
+calls ``setuptools.setup()`` with a number of specific arguments.
+
+The basic structure:
+
+.. sourcecode:: python
+
+   from setuptools import setup
+
+   setup(
+       app=...
+       options={
+           "py2app"={
+               ...
+           }
+       }
+   )
+
+The following keyword arguments are used by py2app:
+
+* ``name``
+
+  Name of the application or plugin bundle. By default this is
+  derived from the name of the main script.
+
+* ``app``
+
+  A list of application scripts, each of which will by used to
+  generate an application bundle. Use a list of 1 item
+  here, other scenario's are not actively tested.
+
+  Entries in the list are one of:
+
+  - A string with the filename of the main script of the application;
+
+  - A dictionary with the following keys (only ``script`` is required):
+
+    - ``script``: A string with the filename of the main script for the application
+
+    - ``plist``: A dictionary with the contents of the plist file
+
+    - ``extra_scripts``: A list of filenames of scripts that will have a launcher
+      included in the ``Contents/MacOS`` folder.
+
+  This keyword argument is mutually exclusive with ``plugin``.
+
+* ``plugin``
+
+  A list of plugin scripts, each of which will by used to
+  generate a plugin bundle.  Use a list of 1 item
+  here, other scenario's are not actively tested.
+
+  Entries in the list are one of:
+
+  - A string with the filename of the main script of the plugin;
+
+  - A dictionary with the following keys (only ``script`` is required):
+
+    - ``script``: A string with the filename of the main script for the plugin
+
+    - ``plist``: A dictionary with the contents of the plist file
+
+    - ``extra_scripts``: A list of filenames of scripts that will have a launcher
+      included in the ``Contents/MacOS`` folder.
+
+  This keyword argument is mutually exclusive with ``app``.
+
+* ``data_files``
+
+  A list of data files to include in the ``Resources`` folder in
+  the generated bundle. Entries of this list should be one of the
+  following:
+
+  - A string specifying the path to a resource (file or folder).
+    These are copied into the ``Resources`` folder
+
+  - A two-tuple ``(dirname, [file, ...])``. The ``dirname`` is
+    a folder name relative to the ``Resources`` folder, and the
+    ``file``-s are the names of sources (files or folders) copied
+    into the specified folder.
+
+* ``options``
+
+  The ``options`` argument should be a directory, where the ``py2app``
+  key contains py2app configuration options, as specified below.
+
+Configuration options
+---------------------
 
 Options can be specified to py2app to influence the build procedure in three
 different ways:
 
-At the command line::
+At the command line:
+
+.. sourcecode:: sh
 
     $ python setup.py py2app --includes=os,platform
 
-In your ``setup.py``::
+In your ``setup.py``:
+
+.. sourcecode:: python
 
     setup(
         app=['MyApplication.py'],
-        options=dict(py2app=dict(
-            includes=["os", "platform"]
-        )),
+        options={
+            "py2app": {
+                 "includes": ["os", "platform"],
+            }
+        },
     )
 
-In a ``setup.cfg`` file::
+In a ``setup.cfg`` file:
+
+.. sourcecode:: ini
 
    [py2app]
    includes=os,platform
@@ -34,7 +134,10 @@ in setup.cfg, and regular python lists in setup.py (as shown in the earlier exam
 Option Reference
 ----------------
 
-To enumerate the options that py2app supports, use the following command::
+To enumerate the options that py2app supports, use the following command:
+
+
+.. sourcecode:: sh
 
     $ python setup.py py2app --help
 
