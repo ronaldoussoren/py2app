@@ -32,8 +32,7 @@ The following keyword arguments are used by py2app:
 * ``app``
 
   A list of application scripts, each of which will by used to
-  generate an application bundle. Use a list of 1 item
-  here, other scenario's are not actively tested.
+  generate an application bundle. This must be a list of 1 item.
 
   Entries in the list are one of:
 
@@ -53,8 +52,7 @@ The following keyword arguments are used by py2app:
 * ``plugin``
 
   A list of plugin scripts, each of which will by used to
-  generate a plugin bundle.  Use a list of 1 item
-  here, other scenario's are not actively tested.
+  generate a plugin bundle.  This must be a list of 1 item.
 
   Entries in the list are one of:
 
