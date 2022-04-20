@@ -100,9 +100,9 @@ def finalize_distribution_options(dist):
     name = getattr(dist.metadata, "name", None)
     if name is None or name == "UNKNOWN":
         if dist.app:
-            targets = FixupTargets(dist.app, "script")
+            targets = fixup_targets(dist.app, "script")
         else:
-            targets = FixupTargets(dist.plugin, "script")
+            targets = fixup_targets(dist.plugin, "script")
 
         base = targets[0].get_dest_base()
         name = os.path.basename(base)
@@ -320,13 +320,13 @@ class Target:
 
 
 def validate_target(dist, attr, value):
-    res = FixupTargets(value, "script")
+    res = fixup_targets(value, "script")
     other = {"app": "plugin", "plugin": "app"}
     if res and getattr(dist, other[attr]):
         raise DistutilsOptionError("You must specify either app or plugin, not both")
 
 
-def FixupTargets(targets, default_attribute):
+def fixup_targets(targets, default_attribute):
     if not targets:
         return targets
     try:
@@ -1964,8 +1964,8 @@ class py2app(Command):
             plugin = self.plugin
 
         # Convert our args into target objects.
-        dist.app = FixupTargets(app, "script")
-        dist.plugin = FixupTargets(plugin, "script")
+        dist.app = fixup_targets(app, "script")
+        dist.plugin = fixup_targets(plugin, "script")
         if dist.app and dist.plugin:
             raise DistutilsOptionError(
                 "You must specify either app or plugin, not both"
