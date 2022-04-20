@@ -40,6 +40,9 @@ py2app.0.29
 
   Stub executables for PowerPC and 32-bit Intel were removed.
 
+* Code cleanup: Drop all code related to multiple apps or plugins
+  from py2app, the code was inactive because the configuration parsing
+  code actively checked for exactly one app or plugin.
 
 py2app 0.28
 -----------

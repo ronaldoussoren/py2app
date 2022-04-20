@@ -818,12 +818,11 @@ class py2app(Command):
 
     def get_default_plist(self):
         plist = {}
-        target = self.targets[0]
 
         version = self.distribution.get_version()
         if version == "0.0.0":
             try:
-                version = find_version(target.script)
+                version = find_version(self.target.script)
             except ValueError:
                 pass
 
@@ -837,7 +836,7 @@ class py2app(Command):
 
         name = self.distribution.get_name()
         if name == "UNKNOWN":
-            base = target.get_dest_base()
+            base = self.target.get_dest_base()
             name = os.path.basename(base)
         plist["CFBundleName"] = name
 
@@ -921,8 +920,11 @@ class py2app(Command):
         self.initialize_plist()
 
         sys_old_path = sys.path[:]
-        extra_paths = [os.path.dirname(target.script) for target in self.targets]
-        extra_paths.extend([build.build_platlib, build.build_lib])
+        extra_paths = [
+            os.path.dirname(self.target.script),
+            build.build_platlib,
+            build.build_lib,
+        ]
         self.additional_paths = [
             os.path.abspath(p) for p in extra_paths if p is not None
         ]
@@ -999,11 +1001,10 @@ class py2app(Command):
         # these contains file names
         scripts = set()
 
-        for target in self.targets:
-            scripts.add(target.script)
-            scripts.update([k for k in target.prescripts if isinstance(k, str)])
-            if hasattr(target, "extra_scripts"):
-                scripts.update(target.extra_scripts)
+        scripts.add(self.target.script)
+        scripts.update([k for k in self.target.prescripts if isinstance(k, str)])
+        if hasattr(self.target, "extra_scripts"):
+            scripts.update(self.target.extra_scripts)
 
         scripts.update(self.extra_scripts)
         return scripts
@@ -1028,8 +1029,7 @@ class py2app(Command):
 
     def initialize_plist(self):
         plist = self.get_default_plist()
-        for target in self.targets:
-            plist.update(getattr(target, "plist", {}))
+        plist.update(getattr(self.target, "plist", {}))
         plist.update(self.plist)
         plist.update(self.get_plist_options())
 
@@ -1049,33 +1049,33 @@ class py2app(Command):
 
     def run_alias(self):
         self.app_files = []
-        for target in self.targets:
+        extra_scripts = list(self.extra_scripts)
+        if hasattr(self.target, "extra_scripts"):
+            extra_scripts.update(self.target.extra_scripts)
 
-            extra_scripts = list(self.extra_scripts)
-            if hasattr(target, "extra_scripts"):
-                extra_scripts.update(extra_scripts)
+        dst = self.build_alias_executable(
+            self.target, self.target.script, extra_scripts
+        )
+        self.app_files.append(dst)
 
-            dst = self.build_alias_executable(target, target.script, extra_scripts)
-            self.app_files.append(dst)
+        for fn in extra_scripts:
+            if fn.endswith(".py"):
+                fn = fn[:-3]
+            elif fn.endswith(".pyw"):
+                fn = fn[:-4]
 
-            for fn in extra_scripts:
-                if fn.endswith(".py"):
-                    fn = fn[:-3]
-                elif fn.endswith(".pyw"):
-                    fn = fn[:-4]
+            src_fn = script_executable(
+                arch=self.arch, secondary=True, use_old_sdk=self.use_old_sdk
+            )
+            tgt_fn = os.path.join(
+                self.target.appdir, "Contents", "MacOS", os.path.basename(fn)
+            )
+            mergecopy(src_fn, tgt_fn)
+            make_exec(tgt_fn)
 
-                src_fn = script_executable(
-                    arch=self.arch, secondary=True, use_old_sdk=self.use_old_sdk
-                )
-                tgt_fn = os.path.join(
-                    target.appdir, "Contents", "MacOS", os.path.basename(fn)
-                )
-                mergecopy(src_fn, tgt_fn)
-                make_exec(tgt_fn)
-
-            arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
-            if arch in ("universal2", "arm64"):
-                codesign_adhoc(target.appdir)
+        arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
+        if arch in ("universal2", "arm64"):
+            codesign_adhoc(self.target.appdir)
 
     def collect_recipedict(self):
         return dict(iterRecipes())
@@ -1143,8 +1143,7 @@ class py2app(Command):
                     if isinstance(fn, str):
                         mf.run_script(fn)
 
-                for target in self.targets:
-                    target.prescripts.extend(newbootstraps)
+                self.target.prescripts.extend(newbootstraps)
                 break
             else:
                 break
@@ -1178,24 +1177,22 @@ class py2app(Command):
         return self.plist["CFBundleName"]
 
     def build_xref(self, mf, flatpackages):
-        for target in self.targets:
-            base = target.get_dest_base()
-            appdir = os.path.join(self.dist_dir, os.path.dirname(base))
-            appname = self.get_appname()
-            dgraph = os.path.join(appdir, appname + ".html")
-            print(f"*** creating dependency html: {os.path.basename(dgraph)} ***")
-            with open(dgraph, "w") as fp:
-                mf.create_xref(fp)
+        base = self.target.get_dest_base()
+        appdir = os.path.join(self.dist_dir, os.path.dirname(base))
+        appname = self.get_appname()
+        dgraph = os.path.join(appdir, appname + ".html")
+        print(f"*** creating dependency html: {os.path.basename(dgraph)} ***")
+        with open(dgraph, "w") as fp:
+            mf.create_xref(fp)
 
     def build_graph(self, mf, flatpackages):
-        for target in self.targets:
-            base = target.get_dest_base()
-            appdir = os.path.join(self.dist_dir, os.path.dirname(base))
-            appname = self.get_appname()
-            dgraph = os.path.join(appdir, appname + ".dot")
-            print(f"*** creating dependency graph: {os.path.basename(dgraph)} ***")
-            with open(dgraph, "w") as fp:
-                mf.graphreport(fp, flatpackages=flatpackages)
+        base = self.target.get_dest_base()
+        appdir = os.path.join(self.dist_dir, os.path.dirname(base))
+        appname = self.get_appname()
+        dgraph = os.path.join(appdir, appname + ".dot")
+        print(f"*** creating dependency graph: {os.path.basename(dgraph)} ***")
+        with open(dgraph, "w") as fp:
+            mf.graphreport(fp, flatpackages=flatpackages)
 
     def finalize_modulefinder(self, mf):
         for item in mf.flatten():
@@ -1626,113 +1623,108 @@ class py2app(Command):
         )
 
         # build the executables
-        for target in self.targets:
-            extra_scripts = list(self.extra_scripts)
-            if hasattr(target, "extra_scripts"):
-                extra_scripts.extend(target.extra_scripts)
+        extra_scripts = list(self.extra_scripts)
+        if hasattr(self.target, "extra_scripts"):
+            extra_scripts.extend(self.target.extra_scripts)
 
-            dst = self.build_executable(
-                target, arcname, pkgexts, copyexts, target.script, extra_scripts
-            )
-            exp = os.path.join(dst, "Contents", "MacOS")
-            execdst = os.path.join(exp, "python")
-            if self.semi_standalone:
-                make_symlink(sys.executable, execdst)
+        dst = self.build_executable(
+            self.target, arcname, pkgexts, copyexts, self.target.script, extra_scripts
+        )
+        exp = os.path.join(dst, "Contents", "MacOS")
+        execdst = os.path.join(exp, "python")
+        if self.semi_standalone:
+            make_symlink(sys.executable, execdst)
+        else:
+            if PYTHONFRAMEWORK:
+                # When we're using a python framework bin/python refers
+                # to a stub executable that we don't want use, we need
+                # the executable in Resources/Python.app
+                dpath = os.path.join(self._python_app, "Contents", "MacOS")
+                sfile = os.path.join(dpath, PYTHONFRAMEWORK)
+                if not os.path.exists(sfile):
+                    sfile = os.path.join(dpath, "Python")
+                self.copy_file(sfile, execdst)
+                make_exec(execdst)
+
+            elif os.path.exists(os.path.join(sys.prefix, ".Python")):
+                fn = os.path.join(
+                    sys.prefix,
+                    "lib",
+                    "python%d.%d" % (sys.version_info[:2]),
+                    "orig-prefix.txt",
+                )
+
+                if os.path.exists(fn):
+                    with open(fn) as fp:
+                        prefix = fp.read().strip()
+
+                rest_path = os.path.normpath(sys.executable)[
+                    len(os.path.normpath(sys.prefix)) + 1 :  # noqa: E203
+                ]
+                if rest_path.startswith("."):
+                    rest_path = rest_path[1:]
+
+                self.copy_file(os.path.join(prefix, rest_path), execdst)
+                make_exec(execdst)
+
             else:
-                if PYTHONFRAMEWORK:
-                    # When we're using a python framework bin/python refers
-                    # to a stub executable that we don't want use, we need
-                    # the executable in Resources/Python.app
-                    dpath = os.path.join(self._python_app, "Contents", "MacOS")
-                    sfile = os.path.join(dpath, PYTHONFRAMEWORK)
-                    if not os.path.exists(sfile):
-                        sfile = os.path.join(dpath, "Python")
-                    self.copy_file(sfile, execdst)
-                    make_exec(execdst)
+                self.copy_file(sys.executable, execdst)
+                make_exec(execdst)
 
-                elif os.path.exists(os.path.join(sys.prefix, ".Python")):
-                    fn = os.path.join(
-                        sys.prefix,
-                        "lib",
-                        "python%d.%d" % (sys.version_info[:2]),
-                        "orig-prefix.txt",
-                    )
-
-                    if os.path.exists(fn):
-                        with open(fn) as fp:
-                            prefix = fp.read().strip()
-
-                    rest_path = os.path.normpath(sys.executable)[
-                        len(os.path.normpath(sys.prefix)) + 1 :  # noqa: E203
-                    ]
-                    if rest_path.startswith("."):
-                        rest_path = rest_path[1:]
-
-                    self.copy_file(os.path.join(prefix, rest_path), execdst)
-                    make_exec(execdst)
-
-                else:
-                    self.copy_file(sys.executable, execdst)
-                    make_exec(execdst)
-
-            if not self.debug_skip_macholib:
-                if self.force_system_tk:
-                    print("force system tk")
-                    resdir = os.path.join(dst, "Contents", "Resources")
-                    pydir = os.path.join(
-                        resdir, "lib", "python%s.%s" % (sys.version_info[:2])
-                    )
-                    ext_dir = os.path.join(pydir, os.path.basename(self.ext_dir))
-                    tkinter_path = os.path.join(ext_dir, "_tkinter.so")
-                    if os.path.exists(tkinter_path):
-                        rewrite_tkinter_load_commands(tkinter_path)
-                    else:
-                        print("tkinter not found at", tkinter_path)
-
-                mm = PythonStandalone(
-                    appbuilder=self,
-                    base=dst,
-                    ext_dir=os.path.join(
-                        dst,
-                        "Contents",
-                        "Resources",
-                        "lib",
-                        "python%s.%s" % (sys.version_info[:2]),
-                        "lib-dynload",
-                    ),
-                    copyexts=copyexts,
-                    executable_path=exp,
+        if not self.debug_skip_macholib:
+            if self.force_system_tk:
+                print("force system tk")
+                resdir = os.path.join(dst, "Contents", "Resources")
+                pydir = os.path.join(
+                    resdir, "lib", "python%s.%s" % (sys.version_info[:2])
                 )
-
-                dylib, runtime = self.get_runtime()
-                if self.semi_standalone:
-                    mm.excludes.append(runtime)
+                ext_dir = os.path.join(pydir, os.path.basename(self.ext_dir))
+                tkinter_path = os.path.join(ext_dir, "_tkinter.so")
+                if os.path.exists(tkinter_path):
+                    rewrite_tkinter_load_commands(tkinter_path)
                 else:
-                    mm.mm.run_file(runtime)
-                for exclude in self.dylib_excludes:
-                    info = macholib.dyld.framework_info(exclude)
-                    if info is not None:
-                        exclude = os.path.join(
-                            info["location"], info["shortname"] + ".framework"
-                        )
-                    mm.excludes.append(exclude)
-                for fmwk in self.frameworks:
-                    mm.mm.run_file(fmwk)
-                platfiles = mm.run()
+                    print("tkinter not found at", tkinter_path)
 
-                if self.strip:
-                    platfiles = self.strip_dsym(platfiles)
-                    self.strip_files(platfiles)
+            mm = PythonStandalone(
+                appbuilder=self,
+                base=dst,
+                ext_dir=os.path.join(
+                    dst,
+                    "Contents",
+                    "Resources",
+                    "lib",
+                    "python%s.%s" % (sys.version_info[:2]),
+                    "lib-dynload",
+                ),
+                copyexts=copyexts,
+                executable_path=exp,
+            )
 
-                arch = (
-                    self.arch
-                    if self.arch is not None
-                    else get_platform().split("-")[-1]
-                )
+            dylib, runtime = self.get_runtime()
+            if self.semi_standalone:
+                mm.excludes.append(runtime)
+            else:
+                mm.mm.run_file(runtime)
+            for exclude in self.dylib_excludes:
+                info = macholib.dyld.framework_info(exclude)
+                if info is not None:
+                    exclude = os.path.join(
+                        info["location"], info["shortname"] + ".framework"
+                    )
+                mm.excludes.append(exclude)
+            for fmwk in self.frameworks:
+                mm.mm.run_file(fmwk)
+            platfiles = mm.run()
 
-                if arch in ("universal2", "arm64"):
-                    codesign_adhoc(target.appdir)
-            self.app_files.append(dst)
+            if self.strip:
+                platfiles = self.strip_dsym(platfiles)
+                self.strip_files(platfiles)
+
+            arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
+
+            if arch in ("universal2", "arm64"):
+                codesign_adhoc(self.target.appdir)
+        self.app_files.append(dst)
 
     def copy_package_data(self, package, target_dir):
         """
@@ -1980,37 +1972,25 @@ class py2app(Command):
             )
         elif dist.app:
             self.style = "app"
-            self.targets = dist.app
+            targets = dist.app
         elif dist.plugin:
             self.style = "plugin"
-            self.targets = dist.plugin
+            targets = dist.plugin
         else:
             raise DistutilsOptionError("You must specify either app or plugin")
-        if len(self.targets) != 1:
+
+        if len(targets) != 1:
             raise DistutilsOptionError("Multiple targets not currently supported")
+
+        self.target = targets[0]
         if not self.extension:
             self.extension = "." + self.style
 
-        # make sure all targets use the same directory, this is
-        # also the directory where the pythonXX.dylib must reside
-        paths = set()
-        for target in self.targets:
-            paths.add(os.path.dirname(target.get_dest_base()))
-
-        if len(paths) > 1:
-            raise DistutilsOptionError(
-                f"all targets must use the same directory: {list(paths)}"
-            )
-        if paths:
-            app_dir = paths.pop()  # the only element
-            if os.path.isabs(app_dir):
-                raise DistutilsOptionError(f"app directory must be relative: {app_dir}")
-            self.app_dir = os.path.join(self.dist_dir, app_dir)
-            self.mkpath(self.app_dir)
-        else:
-            # Do we allow to specify no targets?
-            # We can at least build a zipfile...
-            self.app_dir = self.lib_dir
+        app_dir = os.path.dirname(self.target.get_dest_base())
+        if os.path.isabs(app_dir):
+            raise DistutilsOptionError(f"app directory must be relative: {app_dir}")
+        self.app_dir = os.path.join(self.dist_dir, app_dir)
+        self.mkpath(self.app_dir)
 
     def initialize_prescripts(self):
         prescripts = []
@@ -2129,9 +2109,8 @@ class py2app(Command):
             else:
                 newprescripts.append(s)
 
-        for target in self.targets:
-            prescripts = getattr(target, "prescripts", [])
-            target.prescripts = newprescripts + prescripts
+        prescripts = getattr(self.target, "prescripts", [])
+        self.target.prescripts = newprescripts + prescripts
 
     def get_bootstrap(self, bootstrap):
         if isinstance(bootstrap, str):
