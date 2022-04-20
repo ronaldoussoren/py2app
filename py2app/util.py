@@ -220,39 +220,6 @@ def fancy_split(s, sep=","):
     return s
 
 
-class FileSet:
-    # A case insensitive but case preserving set of files
-    def __init__(self, iterable=None):
-        self._dict = {}
-        if iterable is not None:
-            for arg in iterable:
-                self.add(arg)
-
-    def __repr__(self):
-        return f"<FileSet {self._dict.values()} at {id(self):x}>"
-
-    def add(self, fname):
-        self._dict[fname.upper()] = fname
-
-    def remove(self, fname):
-        del self._dict[fname.upper()]
-
-    def __contains__(self, fname):
-        return fname.upper() in self._dict.keys()
-
-    def __getitem__(self, index):
-        key = self._dict.keys()[index]
-        return self._dict[key]
-
-    def __len__(self):
-        return len(self._dict)
-
-    def copy(self):
-        res = FileSet()
-        res._dict.update(self._dict)
-        return res
-
-
 LOADER = """
 def __load():
     import imp, os, sys
