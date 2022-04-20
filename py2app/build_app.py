@@ -1950,6 +1950,9 @@ class py2app(Command):
             prescripts.append("emulate_shell_environment")
 
         if self.argv_emulation and self.style == "app":
+            # XXX: Warn when using argv_emulation with a GUI application
+            #      Warn when using argv_emultation with a plugin (where
+            #      the option is ignored)
             prescripts.append("argv_emulation")
             if "CFBundleDocumentTypes" not in self.plist:
                 self.plist["CFBundleDocumentTypes"] = [

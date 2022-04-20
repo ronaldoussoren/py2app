@@ -147,6 +147,7 @@ def find_version(fn):
     """
     Try to find a __version__ assignment in a source file
     """
+    # XXX: Why does this always return 0.0.0?
     return "0.0.0"
     import compiler
     from compiler.ast import Assign, AssName, Const, Module, Stmt
@@ -401,26 +402,6 @@ JUNK_EXTS = [".pbxuser", ".pyc", ".pyo", ".swp"]
 skipjunk = skipfunc(JUNK, JUNK_EXTS)
 
 
-def get_magic(platform=sys.platform):
-    if platform == "darwin":
-        import struct
-
-        import macholib.mach_o
-
-        return [
-            struct.pack("!L", macholib.mach_o.MH_MAGIC),
-            struct.pack("!L", macholib.mach_o.MH_CIGAM),
-            struct.pack("!L", macholib.mach_o.MH_MAGIC_64),
-            struct.pack("!L", macholib.mach_o.MH_CIGAM_64),
-            struct.pack("!L", macholib.mach_o.FAT_MAGIC),
-        ]
-    elif platform == "linux2":
-        return ["\x7fELF"]
-    elif platform == "win32":
-        return ["MZ"]
-    return None
-
-
 def iter_platform_files(path, is_platform_file=macholib.util.is_platform_file):
     """
     Iterate over all of the platform files in a directory
@@ -569,16 +550,6 @@ def find_app(app):
     return None
 
 
-def check_output(command_line):
-    p = subprocess.Popen(command_line, stdout=subprocess.PIPE)
-    stdout, _ = p.communicate()
-    xit = p.wait()
-    if xit != 0:
-        raise subprocess.CalledProcessError(xit, command_line)
-
-    return stdout
-
-
 _tools = {}
 
 
@@ -586,9 +557,9 @@ def _get_tool(toolname):
     if toolname not in _tools:
         if os.path.exists("/usr/bin/xcrun"):
             try:
-                _tools[toolname] = check_output(["/usr/bin/xcrun", "-find", toolname])[
-                    :-1
-                ]
+                _tools[toolname] = subprocess.check_output(
+                    ["/usr/bin/xcrun", "-find", toolname]
+                )[:-1]
             except subprocess.CalledProcessError:
                 raise OSError(f"Tool {toolname!r} not found")
 
