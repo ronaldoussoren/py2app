@@ -72,6 +72,11 @@ PLUGIN_SUFFIXES = {
     ".action": "Automator",
 }
 
+
+# XXX: Which env tool uses which prefix,
+#      in particular: it all of this needed
+#      with Python 3 and modern versions of
+#      venv and virtualenv?
 if hasattr(sys, "real_prefix"):
     sys_base_prefix = sys.real_prefix
 elif hasattr(sys, "base_prefix"):
@@ -276,7 +281,7 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
         return destfn
 
 
-def iterRecipes(module=recipes):
+def iter_recipes(module=recipes):
     for name in dir(module):
         if name.startswith("_"):
             continue
@@ -1078,7 +1083,7 @@ class py2app(Command):
             codesign_adhoc(self.target.appdir)
 
     def collect_recipedict(self):
-        return dict(iterRecipes())
+        return dict(iter_recipes())
 
     def get_modulefinder(self):
         if self.debug_modulegraph:
