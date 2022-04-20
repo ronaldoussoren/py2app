@@ -4,8 +4,6 @@ import stat
 import subprocess
 import sys
 import time
-import warnings
-import zipfile
 from distutils import log
 
 import macholib.util
@@ -13,85 +11,6 @@ import pkg_resources
 from macholib.util import is_platform_file
 from modulegraph import zipio
 from modulegraph.find_modules import PY_SUFFIXES
-
-# Deprecated functionality
-
-
-def os_path_islink(path):
-    warnings.warn("Use zipio.islink instead of os_path_islink", DeprecationWarning)
-    return zipio.islink(path)
-
-
-def os_path_isdir(path):
-    warnings.warn("Use zipio.isdir instead of os_path_isdir", DeprecationWarning)
-    return zipio.islink(path)
-
-
-def os_readlink(path):
-    warnings.warn("Use zipio.readlink instead of os_readlink", DeprecationWarning)
-    return zipio.islink(path)
-
-
-def get_zip_data(path_to_zip, path_in_zip):
-    warnings.warn("Use zipio.open instead of get_zip_data", DeprecationWarning)
-    zf = zipfile.ZipFile(path_to_zip)
-    return zf.read(path_in_zip)
-
-
-def path_to_zip(path):
-    """
-    Returns (pathtozip, pathinzip). If path isn't in a zipfile pathtozip
-    will be None
-    """
-    warnings.warn("Don't use this function", DeprecationWarning)
-    zf = zipfile.ZipFile(path_to_zip)
-    orig_path = path
-    from distutils.errors import DistutilsFileError
-
-    if os.path.exists(path):
-        return (None, path)
-
-    else:
-        rest = ""
-        while not os.path.exists(path):
-            path, r = os.path.split(path)
-            if not path:
-                raise DistutilsFileError(f"File doesn't exist: {orig_path}")
-            rest = os.path.join(r, rest)
-
-        if not os.path.isfile(path):
-            # Directory really doesn't exist
-            raise DistutilsFileError(f"File doesn't exist: {orig_path}")
-
-        try:
-            zf = zipfile.ZipFile(path)
-            zf.close()
-        except zipfile.BadZipfile:
-            raise DistutilsFileError(f"File doesn't exist: {orig_path}")
-
-        if rest.endswith("/"):
-            rest = rest[:-1]
-
-        return path, rest
-
-
-def get_mtime(path, mustExist=True):
-    """
-    Get mtime of a path, even if it is inside a zipfile
-    """
-    warnings.warn("Don't use this function", DeprecationWarning)
-    try:
-        return zipio.getmtime(path)
-
-    except OSError:
-        if not mustExist:
-            return -1
-
-        raise
-
-
-# End deprecated functionality
-
 
 gConverterTab = {}
 

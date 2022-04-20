@@ -44,6 +44,9 @@ py2app.0.29
   from py2app, the code was inactive because the configuration parsing
   code actively checked for exactly one app or plugin.
 
+* Code cleanup: Drop some deprecated internal functions from
+  ``py2app.util``.
+
 py2app 0.28
 -----------
 
