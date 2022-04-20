@@ -11,6 +11,16 @@ py2app.0.29
   which means pip will install py2app 0.28 for users of older
   version of Python.
 
+* Drop the "prefer_ppc" option, use the "arch" option instead
+
+  But see below: py2app no longer ships with stub executables
+  that target PPC systems.
+
+* Drop the "force_syste_tk" option
+
+  The system version of Tcl/Tk is deprecated, and is buggy enough
+  that it is never a good option to use for Python applications.
+
 * #423: The code is now formatted with black.
 
   This is enforced by pre-commit configuration.

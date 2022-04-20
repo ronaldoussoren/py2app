@@ -26,8 +26,20 @@ The following keyword arguments are used by py2app:
 
 * ``name``
 
-  Name of the application or plugin bundle. By default this is
-  derived from the name of the main script.
+  Name of the application or plugin bundle. The name is also
+  included as the ``CFBundleName`` in the ``Info.plist`` file.
+
+  By default this is derived from the name of the main script.
+
+* ``version``
+
+  The version of the application or plugin bundle, will be included
+  in the Info.plist (unless the specified plist already contains
+  a ``CFBundleVersion`` key).
+
+  By default this is derived from a ``__version__`` attribute of
+  the main script, and set to ``"0.0.0"`` when that attribute is
+  not present.
 
 * ``app``
 
@@ -393,24 +405,6 @@ Options for 'py2app' command:
      - redirect_stdout_to_asl
      - None (use ``True`` in setup.py)
      - Forward the stdout/stderr streams to Console.app using ASL
-
-   * - ``--force-system-tk``
-     - force_system_tk
-     - None (use ``True`` in setup.py)
-     - Ensures that Tkinter will be linked to the system copy
-       of Tcl and Tk.
-
-       This makes the bundle smaller, but the system version of Tcl/Tk
-       is ancient an buggy. Don't use this option.
-
-       **This is a legacy option that will be dropped in a future version**
-
-   * - ``--prefer-ppc``
-     - prefer_ppc
-     - None (use ``True`` in setup.py)
-     - Force the application to run translated on i386
-
-       **This is a legacy option that will be dropped in a future version**
 
    * - ``--debug-modulegraph``
      - debug_modulegraph

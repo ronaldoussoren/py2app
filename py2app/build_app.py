@@ -25,7 +25,6 @@ import macholib.dyld
 import macholib.MachO
 import macholib.MachOStandalone
 import pkg_resources
-from macholib.util import flipwritable
 from modulegraph import modulegraph, zipio
 from modulegraph.find_modules import find_modules, find_needed_modules, parse_mf_results
 from modulegraph.modulegraph import Package, Script, SourceModule
@@ -128,98 +127,6 @@ def loader_paths(sourcefn, destfn):
                 continue
             relpath = other[13:]
             yield os.path.join(sourcedir, relpath), os.path.join(destdir, relpath)
-
-
-def rewrite_tkinter_load_commands(tkinter_path):
-    m = macholib.MachO.MachO(tkinter_path)
-    tcl_path = None
-    tk_path = None
-
-    rewrite_map = {}
-
-    for header in m.headers:
-        for _idx, _name, other in header.walkRelocatables():
-            if other.endswith("/Tk"):
-                if tk_path is not None and other != tk_path:
-                    raise DistutilsPlatformError(
-                        "_tkinter is linked to different Tk paths"
-                    )
-                tk_path = other
-            elif other.endswith("/Tcl"):
-                if tcl_path is not None and other != tcl_path:
-                    raise DistutilsPlatformError(
-                        "_tkinter is linked to different Tcl paths"
-                    )
-                tcl_path = other
-
-    if tcl_path is None or "Tcl.framework" not in tcl_path:
-        raise DistutilsPlatformError("_tkinter is not linked a Tcl.framework")
-
-    if tk_path is None or "Tk.framework" not in tk_path:
-        raise DistutilsPlatformError("_tkinter is not linked a Tk.framework")
-
-    system_tcl_versions = [
-        nm
-        for nm in os.listdir("/System/Library/Frameworks/Tcl.framework/Versions")
-        if nm != "Current"
-    ]
-    system_tk_versions = [
-        nm
-        for nm in os.listdir("/System/Library/Frameworks/Tk.framework/Versions")
-        if nm != "Current"
-    ]
-
-    if not tcl_path.startswith("/System/Library/Frameworks"):
-        # ../Versions/8.5/Tcl
-        ver = os.path.basename(os.path.dirname(tcl_path))
-        if ver not in system_tcl_versions:
-            raise DistutilsPlatformError(
-                "_tkinter is linked to a version of Tcl not in /System"
-            )
-
-        rewrite_map[
-            tcl_path
-        ] = f"/System/Library/Frameworks/Tcl.framework/Versions/{ver}/Tcl"
-
-    if not tk_path.startswith("/System/Library/Frameworks"):
-        # ../Versions/8.5/Tk
-        ver = os.path.basename(os.path.dirname(tk_path))
-        if ver not in system_tk_versions:
-            raise DistutilsPlatformError(
-                "_tkinter is linked to a version of Tk not in /System"
-            )
-
-        rewrite_map[
-            tk_path
-        ] = f"/System/Library/Frameworks/Tk.framework/Versions/{ver}/Tk"
-
-    if rewrite_map:
-        print("Relinking _tkinter.so to system Tcl/Tk")
-        rewroteAny = False
-        for header in m.headers:
-            for idx, _name, other in header.walkRelocatables():
-                data = rewrite_map.get(other)
-                if data:
-                    if header.rewriteDataForCommand(
-                        idx, data.encode(sys.getfilesystemencoding())
-                    ):
-                        rewroteAny = True
-
-        if rewroteAny:
-            old_mode = flipwritable(m.filename)
-            try:
-                with open(m.filename, "rb+") as f:
-                    for header in m.headers:
-                        f.seek(0)
-                        header.write(f)
-                        f.seek(0, 2)
-                        f.flush()
-
-            finally:
-                flipwritable(m.filename, old_mode)
-
-    else:
-        print("_tkinter already linked against system Tcl/Tk")
 
 
 def get_zipfile(dist, semi_standalone=False):
@@ -364,6 +271,8 @@ def normalize_data_file(fn):
 
 
 def is_system():
+    # XXX: This was added to detect /usr/bin/python2.x, probably
+    #      need to check for Xcode's Python 3 installation as well.
     prefix = sys.prefix
     if os.path.exists(os.path.join(prefix, ".Python")):
         fn = os.path.join(
@@ -387,7 +296,7 @@ def installation_info(version=None):
 
 
 class py2app(Command):
-    description = "create a Mac OS X application or plugin from Python scripts"
+    description = "create a macOS application or plugin from Python scripts"
     # List of option tuples: long name, short name (None if no short
     # name), and help string.
 
@@ -498,11 +407,6 @@ class py2app(Command):
             "compatibility)",
         ),
         (
-            "prefer-ppc",
-            None,
-            "Force application to run translated on i386 (LSPrefersPPC=True)",
-        ),
-        (
             "debug-modulegraph",
             None,
             "Drop to pdb console after the module finding phase is complete",
@@ -535,11 +439,6 @@ class py2app(Command):
             "set of additional scripts to include in the application bundle",
         ),
         ("include-plugins=", None, "List of plugins to include"),
-        (
-            "force-system-tk",
-            None,
-            "Ensure that Tkinter is linked against Apple's build of Tcl/Tk",
-        ),
         (
             "report-missing-from-imports",
             None,
@@ -574,9 +473,7 @@ class py2app(Command):
         "debug-modulegraph",
         "debug-skip-macholib",
         "graph",
-        "prefer-ppc",
         "emulate-shell-environment",
-        "force-system-tk",
         "report-missing-from-imports",
         "no-report-missing-conditional-import",
         "redirect-stdout-to-asl",
@@ -628,14 +525,12 @@ class py2app(Command):
         self.dist_dir = None
         self.debug_skip_macholib = False
         self.debug_modulegraph = False
-        self.prefer_ppc = False
         self.filters = []
         self.eggs = []
         self.qt_plugins = None
         self.matplotlib_backends = None
         self.extra_scripts = None
         self.include_plugins = None
-        self.force_system_tk = False
         self.report_missing_from_imports = False
         self.no_report_missing_conditional_import = False
         self.redirect_stdout_to_asl = False
@@ -644,12 +539,6 @@ class py2app(Command):
         self.expected_missing_imports = None
 
     def finalize_options(self):
-        if self.prefer_ppc:
-            print(
-                "WARNING: Option --prefer-ppc is deprecated an will be removed "
-                "in a future version. Use --arch instead"
-            )
-
         if sys_base_prefix != sys.prefix:
             self._python_app = os.path.join(sys_base_prefix, "Resources", "Python.app")
 
@@ -669,6 +558,8 @@ class py2app(Command):
                 self._python_app = os.path.join(prefix, "Resources", "Python.app")
 
         elif os.path.exists(os.path.join(sys.prefix, ".Python")):
+            # XXX: Python 2 virtualenv, check if this is still needed for
+            #      modern virtualenv on Python 3.
             fn = os.path.join(
                 sys.prefix,
                 "lib",
@@ -688,15 +579,14 @@ class py2app(Command):
             self._python_app = os.path.join(sys.prefix, "Resources", "Python.app")
 
         if self.optimize is None:
-            self.optimize = 0
-            if hasattr(sys, "flags"):
-                self.optimize = sys.flags.optimize
+            self.optimize = sys.flags.optimize
+        else:
+            self.optimize = int(self.optimize)
 
         if not self.strip:
             self.no_strip = True
         elif self.no_strip:
             self.strip = False
-        self.optimize = int(self.optimize)
         if self.argv_inject and isinstance(self.argv_inject, str):
             self.argv_inject = shlex.split(self.argv_inject)
         self.includes = set(fancy_split(self.includes))
@@ -719,6 +609,9 @@ class py2app(Command):
         # Setuptools/distribute style namespace packages uses
         # __import__('pkg_resources'), and that import isn't detected at the
         # moment. Forcefully include pkg_resources.
+        # XXX: (a) is this still needed and (b) can we detect this
+        #      dynamically instead of forcing a dependency on setuptools
+        #      for all apps?
         self.includes.add("pkg_resources")
 
         dylib_excludes = fancy_split(self.dylib_excludes)
@@ -747,12 +640,10 @@ class py2app(Command):
             self.plist = {}
         if isinstance(self.plist, str):
 
-            if hasattr(plistlib, "load"):
-                with open(self.plist, "rb") as fp:
-                    self.plist = plistlib.load(fp)
-            else:
-                # 2.7
-                self.plist = plistlib.Plist.fromFile(self.plist)
+            with open(self.plist, "rb") as fp:
+                self.plist = plistlib.load(fp)
+
+        # XXX: Clean up...
         if hasattr(plistlib, "Dict") and isinstance(self.plist, plistlib.Dict):
             # 2.7
             self.plist = dict(self.plist.__dict__)
@@ -848,7 +739,7 @@ class py2app(Command):
         return plist
 
     def get_runtime(self, prefix=None, version=None):
-        # this is a bit of a hack!
+        # XXX: this is a bit of a hack!
         # ideally we'd use dylib functions to figure this out
         if prefix is None:
             prefix = sys.prefix
@@ -1023,7 +914,6 @@ class py2app(Command):
                 "argv_emulation": bool(self.argv_emulation),
                 "emulate_shell_environment": bool(self.emulate_shell_environment),
                 "no_chdir": bool(self.no_chdir),
-                "prefer_ppc": self.prefer_ppc,
                 "verbose": self.verbose_interpreter,
                 "use_faulthandler": self.use_faulthandler,
             },
@@ -1046,8 +936,6 @@ class py2app(Command):
                 raise DistutilsOptionError(f"icon file must exist: {self.iconfile!r}")
             self.resources.append(iconfile)
             plist["CFBundleIconFile"] = os.path.basename(iconfile)
-        if self.prefer_ppc:
-            plist["LSPrefersPPC"] = True
 
         self.plist = plist
         return plist
@@ -1677,19 +1565,6 @@ class py2app(Command):
                 make_exec(execdst)
 
         if not self.debug_skip_macholib:
-            if self.force_system_tk:
-                print("force system tk")
-                resdir = os.path.join(dst, "Contents", "Resources")
-                pydir = os.path.join(
-                    resdir, "lib", "python%s.%s" % (sys.version_info[:2])
-                )
-                ext_dir = os.path.join(pydir, os.path.basename(self.ext_dir))
-                tkinter_path = os.path.join(ext_dir, "_tkinter.so")
-                if os.path.exists(tkinter_path):
-                    rewrite_tkinter_load_commands(tkinter_path)
-                else:
-                    print("tkinter not found at", tkinter_path)
-
             mm = PythonStandalone(
                 appbuilder=self,
                 base=dst,
