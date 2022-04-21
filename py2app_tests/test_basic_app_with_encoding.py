@@ -243,7 +243,9 @@ class TestBasicAppWithEncoding(unittest.TestCase):
         if not os.path.exists(path):
             return
 
-        names = { fn for fn in os.listdir(os.path.join(path, "Versions")) if "-" not in fn}
+        names = {
+            fn for fn in os.listdir(os.path.join(path, "Versions")) if "-" not in fn
+        }
         ver_str = "%d.%d" % sys.version_info[:2]
         self.assertEqual(names, {"Current", ver_str})
         self.assertEqual(

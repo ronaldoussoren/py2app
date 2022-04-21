@@ -240,7 +240,9 @@ class TestBasicApp(unittest.TestCase):
         if not os.path.exists(path):
             return
 
-        names = { nm for nm in os.listdir(os.path.join(path, "Versions")) if "-" not in nm }
+        names = {
+            nm for nm in os.listdir(os.path.join(path, "Versions")) if "-" not in nm
+        }
         ver_str = "%d.%d" % sys.version_info[:2]
         self.assertEqual(names, {"Current", ver_str})
         self.assertEqual(
