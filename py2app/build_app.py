@@ -2432,6 +2432,8 @@ class py2app(Command):
 
         This version doesn't bork on existing symlinks
         """
+        # XXX: Need and indeterminate progress spinner for
+        #      copying files.
         return copy_tree(
             infile,
             outfile,
@@ -2441,10 +2443,18 @@ class py2app(Command):
             not self.force,
             dry_run=self.dry_run,
             condition=condition,
+            progress=self.progress,
         )
 
     def copy_file(self, infile, outfile):
         """
         This version doesn't bork on existing symlinks
         """
-        return copy_file(infile, outfile)
+        return copy_file(infile, outfile, progress=self.progress)
+
+    def mkpath(self, name, mode=0o777):
+        self.progress.trace(f"creating {name}")
+        if self.dry_run:
+            return
+
+        os.makedirs(name, mode, exist_ok=True)

@@ -6,7 +6,6 @@ import subprocess
 import sys
 import time
 import typing
-from distutils import log
 
 import macholib.util
 import pkg_resources
@@ -73,22 +72,30 @@ def copy_file(
     preserve_times=False,
     update=False,
     dry_run=0,
+    progress=None,
 ):
     while True:
         try:
             _copy_file(
-                source, destination, preserve_mode, preserve_times, update, dry_run
+                source,
+                destination,
+                preserve_mode,
+                preserve_times,
+                update,
+                dry_run,
+                progress,
             )
             return
         except OSError as exc:
             if exc.errno != errno.EAGAIN:
                 raise
 
-            log.info(
-                "copying file %s failed due to spurious EAGAIN, "
-                "retrying in 2 seconds",
-                source,
-            )
+            if progress is not None:
+                progress.warning(
+                    "copying file %s failed due to spurious EAGAIN, "
+                    "retrying in 2 seconds",
+                    source,
+                )
             time.sleep(2)
 
 
@@ -99,8 +106,10 @@ def _copy_file(
     preserve_times=False,
     update=False,
     dry_run=0,
+    progress=None,
 ):
-    log.info("copying file %s -> %s", source, destination)
+    if progress is not None:
+        progress.trace(f"copying file {source} -> {destination}")
     with zipio.open(source, "rb") as fp_in:
         if not dry_run:
             if os.path.isdir(destination):
@@ -266,6 +275,7 @@ def byte_compile(
     # "Indirect" byte-compilation: write a temporary script and then
     # run it with the appropriate flags.
     if not direct:
+        # XXX: This needs work to play nice with rich.progress
         from distutils.util import execute, spawn
         from tempfile import NamedTemporaryFile
 
@@ -321,7 +331,6 @@ byte_compile(files, optimize=%r, force=%r,
         )
 
     else:
-        from distutils.dir_util import mkpath
         from py_compile import compile
 
         task_id = progress.add_task("Byte compiling", len(py_files))
@@ -343,10 +352,12 @@ byte_compile(files, optimize=%r, force=%r,
                 cfile = os.path.join(target_dir, dfile)
 
             if force or newer(mod.filename, cfile):
-                progress.info(f"byte-compiling {mod.filename} to {dfile}")
+                progress.trace(f"byte-compiling {mod.filename} to {dfile}")
 
                 if not dry_run:
-                    mkpath(os.path.dirname(cfile))
+                    if not os.path.exists(os.path.dirname(cfile)):
+                        progress.trace(f"create {os.path.dirname(cfile)}")
+                        os.makedirs(os.path.dirname(cfile), 0o777)
                     suffix = os.path.splitext(mod.filename)[1]
 
                     if suffix in (".py", ".pyw"):
@@ -430,7 +441,7 @@ def strip_files(files, dry_run=0, progress=None):
 
     task_id = progress.add_task("Stripping binaries", len(files))
     for name in files:
-        progress.info(f"Stripping {name}")
+        progress.trace(f"Stripping {name}")
         subprocess.check_call(
             ["/usr/bin/strip", "-x", "-S", "-", name], stderr=subprocess.DEVNULL
         )
@@ -449,6 +460,7 @@ def copy_tree(
     verbose=0,
     dry_run=0,
     condition=None,
+    progress=None,
 ):
 
     """
@@ -473,9 +485,7 @@ def copy_tree(
     assert isinstance(src, str), repr(src)
     assert isinstance(dst, str), repr(dst)
 
-    from distutils import log
     from distutils.dep_util import newer
-    from distutils.dir_util import mkpath
     from distutils.errors import DistutilsFileError
 
     if condition is None:
@@ -492,8 +502,10 @@ def copy_tree(
         else:
             raise DistutilsFileError(f"error listing files in '{src}': {errstr}")
 
-    if not dry_run:
-        mkpath(dst)
+    if not dry_run and not os.path.exists(dst):
+        if progress is not None:
+            progress.trace(f"creating {dst}")
+        os.makedirs(dst, 0o777)
 
     outputs = []
 
@@ -512,7 +524,8 @@ def copy_tree(
 
         if preserve_symlinks and zipio.islink(src_name):
             link_dest = zipio.readlink(src_name)
-            log.info("linking %s -> %s", dst_name, link_dest)
+            if progress is not None:
+                progress.trace(f"linking {dst_name} -> {link_dest}")
             if not dry_run:
                 if update and not newer(src, dst_name):
                     pass
@@ -533,6 +546,7 @@ def copy_tree(
                     update,
                     dry_run=dry_run,
                     condition=condition,
+                    progress=progress,
                 )
             )
         else:
@@ -543,6 +557,7 @@ def copy_tree(
                 preserve_times,
                 update,
                 dry_run=dry_run,
+                progress=progress,
             )
             outputs.append(dst_name)
 
@@ -632,8 +647,8 @@ def _macho_find(path):
                 yield path
 
 
-def _dosign(*path):
-    subprocess.check_call(
+def _dosign(*path, progress=None):
+    p = subprocess.Popen(
         (
             "codesign",
             "-s",
@@ -642,7 +657,14 @@ def _dosign(*path):
             "-f",
         )
         + path,
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE,
     )
+    out, _ = p.communicate()
+    xit = p.wait()
+    if xit != 0:
+        progress.warning(f"{path}: {out}")
+        raise subprocess.CalledProcessError
 
 
 def codesign_adhoc(bundle, progress):
@@ -673,8 +695,8 @@ def codesign_adhoc(bundle, progress):
         for file in platfiles:
             failed = []
             try:
-                progress.info(f"Signing {file}")
-                _dosign(file)
+                progress.trace(f"Signing {file}")
+                _dosign(file, progress=progress)
                 progress.step_task(task_id)
             except subprocess.CalledProcessError:
                 progress.info(f"Signing {file} failed")
@@ -686,7 +708,7 @@ def codesign_adhoc(bundle, progress):
     for _ in range(5):
         try:
             progress.info(f"Signing {bundle}")
-            _dosign(bundle)
+            _dosign(bundle, progress=progress)
             break
         except subprocess.CalledProcessError:
             progress.warning(f"Signing {bundle} failed")
