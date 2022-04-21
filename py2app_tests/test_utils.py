@@ -26,6 +26,9 @@ class TestVersionExtraction(unittest.TestCase):
     def test_multi_target(self):
         self.assert_version_equals("b = __version__ = 'c'", "c")
 
+    def test_multi_target2(self):
+        self.assert_version_equals("b[x] = __version__ = 'c'", "c")
+
     def test_not_string(self):
         self.assert_version_equals("__version__ = 42", None)
 

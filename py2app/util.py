@@ -158,7 +158,7 @@ def find_version(fn: os.PathLike) -> typing.Optional[str]:
         # would require handling encoding tokens.
         source = stream.read()
 
-    module_ast = ast.parse(source, fn)
+    module_ast = ast.parse(source, str(fn))
 
     # Look for a toplevel assignment statement that sets
     # __version__ to a constant value
@@ -172,6 +172,8 @@ def find_version(fn: os.PathLike) -> typing.Optional[str]:
             continue
 
         for t in node.targets:
+            if not isinstance(t, ast.Name):
+                continue
             if t.id == "__version__":
                 value = node.value
                 if isinstance(value, ast.Constant) and isinstance(value.value, str):
