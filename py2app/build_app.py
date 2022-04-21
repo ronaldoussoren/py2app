@@ -231,13 +231,6 @@ class Target:
                 )
 
 
-def validate_target(dist, attr, value):
-    res = fixup_targets(value, "script")
-    other = {"app": "plugin", "plugin": "app"}
-    if res and getattr(dist, other[attr]):
-        raise DistutilsOptionError("You must specify either app or plugin, not both")
-
-
 def fixup_targets(targets, default_attribute):
     if not targets:
         return targets
