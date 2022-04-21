@@ -47,16 +47,3 @@ class FilterTest(unittest.TestCase):
             self.assertTrue(filters.not_system_filter(Node("/tmp/foo")))
         finally:
             filters.in_system_path = cur_func
-
-    def test_bundle_or_dylib_filter(self):
-        node = Node("dummy.dylib")
-        self.assertFalse(filters.bundle_or_dylib_filter(node))
-
-        node.filetype = "elf"
-        self.assertFalse(filters.bundle_or_dylib_filter(node))
-
-        node.filetype = "bundle"
-        self.assertTrue(filters.bundle_or_dylib_filter(node))
-
-        node.filetype = "dylib"
-        self.assertTrue(filters.bundle_or_dylib_filter(node))

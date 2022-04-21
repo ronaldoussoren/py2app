@@ -75,11 +75,3 @@ def not_system_filter(module):
     Return False if the module is located in a system directory
     """
     return not in_system_path(module.filename)
-
-
-def bundle_or_dylib_filter(module):
-    """
-    Return False if the module does not have a filetype attribute
-    corresponding to a Mach-O bundle or dylib
-    """
-    return getattr(module, "filetype", None) in ("bundle", "dylib")
