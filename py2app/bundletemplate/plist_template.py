@@ -57,7 +57,7 @@ def infoPlistDict(CFBundleExecutable, plist=None):
     pythonInfo.update(
         {
             "PythonLongVersion": sys.version,
-            "PythonShortVersion": ".".join(sys.version_info[:2]),
+            "PythonShortVersion": ".".join(str(x) for x in sys.version_info[:2]),
             "PythonExecutable": sys.executable,
         }
     )
