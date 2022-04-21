@@ -658,7 +658,6 @@ def codesign_adhoc(bundle):
     #    pass
 
     platfiles = list(_macho_find(bundle))
-    print("sign", platfiles)
     while platfiles:
         for file in platfiles:
             failed = []

@@ -985,7 +985,8 @@ class py2app(Command):
             for name, check in rdict.items():
                 rval = check(self, mf)
                 if rval is None:
-                    print(f"--- Skipping recipe {name} ---")
+                    # XXX: Printing skipped recipes is just noise
+                    # print(f"--- Skipping recipe {name} ---")
                     continue
                 # we can pull this off so long as we stop the iter
                 del rdict[name]
@@ -1182,6 +1183,7 @@ class py2app(Command):
             missing_fromimport_conditional = collections.defaultdict(set)
             missing_conditional = collections.defaultdict(set)
 
+            log.info("")
             log.info("checking for any import problems")
             for module in sorted(missing):
                 for m in mf.getReferers(module):
@@ -1415,7 +1417,6 @@ class py2app(Command):
             if dist_info_path is None and (fn.endswith(".pyc") or fn.endswith(".pyo")):
                 dist_info_path = metadata_infos.get(fn[:-1], None)
             if dist_info_path is not None:
-                print("ADD INFO", dist_info_path)
                 included_metadata.add(dist_info_path)
 
         def files_in_dir(toplevel):
