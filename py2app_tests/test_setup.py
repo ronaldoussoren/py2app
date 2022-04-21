@@ -1,8 +1,10 @@
 """
 Tests for typechecking of input arguments
 """
+import os
 import unittest
-from distutils.core import Distribution
+
+from setuptools import Distribution
 
 from py2app.build_app import py2app as py2app_cmd
 
@@ -30,7 +32,7 @@ class TestSetupArguments(unittest.TestCase):
         # No version specified, none in script as well.
         cmd = self.create_cmd(
             name="py2app_test",
-            app=["main.py"],
+            app=[os.path.join(os.path.dirname(__file__), "shell_app/main.py")],
         )
         pl = cmd.get_default_plist()
         self.assertEqual(pl["CFBundleVersion"], "0.0.0")
