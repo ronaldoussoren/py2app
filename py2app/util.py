@@ -1,9 +1,11 @@
+import ast
 import errno
 import os
 import stat
 import subprocess
 import sys
 import time
+import typing
 from distutils import log
 
 import macholib.util
@@ -143,38 +145,40 @@ def newer(source, target):
         return True
 
 
-def find_version(fn):
+def find_version(fn: os.PathLike) -> typing.Optional[str]:
     """
-    Try to find a __version__ assignment in a source file
-    """
-    # XXX: Why does this always return 0.0.0?
-    #     -> Because the code below is python 2 only.
-    return "0.0.0"
-    import compiler
-    from compiler.ast import Assign, AssName, Const, Module, Stmt
+    Try to find a toplevel statement assigning a constant
+    to ``__version__`` and return the value. When multiple
+    assignments are found, use the last one.
 
-    ast = compiler.parseFile(fn)
-    if not isinstance(ast, Module):
-        raise ValueError("expecting Module")
-    statements = ast.getChildNodes()
-    if not (len(statements) == 1 and isinstance(statements[0], Stmt)):
-        raise ValueError("expecting one Stmt")
-    for node in statements[0].getChildNodes():
-        if not isinstance(node, Assign):
+    Returns None when no valid ``__version__`` is found.
+    """
+    with open(fn, "rb") as stream:
+        # Read source in binary mode, reading in text mode
+        # would require handling encoding tokens.
+        source = stream.read()
+
+    module_ast = ast.parse(source, fn)
+
+    # Look for a toplevel assignment statement that sets
+    # __version__ to a constant value
+    #
+    # Don't look inside conditional statement because there's
+    # no good way to assess which branch should be used.
+    #
+    result = None
+    for node in module_ast.body:
+        if not isinstance(node, ast.Assign):
             continue
-        if not len(node.nodes) == 1:
-            continue
-        assName = node.nodes[0]
-        if not (
-            isinstance(assName, AssName)
-            and isinstance(node.expr, Const)
-            and assName.flags == "OP_ASSIGN"
-            and assName.name == "__version__"
-        ):
-            continue
-        return node.expr.value
-    else:
-        raise ValueError("Version not found")
+
+        for t in node.targets:
+            if t.id == "__version__":
+                value = node.value
+                if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                    result = value.value
+                else:
+                    result = None
+    return result
 
 
 def in_system_path(filename):

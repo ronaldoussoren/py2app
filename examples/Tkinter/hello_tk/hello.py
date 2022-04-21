@@ -1,5 +1,7 @@
 import tkinter
 
+__version__ = "2.5b3"
+
 
 class Application(tkinter.Frame):
     def say_hi(self):

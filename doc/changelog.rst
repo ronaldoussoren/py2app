@@ -69,6 +69,9 @@ py2app.0.29
 * Code cleanup: Drop some deprecated internal functions from
   ``py2app.util``.
 
+* Extracting the application version from the ``__version__`` attribute
+  of the main script now actually works.
+
 py2app 0.28
 -----------
 

@@ -37,9 +37,10 @@ The following keyword arguments are used by py2app:
   in the Info.plist (unless the specified plist already contains
   a ``CFBundleVersion`` key).
 
-  By default this is derived from a ``__version__`` attribute of
-  the main script, and set to ``"0.0.0"`` when that attribute is
-  not present.
+  When this keyword argument is not used py2app tries to find a toplevel
+  assignment of a constant string to ``__version__`` in the main script,
+  and uses the last one found. The version is set to ``0.0.0`` When there is
+  no such assignment, or the last assignment uses an expression or non-string value.
 
 * ``app``
 
@@ -195,6 +196,14 @@ Options for 'py2app' command:
      - list of module or package names
      - A list of Python modules or packages to exclude even if they are
        detected by dependency checker.
+
+   * - ``--expected-missing-imports``
+     - expected_missing_imports
+     - A list of Python module/package names that are expected to be missing,
+       or a string starting with a @-sign followed by the name of file containing
+       this list (one name per line).
+
+       This is used to fine-tune error reporting.
 
    * - ``--matplotlib-backends``
      - matplotlib_backends

@@ -256,6 +256,10 @@ def fixup_targets(targets, default_attribute):
     return ret
 
 
+def validate_target(dist, attr, value):
+    fixup_targets(value, "script")
+
+
 def normalize_data_file(fn):
     if isinstance(fn, str):
         fn = convert_path(fn)
@@ -348,16 +352,12 @@ class py2app(Command):
         ("graph", "g", "output module dependency graph"),
         ("xref", "x", "output module cross-reference as html"),
         ("no-strip", None, "do not strip debug and local symbols from output"),
-        # ("compressed", 'c',
-        # "create a compressed zipfile"),
         (
             "no-chdir",
             "C",
             "do not change to the data directory (Contents/Resources) "
             "[forced for plugins]",
         ),
-        # ("no-zip", 'Z',
-        # "do not use a zip file"),
         (
             "semi-standalone",
             "s",
@@ -410,11 +410,11 @@ class py2app(Command):
             "skip macholib phase (app will not be standalone!)",
         ),
         (
+            # XXX: Fetch default architecture to show in help.
             "arch=",
             None,
-            "set of architectures to use (fat, fat3, universal, intel, "
-            "i386, ppc, x86_64; default is the set for the current python "
-            "binary)",
+            "set of architectures to use (x86_64, arm64, universal2; "
+            "default is the set for the current python binary)",
         ),
         (
             "qt-plugins=",
@@ -450,7 +450,6 @@ class py2app(Command):
     ]
 
     boolean_options = [
-        # "compressed",
         "xref",
         "strip",
         "no-strip",
@@ -458,7 +457,6 @@ class py2app(Command):
         "semi-standalone",
         "alias",
         "argv-emulation",
-        # "no-zip",
         "use-pythonpath",
         "use-faulthandler",
         "verbose-interpreter",
@@ -486,9 +484,6 @@ class py2app(Command):
         self.graph = False
         self.no_zip = 0
         self.optimize = None
-        # self.optimize = 0
-        # if hasattr(sys, 'flags'):
-        # self.optimize = sys.flags.optimize
         self.arch = None
         self.strip = True
         self.no_strip = False
@@ -705,21 +700,23 @@ class py2app(Command):
 
         return expected_missing_imports
 
-    def get_default_plist(self):
-        plist = {}
-
+    def get_version(self):
         version = self.distribution.get_version()
-        if version == "0.0.0":
-            try:
-                version = find_version(self.target.script)
-            except ValueError:
-                pass
-
         if not isinstance(version, str):
             raise DistutilsOptionError("Version must be a string")
 
-        if isinstance(version, bytes):
-            raise DistutilsOptionError("Version must be a string")
+        if version == "0.0.0":
+            version = find_version(self.target.script)
+            if version is None:
+                version = "0.0.0"
+
+        assert isinstance(version, str)
+        return version
+
+    def get_default_plist(self):
+        plist = {}
+
+        version = self.get_version()
 
         plist["CFBundleVersion"] = version
 
