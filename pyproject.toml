@@ -37,6 +37,7 @@ classifiers = [
 ]
 dependencies=[
     "setuptools",
+    "rich >= 12.0",
     "altgraph>=0.17",
     "modulegraph>=0.19",
     "macholib>=1.16",

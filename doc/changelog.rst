@@ -78,6 +78,9 @@ py2app.0.29
   name of the entrypoint should now be the file suffix (without leading
   dot).
 
+* Switch from plain prints and distutils.log to using rich for printing
+  progress information.
+
 py2app 0.28
 -----------
 

@@ -251,7 +251,13 @@ def make_loader(fn):
 
 
 def byte_compile(
-    py_files, optimize=0, force=0, target_dir=None, verbose=1, dry_run=0, direct=None
+    py_files,
+    optimize=0,
+    force=0,
+    target_dir=None,
+    progress=None,
+    dry_run=0,
+    direct=None,
 ):
 
     if direct is None:
@@ -263,8 +269,7 @@ def byte_compile(
         from distutils.util import execute, spawn
         from tempfile import NamedTemporaryFile
 
-        if verbose:
-            print("writing byte-compilation script")
+        progress.info("writing byte-compilation script")
         if not dry_run:
             with NamedTemporaryFile(
                 suffix=".py", delete=False, mode="w", encoding="utf-8"
@@ -288,7 +293,7 @@ byte_compile(files, optimize=%r, force=%r,
              verbose=%r, dry_run=0,
              direct=1)
 """
-                    % (optimize, force, target_dir, verbose)
+                    % (optimize, force, target_dir, 1)
                 )
 
         # Ensure that py2app is on PYTHONPATH, this ensures that
@@ -306,12 +311,12 @@ byte_compile(files, optimize=%r, force=%r,
             cmd.insert(3, "-O")
         elif optimize == 2:
             cmd.insert(3, "-OO")
-        spawn(cmd, verbose=verbose, dry_run=dry_run)
+        spawn(cmd, verbose=1, dry_run=dry_run)
         execute(
             os.remove,
             (script_name,),
             "removing %s" % script_name,
-            verbose=verbose,
+            verbose=1,
             dry_run=dry_run,
         )
 
@@ -319,6 +324,7 @@ byte_compile(files, optimize=%r, force=%r,
         from distutils.dir_util import mkpath
         from py_compile import compile
 
+        task_id = progress.add_task("Byte compiling", len(py_files))
         for mod in py_files:
             # Terminology from the py_compile module:
             #   cfile - byte-compiled file
@@ -329,24 +335,15 @@ byte_compile(files, optimize=%r, force=%r,
             else:
                 cfile = mod.identifier.replace(".", os.sep)
 
-                if sys.version_info[:2] <= (3, 4):
-                    if mod.packagepath:
-                        dfile = (
-                            cfile + os.sep + "__init__.py" + (__debug__ and "c" or "o")
-                        )
-                    else:
-                        dfile = cfile + ".py" + (__debug__ and "c" or "o")
+                if mod.packagepath:
+                    dfile = cfile + os.sep + "__init__.pyc"
                 else:
-                    if mod.packagepath:
-                        dfile = cfile + os.sep + "__init__.pyc"
-                    else:
-                        dfile = cfile + ".pyc"
+                    dfile = cfile + ".pyc"
             if target_dir:
                 cfile = os.path.join(target_dir, dfile)
 
             if force or newer(mod.filename, cfile):
-                if verbose:
-                    print(f"byte-compiling {mod.filename} to {dfile}")
+                progress.info(f"byte-compiling {mod.filename} to {dfile}")
 
                 if not dry_run:
                     mkpath(os.path.dirname(cfile))
@@ -371,8 +368,9 @@ byte_compile(files, optimize=%r, force=%r,
                     else:
                         raise RuntimeError("Don't know how to handle %r" % mod.filename)
             else:
-                if verbose:
-                    print(f"skipping byte-compilation of {mod.filename} to {dfile}")
+                progress.info(f"skipping byte-compilation of {mod.filename} to {dfile}")
+            progress.step_task(task_id)
+    progress._progress.stop_task(task_id)
 
 
 SCMDIRS = ["CVS", ".svn", ".hg", ".git"]
@@ -420,13 +418,25 @@ def iter_platform_files(path, is_platform_file=macholib.util.is_platform_file):
                 yield fn
 
 
-def strip_files(files, dry_run=0, verbose=0):
+def strip_files(files, dry_run=0, progress=None):
     """
     Strip the given set of files
     """
     if dry_run:
         return
-    return macholib.util.strip_files(files)
+
+    # XXX: macholib.util.strip_files just calls strip(1)
+    # return macholib.util.strip_files(files)
+
+    task_id = progress.add_task("Stripping binaries", len(files))
+    for name in files:
+        progress.info(f"Stripping {name}")
+        subprocess.check_call(
+            ["/usr/bin/strip", "-x", "-S", "-", name], stderr=subprocess.DEVNULL
+        )
+        progress.step_task(task_id)
+
+    progress._progress.stop_task(task_id)
 
 
 def copy_tree(
@@ -630,13 +640,12 @@ def _dosign(*path):
             "-",
             "--preserve-metadata=identifier,entitlements,flags,runtime",
             "-f",
-            "-vvvv",
         )
         + path,
     )
 
 
-def codesign_adhoc(bundle):
+def codesign_adhoc(bundle, progress):
     """
     (Re)sign a bundle
 
@@ -658,12 +667,17 @@ def codesign_adhoc(bundle):
     #    pass
 
     platfiles = list(_macho_find(bundle))
+
+    task_id = progress.add_task("Signing code", len(platfiles) + 1)
     while platfiles:
         for file in platfiles:
             failed = []
             try:
+                progress.info(f"Signing {file}")
                 _dosign(file)
+                progress.step_task(task_id)
             except subprocess.CalledProcessError:
+                progress.info(f"Signing {file} failed")
                 failed.append(file)
         if failed == platfiles:
             raise RuntimeError(f"Cannot sign bundle {bundle!r}")
@@ -671,8 +685,12 @@ def codesign_adhoc(bundle):
 
     for _ in range(5):
         try:
+            progress.info(f"Signing {bundle}")
             _dosign(bundle)
             break
         except subprocess.CalledProcessError:
+            progress.warning(f"Signing {bundle} failed")
             time.sleep(1)
             continue
+    progress.step_task(task_id)
+    progress._progress.stop_task(task_id)

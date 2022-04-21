@@ -14,7 +14,6 @@ import sys
 import types
 import zipfile
 import zlib
-from distutils import log
 from distutils.errors import DistutilsOptionError, DistutilsPlatformError
 from distutils.sysconfig import get_config_h_filename, get_config_var
 from distutils.util import convert_path, get_platform
@@ -57,6 +56,8 @@ from py2app.util import (
     skipscm,
     strip_files,
 )
+
+from .progress import Progress
 
 PYTHONFRAMEWORK = get_config_var("PYTHONFRAMEWORK")
 
@@ -527,6 +528,8 @@ class py2app(Command):
         self.expected_missing_imports = None
 
     def finalize_options(self):
+        self.progress = Progress()
+
         if sys_base_prefix != sys.prefix:
             self._python_app = os.path.join(sys_base_prefix, "Resources", "Python.app")
 
@@ -674,13 +677,13 @@ class py2app(Command):
             self.expected_missing_imports |= self.always_expected_missing_imports
 
         if self.datamodels:
-            print(
+            self.progress.warning(
                 "WARNING: the datamodels option is deprecated, "
                 "add model files to the list of resources"
             )
 
         if self.mappingmodels:
-            print(
+            self.progress.warning(
                 "WARNING: the mappingmodels option is deprecated, "
                 "add model files to the list of resources"
             )
@@ -822,6 +825,7 @@ class py2app(Command):
         try:
             self._run()
         finally:
+            self.progress.stop()
             sys.path = sys_old_path
 
     def iter_datamodels(self, resdir):
@@ -838,7 +842,7 @@ class py2app(Command):
 
     def compile_datamodels(self, resdir):
         for src, dest in self.iter_datamodels(resdir):
-            print("compile datamodel", src, "->", dest)
+            self.progress.info("compile datamodel", src, "->", dest)
             self.mkpath(os.path.dirname(dest))
             momc(src, dest)
 
@@ -958,7 +962,7 @@ class py2app(Command):
 
         arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
         if arch in ("universal2", "arm64"):
-            codesign_adhoc(self.target.appdir)
+            codesign_adhoc(self.target.appdir, self.progress)
 
     def collect_recipedict(self):
         return dict(iter_recipes())
@@ -985,12 +989,10 @@ class py2app(Command):
             for name, check in rdict.items():
                 rval = check(self, mf)
                 if rval is None:
-                    # XXX: Printing skipped recipes is just noise
-                    # print(f"--- Skipping recipe {name} ---")
                     continue
                 # we can pull this off so long as we stop the iter
                 del rdict[name]
-                print(f"*** using recipe: {name} ***", rval)
+                self.progress.info(f"*** using recipe: {name} ***: {rval}")
 
                 if "expected_missing_imports" in rval:
                     self.expected_missing_imports |= rval.get(
@@ -1047,15 +1049,15 @@ class py2app(Command):
             # traceback.print_exc()
             # pdb.post_mortem(sys.exc_info()[2])
         #
-        print("Done!")
+        self.progress.info("Done!")
 
     def filter_dependencies(self, mf, filters):
-        print("*** filtering dependencies ***")
+        self.progress.info("*** filtering dependencies ***")
         nodes_seen, nodes_removed, nodes_orphaned = mf.filterStack(filters)
-        print("%d total" % (nodes_seen,))
-        print("%d filtered" % (nodes_removed,))
-        print("%d orphaned" % (nodes_orphaned,))
-        print("%d remaining" % (nodes_seen - nodes_removed,))
+        self.progress.info("%d total" % (nodes_seen,))
+        self.progress.info("%d filtered" % (nodes_removed,))
+        self.progress.info("%d orphaned" % (nodes_orphaned,))
+        self.progress.info("%d remaining" % (nodes_seen - nodes_removed,))
 
     def get_appname(self):
         return self.plist["CFBundleName"]
@@ -1065,7 +1067,9 @@ class py2app(Command):
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
         dgraph = os.path.join(appdir, appname + ".html")
-        print(f"*** creating dependency html: {os.path.basename(dgraph)} ***")
+        self.progress.info(
+            f"*** creating dependency html: {os.path.basename(dgraph)} ***"
+        )
         with open(dgraph, "w") as fp:
             mf.create_xref(fp)
 
@@ -1074,7 +1078,9 @@ class py2app(Command):
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
         dgraph = os.path.join(appdir, appname + ".dot")
-        print(f"*** creating dependency graph: {os.path.basename(dgraph)} ***")
+        self.progress.info(
+            f"*** creating dependency graph: {os.path.basename(dgraph)} ***"
+        )
         with open(dgraph, "w") as fp:
             mf.graphreport(fp, flatpackages=flatpackages)
 
@@ -1183,8 +1189,8 @@ class py2app(Command):
             missing_fromimport_conditional = collections.defaultdict(set)
             missing_conditional = collections.defaultdict(set)
 
-            log.info("")
-            log.info("checking for any import problems")
+            self.progress.info("")
+            self.progress.info("checking for any import problems")
             for module in sorted(missing):
                 for m in mf.getReferers(module):
                     if m is None:
@@ -1251,10 +1257,10 @@ class py2app(Command):
                             )
 
                 if len(warnings) > 0:
-                    log.warn("Modules not found (unconditional imports):")
+                    self.progress.warning("Modules not found (unconditional imports):")
                     for msg in warnings:
-                        log.warn(msg)
-                    log.warn("")
+                        self.progress.warning(msg)
+                    self.progress.warning("")
 
             if missing_conditional and not self.no_report_missing_conditional_import:
                 warnings = []
@@ -1293,10 +1299,10 @@ class py2app(Command):
                             )
 
                 if len(warnings) > 0:
-                    log.warn("Modules not found (conditional imports):")
+                    self.progress.warning("Modules not found (conditional imports):")
                     for msg in warnings:
-                        log.warn(msg)
-                    log.warn("")
+                        self.progress.warning(msg)
+                    self.progress.warning("")
 
             if self.report_missing_from_imports and (
                 missing_fromimport
@@ -1305,9 +1311,9 @@ class py2app(Command):
                     and missing_fromimport_conditional
                 )
             ):
-                log.warn("Modules not found ('from ... import y'):")
+                self.progress.warning("Modules not found ('from ... import y'):")
                 for m in sorted(missing_fromimport):
-                    log.warn(
+                    self.progress.warning(
                         " * {} ({})".format(m, ", ".join(sorted(missing_fromimport[m])))
                     )
 
@@ -1315,24 +1321,24 @@ class py2app(Command):
                     not self.no_report_missing_conditional_import
                     and missing_fromimport_conditional
                 ):
-                    log.warn("")
-                    log.warn("Conditional:")
+                    self.progress.warning("")
+                    self.progress.warning("Conditional:")
                     for m in sorted(missing_fromimport_conditional):
-                        log.warn(
+                        self.progress.warning(
                             " * %s (%s)"
                             % (m, ", ".join(sorted(missing_fromimport_conditional[m])))
                         )
-                log.warn("")
+                self.progress.warning("")
 
         if syntax_error:
-            log.warn("Modules with syntax errors:")
+            self.progress.warning("Modules with syntax errors:")
             for module in sorted(syntax_error):
-                log.warn(" * %s" % (module.identifier))
+                self.progress.warning(" * %s" % (module.identifier))
 
-            log.warn("")
+            self.progress.warning("")
 
         if invalid_relative_import:
-            log.warn("Modules with invalid relative imports:")
+            self.progress.warning("Modules with invalid relative imports:")
 
             imports = collections.defaultdict(set)
 
@@ -1341,16 +1347,16 @@ class py2app(Command):
                     imports[n.identifier].add(module.relative_path)
 
             for mod in sorted(imports):
-                log.warn(
+                self.progress.warning(
                     " * {} (importing {})".format(mod, ", ".join(sorted(imports[mod])))
                 )
 
         if invalid_bytecode:
-            log.warn("Modules with invalid bytecode:")
+            self.progress.warning("Modules with invalid bytecode:")
             for module in sorted(invalid_bytecode):
-                log.warn(" * %s" % (module.identifier))
+                self.progress.warning(" * %s" % (module.identifier))
 
-            log.warn("")
+            self.progress.warning("")
 
     def create_directories(self):
         bdist_base = self.bdist_base
@@ -1390,7 +1396,7 @@ class py2app(Command):
         self.mkpath(self.framework_dir)
 
     def create_binaries(self, py_files, pkgdirs, extensions, loader_files):
-        print("*** create binaries ***")
+        self.progress.info("*** create binaries ***")
         dist = self.distribution
         pkgexts = []
         copyexts = []
@@ -1451,13 +1457,13 @@ class py2app(Command):
             extmap[fn] = ext
 
         # byte compile the python modules into the target directory
-        print("*** byte compile python files ***")
+        self.progress.info("*** byte compile python files ***")
         byte_compile(
             py_files,
             target_dir=self.collect_dir,
             optimize=self.optimize,
             force=self.force,
-            verbose=self.verbose,
+            progress=self.progress,
             dry_run=self.dry_run,
         )
 
@@ -1594,7 +1600,7 @@ class py2app(Command):
             arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
 
             if arch in ("universal2", "arm64"):
-                codesign_adhoc(self.target.appdir)
+                codesign_adhoc(self.target.appdir, self.progress)
         self.app_files.append(dst)
 
     def copy_package_data(self, package, target_dir):
@@ -1673,7 +1679,7 @@ class py2app(Command):
         for dirpath, dnames, _fnames in os.walk(self.appdir):
             for nm in list(dnames):
                 if nm.endswith(".dSYM"):
-                    print(f"removing debug info: {dirpath}/{nm}")
+                    self.progress.info(f"removing debug info: {dirpath}/{nm}")
                     shutil.rmtree(os.path.join(dirpath, nm))
                     dnames.remove(nm)
         return [file for file in platfiles if ".dSYM" not in file]
@@ -1684,16 +1690,12 @@ class py2app(Command):
         for fn in files:
             unstripped += os.stat(fn).st_size
             stripfiles.append(fn)
-            log.info("stripping %s", os.path.basename(fn))
-        strip_files(stripfiles, dry_run=self.dry_run, verbose=self.verbose)
+        strip_files(stripfiles, dry_run=self.dry_run, progress=self.progress)
         stripped = 0
         for fn in stripfiles:
             stripped += os.stat(fn).st_size
-        log.info(
-            "stripping saved %d bytes (%d / %d)",
-            unstripped - stripped,
-            stripped,
-            unstripped,
+        self.progress.info(
+            f"stripping saved {unstripped - stripped} bytes ({stripped} / {unstripped})",
         )
 
     def copy_dylib(self, src, dst):
@@ -1892,7 +1894,9 @@ class py2app(Command):
                 )
 
             if self.site_packages or self.alias:
-                print("Add paths for VENV", real_prefix, global_site_packages)
+                self.progress.info(
+                    "Add paths for VENV", real_prefix, global_site_packages
+                )
                 prescripts.append("virtualenv_site_packages")
                 prescripts.append(
                     StringIO(
@@ -2004,7 +2008,7 @@ class py2app(Command):
         base = target.get_dest_base()
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
-        print(f"*** creating plugin bundle: {appname} ***")
+        self.progress.info(f"*** creating plugin bundle: {appname} ***")
         if self.runtime_preferences and use_runtime_preference:
             self.plist.setdefault("PyRuntimeLocations", self.runtime_preferences)
         appdir, plist = create_pluginbundle(
@@ -2021,7 +2025,7 @@ class py2app(Command):
         base = target.get_dest_base()
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
-        print(f"*** creating application bundle: {appname} ***")
+        self.progress.info(f"*** creating application bundle: {appname} ***")
         if self.runtime_preferences and use_runtime_preference:
             self.plist.setdefault("PyRuntimeLocations", self.runtime_preferences)
         pythonInfo = self.plist.setdefault("PythonInfoDict", {})
@@ -2190,7 +2194,7 @@ class py2app(Command):
             target_dir=resdir,
             optimize=self.optimize,
             force=self.force,
-            verbose=self.verbose,
+            progress=self.progress,
             dry_run=self.dry_run,
         )
         if not self.dry_run:
@@ -2355,12 +2359,16 @@ class py2app(Command):
         pathname = os.path.join(self.temp_dir, "%s.py" % slashname)
         if os.path.exists(pathname):
             if self.verbose:
-                print(f"skipping python loader for extension {item.identifier!r}")
+                self.progress.info(
+                    f"skipping python loader for extension {item.identifier!r}"
+                )
         else:
             self.mkpath(os.path.dirname(pathname))
             # and what about dry_run?
             if self.verbose:
-                print(f"creating python loader for extension {item.identifier!r}")
+                self.progress.info(
+                    f"creating python loader for extension {item.identifier!r}"
+                )
 
             fname = slashname + os.path.splitext(item.filename)[1]
             source = make_loader(fname)
