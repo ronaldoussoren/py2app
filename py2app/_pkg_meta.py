@@ -1,9 +1,18 @@
 import os
+import typing
 
 IGNORED_DISTINFO = {"installed-files.txt", "RECORD"}  # noqa: C405
 
+# XXX: This should use pathlib.Path instead of os.PathLike and string,
+# but that requires changes to all users of this module.
+InfoDict = typing.Dict[
+    typing.Union[str, os.PathLike[str]], typing.Union[str, os.PathLike[str]]
+]
 
-def update_metadata_cache_distinfo(infos, dist_info_path):
+
+def update_metadata_cache_distinfo(
+    infos: InfoDict, dist_info_path: typing.Union[str, os.PathLike[str]]
+) -> None:
     """
     Update mapping from filename to dist_info directory
     for all files installed by the package described
@@ -41,7 +50,9 @@ def update_metadata_cache_distinfo(infos, dist_info_path):
                 ] = dist_info_path
 
 
-def update_metadata_cache_distlink(infos, dist_link_path):
+def update_metadata_cache_distlink(
+    infos: InfoDict, dist_link_path: typing.Union[str, os.PathLike[str]]
+) -> None:
     """
     Update mapping from filename to dist_info directory
     for all files in the package installed in editable mode.
@@ -82,7 +93,11 @@ def update_metadata_cache_distlink(infos, dist_link_path):
     add_recursive(infos, dist_info_path, to_include)
 
 
-def add_recursive(infos, dist_info_path, to_include):
+def add_recursive(
+    infos: InfoDict,
+    dist_info_path: typing.Union[str, os.PathLike[str]],
+    to_include: typing.Sequence[typing.Union[str, os.PathLike[str]]],
+):
     """Add items from to_include to infos, recursively
     walking into directories"""
     for item in to_include:
@@ -97,13 +112,13 @@ def add_recursive(infos, dist_info_path, to_include):
             infos[item] = dist_info_path
 
 
-def scan_for_metadata(path):
+def scan_for_metadata(path: typing.Sequence[str]):
     """
     Scan the importlib search path *path* for dist-info/egg-info
     directories and return a mapping from absolute paths of installed
     files to their egg-info location
     """
-    infos = {}
+    infos: InfoDict = {}
     for dirname in path:
         if not os.path.isdir(dirname):
             continue
