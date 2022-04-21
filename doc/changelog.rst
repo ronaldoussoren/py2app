@@ -72,6 +72,8 @@ py2app.0.29
 * Extracting the application version from the ``__version__`` attribute
   of the main script now actually works.
 
+* Fix ``PythonShortVersion`` key in ``Info.plist`` for Python 3.10 or later
+
 py2app 0.28
 -----------
 

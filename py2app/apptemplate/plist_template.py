@@ -46,7 +46,7 @@ def infoPlistDict(CFBundleExecutable, plist={}):  # noqa: B006, M511
     pythonInfo.update(
         {
             "PythonLongVersion": sys.version,
-            "PythonShortVersion": sys.version[:3],
+            "PythonShortVersion": ".".join(sys.version_info[:2]),
             "PythonExecutable": sys.executable,
         }
     )
