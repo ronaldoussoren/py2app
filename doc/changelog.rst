@@ -21,6 +21,18 @@ py2app.0.29
   The system version of Tcl/Tk is deprecated, and is buggy enough
   that it is never a good option to use for Python applications.
 
+* Previous versions would try to ``eval()``
+  the ``app`` and ``plugin`` keyword arguments, with unspecified
+  values in the local and global namespaces e.g.:
+
+  .. sourcecode:: python
+
+     setup(
+         app="[{ 'script': 'foo.py' }]"
+     )
+
+  This undocumented behaviour was removed.
+
 * #423: The code is now formatted with black.
 
   This is enforced by pre-commit configuration.

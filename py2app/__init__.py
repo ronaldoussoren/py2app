@@ -1,5 +1,5 @@
 """
-builds Mac OS X application bundles from Python scripts
+builds macOS application and plugin bundles from Python scripts
 
 New keywords for distutils' setup function specify what to build:
 

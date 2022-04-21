@@ -241,10 +241,10 @@ def validate_target(dist, attr, value):
 def fixup_targets(targets, default_attribute):
     if not targets:
         return targets
-    try:
-        targets = eval(targets)
-    except:  # noqa: E722,B001
-        pass
+
+    if isinstance(targets, str):
+        raise DistutilsOptionError("Target definition should be a sequence")
+
     ret = []
     for target_def in targets:
         if isinstance(target_def, str):

@@ -148,6 +148,7 @@ def find_version(fn):
     Try to find a __version__ assignment in a source file
     """
     # XXX: Why does this always return 0.0.0?
+    #     -> Because the code below is python 2 only.
     return "0.0.0"
     import compiler
     from compiler.ast import Assign, AssName, Const, Module, Stmt
