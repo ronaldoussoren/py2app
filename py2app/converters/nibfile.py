@@ -4,9 +4,9 @@ Automatic compilation of XIB files
 
 import os
 import subprocess
+from subprocess import check_output
 
 from py2app.decorators import converts
-from py2app.util import check_output
 
 
 # _run_nibtool is an experiment while researching an odd
