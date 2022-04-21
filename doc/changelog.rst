@@ -74,6 +74,10 @@ py2app.0.29
 
 * Fix ``PythonShortVersion`` key in ``Info.plist`` for Python 3.10 or later
 
+* Changed the (undocumented) entrypoint for resource converters, the
+  name of the entrypoint should now be the file suffix (without leading
+  dot).
+
 py2app 0.28
 -----------
 

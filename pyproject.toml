@@ -62,10 +62,10 @@ app =    "py2app.build_app:validate_target"
 plugin = "py2app.build_app:validate_target"
 
 [project.entry-points."py2app.converter"]
-xib          = "py2app.converters.nibfile:convert_xib"
-nib          = "py2app.converters.nibfile:convert_nib"
-datamodel    = "py2app.converters.coredata:convert_datamodel"
-mappingmodel = "py2app.converters.coredata:convert_mappingmodel"
+xib            = "py2app.converters.nibfile:convert_xib"
+nib            = "py2app.converters.nibfile:convert_nib"
+xcdatamodel    = "py2app.converters.coredata:convert_datamodel"
+xcmappingmodel = "py2app.converters.coredata:convert_mappingmodel"
 
 [tool.flit.sdist]
 exclude = [".github"]

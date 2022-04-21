@@ -6,8 +6,6 @@ import os
 import subprocess
 from subprocess import check_output
 
-from py2app.decorators import converts
-
 
 # _run_nibtool is an experiment while researching an odd
 # failure of py2app: when _run_nibtool is None py2app will often
@@ -47,7 +45,6 @@ def _get_ibtool():
     return gTool
 
 
-@converts(suffix=".xib")
 def convert_xib(source, destination, dry_run=0):
     destination = destination[:-4] + ".nib"
 
@@ -61,7 +58,6 @@ def convert_xib(source, destination, dry_run=0):
         _run_nibtool(source, destination)
 
 
-@converts(suffix=".nib")
 def convert_nib(source, destination, dry_run=0):
     destination = destination[:-4] + ".nib"
     print(f"compile {source} -> {destination}")

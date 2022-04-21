@@ -3,12 +3,13 @@ Automatic compilation of CoreData model files
 """
 import os
 
-from py2app.decorators import converts
 from py2app.util import mapc, momc
 
 
-@converts(suffix=".xcdatamodel")
 def convert_datamodel(source, destination, dry_run=0):
+    """
+    Convert an .xcdatamodel to a .mom
+    """
     destination = os.path.splitext(destination)[0] + ".mom"
 
     if dry_run:
@@ -17,8 +18,10 @@ def convert_datamodel(source, destination, dry_run=0):
     momc(source, destination)
 
 
-@converts(suffix=".xcmappingmodel")
 def convert_mappingmodel(source, destination, dry_run=0):
+    """
+    Convert an .xcmappingmodel to a .cdm
+    """
     destination = destination[:-4] + ".cdm"
 
     if dry_run:

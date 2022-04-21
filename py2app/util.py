@@ -21,12 +21,12 @@ def find_converter(source):
     if not gConverterTab:
         for ep in pkg_resources.iter_entry_points("py2app.converter"):
             function = ep.load()
-            if not hasattr(function, "py2app_suffix"):
-                print(
-                    "WARNING: %s does not have 'py2app_suffix' attribute" % (function)
-                )
-                continue
-            gConverterTab[function.py2app_suffix] = function
+            if hasattr(function, "py2app_suffix"):
+                print(f"WARNING: using 'py2app_suffix' is deprecated for {function}")
+                suffix = function.py2app_suffix
+            else:
+                suffix = f".{ep.name}"
+            gConverterTab[suffix] = function
 
     basename, suffix = os.path.splitext(source)
     try:
