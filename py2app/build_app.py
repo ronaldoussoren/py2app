@@ -1895,7 +1895,7 @@ class py2app(Command):
 
             if self.site_packages or self.alias:
                 self.progress.info(
-                    "Add paths for VENV", real_prefix, global_site_packages
+                    f"Add paths for VENV ({real_prefix}, {global_site_packages}"
                 )
                 prescripts.append("virtualenv_site_packages")
                 prescripts.append(
@@ -2453,7 +2453,10 @@ class py2app(Command):
         return copy_file(infile, outfile, progress=self.progress)
 
     def mkpath(self, name, mode=0o777):
-        self.progress.trace(f"creating {name}")
+        if hasattr(self, "progress"):
+            # XXX: Workaround for a failing test, should no
+            # longer be necessary when the code gets restructured.
+            self.progress.trace(f"creating {name}")
         if self.dry_run:
             return
 

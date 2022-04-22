@@ -26,6 +26,7 @@ class TestSetupArguments(unittest.TestCase):
             version="1.0",
             app=["main.py"],
         )
+        cmd.progress._progress.stop()
         pl = cmd.get_default_plist()
         self.assertEqual(pl["CFBundleVersion"], "1.0")
 
@@ -36,6 +37,7 @@ class TestSetupArguments(unittest.TestCase):
         )
         pl = cmd.get_default_plist()
         self.assertEqual(pl["CFBundleVersion"], "0.0.0")
+        cmd.progress._progress.stop()
 
         # A bit annoyinly distutils will automatically convert
         # integers to strings:
@@ -43,3 +45,4 @@ class TestSetupArguments(unittest.TestCase):
         pl = cmd.get_default_plist()
         self.assertEqual(pl["CFBundleVersion"], "1")
         self.assertEqual(cmd.distribution.get_version(), "1")
+        cmd.progress._progress.stop()

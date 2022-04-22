@@ -300,10 +300,10 @@ files = [
                     """
 byte_compile(files, optimize=%r, force=%r,
              target_dir=%r,
-             verbose=%r, dry_run=0,
+             progress=None, dry_run=0,
              direct=1)
 """
-                    % (optimize, force, target_dir, 1)
+                    % (optimize, force, target_dir)
                 )
 
         # Ensure that py2app is on PYTHONPATH, this ensures that
@@ -333,7 +333,8 @@ byte_compile(files, optimize=%r, force=%r,
     else:
         from py_compile import compile
 
-        task_id = progress.add_task("Byte compiling", len(py_files))
+        if progress is not None:
+            task_id = progress.add_task("Byte compiling", len(py_files))
         for mod in py_files:
             # Terminology from the py_compile module:
             #   cfile - byte-compiled file
@@ -352,11 +353,13 @@ byte_compile(files, optimize=%r, force=%r,
                 cfile = os.path.join(target_dir, dfile)
 
             if force or newer(mod.filename, cfile):
-                progress.trace(f"byte-compiling {mod.filename} to {dfile}")
+                if progress is not None:
+                    progress.trace(f"byte-compiling {mod.filename} to {dfile}")
 
                 if not dry_run:
                     if not os.path.exists(os.path.dirname(cfile)):
-                        progress.trace(f"create {os.path.dirname(cfile)}")
+                        if progress is not None:
+                            progress.trace(f"create {os.path.dirname(cfile)}")
                         os.makedirs(os.path.dirname(cfile), 0o777)
                     suffix = os.path.splitext(mod.filename)[1]
 
@@ -379,9 +382,16 @@ byte_compile(files, optimize=%r, force=%r,
                     else:
                         raise RuntimeError("Don't know how to handle %r" % mod.filename)
             else:
-                progress.info(f"skipping byte-compilation of {mod.filename} to {dfile}")
-            progress.step_task(task_id)
-    progress._progress.stop_task(task_id)
+                if progress is not None:
+                    progress.info(
+                        f"skipping byte-compilation of {mod.filename} to {dfile}"
+                    )
+
+            if progress is not None:
+                progress.step_task(task_id)
+
+        if progress is not None:
+            progress._progress.stop_task(task_id)
 
 
 SCMDIRS = ["CVS", ".svn", ".hg", ".git"]
@@ -664,7 +674,7 @@ def _dosign(*path, progress=None):
     xit = p.wait()
     if xit != 0:
         progress.warning(f"{path}: {out}")
-        raise subprocess.CalledProcessError
+        raise subprocess.CalledProcessError(xit, "codesign")
 
 
 def codesign_adhoc(bundle, progress):
