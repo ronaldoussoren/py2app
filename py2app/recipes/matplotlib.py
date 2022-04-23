@@ -1,6 +1,7 @@
 import os
 
-from pkg_resources import packaging
+# XXX: Only used for parsing version numbers
+import packaging
 
 
 def check(cmd, mf):

@@ -2,20 +2,13 @@ def _setup_pkgresources():
     import os
     import plistlib
 
-    import pkg_resources
+    import pkg_resources  # noqa: I251
 
-    if hasattr(plistlib, "load"):
-        with open(
-            os.path.join(os.path.dirname(os.getenv("RESOURCEPATH")), "Info.plist"), "rb"
-        ) as fp:
+    with open(
+        os.path.join(os.path.dirname(os.getenv("RESOURCEPATH")), "Info.plist"), "rb"
+    ) as fp:
 
-            pl = plistlib.load(fp)
-
-    else:
-        # 2.7
-        pl = plistlib.readPlist(
-            os.path.join(os.path.dirname(os.getenv("RESOURCEPATH")), "Info.plist")
-        )
+        pl = plistlib.load(fp)
 
     appname = pl.get("CFBundleIdentifier")
     if appname is None:

@@ -1,7 +1,7 @@
 import glob
+import importlib.resources
+import io
 import os
-
-import pkg_resources
 
 
 def check(cmd, mf):
@@ -18,7 +18,10 @@ def check(cmd, mf):
 
     plugin_dir = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath)
 
-    resources = [pkg_resources.resource_filename("py2app", "recipes/qt.conf")]
+    resource_data = importlib.resources.read_text("py2app.recipes", "qt.conf")
+    resource_fp = io.StringIO(resource_data)
+    resource_fp.name = "qt.conf"
+    resources = [("", [resource_fp])]
     for item in cmd.qt_plugins:
         if "/" not in item:
             item = item + "/*"

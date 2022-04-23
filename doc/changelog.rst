@@ -21,6 +21,9 @@ py2app.0.29
   The system version of Tcl/Tk is deprecated, and is buggy enough
   that it is never a good option to use for Python applications.
 
+* Use the ``install_requires`` keyword in the ``setup()`` call
+  is deprecated and will be removed in a future version.
+
 * Previous versions would try to ``eval()``
   the ``app`` and ``plugin`` keyword arguments, with unspecified
   values in the local and global namespaces e.g.:
@@ -80,6 +83,9 @@ py2app.0.29
 
 * Switch from plain prints and distutils.log to using rich for printing
   progress information.
+
+* Switch to ``importlib.metadata`` and ``importlib.resources`` from ``pkg_resources``
+  where possible. This is enforced by a pre-commit check.
 
 py2app 0.28
 -----------

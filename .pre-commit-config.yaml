@@ -44,6 +44,7 @@ repos:
         - flake8-todo
         - flake8-builtins
         - flake8-raise
+        - flake8-tidy-imports
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.2.0

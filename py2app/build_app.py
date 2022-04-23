@@ -23,7 +23,6 @@ from itertools import chain
 import macholib.dyld
 import macholib.MachO
 import macholib.MachOStandalone
-import pkg_resources
 from modulegraph import modulegraph, zipio
 from modulegraph.find_modules import find_modules, find_needed_modules, parse_mf_results
 from modulegraph.modulegraph import Package, Script, SourceModule
@@ -594,8 +593,15 @@ class py2app(Command):
         # included by apptemplate
         self.excludes.add("site")
         if getattr(self.distribution, "install_requires", None):
-            self.includes.add("pkg_resources")
+            self.progress.warning("Using 'install_requires' with py2app is deprecated")
+            self.includes.add("pkg_resources")  # XXX: Why is this needed?
+
+            # XXX: Local import to minimize the impact of using pkg_resources,
+            #      to be removed.
+            import pkg_resources  # noqa: I251
+
             self.eggs = pkg_resources.require(self.distribution.install_requires)
+            del pkg_resources
 
         # Setuptools/distribute style namespace packages uses
         # __import__('pkg_resources'), and that import isn't detected at the
@@ -634,12 +640,7 @@ class py2app(Command):
             with open(self.plist, "rb") as fp:
                 self.plist = plistlib.load(fp)
 
-        # XXX: Clean up...
-        if hasattr(plistlib, "Dict") and isinstance(self.plist, plistlib.Dict):
-            # 2.7
-            self.plist = dict(self.plist.__dict__)
-        else:
-            self.plist = dict(self.plist)
+        self.plist = dict(self.plist)
 
         self.set_undefined_options(
             "bdist", ("dist_dir", "dist_dir"), ("bdist_base", "bdist_base")
@@ -885,7 +886,10 @@ class py2app(Command):
         allres = chain(getattr(dist, "data_files", ()) or (), self.resources)
         for (path, files) in (normalize_data_file(fn) for fn in allres):
             for fn in files:
-                yield fn, os.path.join(path, os.path.basename(fn))
+                if hasattr(fn, "name"):
+                    yield fn, os.path.join(path, os.path.basename(fn.name))
+                else:
+                    yield fn, os.path.join(path, os.path.basename(fn))
 
     def collect_scripts(self):
         # these contains file names
@@ -1092,7 +1096,7 @@ class py2app(Command):
             ):
                 # Include all "maybe_packages" that are reachable from
                 # the root of the graph.
-                self.packages.append(item)
+                self.packages.add(item.identifier)
 
             if isinstance(item, Package) and item.filename == "-":
                 # In python3.3 or later the default importer supports namespace
@@ -1126,6 +1130,7 @@ class py2app(Command):
                 [
                     os.path.join(os.path.realpath(self.get_bootstrap(pkg)), "")
                     for pkg in self.packages
+                    if print(pkg, type(pkg)) or True  # XXX
                 ],
             )
         )
@@ -1283,7 +1288,16 @@ class py2app(Command):
                                 continue
 
                         else:
-                            o = __import__(m)
+                            try:
+                                o = __import__(m)
+                            except:  # noqa: E722, B001
+                                # Import may fail with other exceptions as well...
+                                if self.may_log_missing(m):
+                                    warnings.append(
+                                        " * %s (%s)"
+                                        % (m, ", ".join(sorted(missing_conditional[m])))
+                                    )
+                                continue
 
                         if isinstance(o, types.ModuleType):
                             if self.may_log_missing(m):

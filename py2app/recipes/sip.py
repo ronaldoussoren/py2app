@@ -11,9 +11,9 @@ detected by the python code in py2app).
 """
 
 import glob
+import importlib.resources
+import io
 import os
-
-import pkg_resources
 
 
 class Sip:
@@ -116,7 +116,10 @@ class Sip:
                 print(f"WARNING: ImportError in sip recipe ignored: {exc}")
 
         if mf.findNode("PyQt4") is not None or mf.findNode("PyQt5") is not None:
-            resources = [pkg_resources.resource_filename("py2app", "recipes/qt.conf")]
+            resource_data = importlib.resources.read_text("py2app.recipes", "qt.conf")
+            resource_fp = io.StringIO(resource_data)
+            resource_fp.name = "qt.conf"
+            resources = [("", [resource_fp])]
 
             for item in cmd.qt_plugins:
                 if "/" not in item:

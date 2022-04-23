@@ -1,5 +1,6 @@
 import ast
 import errno
+import importlib.metadata
 import os
 import stat
 import subprocess
@@ -8,7 +9,6 @@ import time
 import typing
 
 import macholib.util
-import pkg_resources
 from macholib.util import is_platform_file
 from modulegraph import zipio
 from modulegraph.find_modules import PY_SUFFIXES
@@ -18,7 +18,7 @@ gConverterTab = {}
 
 def find_converter(source):
     if not gConverterTab:
-        for ep in pkg_resources.iter_entry_points("py2app.converter"):
+        for ep in importlib.metadata.entry_points(group="py2app.converter"):
             function = ep.load()
             if hasattr(function, "py2app_suffix"):
                 print(f"WARNING: using 'py2app_suffix' is deprecated for {function}")
@@ -39,6 +39,21 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
     """
     Copy a resource file into the application bundle
     """
+    if hasattr(source, "getvalue"):
+        if not dry_run:
+            contents = source.getvalue()
+
+            if isinstance(contents, bytes):
+                mode = "wb"
+            else:
+                mode = "w"
+
+            if os.path.exists(destination):
+                os.unlink(destination)
+            with open(destination, mode) as fp:
+                fp.write(contents)
+        return
+
     converter = find_converter(source)
     if converter is not None:
         converter(source, destination, dry_run=dry_run)

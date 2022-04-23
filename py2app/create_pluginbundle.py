@@ -1,9 +1,8 @@
+import importlib.resources
 import os
 import plistlib
 import shutil
 import sys
-
-from pkg_resources import resource_filename
 
 import py2app.bundletemplate
 from py2app.util import make_exec, makedirs, mergecopy, mergetree, skipscm
@@ -41,11 +40,7 @@ def create_pluginbundle(
     plistPath = os.path.join(contents, "Info.plist")
     if os.path.exists(plistPath):
         with open(plistPath, "rb") as fp:
-            if hasattr(plistlib, "load"):
-                contents = plistlib.load(fp)
-            else:
-                # 2.7
-                contents = plistlib.readPlist(fp)
+            contents = plistlib.load(fp)
 
             if plist != contents:
                 for d in dirs:
@@ -64,12 +59,13 @@ def create_pluginbundle(
         fp.write(kw["CFBundlePackageType"] + kw["CFBundleSignature"])
     copy(srcmain, destmain)
     make_exec(destmain)
-    mergetree(
-        resource_filename(module.__name__, "lib"),
-        resources,
-        condition=condition,
-        copyfn=copy,
-    )
+    with importlib.resources.path(module.__name__, "lib") as p:
+        mergetree(
+            str(p),
+            resources,
+            condition=condition,
+            copyfn=copy,
+        )
     return plugin, plist
 
 
