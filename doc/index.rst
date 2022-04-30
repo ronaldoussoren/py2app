@@ -6,6 +6,11 @@ to make standalone application bundles and plugins from Python
 scripts. py2app is similar in purpose and design to `py2exe`_ for
 Windows.
 
+.. note::
+
+   Py2app must be run on macOS and cannot be used to cross build
+   macOS applications on Windows or Linux.
+
 Contents
 --------
 
