@@ -1,5 +1,7 @@
-from importlib.metadata import packages_distributions
-
+try:
+    from importlib.metadata import distributions # importlib for python 3.9 and later
+except ImportError:
+    from importlib.metadata import packages_distributions as distributions
 
 def check(cmd, mf):
     m = mf.findNode("black")
@@ -13,7 +15,7 @@ def check(cmd, mf):
     # unusual name, e.g. 610faff656c4cfcbb4a3__mypyc; extract
     # the name from the list of toplevels.
     includes = set()
-    for toplevel, dists in packages_distributions():
+    for toplevel, dists in distributions():
         if "black" not in dists:
             continue
 
