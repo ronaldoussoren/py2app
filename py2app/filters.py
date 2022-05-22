@@ -1,11 +1,11 @@
-import os
+import pathlib
 import sys
 
 from macholib.util import in_system_path
 from modulegraph import modulegraph
 
 
-def has_filename_filter(module):
+def has_filename_filter(module: modulegraph.Node) -> bool:
     if isinstance(module, modulegraph.MissingModule):
         return True
     if hasattr(modulegraph, "InvalidRelativeImport") and isinstance(
@@ -15,62 +15,44 @@ def has_filename_filter(module):
     return getattr(module, "filename", None) is not None
 
 
-def not_stdlib_filter(module, prefix=None):
+def _is_site_path(relpath: pathlib.Path) -> bool:
+    return bool(any(x in relpath.parts for x in {"site-python", "site-packages"}))
+
+
+def not_stdlib_filter(module: modulegraph.Node) -> bool:
     """
     Return False if the module is located in the standard library
     """
-    if prefix is None:
-        prefix = sys.prefix
+
     if module.filename is None:
         return True
 
-    prefix = os.path.join(os.path.realpath(prefix), "")
+    prefix = pathlib.Path(sys.prefix).resolve()
+    rp = pathlib.Path(module.filename).resolve()
 
-    rp = os.path.realpath(module.filename)
-    if rp.startswith(prefix):
-        rest = rp[len(prefix) :]  # noqa: E203
-        if "/site-python/" in rest:
-            return True
-        elif "/site-packages/" in rest:
-            return True
-        else:
-            return False
+    if rp.is_relative_to(prefix):
+        return _is_site_path(rp.relative_to(prefix))
 
-    if os.path.exists(os.path.join(prefix, ".Python")):
+    if (prefix / ".Python").exists():
         # Virtualenv
-        fn = os.path.join(
-            prefix, "lib", "python%d.%d" % (sys.version_info[:2]), "orig-prefix.txt"
-        )
+        v = sys.version_info
+        fn = prefix / "lib" / f"python{v[0]}.{v[1]}" / "orig-prefix.txt"
 
-        if os.path.exists(fn):
-            with open(fn) as fp:
-                prefix = fp.read().strip()
-
-            if rp.startswith(prefix):
-                rest = rp[len(prefix) :]  # noqa: E203
-                if "/site-python/" in rest:
-                    return True
-                elif "/site-packages/" in rest:
-                    return True
-                else:
-                    return False
+        if fn.exists():
+            prefix = pathlib.Path(fn.read_text().strip())
+            if rp.is_relative_to(prefix):
+                return _is_site_path(rp.relative_to(prefix))
 
     if hasattr(sys, "base_prefix"):
         # Venv
-        prefix = os.path.join(os.path.realpath(sys.base_prefix), "")
-        if rp.startswith(prefix):
-            rest = rp[len(prefix) :]  # noqa: E203
-            if "/site-python/" in rest:
-                return True
-            elif "/site-packages/" in rest:
-                return True
-            else:
-                return False
+        prefix = pathlib.Path(sys.base_prefix).resolve()
+        if rp.is_relative_to(prefix):
+            return _is_site_path(rp.relative_to(prefix))
 
     return True
 
 
-def not_system_filter(module):
+def not_system_filter(module: modulegraph.Node) -> bool:
     """
     Return False if the module is located in a system directory
     """
