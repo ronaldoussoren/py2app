@@ -94,6 +94,12 @@ py2app.0.29
   to non-blocking when compiling NIB files. I've added a context manager that
   resets the non-blocking status of these streams.
 
+* Drop support for ancient versions of Xcode
+
+  The code now assumes that the "xcrun" command exists and can be
+  used to find converter tools, and no longer contains hardcoded
+  paths for some of the tools for use with Xcode 3.
+
 py2app 0.28
 -----------
 

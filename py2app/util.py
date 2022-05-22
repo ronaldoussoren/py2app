@@ -613,60 +613,26 @@ def find_app(app):
 _tools = {}
 
 
-def _get_tool(toolname):
+def get_tool(toolname):
     if toolname not in _tools:
-        if os.path.exists("/usr/bin/xcrun"):
-            try:
-                _tools[toolname] = subprocess.check_output(
-                    ["/usr/bin/xcrun", "-find", toolname]
-                )[:-1]
-            except subprocess.CalledProcessError:
-                raise OSError(f"Tool {toolname!r} not found")
+        try:
+            _tools[toolname] = subprocess.check_output(
+                ["/usr/bin/xcrun", "-find", toolname]
+            )[:-1]
+        except subprocess.CalledProcessError:
+            raise OSError(f"Tool {toolname!r} not found")
 
-        else:
-            # Support for Xcode 3.x and earlier
-            if toolname == "momc":
-                choices = [
-                    (
-                        "/Library/Application Support/Apple/"
-                        "Developer Tools/Plug-ins/XDCoreDataModel.xdplugin/"
-                        "Contents/Resources/momc"
-                    ),
-                    (
-                        "/Developer/Library/Xcode/Plug-ins/"
-                        "XDCoreDataModel.xdplugin/Contents/Resources/momc"
-                    ),
-                    "/Developer/usr/bin/momc",
-                ]
-            elif toolname == "mapc":
-                choices = [
-                    (
-                        "/Developer/Library/Xcode/Plug-ins/"
-                        "XDMappingModel.xdplugin/"
-                        "Contents/Resources/mapc",
-                    ),
-                    "/Developer/usr/bin/mapc",
-                ]
-            else:
-                raise OSError(f"Tool {toolname!r} not found")
-
-            for fn in choices:
-                if os.path.exists(fn):
-                    _tools[toolname] = fn
-                    break
-            else:
-                raise OSError(f"Tool {toolname!r} not found")
     return _tools[toolname]
 
 
 def momc(src, dst):
     with reset_blocking_status():
-        subprocess.check_call([_get_tool("momc"), src, dst])
+        subprocess.check_call([get_tool("momc"), src, dst])
 
 
 def mapc(src, dst):
     with reset_blocking_status():
-        subprocess.check_call([_get_tool("mapc"), src, dst])
+        subprocess.check_call([get_tool("mapc"), src, dst])
 
 
 def _macho_find(path):
