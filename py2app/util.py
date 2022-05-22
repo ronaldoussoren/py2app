@@ -1,6 +1,7 @@
 import ast
 import contextlib
 import errno
+import fcntl
 import importlib.metadata
 import os
 import stat
@@ -757,9 +758,6 @@ def reset_blocking_status():
     xcode tools, mostly because ibtool tends to set the
     std* streams to non-blocking.
     """
-    import fcntl
-    import os
-
     blocking = [fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_NONBLOCK for fd in (0, 1, 2)]
 
     try:
