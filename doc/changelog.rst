@@ -1,6 +1,16 @@
 Release history
 ===============
 
+py2app 0.28.1
+-------------
+
+* #444: Fix issue where the standard output and standard error streams
+  are set to non-blocking when using py2app.
+
+  For some reason the "ibtool" command (part of Xcode) sets these streams
+  to non-blocking when compiling NIB files. I've added a context manager that
+  resets the non-blocking status of these streams.
+
 py2app 0.28
 -----------
 

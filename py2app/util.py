@@ -8,6 +8,8 @@ import sys
 import time
 import warnings
 import zipfile
+import contextlib
+import fcntl
 from distutils import log
 
 import macholib.util
@@ -575,7 +577,9 @@ def strip_files(files, dry_run=0, verbose=0):
     """
     if dry_run:
         return
-    return macholib.util.strip_files(files)
+
+    with reset_blocking_status():
+        return macholib.util.strip_files(files)
 
 
 def copy_tree(
@@ -770,11 +774,13 @@ def _get_tool(toolname):
 
 
 def momc(src, dst):
-    subprocess.check_call([_get_tool("momc"), src, dst])
+    with reset_blocking_status():
+        subprocess.check_call([_get_tool("momc"), src, dst])
 
 
 def mapc(src, dst):
-    subprocess.check_call([_get_tool("mapc"), src, dst])
+    with reset_blocking_status():
+        subprocess.check_call([_get_tool("mapc"), src, dst])
 
 
 def _macho_find(path):
@@ -786,17 +792,18 @@ def _macho_find(path):
 
 
 def _dosign(*path):
-    subprocess.check_call(
-        (
-            "codesign",
-            "-s",
-            "-",
-            "--preserve-metadata=identifier,entitlements,flags,runtime",
-            "-f",
-            "-vvvv",
+    with reset_blocking_status():
+        subprocess.check_call(
+            (
+                "codesign",
+                "-s",
+                "-",
+                "--preserve-metadata=identifier,entitlements,flags,runtime",
+                "-f",
+                "-vvvv",
+            )
+            + path,
         )
-        + path,
-    )
 
 
 def codesign_adhoc(bundle):
@@ -840,3 +847,28 @@ def codesign_adhoc(bundle):
         except subprocess.CalledProcessError:
             time.sleep(1)
             continue
+
+@contextlib.contextmanager
+def reset_blocking_status():
+    """
+    Contextmanager that resets the non-blocking status of
+    the std* streams as necessary. Used with all calls of
+    xcode tools, mostly because ibtool tends to set the
+    std* streams to non-blocking.
+    """
+    blocking = [fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_NONBLOCK for fd in (0, 1, 2)]
+
+    try:
+        yield
+
+    finally:
+        for fd, is_blocking in zip((0, 1, 2), blocking):
+            cur = fcntl.fcntl(fd, fcntl.F_GETFL)
+            if is_blocking:
+                reset = cur & ~os.O_NONBLOCK
+            else:
+                reset = cur | os.O_NONBLOCK
+
+            if cur != reset:
+                print("Resetting blocking status of %s" %(fd,))
+                fcntl.fcntl(fd, fcntl.F_SETFL, reset)
