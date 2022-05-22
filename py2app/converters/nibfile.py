@@ -2,27 +2,11 @@
 Automatic compilation of XIB files
 """
 
-import os
 import subprocess
-from subprocess import check_output
 
-from py2app.util import reset_blocking_status
+from py2app.util import _get_tool, reset_blocking_status
 
 gTool = None
-
-
-def _get_ibtool():
-    global gTool
-    if gTool is None:
-        if os.path.exists("/usr/bin/xcrun"):
-            try:
-                gTool = check_output(["/usr/bin/xcrun", "-find", "ibtool"])[:-1]
-            except subprocess.CalledProcessError:
-                raise OSError("Tool 'ibtool' not found")
-        else:
-            gTool = "ibtool"
-
-    return gTool
 
 
 def convert_xib(source, destination, dry_run=0):
@@ -33,7 +17,7 @@ def convert_xib(source, destination, dry_run=0):
         return
 
     with reset_blocking_status():
-        subprocess.check_call([_get_ibtool(), "--compile", destination, source])
+        subprocess.check_call([_get_tool("ibtool"), "--compile", destination, source])
 
 
 def convert_nib(source, destination, dry_run=0):
@@ -44,4 +28,4 @@ def convert_nib(source, destination, dry_run=0):
         return
 
     with reset_blocking_status():
-        subprocess.check_call([_get_ibtool, "--compile", destination, source])
+        subprocess.check_call([_get_tool("ibtool"), "--compile", destination, source])
