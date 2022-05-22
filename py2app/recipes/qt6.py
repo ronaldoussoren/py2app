@@ -53,7 +53,7 @@ def check(cmd, mf):
         except ImportError:
             mf.import_hook("sip", m, level=1)
 
-        reslt = {"packages": ["PyQt6"]}
+        result = {"packages": ["PyQt6"]}
         result.update(extra)
         return result
 

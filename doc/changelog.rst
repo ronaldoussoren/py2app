@@ -4,6 +4,8 @@ Release history
 py2app 0.28.1
 -------------
 
+* #448: Fix typo in qt6 recipe
+
 * #444: Fix issue where the standard output and standard error streams
   are set to non-blocking when using py2app.
 
