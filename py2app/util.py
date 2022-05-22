@@ -856,18 +856,18 @@ def reset_blocking_status():
     xcode tools, mostly because ibtool tends to set the
     std* streams to non-blocking.
     """
-    blocking = [fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_NONBLOCK for fd in (0, 1, 2)]
+    orig_nonblocking = [fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_NONBLOCK for fd in (0, 1, 2)]
 
     try:
         yield
 
     finally:
-        for fd, is_blocking in zip((0, 1, 2), blocking):
+        for fd, is_nonblocking in zip((0, 1, 2), orig_nonblocking):
             cur = fcntl.fcntl(fd, fcntl.F_GETFL)
-            if is_blocking:
-                reset = cur & ~os.O_NONBLOCK
-            else:
+            if is_nonblocking:
                 reset = cur | os.O_NONBLOCK
+            else:
+                reset = cur & ~os.O_NONBLOCK
 
             if cur != reset:
                 print("Resetting blocking status of %s" %(fd,))
