@@ -87,6 +87,17 @@ py2app.0.29
 * Switch to ``importlib.metadata`` and ``importlib.resources`` from ``pkg_resources``
   where possible. This is enforced by a pre-commit check.
 
+* Drop support for ancient versions of Xcode
+
+  The code now assumes that the "xcrun" command exists and can be
+  used to find converter tools, and no longer contains hardcoded
+  paths for some of the tools for use with Xcode 3.
+
+py2app 0.28.1
+-------------
+
+* #448: Fix typo in qt6 recipe
+
 * #444: Fix issue where the standard output and standard error streams
   are set to non-blocking when using py2app.
 
@@ -94,11 +105,6 @@ py2app.0.29
   to non-blocking when compiling NIB files. I've added a context manager that
   resets the non-blocking status of these streams.
 
-* Drop support for ancient versions of Xcode
-
-  The code now assumes that the "xcrun" command exists and can be
-  used to find converter tools, and no longer contains hardcoded
-  paths for some of the tools for use with Xcode 3.
 
 py2app 0.28
 -----------
