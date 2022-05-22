@@ -87,6 +87,13 @@ py2app.0.29
 * Switch to ``importlib.metadata`` and ``importlib.resources`` from ``pkg_resources``
   where possible. This is enforced by a pre-commit check.
 
+* #444: Fix issue where the standard output and standard error streams
+  are set to non-blocking when using py2app.
+
+  For some reason the "ibtool" command (part of Xcode) sets these streams
+  to non-blocking when compiling NIB files. I've added a context manager that
+  resets the non-blocking status of these streams.
+
 py2app 0.28
 -----------
 

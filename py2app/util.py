@@ -1,4 +1,5 @@
 import ast
+import contextlib
 import errno
 import importlib.metadata
 import os
@@ -467,9 +468,10 @@ def strip_files(files, dry_run=0, progress=None):
     task_id = progress.add_task("Stripping binaries", len(files))
     for name in files:
         progress.trace(f"Stripping {name}")
-        subprocess.check_call(
-            ["/usr/bin/strip", "-x", "-S", "-", name], stderr=subprocess.DEVNULL
-        )
+        with reset_blocking_status():
+            subprocess.check_call(
+                ["/usr/bin/strip", "-x", "-S", "-", name], stderr=subprocess.DEVNULL
+            )
         progress.step_task(task_id)
 
     progress._progress.stop_task(task_id)
@@ -657,11 +659,13 @@ def _get_tool(toolname):
 
 
 def momc(src, dst):
-    subprocess.check_call([_get_tool("momc"), src, dst])
+    with reset_blocking_status():
+        subprocess.check_call([_get_tool("momc"), src, dst])
 
 
 def mapc(src, dst):
-    subprocess.check_call([_get_tool("mapc"), src, dst])
+    with reset_blocking_status():
+        subprocess.check_call([_get_tool("mapc"), src, dst])
 
 
 def _macho_find(path):
@@ -673,23 +677,25 @@ def _macho_find(path):
 
 
 def _dosign(*path, progress=None):
-    p = subprocess.Popen(
-        (
-            "codesign",
-            "-s",
-            "-",
-            "--preserve-metadata=identifier,entitlements,flags,runtime",
-            "-f",
+    with reset_blocking_status():
+        p = subprocess.Popen(
+            (
+                "codesign",
+                "-s",
+                "-",
+                "--preserve-metadata=identifier,entitlements,flags,runtime",
+                "-f",
+            )
+            + path,
+            stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE,
         )
-        + path,
-        stderr=subprocess.STDOUT,
-        stdout=subprocess.PIPE,
-    )
-    out, _ = p.communicate()
-    xit = p.wait()
-    if xit != 0:
-        progress.warning(f"{path}: {out}")
-        raise subprocess.CalledProcessError(xit, "codesign")
+
+        out, _ = p.communicate()
+        xit = p.wait()
+        if xit != 0:
+            progress.warning(f"{path}: {out}")
+            raise subprocess.CalledProcessError(xit, "codesign")
 
 
 def codesign_adhoc(bundle, progress):
@@ -741,3 +747,32 @@ def codesign_adhoc(bundle, progress):
             continue
     progress.step_task(task_id)
     progress._progress.stop_task(task_id)
+
+
+@contextlib.contextmanager
+def reset_blocking_status():
+    """
+    Contextmanager that resets the non-blocking status of
+    the std* streams as necessary. Used with all calls of
+    xcode tools, mostly because ibtool tends to set the
+    std* streams to non-blocking.
+    """
+    import fcntl
+    import os
+
+    blocking = [fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_NONBLOCK for fd in (0, 1, 2)]
+
+    try:
+        yield
+
+    finally:
+        for fd, is_blocking in zip((0, 1, 2), blocking):
+            cur = fcntl.fcntl(fd, fcntl.F_GETFL)
+            if is_blocking:
+                reset = cur & ~os.O_NONBLOCK
+            else:
+                reset = cur | os.O_NONBLOCK
+
+            if cur != reset:
+                print(f"Resetting blocking status of {fd}")
+                fcntl.fcntl(fd, fcntl.F_SETFL, reset)
