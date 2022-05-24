@@ -13,6 +13,10 @@ py2app 0.28.1
   to non-blocking when compiling NIB files. I've added a context manager that
   resets the non-blocking status of these streams.
 
+* PR #446: Fix Qt5 recipe for newer versions of PyQt5
+
+  PR by kangi.
+
 py2app 0.28
 -----------
 

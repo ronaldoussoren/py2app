@@ -30,7 +30,7 @@ def check(cmd, mf):
         # 2. Use of other modules, datafiles and C libraries
         #    in the PyQt5 package.
         try:
-            mf.import_hook("sip", m)
+            mf.import_hook("PyQt5.sip", m)
         except ImportError:
             mf.import_hook("sip", m, level=1)
 
