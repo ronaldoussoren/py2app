@@ -13,7 +13,7 @@ def check(cmd, mf):
     # unusual name, e.g. 610faff656c4cfcbb4a3__mypyc; extract
     # the name from the list of toplevels.
     includes = set()
-    for toplevel, dists in packages_distributions():
+    for toplevel, dists in packages_distributions.items():
         if "black" not in dists:
             continue
 
