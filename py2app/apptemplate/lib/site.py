@@ -23,7 +23,7 @@ ENABLE_USER_SITE = False
 USER_SITE = None
 USER_BASE = None
 
-import os
+import os  # noqa: E402
 
 try:
     basestring

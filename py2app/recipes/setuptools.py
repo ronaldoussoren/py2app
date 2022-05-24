@@ -30,7 +30,7 @@ PRESCRIPT = textwrap.dedent(
                 subpath = os.path.join(path_item, subitem)
                 submeta = pkg_resources.EggMetadata(zipimport.zipimporter(subpath))
                 submeta.egg_info = subpath
-                yield pkg_resources.Distribution.from_location(path_item, subitem, submeta)
+                yield pkg_resources.Distribution.from_location(path_item, subitem, submeta)  # noqa: B950
 
     def _fixup_pkg_resources():
         pkg_resources.register_finder(zipimport.zipimporter, find_eggs_in_zip)

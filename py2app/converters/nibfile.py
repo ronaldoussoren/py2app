@@ -9,7 +9,6 @@ import subprocess
 from py2app.decorators import converts
 from py2app.util import check_output, reset_blocking_status
 
-
 gTool = None
 
 

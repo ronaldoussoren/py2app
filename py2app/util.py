@@ -1,6 +1,8 @@
 from __future__ import print_function
 
+import contextlib
 import errno
+import fcntl
 import os
 import stat
 import subprocess
@@ -8,8 +10,6 @@ import sys
 import time
 import warnings
 import zipfile
-import contextlib
-import fcntl
 from distutils import log
 
 import macholib.util
@@ -848,6 +848,7 @@ def codesign_adhoc(bundle):
             time.sleep(1)
             continue
 
+
 @contextlib.contextmanager
 def reset_blocking_status():
     """
@@ -856,7 +857,9 @@ def reset_blocking_status():
     xcode tools, mostly because ibtool tends to set the
     std* streams to non-blocking.
     """
-    orig_nonblocking = [fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_NONBLOCK for fd in (0, 1, 2)]
+    orig_nonblocking = [
+        fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_NONBLOCK for fd in (0, 1, 2)
+    ]
 
     try:
         yield
@@ -870,5 +873,5 @@ def reset_blocking_status():
                 reset = cur & ~os.O_NONBLOCK
 
             if cur != reset:
-                print("Resetting blocking status of %s" %(fd,))
+                print("Resetting blocking status of %s" % (fd,))
                 fcntl.fcntl(fd, fcntl.F_SETFL, reset)

@@ -29,7 +29,7 @@ def check(cmd, mf):
     plugins = set()
     visited = set()
 
-    # XXX: Most users should now use Pillow, which always uses
+    # Most users should now use Pillow, which always uses
     # "PIL.Image", which can simply the code below.
     for folder in sys.path:
         if not isinstance(folder, basestring):

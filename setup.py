@@ -4,11 +4,11 @@
 import os
 import sys
 import unittest
+from distutils import log
 from fnmatch import fnmatch
 
 from setuptools import Command, find_packages, setup
 from setuptools.command import egg_info
-from distutils import log
 
 fp = open("README.rst")
 try:
