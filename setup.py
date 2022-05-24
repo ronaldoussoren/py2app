@@ -119,7 +119,13 @@ class my_egg_info(egg_info.egg_info):
         egg_info.egg_info.run(self)
 
         path = os.path.join(self.egg_info, "PKG-INFO")
-        with open(path, "a+") as fp:
+        with open(path) as fp:
+            contents = fp.read()
+
+        first, middle, last = contents.partition("\n\n")
+
+        with open(path, "w") as fp:
+            fp.write(first)
             fp.write(
                 "Project-URL: Documentation, "
                 "https://py2app.readthedocs.io/en/latest/\n"
@@ -131,6 +137,9 @@ class my_egg_info(egg_info.egg_info):
             fp.write(
                 "Project-URL: Repository, " "https://github.com/ronaldoussoren/py2app\n"
             )
+            fp.write(middle)
+            fp.write(last)
+
 
 
 class test(Command):
@@ -275,7 +284,7 @@ if sys.platform != "darwin":
 setup(
     # metadata
     name="py2app",
-    version="0.28.1",
+    version="0.28.2",
     description="Create standalone Mac OS X applications with Python",
     # author='Bob Ippolito',
     # author_email='bob@redivi.com',

@@ -1,6 +1,11 @@
 Release history
 ===============
 
+py2app 0.28.2
+-------------
+
+* Fix incompatibility with recent setuptools
+
 py2app 0.28.1
 -------------
 
