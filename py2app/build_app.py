@@ -115,6 +115,9 @@ def finalize_distribution_options(dist):
         else:
             targets = FixupTargets(dist.plugin, "script")
 
+        if not targets:
+            return
+
         base = targets[0].get_dest_base()
         name = os.path.basename(base)
 

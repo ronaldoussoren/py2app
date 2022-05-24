@@ -17,6 +17,11 @@ py2app 0.28.1
 
   PR by kangi.
 
+* #447: Fix error when using ``py2applet --help``
+
+  Bug was introduced in the fix for #414
+
+
 py2app 0.28
 -----------
 
