@@ -1,7 +1,7 @@
 Release history
 ===============
 
-py2app.0.29
+py2app 0.29
 -----------
 
 * Drop support for Python 3.5 or earlier, including
@@ -92,6 +92,14 @@ py2app.0.29
   The code now assumes that the "xcrun" command exists and can be
   used to find converter tools, and no longer contains hardcoded
   paths for some of the tools for use with Xcode 3.
+
+
+py2app 0.28.2
+-------------
+
+* #453: Fix crash in py2applet when specifying a directory to
+  include in the application bundle.
+
 
 py2app 0.28.1
 -------------

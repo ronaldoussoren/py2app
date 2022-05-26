@@ -111,7 +111,7 @@ def main():
         elif fn.endswith(".icns") and not iconfile:
             iconfile = os.path.abspath(fn)
         elif os.path.isdir(fn):
-            sys.path.insert(0, [os.path.dirname(fn)])
+            sys.path.insert(0, os.path.dirname(fn))
             try:
                 path = imp.find_module(os.path.basename(fn))[0]
             except ImportError:
