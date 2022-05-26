@@ -1,6 +1,12 @@
 Release history
 ===============
 
+py2app 0.28.3
+-------------
+
+* #453: Fix crash in py2applet when specifying a directory to 
+  include in the application bundle.
+
 py2app 0.28.2
 -------------
 
