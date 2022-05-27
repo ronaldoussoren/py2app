@@ -595,16 +595,6 @@ class py2app(Command):
         self.excludes.add("readline")
         # included by apptemplate
         self.excludes.add("site")
-        if getattr(self.distribution, "install_requires", None):
-            self.progress.warning("Using 'install_requires' with py2app is deprecated")
-            self.includes.add("pkg_resources")  # XXX: Why is this needed?
-
-            # XXX: Local import to minimize the impact of using pkg_resources,
-            #      to be removed.
-            import pkg_resources  # noqa: I251
-
-            self.eggs = pkg_resources.require(self.distribution.install_requires)
-            del pkg_resources
 
         # Setuptools/distribute style namespace packages uses
         # __import__('pkg_resources'), and that import isn't detected at the
@@ -797,13 +787,6 @@ class py2app(Command):
                 raise DistutilsPlatformError(
                     "This python does not have a shared library or framework"
                 )
-
-        if (
-            hasattr(self.distribution, "install_requires")
-            and self.distribution.install_requires
-        ):
-
-            self.distribution.fetch_build_eggs(self.distribution.install_requires)
 
         build = self.reinitialize_command("build")
         build.build_base = self.bdist_base

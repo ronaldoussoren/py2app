@@ -4,6 +4,10 @@ Release history
 py2app 0.29
 -----------
 
+* The ``install_requires`` option in setup.py is now
+  ignored by py2app. Ensure that requirements are installed
+  before invoking py2app.
+
 * Drop support for Python 3.5 or earlier, including
   Python 2.7.
 
