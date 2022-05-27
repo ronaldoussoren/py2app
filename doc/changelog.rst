@@ -4,17 +4,6 @@ Release history
 py2app 0.29
 -----------
 
-* Drop the "optimize" option, run the python interpreter with
-  the correct optimization instead.
-
-  That is, instead of::
-
-      $ python3 setup.py py2app --optimize=2
-
-  Use::
-
-      $ python3  -OO setup.py py2app
-
 * The ``install_requires`` option in setup.py is now
   ignored by py2app. Ensure that requirements are installed
   before invoking py2app.

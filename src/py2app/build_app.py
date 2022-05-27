@@ -298,6 +298,12 @@ class py2app(Command):
             "E",
             "comma-separated list of frameworks or dylibs to exclude",
         ),
+        (
+            "optimize=",
+            "O",
+            'optimization level: -O1 for "python -O", '
+            '-O2 for "python -OO", and -O0 to disable [default: -O0]',
+        ),
         ("datamodels=", None, "xcdatamodels to be compiled and copied into Resources"),
         (
             "expected-missing-imports=",
@@ -456,6 +462,7 @@ class py2app(Command):
 
     def initialize_options(self):
         self.app = None
+        self.optimize = None
         self.plugin = None
         self.bdist_base = None
         self.xref = False
@@ -650,6 +657,11 @@ class py2app(Command):
                 "WARNING: the mappingmodels option is deprecated, "
                 "add model files to the list of resources"
             )
+
+        if self.optimize is None:
+            self.optimize = sys.flags.optimize
+        else:
+            self.optimize = int(self.optimize)
 
     def read_expected_missing_imports_file(self, filename):
         #
@@ -871,8 +883,8 @@ class py2app(Command):
                 "use_faulthandler": self.use_faulthandler,
             },
         }
-        if sys.flags.optimize:
-            result["PyOptions"]["optimize"] = sys.flags.optimize
+        if self.optimize:
+            result["PyOptions"]["optimize"] = self.optimize
         return result
 
     def initialize_plist(self):
@@ -1433,6 +1445,7 @@ class py2app(Command):
             force=self.force,
             progress=self.progress,
             dry_run=self.dry_run,
+            optimize=self.optimize,
         )
 
         for item in py_files:
@@ -2042,7 +2055,7 @@ class py2app(Command):
             sys.prefix, "lib", "python%d.%d" % (sys.version_info[:2])
         )
         makedirs(pyhome)
-        if sys.flags.optimize:
+        if self.optimize:
             make_symlink("../../site.pyo", os.path.join(pyhome, "site.pyo"))
         else:
             make_symlink("../../site.pyc", os.path.join(pyhome, "site.pyc"))
@@ -2162,6 +2175,7 @@ class py2app(Command):
             force=self.force,
             progress=self.progress,
             dry_run=self.dry_run,
+            optimize=self.optimize,
         )
         if not self.dry_run:
             os.unlink(site_path)
@@ -2226,7 +2240,7 @@ class py2app(Command):
         #    semistandalone builds (the lib/pythonX.Y directory is too
         #    late on sys.path to be found in that case).
         #
-        if sys.flags.optimize:
+        if self.optimize:
             make_symlink("../../site.pyo", os.path.join(pydir, "site.pyo"))
         else:
             make_symlink("../../site.pyc", os.path.join(pydir, "site.pyc"))

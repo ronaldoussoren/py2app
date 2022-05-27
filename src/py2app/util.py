@@ -282,6 +282,7 @@ def byte_compile(
     target_dir=None,
     progress=None,
     dry_run=0,
+    optimize=-1,
 ):
     if progress is not None:
         task_id = progress.add_task("Byte compiling", len(py_files))
@@ -320,7 +321,7 @@ def byte_compile(
                         with open(fn, "wb") as fp_out:
                             fp_out.write(fp_in.read())
 
-                    compile(fn, cfile, dfile)
+                    compile(fn, cfile, dfile, optimize=optimize)
                     os.unlink(fn)
 
                 elif suffix in PY_SUFFIXES:

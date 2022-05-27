@@ -163,6 +163,14 @@ Options for 'py2app' command:
      - Value
      - Description
 
+   * - ``--optimize``
+     - optimize
+     - level (integer)
+     - Specifies the optimization level for the Pytho interpreter
+       level 0 to disable, level 1 for ``python -O``, and level 2
+       for ``python -OO``. Defaults to the optimization level of the
+       process running py2app.
+
    * - ``--includes``
      - includes
      - list of module names
