@@ -4,15 +4,15 @@ import plistlib
 import shutil
 import sys
 
-import py2app.bundletemplate
 from py2app.util import make_exec, makedirs, mergecopy, mergetree, skipscm
+
+from . import bundletemplate
 
 
 def create_pluginbundle(
     destdir,
     name,
     extension=".plugin",
-    module=py2app.bundletemplate,
     platform="MacOS",
     copy=mergecopy,
     mergetree=mergetree,
@@ -24,7 +24,7 @@ def create_pluginbundle(
     if plist is None:
         plist = {}
 
-    kw = module.plist_template.infoPlistDict(
+    kw = bundletemplate.plist_template.infoPlistDict(
         plist.get("CFBundleExecutable", name), plist
     )
     plugin = os.path.join(destdir, kw["CFBundleName"] + extension)
@@ -54,7 +54,7 @@ def create_pluginbundle(
             plistlib.dump(plist, fp)
         else:
             plistlib.writePlist(plist, fp)
-    srcmain = module.setup.main(arch=arch)
+    srcmain = bundletemplate.setup.main(arch=arch)
     destmain = os.path.join(platdir, kw["CFBundleExecutable"])
     with open(os.path.join(contents, "PkgInfo"), "w") as fp:
         fp.write(kw["CFBundlePackageType"] + kw["CFBundleSignature"])
@@ -62,7 +62,7 @@ def create_pluginbundle(
     progress.trace(f"Copy {srcmain!r} -> {destmain!r}")
     copy(srcmain, destmain)
     make_exec(destmain)
-    with importlib.resources.path(module.__name__, "lib") as p:
+    with importlib.resources.path(bundletemplate.__name__, "lib") as p:
         mergetree(
             str(p),
             resources,

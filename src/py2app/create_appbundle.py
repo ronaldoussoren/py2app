@@ -4,15 +4,15 @@ import plistlib
 import shutil
 import sys
 
-import py2app.apptemplate
 from py2app.util import make_exec, makedirs, mergecopy, mergetree, skipscm
+
+from . import apptemplate
 
 
 def create_appbundle(
     destdir,
     name,
     extension=".app",
-    module=py2app.apptemplate,
     platform="MacOS",
     copy=mergecopy,
     mergetree=mergetree,
@@ -26,7 +26,7 @@ def create_appbundle(
     if plist is None:
         plist = {}
 
-    kw = module.plist_template.infoPlistDict(
+    kw = apptemplate.plist_template.infoPlistDict(
         plist.get("CFBundleExecutable", name), plist
     )
     app = os.path.join(destdir, kw["CFBundleName"] + extension)
@@ -57,7 +57,7 @@ def create_appbundle(
         else:
             plistlib.writePlist(plist, fp)
 
-    srcmain = module.setup.main(
+    srcmain = apptemplate.setup.main(
         arch=arch, redirect_asl=redirect_stdout, use_old_sdk=use_old_sdk
     )
     destmain = os.path.join(platdir, kw["CFBundleExecutable"])
@@ -68,7 +68,7 @@ def create_appbundle(
     progress.trace(f"Copy {srcmain!r} -> {destmain!r}")
     copy(srcmain, destmain)
     make_exec(destmain)
-    with importlib.resources.path(module.__name__, "lib") as p:
+    with importlib.resources.path(apptemplate.__name__, "lib") as p:
         mergetree(
             str(p),
             resources,
