@@ -13,6 +13,7 @@ import pprint
 import shutil
 import sys
 import tempfile
+import typing
 from distutils.core import setup
 
 import py2app  # noqa: F401
@@ -47,7 +48,7 @@ setup(
 '''
 
 
-def get_option_map():
+def get_option_map() -> typing.Dict[str, str]:
     optmap = {}
     for option in build_app.py2app.user_options:
         opt_long, opt_short = option[:2]
@@ -56,7 +57,7 @@ def get_option_map():
     return optmap
 
 
-def get_cmd_options():
+def get_cmd_options() -> typing.Set[str]:
     options = set()
     for option in build_app.py2app.user_options:
         opt_long, opt_short = option[:2]
@@ -65,17 +66,17 @@ def get_cmd_options():
     return options
 
 
-def main():
+def main() -> None:
     if not sys.argv[1:]:
         print(HELP_TEXT)
         return
 
-    scripts = []
-    data_files = []
-    packages = []
-    args = []
-    plist = {}
-    iconfile = None
+    scripts: typing.List[str] = []
+    data_files: typing.List[str] = []
+    packages: typing.List[str] = []
+    args: typing.List[str] = []
+    plist: typing.Dict[str, typing.Any] = {}
+    iconfile: typing.Optional[str] = None
     parsing_options = True
     next_is_option = False
     cmd_options = get_cmd_options()
@@ -104,16 +105,13 @@ def main():
                 scripts.append(fn)
         elif os.path.basename(fn) == "Info.plist":
             with open(fn, "rb") as fp:
-                if hasattr(plistlib, "load"):
-                    plist = plistlib.load(fp)
-                else:
-                    plist = plistlib.readPlist(fp)
+                plist = plistlib.load(fp)
         elif fn.endswith(".icns") and not iconfile:
             iconfile = os.path.abspath(fn)
         elif os.path.isdir(fn):
             sys.path.insert(0, os.path.dirname(fn))
             try:
-                path = imp.find_module(os.path.basename(fn))[0]
+                path = imp.find_module(os.path.basename(fn))[1]
             except ImportError:
                 path = ""
             del sys.path[0]
@@ -134,7 +132,12 @@ def main():
         build(args, scripts, data_files, options)
 
 
-def make_setup(args, scripts, data_files, options):
+def make_setup(
+    args: typing.List[str],
+    scripts: typing.List[str],
+    data_files: typing.List[str],
+    options: typing.Dict[str, typing.Any],
+) -> None:
     optmap = get_option_map()
     cmd_options = get_cmd_options()
 
@@ -167,7 +170,12 @@ def make_setup(args, scripts, data_files, options):
     print("Wrote setup.py")
 
 
-def build(args, scripts, data_files, options):
+def build(
+    args: typing.List[str],
+    scripts: typing.List[str],
+    data_files: typing.List[str],
+    options: typing.Dict[str, typing.Any],
+) -> None:
     old_argv = sys.argv
     sys.argv = [sys.argv[0], "py2app"] + args
     old_path = sys.path
@@ -179,9 +187,9 @@ def build(args, scripts, data_files, options):
     tempdir = tempfile.mkdtemp()
     os.chdir(tempdir)
     try:
-        d = setup(
+        d = setup(  # type: ignore
             app=scripts,
-            data_files=data_files,
+            data_files=data_files,  # type: ignore
             options={"py2app": options},
         )
         for target in d.app:
