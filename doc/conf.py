@@ -17,6 +17,7 @@ import sys
 def get_version():
     fn = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "src",
         "py2app",
         "__init__.py",
     )
