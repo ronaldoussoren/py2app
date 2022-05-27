@@ -21,6 +21,7 @@ def create_appbundle(
     arch=None,
     use_old_sdk=False,
     redirect_stdout=False,
+    progress=None,
 ):
     if plist is None:
         plist = {}
@@ -64,7 +65,7 @@ def create_appbundle(
     with open(os.path.join(contents, "PkgInfo"), "w") as fp:
         fp.write(kw["CFBundlePackageType"] + kw["CFBundleSignature"])
 
-    print(f"Copy {srcmain!r} -> {destmain!r}")
+    progress.trace(f"Copy {srcmain!r} -> {destmain!r}")
     copy(srcmain, destmain)
     make_exec(destmain)
     with importlib.resources.path(module.__name__, "lib") as p:

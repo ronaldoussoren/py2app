@@ -2004,6 +2004,7 @@ class py2app(Command):
             plist=self.plist,
             extension=self.extension,
             arch=self.arch,
+            progress=self.progress,
         )
         resdir = os.path.join(appdir, "Contents", "Resources")
         return appdir, resdir, plist
@@ -2026,6 +2027,7 @@ class py2app(Command):
             arch=self.arch,
             redirect_stdout=self.redirect_stdout_to_asl,
             use_old_sdk=self.use_old_sdk,
+            progress=self.progress,
         )
         resdir = os.path.join(appdir, "Contents", "Resources")
         return appdir, resdir, plist

@@ -19,6 +19,7 @@ def create_pluginbundle(
     condition=skipscm,
     plist=None,
     arch=None,
+    progress=None,
 ):
     if plist is None:
         plist = {}
@@ -57,6 +58,8 @@ def create_pluginbundle(
     destmain = os.path.join(platdir, kw["CFBundleExecutable"])
     with open(os.path.join(contents, "PkgInfo"), "w") as fp:
         fp.write(kw["CFBundlePackageType"] + kw["CFBundleSignature"])
+
+    progress.trace(f"Copy {srcmain!r} -> {destmain!r}")
     copy(srcmain, destmain)
     make_exec(destmain)
     with importlib.resources.path(module.__name__, "lib") as p:
