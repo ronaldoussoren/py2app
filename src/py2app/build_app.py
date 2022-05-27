@@ -2439,6 +2439,8 @@ class py2app(Command):
         return copy_file(infile, outfile, progress=self.progress)
 
     def mkpath(self, name, mode=0o777):
+        if os.path.isdir(name):
+            return
         if hasattr(self, "progress"):
             # XXX: Workaround for a failing test, should no
             # longer be necessary when the code gets restructured.
