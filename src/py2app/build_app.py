@@ -43,7 +43,6 @@ from py2app.util import (
     copy_tree,
     fancy_split,
     find_version,
-    in_system_path,
     iter_platform_files,
     make_exec,
     make_loader,
@@ -270,29 +269,11 @@ def normalize_data_file(fn):
     return fn
 
 
-def is_system():
-    # XXX: This was added to detect /usr/bin/python2.x, probably
-    #      need to check for Xcode's Python 3 installation as well.
-    prefix = sys.prefix
-    if os.path.exists(os.path.join(prefix, ".Python")):
-        fn = os.path.join(
-            prefix, "lib", "python%d.%d" % (sys.version_info[:2]), "orig-prefix.txt"
-        )
-        if os.path.exists(fn):
-            with open(fn) as fp:
-                prefix = fp.read().strip()
-
-    return in_system_path(prefix)
-
-
 def installation_info(version=None):
     if version is None:
         version = sys.version
 
-    if is_system():
-        return ".".join(version.split(".")[:2]) + " (FORCED: Using vendor Python)"
-    else:
-        return ".".join(version.split(".")[:2])
+    return ".".join(version.split(".")[:2])
 
 
 class py2app(Command):
@@ -505,7 +486,7 @@ class py2app(Command):
         self.mappingmodels = None
         self.plist = None
         self.compressed = True
-        self.semi_standalone = is_system()
+        self.semi_standalone = False
         self.dist_dir = None
         self.debug_skip_macholib = False
         self.debug_modulegraph = False
@@ -1919,9 +1900,6 @@ class py2app(Command):
 
         elif self.site_packages or self.alias:
             prescripts.append("site_packages")
-
-        if is_system():
-            prescripts.append("system_path_extras")
 
         included_subpkg = [pkg for pkg in self.packages if "." in pkg]
         if included_subpkg:

@@ -27,5 +27,5 @@ class Application(tkinter.Frame):
         self.createWidgets()
 
 
-# app = Application()
-# app.mainloop()
+app = Application()
+app.mainloop()

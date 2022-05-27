@@ -108,7 +108,6 @@ py2app 0.29
   used to find converter tools, and no longer contains hardcoded
   paths for some of the tools for use with Xcode 3.
 
-
 py2app 0.28.2
 -------------
 
