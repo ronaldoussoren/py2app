@@ -4,6 +4,7 @@ import errno
 import fcntl
 import importlib.metadata
 import os
+import pathlib
 import stat
 import subprocess
 import time
@@ -677,3 +678,10 @@ def reset_blocking_status():
                     f" {'non-blocking' if is_nonblocking else 'blocking'}"
                 )
                 fcntl.fcntl(fd, fcntl.F_SETFL, reset)
+
+
+def make_path(value: typing.Union[str, os.PathLike[str]]) -> pathlib.Path:
+    if isinstance(value, pathlib.Path):
+        return value
+
+    return pathlib.Path(value)

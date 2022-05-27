@@ -2,75 +2,73 @@ import importlib.resources
 import os
 import plistlib
 import shutil
-import sys
+import typing
 
-from py2app.util import make_exec, makedirs, mergecopy, mergetree, skipscm
-
-from . import bundletemplate
+from . import bundletemplate, progress
+from .util import make_exec, make_path, mergecopy, mergetree, skipscm
 
 
 def create_pluginbundle(
-    destdir,
-    name,
-    extension=".plugin",
-    platform="MacOS",
-    copy=mergecopy,
-    mergetree=mergetree,
-    condition=skipscm,
-    plist=None,
-    arch=None,
-    progress=None,
+    destdir: typing.Union[str, os.PathLike[str]],
+    name: str,
+    *,
+    progress: progress.Progress,
+    extension: str = ".plugin",
+    platform: str = "MacOS",
+    copy: typing.Callable[[str, str], None] = mergecopy,
+    mergetree: typing.Callable[
+        [str, str, typing.Callable[[str], bool], typing.Callable[[str, str], None]],
+        None,
+    ] = mergetree,
+    condition: typing.Callable[[str], bool] = skipscm,
+    plist: typing.Optional[typing.Dict[str, typing.Any]] = None,
+    arch: str = None,
 ):
+    destpath = make_path(destdir)
     if plist is None:
         plist = {}
 
     kw = bundletemplate.plist_template.infoPlistDict(
         plist.get("CFBundleExecutable", name), plist
     )
-    plugin = os.path.join(destdir, kw["CFBundleName"] + extension)
-    if os.path.exists(plugin):
+    plugin = destpath / (kw["CFBundleName"] + extension)
+    if plugin.exists():
         # Remove any existing build artifacts to ensure
         # we're getting a clean build
         shutil.rmtree(plugin)
-    contents = os.path.join(plugin, "Contents")
-    resources = os.path.join(contents, "Resources")
-    platdir = os.path.join(contents, platform)
+    contents = plugin / "Contents"
+    resources = contents / "Resources"
+    platdir = contents / platform
     dirs = [contents, resources, platdir]
     plist = {}
     plist.update(kw)
-    plistPath = os.path.join(contents, "Info.plist")
-    if os.path.exists(plistPath):
-        with open(plistPath, "rb") as fp:
-            contents = plistlib.load(fp)
+    plistPath = contents / "Info.plist"
 
-            if plist != contents:
-                for d in dirs:
-                    shutil.rmtree(d, ignore_errors=True)
     for d in dirs:
-        makedirs(d)
+        progress.trace(f"Create {d}")
+        d.mkdir(parent=True, exist_ok=True)
 
     with open(plistPath, "wb") as fp:
-        if hasattr(plistlib, "dump"):
-            plistlib.dump(plist, fp)
-        else:
-            plistlib.writePlist(plist, fp)
+        progress.trace(f"Write {plistPath}")
+        plistlib.dump(plist, fp)
     srcmain = bundletemplate.setup.main(arch=arch)
-    destmain = os.path.join(platdir, kw["CFBundleExecutable"])
-    with open(os.path.join(contents, "PkgInfo"), "w") as fp:
-        fp.write(kw["CFBundlePackageType"] + kw["CFBundleSignature"])
+    destmain = platdir / kw["CFBundleExecutable"]
+    (contents / "PkgInfo").write_text(
+        kw["CFBundlePackageType"] + kw["CFBundleSignature"]
+    )
 
     progress.trace(f"Copy {srcmain!r} -> {destmain!r}")
     copy(srcmain, destmain)
     make_exec(destmain)
+
+    # XXX: Below here some pathlib.Path instances are converted
+    # back to strings for compatibility with other code.
+    # This will be changed when that legacy code has been updated.
     with importlib.resources.path(bundletemplate.__name__, "lib") as p:
         mergetree(
             str(p),
-            resources,
-            condition=condition,
-            copyfn=copy,
+            str(resources),
+            condition,
+            copy,
         )
-    return plugin, plist
-
-
-if __name__ == "__main__":
-    create_pluginbundle("build", sys.argv[1])
+    return str(plugin), plist

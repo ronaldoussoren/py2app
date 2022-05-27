@@ -2,81 +2,80 @@ import importlib.resources
 import os
 import plistlib
 import shutil
-import sys
+import typing
 
-from py2app.util import make_exec, makedirs, mergecopy, mergetree, skipscm
-
-from . import apptemplate
+from . import apptemplate, progress
+from .util import make_exec, make_path, mergecopy, mergetree, skipscm
 
 
 def create_appbundle(
-    destdir,
-    name,
-    extension=".app",
-    platform="MacOS",
-    copy=mergecopy,
-    mergetree=mergetree,
-    condition=skipscm,
-    plist=None,
-    arch=None,
-    use_old_sdk=False,
-    redirect_stdout=False,
-    progress=None,
-):
+    destdir: typing.Union[str, os.PathLike[str]],
+    name: str,
+    *,
+    progress: progress.Progress,
+    extension: str = ".app",
+    platform: str = "MacOS",
+    copy: typing.Callable[[str, str], None] = mergecopy,
+    mergetree: typing.Callable[
+        [str, str, typing.Callable[[str], bool], typing.Callable[[str, str], None]],
+        None,
+    ] = mergetree,
+    condition: typing.Callable[[str], bool] = skipscm,
+    plist: typing.Optional[typing.Dict[str, typing.Any]] = None,
+    arch: typing.Optional[str] = None,
+    use_old_sdk: bool = False,
+    redirect_stdout: bool = False,
+) -> typing.Tuple[str, typing.Dict[str, typing.Any]]:
+    destpath = make_path(destdir)
+
     if plist is None:
         plist = {}
 
     kw = apptemplate.plist_template.infoPlistDict(
         plist.get("CFBundleExecutable", name), plist
     )
-    app = os.path.join(destdir, kw["CFBundleName"] + extension)
-    if os.path.exists(app):
+    app = destpath / (kw["CFBundleName"] + extension)
+    if app.exists():
         # Remove any existing build artifacts to ensure that
         # we're getting a clean build
         shutil.rmtree(app)
-    contents = os.path.join(app, "Contents")
-    resources = os.path.join(contents, "Resources")
-    platdir = os.path.join(contents, platform)
+
+    contents = app / "Contents"
+    resources = contents / "Resources"
+    platdir = contents / platform
     dirs = [contents, resources, platdir]
     plist = {}
     plist.update(kw)
-    plistPath = os.path.join(contents, "Info.plist")
-    if os.path.exists(plistPath):
-        with open(plistPath, "rb") as fp:
-            contents = plistlib.load(fp)
-
-            if plist != contents:
-                for d in dirs:
-                    shutil.rmtree(d, ignore_errors=True)
+    plistPath = contents / "Info.plist"
     for d in dirs:
-        makedirs(d)
+        progress.trace(f"Create {d}")
+        d.mkdir(parents=True, exist_ok=True)
 
-    with open(plistPath, "wb") as fp:
-        if hasattr(plistlib, "dump"):
-            plistlib.dump(plist, fp)
-        else:
-            plistlib.writePlist(plist, fp)
+    with open(plistPath, "wb") as stream:
+        progress.trace(f"Write {plistPath}")
+        plistlib.dump(plist, stream)
 
     srcmain = apptemplate.setup.main(
         arch=arch, redirect_asl=redirect_stdout, use_old_sdk=use_old_sdk
     )
     destmain = os.path.join(platdir, kw["CFBundleExecutable"])
 
-    with open(os.path.join(contents, "PkgInfo"), "w") as fp:
-        fp.write(kw["CFBundlePackageType"] + kw["CFBundleSignature"])
+    (contents / "PkgInfo").write_text(
+        kw["CFBundlePackageType"] + kw["CFBundleSignature"]
+    )
 
     progress.trace(f"Copy {srcmain!r} -> {destmain!r}")
     copy(srcmain, destmain)
     make_exec(destmain)
+
+    # XXX: Below here some pathlib.Path instances are converted
+    # back to strings for compatibility with other code.
+    # This will be changed when that legacy code has been updated.
     with importlib.resources.path(apptemplate.__name__, "lib") as p:
         mergetree(
             str(p),
-            resources,
-            condition=condition,
-            copyfn=copy,
+            str(resources),
+            condition,
+            copy,
         )
-    return app, plist
-
-
-if __name__ == "__main__":
-    create_appbundle("build", sys.argv[1])
+    return str(app), plist
