@@ -303,12 +303,6 @@ class py2app(Command):
     user_options = [
         ("app=", None, "application bundle to be built"),
         ("plugin=", None, "plugin bundle to be built"),
-        (
-            "optimize=",
-            "O",
-            'optimization level: -O1 for "python -O", '
-            '-O2 for "python -OO", and -O0 to disable [default: -O0]',
-        ),
         ("includes=", "i", "comma-separated list of modules to include"),
         ("packages=", "p", "comma-separated list of packages to include"),
         (
@@ -486,7 +480,6 @@ class py2app(Command):
         self.xref = False
         self.graph = False
         self.no_zip = 0
-        self.optimize = None
         self.arch = None
         self.strip = True
         self.no_strip = False
@@ -570,11 +563,6 @@ class py2app(Command):
 
         else:
             self._python_app = os.path.join(sys.prefix, "Resources", "Python.app")
-
-        if self.optimize is None:
-            self.optimize = sys.flags.optimize
-        else:
-            self.optimize = int(self.optimize)
 
         if not self.strip:
             self.no_strip = True
@@ -902,8 +890,8 @@ class py2app(Command):
                 "use_faulthandler": self.use_faulthandler,
             },
         }
-        if self.optimize:
-            result["PyOptions"]["optimize"] = self.optimize
+        if sys.flags.optimize:
+            result["PyOptions"]["optimize"] = sys.flags.optimize
         return result
 
     def initialize_plist(self):
@@ -1461,7 +1449,6 @@ class py2app(Command):
         byte_compile(
             py_files,
             target_dir=self.collect_dir,
-            optimize=self.optimize,
             force=self.force,
             progress=self.progress,
             dry_run=self.dry_run,
@@ -2075,7 +2062,7 @@ class py2app(Command):
             sys.prefix, "lib", "python%d.%d" % (sys.version_info[:2])
         )
         makedirs(pyhome)
-        if self.optimize:
+        if sys.flags.optimize:
             make_symlink("../../site.pyo", os.path.join(pyhome, "site.pyo"))
         else:
             make_symlink("../../site.pyc", os.path.join(pyhome, "site.pyc"))
@@ -2192,7 +2179,6 @@ class py2app(Command):
         byte_compile(
             [SourceModule("site", site_path)],
             target_dir=resdir,
-            optimize=self.optimize,
             force=self.force,
             progress=self.progress,
             dry_run=self.dry_run,
@@ -2260,7 +2246,7 @@ class py2app(Command):
         #    semistandalone builds (the lib/pythonX.Y directory is too
         #    late on sys.path to be found in that case).
         #
-        if self.optimize:
+        if sys.flags.optimize:
             make_symlink("../../site.pyo", os.path.join(pydir, "site.pyo"))
         else:
             make_symlink("../../site.pyc", os.path.join(pydir, "site.pyc"))

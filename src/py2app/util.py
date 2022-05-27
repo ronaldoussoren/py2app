@@ -6,9 +6,9 @@ import importlib.metadata
 import os
 import stat
 import subprocess
-import sys
 import time
 import typing
+from py_compile import compile
 
 import macholib.util
 from macholib.util import is_platform_file
@@ -278,137 +278,68 @@ def make_loader(fn):
 
 def byte_compile(
     py_files,
-    optimize=0,
     force=0,
     target_dir=None,
     progress=None,
     dry_run=0,
-    direct=None,
 ):
+    if progress is not None:
+        task_id = progress.add_task("Byte compiling", len(py_files))
+    for mod in py_files:
+        # Terminology from the py_compile module:
+        #   cfile - byte-compiled file
+        #   dfile - purported source filename (same as 'file' by default)
+        if mod.filename == mod.identifier:
+            cfile = os.path.basename(mod.filename)
+            dfile = cfile + (__debug__ and "c" or "o")
+        else:
+            cfile = mod.identifier.replace(".", os.sep)
 
-    if direct is None:
-        direct = __debug__ and optimize == 0
-
-    # "Indirect" byte-compilation: write a temporary script and then
-    # run it with the appropriate flags.
-    if not direct:
-        # XXX: This needs work to play nice with rich.progress
-        from distutils.util import execute, spawn
-        from tempfile import NamedTemporaryFile
-
-        progress.info("writing byte-compilation script")
-        if not dry_run:
-            with NamedTemporaryFile(
-                suffix=".py", delete=False, mode="w", encoding="utf-8"
-            ) as script:
-                script_name = script.name
-                script.write(
-                    """
-from py2app.util import byte_compile
-from modulegraph.modulegraph import *
-files = [
-"""
-                )
-
-                for f in py_files:
-                    script.write(repr(f) + ",\n")
-                script.write("]\n")
-                script.write(
-                    """
-byte_compile(files, optimize=%r, force=%r,
-             target_dir=%r,
-             progress=None, dry_run=0,
-             direct=1)
-"""
-                    % (optimize, force, target_dir)
-                )
-
-        # Ensure that py2app is on PYTHONPATH, this ensures that
-        # py2app.util can be found even when we're running from
-        # an .egg that was downloaded by setuptools
-        import py2app
-
-        pp = os.path.dirname(os.path.dirname(py2app.__file__))
-        if "PYTHONPATH" in os.environ:
-            pp = "{}:{}".format(pp, os.environ["PYTHONPATH"])
-
-        cmd = ["/usr/bin/env", f"PYTHONPATH={pp}", sys.executable, script_name]
-
-        if optimize == 1:
-            cmd.insert(3, "-O")
-        elif optimize == 2:
-            cmd.insert(3, "-OO")
-        spawn(cmd, verbose=1, dry_run=dry_run)
-        execute(
-            os.remove,
-            (script_name,),
-            "removing %s" % script_name,
-            verbose=1,
-            dry_run=dry_run,
-        )
-
-    else:
-        from py_compile import compile
-
-        if progress is not None:
-            task_id = progress.add_task("Byte compiling", len(py_files))
-        for mod in py_files:
-            # Terminology from the py_compile module:
-            #   cfile - byte-compiled file
-            #   dfile - purported source filename (same as 'file' by default)
-            if mod.filename == mod.identifier:
-                cfile = os.path.basename(mod.filename)
-                dfile = cfile + (__debug__ and "c" or "o")
+            if mod.packagepath:
+                dfile = cfile + os.sep + "__init__.pyc"
             else:
-                cfile = mod.identifier.replace(".", os.sep)
+                dfile = cfile + ".pyc"
+        if target_dir:
+            cfile = os.path.join(target_dir, dfile)
 
-                if mod.packagepath:
-                    dfile = cfile + os.sep + "__init__.pyc"
-                else:
-                    dfile = cfile + ".pyc"
-            if target_dir:
-                cfile = os.path.join(target_dir, dfile)
-
-            if force or newer(mod.filename, cfile):
-                if progress is not None:
-                    progress.trace(f"byte-compiling {mod.filename} to {dfile}")
-
-                if not dry_run:
-                    if not os.path.exists(os.path.dirname(cfile)):
-                        if progress is not None:
-                            progress.trace(f"create {os.path.dirname(cfile)}")
-                        os.makedirs(os.path.dirname(cfile), 0o777)
-                    suffix = os.path.splitext(mod.filename)[1]
-
-                    if suffix in (".py", ".pyw"):
-                        fn = cfile + ".py"
-
-                        with zipio.open(mod.filename, "rb") as fp_in:
-                            with open(fn, "wb") as fp_out:
-                                fp_out.write(fp_in.read())
-
-                        compile(fn, cfile, dfile)
-                        os.unlink(fn)
-
-                    elif suffix in PY_SUFFIXES:
-                        # Minor problem: This will happily copy a file
-                        # <mod>.pyo to <mod>.pyc or <mod>.pyc to
-                        # <mod>.pyo, but it does seem to work.
-                        copy_file(mod.filename, cfile, preserve_times=True)
-
-                    else:
-                        raise RuntimeError("Don't know how to handle %r" % mod.filename)
-            else:
-                if progress is not None:
-                    progress.info(
-                        f"skipping byte-compilation of {mod.filename} to {dfile}"
-                    )
-
+        if force or newer(mod.filename, cfile):
             if progress is not None:
-                progress.step_task(task_id)
+                progress.trace(f"byte-compiling {mod.filename} to {dfile}")
+
+            if not dry_run:
+                if not os.path.exists(os.path.dirname(cfile)):
+                    if progress is not None:
+                        progress.trace(f"create {os.path.dirname(cfile)}")
+                    os.makedirs(os.path.dirname(cfile), 0o777)
+                suffix = os.path.splitext(mod.filename)[1]
+
+                if suffix in (".py", ".pyw"):
+                    fn = cfile + ".py"
+
+                    with zipio.open(mod.filename, "rb") as fp_in:
+                        with open(fn, "wb") as fp_out:
+                            fp_out.write(fp_in.read())
+
+                    compile(fn, cfile, dfile)
+                    os.unlink(fn)
+
+                elif suffix in PY_SUFFIXES:
+                    # Minor problem: This will happily copy a file
+                    # <mod>.pyo to <mod>.pyc or <mod>.pyc to
+                    # <mod>.pyo, but it does seem to work.
+                    copy_file(mod.filename, cfile, preserve_times=True)
+
+                else:
+                    raise RuntimeError("Don't know how to handle %r" % mod.filename)
+        else:
+            if progress is not None:
+                progress.info(f"skipping byte-compilation of {mod.filename} to {dfile}")
 
         if progress is not None:
-            progress._progress.stop_task(task_id)
+            progress.step_task(task_id)
+
+    if progress is not None:
+        progress._progress.stop_task(task_id)
 
 
 SCMDIRS = ["CVS", ".svn", ".hg", ".git"]
