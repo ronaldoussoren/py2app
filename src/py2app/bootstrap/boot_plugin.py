@@ -1,12 +1,15 @@
 import sys
 
+SCRIPT_MAP: "dict[str|None, str]"
+DEFAULT_SCRIPT: str
+
 
 def _run():
     global __file__
     import os
     import site  # noqa: F401
 
-    sys.frozen = "macosx_plugin"
+    sys.frozen = "macosx_plugin"  # type: ignore
     base = os.environ["RESOURCEPATH"]
 
     if "ARGVZERO" in os.environ:

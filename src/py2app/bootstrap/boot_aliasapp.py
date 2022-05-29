@@ -1,12 +1,15 @@
 import sys
 
+SCRIPT_MAP: "dict[str, str]"
+DEFAULT_SCRIPT: str
+
 
 def _run():
     global __file__
     import os
     import site  # noqa: F401
 
-    sys.frozen = "macosx_app"
+    sys.frozen = "macosx_app"  # type: ignore
 
     argv0 = os.path.basename(os.environ["ARGVZERO"])
     script = SCRIPT_MAP.get(argv0, DEFAULT_SCRIPT)  # noqa: F821
