@@ -382,8 +382,12 @@ def is_system():
             prefix, "lib", "python%d.%d" % (sys.version_info[:2]), "orig-prefix.txt"
         )
         if os.path.exists(fn):
-            with open(fn, "rU") as fp:
-                prefix = fp.read().strip()
+            if sys.version_info[0] == 2:
+                with open(fn, "rU") as fp:
+                    prefix = fp.read().strip()
+            else:
+                with open(fn, "r") as fp:
+                    prefix = fp.read().strip()
 
     return in_system_path(prefix)
 
@@ -682,9 +686,14 @@ class py2app(Command):
                 "orig-prefix.txt",
             )
             if os.path.exists(fn):
-                with open(fn, "rU") as fp:
-                    prefix = fp.read().strip()
-                    self._python_app = os.path.join(prefix, "Resources", "Python.app")
+                if sys.version_info[0] == 2:
+                    with open(fn, "rU") as fp:
+                        prefix = fp.read().strip()
+                        self._python_app = os.path.join(prefix, "Resources", "Python.app")
+                else:
+                    with open(fn, "r") as fp:
+                        prefix = fp.read().strip()
+                        self._python_app = os.path.join(prefix, "Resources", "Python.app")
             else:
                 raise DistutilsPlatformError(
                     "Virtualenv detected, but cannot determine base prefix"
@@ -884,8 +893,12 @@ class py2app(Command):
             )
 
             if os.path.exists(fn):
-                with open(fn, "rU") as fp:
-                    prefix = fp.read().strip()
+                if sys.version_info[0] == 2:
+                    with open(fn, "rU") as fp:
+                        prefix = fp.read().strip()
+                else:
+                    with open(fn, "r") as fp:
+                        prefix = fp.read().strip()
 
         try:
             fmwk = macholib.dyld.framework_find(prefix)
@@ -1692,8 +1705,12 @@ class py2app(Command):
                     )
 
                     if os.path.exists(fn):
-                        with open(fn, "rU") as fp:
-                            prefix = fp.read().strip()
+                        if sys.version_info[0] == 2:
+                            with open(fn, "rU") as fp:
+                                prefix = fp.read().strip()
+                        else:
+                            with open(fn, "r") as fp:
+                                prefix = fp.read().strip()
 
                     rest_path = os.path.normpath(sys.executable)[
                         len(os.path.normpath(sys.prefix)) + 1 :  # noqa: E203
@@ -2186,8 +2203,12 @@ class py2app(Command):
         if not isinstance(bootstrap, basestring):
             return bootstrap.getvalue()
         else:
-            with open(bootstrap, "rU") as fp:
-                return fp.read()
+            if sys.version_info[0] == 2:
+                with open(bootstrap, "rU") as fp:
+                    return fp.read()
+            else:
+                with open(bootstrap, "r") as fp:
+                    return fp.read()
 
     def create_pluginbundle(self, target, script, use_runtime_preference=True):
         base = target.get_dest_base()

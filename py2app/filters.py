@@ -43,8 +43,12 @@ def not_stdlib_filter(module, prefix=None):
         )
 
         if os.path.exists(fn):
-            with open(fn, "rU") as fp:
-                prefix = fp.read().strip()
+            if sys.version_info[0] == 2:
+                with open(fn, "rU") as fp:
+                    prefix = fp.read().strip()
+            else:
+                with open(fn, "r") as fp:
+                    prefix = fp.read().strip()
 
             if rp.startswith(prefix):
                 rest = rp[len(prefix) :]  # noqa: E203

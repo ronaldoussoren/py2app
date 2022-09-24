@@ -21,8 +21,15 @@ def get_toplevel_package_name(node):
 def scan_bytecode_loads(names, co):
     constants = co.co_consts
     for inst in dis.get_instructions(co):
-        if inst.opname in ("LOAD_NAME", "LOAD_GLOBAL"):
+        if inst.opname == "LOAD_NAME":
             name = co.co_names[inst.arg]
+            names.add(name)
+
+        elif inst.opname == "LOAD_GLOBAL":
+            if sys.version_info[:2] >= (3, 11):
+                name = co.co_names[inst.arg >> 1]
+            else:
+                name = co.co_names[inst.arg]
             names.add(name)
 
     cotype = type(co)

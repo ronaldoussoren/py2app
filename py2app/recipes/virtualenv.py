@@ -76,7 +76,7 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-    with open(m.filename, "rU") as fp:
+    with open(m.filename, "r") as fp:
         contents = fp.read()
     if "virtualenv" in contents:
         # This is the virtualenv version

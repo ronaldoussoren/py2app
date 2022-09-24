@@ -1,6 +1,11 @@
 Release history
 ===============
 
+py2app 0.28.4
+-------------
+
+* Fix incompatibility with Python 3.11
+
 py2app 0.28.3
 -------------
 

@@ -39,6 +39,7 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Objective C",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: User Interfaces",
@@ -284,7 +285,7 @@ if sys.platform != "darwin":
 setup(
     # metadata
     name="py2app",
-    version="0.28.3",
+    version="0.28.4",
     description="Create standalone Mac OS X applications with Python",
     # author='Bob Ippolito',
     # author_email='bob@redivi.com',
@@ -300,7 +301,7 @@ setup(
     long_description_content_type="text/x-rst; charset=UTF-8",
     classifiers=CLASSIFIERS,
     keywords=[".app", "standalone"],
-    install_requires=["altgraph>=0.16", "modulegraph>=0.17", "macholib>=1.16"],
+    install_requires=["altgraph>=0.16", "modulegraph>=0.19.3", "macholib>=1.16"],
     setup_requires=["altgraph>=0.16", "modulegraph>=0.17", "macholib>=1.16"],
     tests_require=["pyobjc"],
     cmdclass=cmdclass,
