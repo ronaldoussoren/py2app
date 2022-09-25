@@ -142,7 +142,6 @@ class my_egg_info(egg_info.egg_info):
             fp.write(last)
 
 
-
 class test(Command):
     description = "run test suite"
     user_options = [
@@ -302,7 +301,7 @@ setup(
     classifiers=CLASSIFIERS,
     keywords=[".app", "standalone"],
     install_requires=["altgraph>=0.16", "modulegraph>=0.19.3", "macholib>=1.16"],
-    setup_requires=["altgraph>=0.16", "modulegraph>=0.17", "macholib>=1.16"],
+    setup_requires=["altgraph>=0.16", "modulegraph>=0.19.3", "macholib>=1.16"],
     tests_require=["pyobjc"],
     cmdclass=cmdclass,
     packages=find_packages(exclude=["py2app_tests"]),

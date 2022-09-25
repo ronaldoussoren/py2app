@@ -689,11 +689,15 @@ class py2app(Command):
                 if sys.version_info[0] == 2:
                     with open(fn, "rU") as fp:
                         prefix = fp.read().strip()
-                        self._python_app = os.path.join(prefix, "Resources", "Python.app")
+                        self._python_app = os.path.join(
+                            prefix, "Resources", "Python.app"
+                        )
                 else:
                     with open(fn, "r") as fp:
                         prefix = fp.read().strip()
-                        self._python_app = os.path.join(prefix, "Resources", "Python.app")
+                        self._python_app = os.path.join(
+                            prefix, "Resources", "Python.app"
+                        )
             else:
                 raise DistutilsPlatformError(
                     "Virtualenv detected, but cannot determine base prefix"
