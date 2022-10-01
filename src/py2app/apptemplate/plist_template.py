@@ -5,7 +5,9 @@ import py2app
 __all__ = ["infoPlistDict"]
 
 
-def infoPlistDict(CFBundleExecutable, plist={}):  # noqa: B006, M511
+def infoPlistDict(
+    CFBundleExecutable: str, plist: dict = {}  # noqa: B006, M511
+) -> dict:
     CFBundleExecutable = CFBundleExecutable
     version = sys.version[:3]
     pdict = {

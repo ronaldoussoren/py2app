@@ -1,11 +1,16 @@
 import os
 import sys
+import typing
 from io import StringIO
 
+from modulegraph.modulegraph import ModuleGraph
 from modulegraph.util import imp_find_module
 
+from ... import build_app
+from .._types import RecipeInfo
 
-def check(cmd, mf):
+
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     m = mf.findNode("Image") or mf.findNode("PIL.Image")
     if m is None or m.filename is None:
         return None

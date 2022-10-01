@@ -1,3 +1,10 @@
+import typing
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
+
 AUTO_MISSING = [
     ("importlib", ("_frozen_importlib_external",)),
     ("mimetypes", ("winreg",)),
@@ -14,8 +21,8 @@ AUTO_MISSING = [
 ]
 
 
-def check(cmd, mf):
-    to_return = []
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
+    to_return: typing.List[str] = []
     for python_package, expected_missing in AUTO_MISSING:
         m = mf.findNode(python_package)
         if m is None or m.filename is None:

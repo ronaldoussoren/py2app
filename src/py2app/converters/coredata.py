@@ -2,11 +2,16 @@
 Automatic compilation of CoreData model files
 """
 import os
+import typing
 
 from py2app.util import mapc, momc
 
 
-def convert_datamodel(source, destination, dry_run=0):
+def convert_datamodel(
+    source: typing.Union[os.PathLike[str], str],
+    destination: typing.Union[os.PathLike[str], str],
+    dry_run: bool = False,
+) -> None:
     """
     Convert an .xcdatamodel to a .mom
     """
@@ -18,11 +23,15 @@ def convert_datamodel(source, destination, dry_run=0):
     momc(source, destination)
 
 
-def convert_mappingmodel(source, destination, dry_run=0):
+def convert_mappingmodel(
+    source: typing.Union[os.PathLike[str], str],
+    destination: typing.Union[os.PathLike[str], str],
+    dry_run: bool = False,
+) -> None:
     """
     Convert an .xcmappingmodel to a .cdm
     """
-    destination = destination[:-4] + ".cdm"
+    destination = os.path.splitext(destination)[0] + ".cdm"
 
     if dry_run:
         return

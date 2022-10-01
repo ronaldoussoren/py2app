@@ -1,4 +1,4 @@
-def _setup_ctypes():
+def _setup_ctypes() -> None:
     import os
     from ctypes.macholib import dyld
 

@@ -1,7 +1,13 @@
 import os
 import sys
 import textwrap
+import typing
 from io import StringIO
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
 
 PRESCRIPT = textwrap.dedent(
     """\
@@ -38,7 +44,7 @@ PRESCRIPT = textwrap.dedent(
 )
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     m = mf.findNode("pkg_resources")
     if m is None or m.filename is None:
         return None

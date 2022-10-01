@@ -1,4 +1,4 @@
-def _site_packages(prefix, real_prefix, global_site_packages):
+def _site_packages(prefix: str, real_prefix: str, global_site_packages: bool) -> None:
     import os
     import site
     import sys
@@ -27,7 +27,7 @@ def _site_packages(prefix, real_prefix, global_site_packages):
     # site-packages way to early on sys.path and that breaks py2app bundles.
     # NOTE: this is hacks into an undocumented feature of setuptools and
     # might stop to work without warning.
-    sys.__egginsert = len(sys.path)
+    sys.__egginsert = len(sys.path)  # type: ignore
 
     for path in paths:
         site.addsitedir(path)
@@ -35,7 +35,7 @@ def _site_packages(prefix, real_prefix, global_site_packages):
     # Ensure that the global site packages get placed on sys.path after
     # the site packages from the virtual environment (this functionality
     # is also in virtualenv)
-    sys.__egginsert = len(sys.path)
+    sys.__egginsert = len(sys.path)  # type: ignore
 
     if global_site_packages:
         site.addsitedir(

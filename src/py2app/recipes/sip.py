@@ -9,36 +9,42 @@ The problem with SIP is that all inter-module dependencies (for example from
 PyQt4.Qt to PyQt4.QtCore) are handled in C code and therefore cannot be
 detected by the python code in py2app).
 """
-
 import glob
 import importlib.resources
 import io
 import os
+import typing
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
 
 
 class Sip:
-    def __init__(self):
+    def __init__(self) -> None:
         self.packages = None
         self.plugin_dir = None
 
-    def config(self):
+    def config(self) -> typing.Set[str]:
         if self.packages is not None:
             print("packages", self.packages)
             return self.packages
 
         import os
 
-        import sipconfig
+        import sipconfig  # type: ignore
 
         try:
-            from PyQt4 import pyqtconfig
+            from PyQt4 import pyqtconfig  # type: ignore
 
             cfg = pyqtconfig.Configuration()
+            assert cfg.qt_dir is not None
             qtdir = cfg.qt_lib_dir
             sipdir = os.path.dirname(cfg.pyqt_mod_dir)
             self.plugin_dir = os.path.join(cfg.qt_dir, "plugins")
         except ImportError:
-            from PyQt5.QtCore import QLibraryInfo
+            from PyQt5.QtCore import QLibraryInfo  # type: ignore
 
             qtdir = QLibraryInfo.location(QLibraryInfo.LibrariesPath)
             self.plugin_dir = QLibraryInfo.location(QLibraryInfo.PluginsPath)
@@ -57,7 +63,7 @@ class Sip:
             dyld_library_path.insert(0, qtdir)
             os.environ["DYLD_LIBRARY_PATH"] = ":".join(dyld_library_path)
 
-        self.packages = set()
+        self.packages: typing.Set[str] = set()
 
         for fn in os.listdir(sipdir):
             fullpath = os.path.join(sipdir, fn)
@@ -76,7 +82,9 @@ class Sip:
 
         return self.packages
 
-    def check(self, cmd, mf):
+    def check(
+        self, cmd: "build_app.py2app", mf: ModuleGraph
+    ) -> typing.Optional[RecipeInfo]:
         try:
             packages = self.config()
         except ImportError:
@@ -119,19 +127,30 @@ class Sip:
             resource_data = importlib.resources.read_text("py2app.recipes", "qt.conf")
             resource_fp = io.StringIO(resource_data)
             resource_fp.name = "qt.conf"
+
+            resources: typing.Sequence[
+                typing.Union[
+                    str,
+                    typing.Tuple[
+                        str, typing.Sequence[typing.Union[str, typing.IO[str]]]
+                    ],
+                ]
+            ]
             resources = [("", [resource_fp])]
 
-            for item in cmd.qt_plugins:
+            for item in cmd.qt_plugins if cmd.qt_plugins is not None else ():
                 if "/" not in item:
                     item = item + "/*"
 
                 if "*" in item:
+                    assert isinstance(self.plugin_dir, str)
                     for path in glob.glob(os.path.join(self.plugin_dir, item)):
                         rel_path = path[len(self.plugin_dir) :]  # noqa: E203
                         resources.append(
                             (os.path.dirname("qt_plugins" + rel_path), [path])
                         )
                 else:
+                    assert self.plugin_dir is not None
                     resources.append(
                         (
                             os.path.dirname(os.path.join("qt_plugins", item)),

@@ -1,12 +1,12 @@
-def _setup_pkgresources():
+def _setup_pkgresources() -> None:
     import os
     import plistlib
 
     import pkg_resources  # noqa: I251
 
-    with open(
-        os.path.join(os.path.dirname(os.getenv("RESOURCEPATH")), "Info.plist"), "rb"
-    ) as fp:
+    resource_path = os.getenv("RESOURCEPATH")
+    assert resource_path is not None
+    with open(os.path.join(os.path.dirname(resource_path), "Info.plist"), "rb") as fp:
 
         pl = plistlib.load(fp)
 

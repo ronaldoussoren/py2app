@@ -2,6 +2,7 @@ import distutils.sysconfig
 import distutils.util
 import os
 import re
+import typing
 
 gPreBuildVariants = [
     {
@@ -26,8 +27,12 @@ gPreBuildVariants = [
 
 
 def main(
-    buildall=False, arch=None, secondary=False, redirect_asl=False, use_old_sdk=False
-):
+    buildall: bool = False,
+    arch: typing.Optional[str] = None,
+    secondary: bool = False,
+    redirect_asl: bool = False,
+    use_old_sdk: bool = False,
+) -> str:
     basepath = os.path.dirname(__file__)
     builddir = os.path.join(basepath, "prebuilt")
     if not os.path.exists(builddir):
@@ -37,6 +42,7 @@ def main(
     cfg = distutils.sysconfig.get_config_vars()
 
     BASE_CFLAGS = cfg["CFLAGS"]
+    assert isinstance(BASE_CFLAGS, str)
     BASE_CFLAGS = BASE_CFLAGS.replace("-dynamic", "")
     while True:
         x = re.sub(r"-arch\s+\S+", "", BASE_CFLAGS)

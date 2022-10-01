@@ -34,7 +34,7 @@ class EventTypeSpec(ctypes.Structure):
     ]
 
 
-def _ctypes_setup():
+def _ctypes_setup() -> ctypes.CDLL:
     carbon = ctypes.CDLL("/System/Library/Carbon.framework/Carbon")
 
     # timer_func = ctypes.CFUNCTYPE(
@@ -108,18 +108,18 @@ def _ctypes_setup():
     return carbon
 
 
-def _run_argvemulator(timeout=60):
+def _run_argvemulator(timeout: float = 60.0) -> None:
 
     # Configure ctypes
     carbon = _ctypes_setup()
 
     # Is the emulator running?
-    running = [True]
-
-    timeout = [timeout]
+    running = True
 
     # Configure AppleEvent handlers
-    ae_callback = carbon.AEInstallEventHandler.argtypes[2]
+    ae_callback = ctypes.CFUNCTYPE(
+        ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p
+    )
 
     (kAEInternetSuite,) = struct.unpack(">i", b"GURL")
     (kAEISGetURL,) = struct.unpack(">i", b"GURL")
@@ -138,7 +138,9 @@ def _run_argvemulator(timeout=60):
     kEventAppleEvent = 1
 
     @ae_callback
-    def open_app_handler(message, reply, refcon):
+    def open_app_handler(
+        message: ctypes.c_int, reply: ctypes.c_void_p, refcon: ctypes.c_void_p
+    ) -> ctypes.c_void_p:
         # Got a kAEOpenApplication event, which means we can
         # start up. On some OSX versions this event is even
         # sent when an kAEOpenDocuments or kAEOpenURLs event
@@ -146,30 +148,34 @@ def _run_argvemulator(timeout=60):
         #
         # Therefore don't set running to false, but reduce the
         # timeout to at most two seconds beyond the current time.
-        timeout[0] = min(timeout[0], time.time() - start + 2)
-        return 0
+        nonlocal timeout
+        timeout = min(timeout, time.time() - start + 2)
+        return ctypes.c_void_p(0)
 
     carbon.AEInstallEventHandler(
         kCoreEventClass, kAEOpenApplication, open_app_handler, 0, FALSE
     )
 
     @ae_callback
-    def open_file_handler(message, reply, refcon):
+    def open_file_handler(
+        message: ctypes.c_int, reply: ctypes.c_void_p, refcon: ctypes.c_void_p
+    ) -> ctypes.c_void_p:
+        nonlocal running
         listdesc = AEDesc()
         sts = carbon.AEGetParamDesc(
             message, keyDirectObject, typeAEList, ctypes.byref(listdesc)
         )
         if sts != 0:
             print("argvemulator warning: cannot unpack open document event")
-            running[0] = False
-            return
+            running = False
+            return ctypes.c_void_p(0)
 
         item_count = ctypes.c_long()
         sts = carbon.AECountItems(ctypes.byref(listdesc), ctypes.byref(item_count))
         if sts != 0:
             print("argvemulator warning: cannot unpack open document event")
-            running[0] = False
-            return
+            running = False
+            return ctypes.c_void_p(0)
 
         desc = AEDesc()
         for i in range(item_count.value):
@@ -178,8 +184,8 @@ def _run_argvemulator(timeout=60):
             )
             if sts != 0:
                 print("argvemulator warning: cannot unpack open document event")
-                running[0] = False
-                return
+                running = False
+                return ctypes.c_void_p(0)
 
             sz = carbon.AEGetDescDataSize(ctypes.byref(desc))
             buf = ctypes.create_string_buffer(sz)
@@ -198,30 +204,34 @@ def _run_argvemulator(timeout=60):
 
             sys.argv.append(buf.value.decode("utf-8"))
 
-        running[0] = False
-        return 0
+        running = False
+        return ctypes.c_void_p(0)
 
     carbon.AEInstallEventHandler(
         kCoreEventClass, kAEOpenDocuments, open_file_handler, 0, FALSE
     )
 
     @ae_callback
-    def open_url_handler(message, reply, refcon):
+    def open_url_handler(
+        message: ctypes.c_int, reply: ctypes.c_void_p, refcon: ctypes.c_void_p
+    ) -> ctypes.c_void_p:
+        nonlocal running
+
         listdesc = AEDesc()
         ok = carbon.AEGetParamDesc(
             message, keyDirectObject, typeAEList, ctypes.byref(listdesc)
         )
         if ok != 0:
             print("argvemulator warning: cannot unpack open document event")
-            running[0] = False
-            return
+            running = False
+            return ctypes.c_void_p(0)
 
         item_count = ctypes.c_long()
         sts = carbon.AECountItems(ctypes.byref(listdesc), ctypes.byref(item_count))
         if sts != 0:
             print("argvemulator warning: cannot unpack open url event")
-            running[0] = False
-            return
+            running = False
+            return ctypes.c_void_p(0)
 
         desc = AEDesc()
         for i in range(item_count.value):
@@ -230,8 +240,8 @@ def _run_argvemulator(timeout=60):
             )
             if sts != 0:
                 print("argvemulator warning: cannot unpack open URL event")
-                running[0] = False
-                return
+                running = False
+                return ctypes.c_void_p(0)
 
             sz = carbon.AEGetDescDataSize(ctypes.byref(desc))
             buf = ctypes.create_string_buffer(sz)
@@ -242,8 +252,8 @@ def _run_argvemulator(timeout=60):
             else:
                 sys.argv.append(buf.value.decode("utf-8"))
 
-        running[0] = False
-        return 0
+        running = False
+        return ctypes.c_void_p(0)
 
     carbon.AEInstallEventHandler(
         kAEInternetSuite, kAEISGetURL, open_url_handler, 0, FALSE
@@ -259,13 +269,13 @@ def _run_argvemulator(timeout=60):
     eventType.eventClass = kEventClassAppleEvent
     eventType.eventKind = kEventAppleEvent
 
-    while running[0] and now - start < timeout[0]:
+    while running and now - start < timeout:
         event = ctypes.c_void_p()
 
         sts = carbon.ReceiveNextEvent(
             1,
             ctypes.byref(eventType),
-            start + timeout[0] - now,
+            start + timeout - now,
             TRUE,
             ctypes.byref(event),
         )
@@ -291,7 +301,7 @@ def _run_argvemulator(timeout=60):
     carbon.AERemoveEventHandler(kAEInternetSuite, kAEISGetURL, open_url_handler, FALSE)
 
 
-def _argv_emulation():
+def _argv_emulation() -> None:
     import os
 
     # only use if started by LaunchServices

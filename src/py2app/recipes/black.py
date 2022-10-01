@@ -1,7 +1,13 @@
+import typing
 from importlib.metadata import packages_distributions
 
+from modulegraph.modulegraph import ModuleGraph
 
-def check(cmd, mf):
+from .. import build_app
+from ._types import RecipeInfo
+
+
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     m = mf.findNode("black")
     if m is None or m.filename is None:
         return None
@@ -13,7 +19,7 @@ def check(cmd, mf):
     # unusual name, e.g. 610faff656c4cfcbb4a3__mypyc; extract
     # the name from the list of toplevels.
     includes = set()
-    for toplevel, dists in packages_distributions.items():
+    for toplevel, dists in packages_distributions.items():  # type: ignore
         if "black" not in dists:
             continue
 
@@ -25,4 +31,4 @@ def check(cmd, mf):
     includes.add("pathspec")
 
     # XXX: verify if caller knows how to work with sets
-    return {"includes": list(includes), "packages": list(packages)}
+    return {"includes": list(includes), "packages": sorted(packages)}

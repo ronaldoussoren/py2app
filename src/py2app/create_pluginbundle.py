@@ -23,7 +23,7 @@ def create_pluginbundle(
     condition: typing.Callable[[str], bool] = skipscm,
     plist: typing.Optional[typing.Dict[str, typing.Any]] = None,
     arch: str = None,
-):
+) -> typing.Tuple[str, dict]:
     destpath = make_path(destdir)
     if plist is None:
         plist = {}
@@ -46,7 +46,7 @@ def create_pluginbundle(
 
     for d in dirs:
         progress.trace(f"Create {d}")
-        d.mkdir(parent=True, exist_ok=True)
+        d.mkdir(parents=True, exist_ok=True)
 
     with open(plistPath, "wb") as fp:
         progress.trace(f"Write {plistPath}")

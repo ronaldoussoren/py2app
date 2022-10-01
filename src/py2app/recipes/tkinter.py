@@ -5,14 +5,20 @@
 import os
 import sys
 import textwrap
+import typing
 from io import StringIO
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
 
 # New enough Tk version to skip using the oldsdk
 # binaries.
 NEW_TK = (8, 6, 11)
 
 
-def tk_version():
+def tk_version() -> typing.Tuple[int, ...]:
     # Returns tk version as a tuple, including micro version
     import _tkinter
 
@@ -21,7 +27,7 @@ def tk_version():
     return tuple(int(x) for x in version_string.split("."))
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     m = mf.findNode("_tkinter")
     if m is None:
         return None
@@ -31,7 +37,7 @@ def check(cmd, mf):
     except ImportError:
         return None
 
-    prefix = sys.prefix if not hasattr(sys, "real_prefix") else sys.real_prefix
+    prefix = sys.base_prefix
 
     paths = []
     lib = os.path.join(prefix, "lib")

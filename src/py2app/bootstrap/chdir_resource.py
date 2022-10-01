@@ -1,4 +1,4 @@
-def _chdir_resource():
+def _chdir_resource() -> None:
     import os
 
     os.chdir(os.environ["RESOURCEPATH"])

@@ -1,12 +1,31 @@
 import dis
 import os
+import sys
+import types
+import typing
 
 from modulegraph import modulegraph
+from modulegraph.modulegraph import ModuleGraph
 
 from py2app.filters import not_stdlib_filter
 
+from .. import build_app
+from ._types import RecipeInfo
 
-def get_toplevel_package_name(node):
+
+@typing.overload
+def get_toplevel_package_name(
+    node: typing.Union[modulegraph.SourceModule, modulegraph.BaseModule]
+) -> str:
+    ...
+
+
+@typing.overload
+def get_toplevel_package_name(node: modulegraph.Node) -> None:
+    ...
+
+
+def get_toplevel_package_name(node: modulegraph.Node) -> typing.Optional[str]:
     if isinstance(node, modulegraph.Package):
         return node.identifier.split(".")[0]
     elif isinstance(node, modulegraph.BaseModule):
@@ -17,11 +36,18 @@ def get_toplevel_package_name(node):
     return None
 
 
-def scan_bytecode_loads(names, co):
+def scan_bytecode_loads(names: typing.Set[str], co: types.CodeType) -> None:
     constants = co.co_consts
     for inst in dis.get_instructions(co):
-        if inst.opname in ("LOAD_NAME", "LOAD_GLOBAL"):
+        if inst.opname == "LOAD_NAME":
             name = co.co_names[inst.arg]
+            names.add(name)
+
+        elif inst.opname == "LOAD_GLOBAL":
+            if sys.version_info[:2] >= (3, 11):
+                name = co.co_names[inst.arg >> 1]
+            else:
+                name = co.co_names[inst.arg]
             names.add(name)
 
     cotype = type(co)
@@ -34,8 +60,8 @@ def scan_bytecode_loads(names, co):
 # scan_bytecode_loads doesn't work on older versions.
 
 
-def check(cmd, mf):
-    packages = set()
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
+    packages: typing.Set[str] = set()
     for node in mf.flatten():
         if not not_stdlib_filter(node):
             continue
@@ -47,7 +73,7 @@ def check(cmd, mf):
             continue
 
         if not hasattr(node, "_py2app_global_reads"):
-            names = set()
+            names: typing.Set[str] = set()
             scan_bytecode_loads(names, node.code)
             node._py2app_global_reads = names
 
@@ -57,5 +83,5 @@ def check(cmd, mf):
                 packages.add(pkg)
 
     if packages:
-        return {"packages": packages}
+        return {"packages": sorted(packages)}
     return None

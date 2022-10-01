@@ -97,7 +97,7 @@ def add_recursive(
     infos: InfoDict,
     dist_info_path: typing.Union[str, os.PathLike[str]],
     to_include: typing.Sequence[typing.Union[str, os.PathLike[str]]],
-):
+) -> None:
     """Add items from to_include to infos, recursively
     walking into directories"""
     for item in to_include:
@@ -112,7 +112,7 @@ def add_recursive(
             infos[item] = dist_info_path
 
 
-def scan_for_metadata(path: typing.Sequence[str]):
+def scan_for_metadata(path: typing.Sequence[str]) -> InfoDict:
     """
     Scan the importlib search path *path* for dist-info/egg-info
     directories and return a mapping from absolute paths of installed

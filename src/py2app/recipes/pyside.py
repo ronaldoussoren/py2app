@@ -2,16 +2,22 @@ import glob
 import importlib.resources
 import io
 import os
+import typing
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     name = "PySide"
     m = mf.findNode(name)
     if m is None or m.filename is None:
         return None
 
     try:
-        from PySide import QtCore
+        from PySide import QtCore  # type: ignore
     except ImportError:
         print("WARNING: macholib found PySide, but cannot import")
         return {}
@@ -21,13 +27,20 @@ def check(cmd, mf):
     resource_data = importlib.resources.read_text("py2app.recipes", "qt.conf")
     resource_fp = io.StringIO(resource_data)
     resource_fp.name = "qt.conf"
+
+    resources: typing.Sequence[
+        typing.Union[
+            str, typing.Tuple[str, typing.Sequence[typing.Union[str, typing.IO[str]]]]
+        ]
+    ]
     resources = [("", [resource_fp])]
-    for item in cmd.qt_plugins:
+    for item in cmd.qt_plugins if cmd.qt_plugins is not None else ():
         if "/" not in item:
             item = item + "/*"
 
         if "*" in item:
             for path in glob.glob(os.path.join(plugin_dir, item)):
+                assert isinstance(path, str)
                 rel_path = path[len(plugin_dir) :]  # noqa: E203
                 resources.append((os.path.dirname("qt_plugins" + rel_path), [path]))
         else:

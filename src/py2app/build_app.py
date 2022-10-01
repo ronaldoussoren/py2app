@@ -6,12 +6,14 @@ Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 
 import collections
 import imp
+import io
 import os
 import plistlib
 import shlex
 import shutil
 import sys
 import types
+import typing
 import zipfile
 import zlib
 from distutils.errors import DistutilsOptionError, DistutilsPlatformError
@@ -25,9 +27,16 @@ import macholib.MachO
 import macholib.MachOStandalone
 from modulegraph import modulegraph, zipio
 from modulegraph.find_modules import find_modules, find_needed_modules, parse_mf_results
-from modulegraph.modulegraph import Package, Script, SourceModule
+from modulegraph.modulegraph import (
+    Extension,
+    ModuleGraph,
+    Node,
+    Package,
+    Script,
+    SourceModule,
+)
 from modulegraph.util import imp_find_module
-from setuptools import Command
+from setuptools import Command, Distribution
 
 from py2app import recipes
 from py2app._pkg_meta import IGNORED_DISTINFO, scan_for_metadata
@@ -56,6 +65,40 @@ from py2app.util import (
 )
 
 from .progress import Progress
+from .recipes._types import RecipeInfo
+
+
+class _FrameworkInfo(typing.TypedDict):
+    # XXX: should be imported...
+    location: str
+    name: str
+    shortname: str
+    version: str
+    suffix: str
+
+
+class _ScriptInfo(typing.TypedDict, total=False):
+    script: str
+    plist: dict
+    extra_scripts: typing.List[str]
+
+
+class Py2appDistribution(Distribution):
+    # Type is only present to help with type checking, the attributes
+    # are dynamically added to the Distribution by setuptools.
+
+    app: typing.List[typing.Union[str, _ScriptInfo, "Target"]]
+    plugin: typing.List[typing.Union[str, _ScriptInfo, "Target"]]
+
+    def __new__(self) -> "Py2appDistribution":
+        raise RuntimeError("Don't instantiate!")
+
+    def get_version(self) -> str:
+        ...
+
+    def get_name(self) -> str:
+        ...
+
 
 PYTHONFRAMEWORK = get_config_var("PYTHONFRAMEWORK")
 
@@ -71,19 +114,10 @@ PLUGIN_SUFFIXES = {
 }
 
 
-# XXX: Which env tool uses which prefix,
-#      in particular: it all of this needed
-#      with Python 3 and modern versions of
-#      venv and virtualenv?
-if hasattr(sys, "real_prefix"):
-    sys_base_prefix = sys.real_prefix
-elif hasattr(sys, "base_prefix"):
-    sys_base_prefix = sys.base_prefix
-else:
-    sys_base_prefix = sys.prefix
+sys_base_prefix = sys.base_prefix
 
 
-def finalize_distribution_options(dist):
+def finalize_distribution_options(dist: Py2appDistribution) -> None:
     """
     setuptools.finalize_distribution_options extension
     point for py2app, to deal with autodiscovery in
@@ -102,10 +136,11 @@ def finalize_distribution_options(dist):
 
     name = getattr(dist.metadata, "name", None)
     if name is None or name == "UNKNOWN":
-        if dist.app:
-            targets = fixup_targets(dist.app, "script")
+        targets: typing.Sequence[Target]
+        if dist.app:  # type: ignore
+            targets = fixup_targets(dist.app, "script")  # type: ignore
         else:
-            targets = fixup_targets(dist.plugin, "script")
+            targets = fixup_targets(dist.plugin, "script")  # type: ignore
 
         if not targets:
             return
@@ -116,13 +151,16 @@ def finalize_distribution_options(dist):
         dist.metadata.name = name
 
 
-def loader_paths(sourcefn, destfn):
+def loader_paths(
+    sourcefn: typing.Union[os.PathLike[str], str],
+    destfn: typing.Union[os.PathLike[str], str],
+) -> typing.Iterator[typing.Tuple[str, str]]:
     # Yield (sourcefn, destfn) pairs for all
     # '@loader_path' load commands in 'sourcefn'
     sourcedir = os.path.dirname(sourcefn)
     destdir = os.path.dirname(destfn)
 
-    m = macholib.MachO.MachO(sourcefn)
+    m = macholib.MachO.MachO(os.fspath(sourcefn))
     for header in m.headers:
         for _idx, _name, other in header.walkRelocatables():
             if not other.startswith("@loader_path/"):
@@ -131,37 +169,53 @@ def loader_paths(sourcefn, destfn):
             yield os.path.join(sourcedir, relpath), os.path.join(destdir, relpath)
 
 
-def get_zipfile(dist, semi_standalone=False):
+def get_zipfile(dist: Py2appDistribution, semi_standalone: bool = False) -> str:
     if semi_standalone:
         return "python%d.%d/site-packages.zip" % (sys.version_info[:2])
     else:
         return "python%d%d.zip" % (sys.version_info[:2])
 
 
-def framework_copy_condition(src):
+def framework_copy_condition(src: typing.Union[os.PathLike[str], str]) -> bool:
     # Skip Headers, .svn, and CVS dirs
     return skipscm(src) and os.path.basename(src) != "Headers"
 
 
 class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
-    def __init__(self, appbuilder, ext_dir, copyexts, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        appbuilder: "py2app",
+        ext_dir: typing.Union[os.PathLike[str], str],
+        copyexts: typing.List[Extension],
+        base: str,
+        dest: typing.Optional[str] = None,
+        graph: typing.Optional[str] = None,
+        env: typing.Dict[str, str] = None,
+        executable_path: typing.Optional[str] = None,
+    ) -> None:
+        super().__init__(base, dest, graph, env, executable_path)
         self.appbuilder = appbuilder
-        self.ext_map = {}
+        self.ext_map: typing.Dict[str, str] = {}
         for e in copyexts:
+            assert e.identifier is not None
+            assert e.filename is not None
             fn = os.path.join(
                 ext_dir,
                 (e.identifier.replace(".", os.sep) + os.path.splitext(e.filename)[1]),
             )
             self.ext_map[fn] = os.path.dirname(e.filename)
 
-    def update_node(self, m):
+    # XXX: Not sure if type annation is correct
+    def update_node(
+        self, m: typing.Optional[macholib.MachO.MachO]
+    ) -> typing.Optional[macholib.MachO.MachO]:
         if isinstance(m, macholib.MachO.MachO):
+            assert m.filename is not None
             if m.filename in self.ext_map:
                 m.loader_path = self.ext_map[m.filename]
         return m
 
-    def copy_dylib(self, src):
+    def copy_dylib(self, src: str) -> str:
         dest = os.path.join(self.dest, os.path.basename(src))
         if os.path.islink(src):
             dest = os.path.join(self.dest, os.path.basename(os.path.realpath(src)))
@@ -183,18 +237,22 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
         self.ext_map[dest] = os.path.dirname(src)
         return self.appbuilder.copy_dylib(src, dest)
 
-    def copy_framework(self, info):
+    def copy_framework(self, info: _FrameworkInfo) -> str:
         destfn = self.appbuilder.copy_framework(info, self.dest)
         dest = os.path.join(self.dest, info["shortname"] + ".framework")
         self.pending.append((destfn, iter_platform_files(dest)))
         return destfn
 
 
-def iter_recipes(module=recipes):
-    for name in dir(module):
+def iter_recipes() -> typing.Iterator[
+    typing.Tuple[
+        str, typing.Callable[["py2app", ModuleGraph], typing.Optional[RecipeInfo]]
+    ]
+]:
+    for name in dir(recipes):
         if name.startswith("_"):
             continue
-        check = getattr(getattr(module, name), "check", None)
+        check = getattr(getattr(recipes, name), "check", None)
         if check is not None:
             yield (name, check)
 
@@ -202,17 +260,22 @@ def iter_recipes(module=recipes):
 # A very loosely defined "target".  We assume either a "script" or "modules"
 # attribute.  Some attributes will be target specific.
 class Target:
-    def __init__(self, **kw):
+    script: str
+    prescripts: typing.List[str]
+    extra_scripts: typing.List[str]
+    appdir: str
+
+    def __init__(self, **kw: typing.Any) -> None:  # XXX
         self.__dict__.update(kw)
         # If modules is a simple string, assume they meant list
         m = self.__dict__.get("modules")
         if m and isinstance(m, str):
             self.modules = [m]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Target {self.__dict__}>"
 
-    def get_dest_base(self):
+    def get_dest_base(self) -> str:
         dest_base = getattr(self, "dest_base", None)
         if dest_base:
             return dest_base
@@ -224,7 +287,7 @@ class Target:
         assert modules, "no script, modules or dest_base specified"
         return modules[0].split(".")[-1]
 
-    def validate(self):
+    def validate(self) -> None:
         resources = getattr(self, "resources", [])
         for r_filename in resources:
             if not os.path.isfile(r_filename):
@@ -233,9 +296,11 @@ class Target:
                 )
 
 
-def fixup_targets(targets, default_attribute):
+def fixup_targets(
+    targets: typing.Sequence[typing.Union[str, dict, Target]], default_attribute: str
+) -> typing.Sequence[Target]:
     if not targets:
-        return targets
+        return []
 
     if isinstance(targets, str):
         raise DistutilsOptionError("Target definition should be a sequence")
@@ -246,7 +311,10 @@ def fixup_targets(targets, default_attribute):
             # Create a default target object, with the string as the attribute
             target = Target(**{default_attribute: target_def})
         else:
-            d = getattr(target_def, "__dict__", target_def)
+            if isinstance(target_def, dict):
+                d = target_def
+            else:
+                d = target_def.__dict__
             if default_attribute not in d:
                 raise DistutilsOptionError(
                     "This target class requires an attribute '%s'"
@@ -258,28 +326,34 @@ def fixup_targets(targets, default_attribute):
     return ret
 
 
-def validate_target(dist, attr, value):
+def validate_target(
+    dist: Py2appDistribution, attr: str, value: typing.Sequence[Target]
+) -> None:
     fixup_targets(value, "script")
 
 
-def normalize_data_file(fn):
+def normalize_data_file(
+    fn: typing.Union[str, typing.Tuple[str, typing.List[str]]]
+) -> typing.Tuple[str, typing.List[str]]:
     if isinstance(fn, str):
         fn = convert_path(fn)
         return ("", [fn])
     return fn
 
 
-def installation_info(version=None):
-    if version is None:
-        version = sys.version
-
-    return ".".join(version.split(".")[:2])
+def installation_info() -> str:
+    return f"{sys.version_info[0]}.{sys.version_info[1]}"
 
 
 class py2app(Command):
     description = "create a macOS application or plugin from Python scripts"
     # List of option tuples: long name, short name (None if no short
     # name), and help string.
+    dry_run: bool
+    verbose: int
+    distribution: Py2appDistribution
+    qt_plugins: typing.Optional[typing.List[str]]
+    style: typing.Literal["app", "plugin"]
 
     user_options = [
         ("app=", None, "application bundle to be built"),
@@ -460,57 +534,57 @@ class py2app(Command):
         "_frozen_importlib_external",  # Seems to be side effect of py2app
     }
 
-    def initialize_options(self):
-        self.app = None
-        self.optimize = None
-        self.plugin = None
-        self.bdist_base = None
-        self.xref = False
-        self.graph = False
-        self.no_zip = 0
-        self.arch = None
-        self.strip = True
-        self.no_strip = False
-        self.iconfile = None
-        self.extension = None
-        self.alias = 0
-        self.argv_emulation = 0
-        self.emulate_shell_environment = 0
-        self.argv_inject = None
-        self.no_chdir = 0
-        self.site_packages = False
-        self.use_pythonpath = False
-        self.use_faulthandler = False
-        self.verbose_interpreter = False
-        self.includes = None
-        self.packages = None
-        self.maybe_packages = None
-        self.excludes = None
-        self.dylib_excludes = None
-        self.frameworks = None
-        self.resources = None
-        self.datamodels = None
-        self.mappingmodels = None
-        self.plist = None
-        self.compressed = True
-        self.semi_standalone = False
-        self.dist_dir = None
-        self.debug_skip_macholib = False
-        self.debug_modulegraph = False
-        self.filters = []
-        self.eggs = []
-        self.qt_plugins = None
-        self.matplotlib_backends = None
-        self.extra_scripts = None
-        self.include_plugins = None
-        self.report_missing_from_imports = False
-        self.no_report_missing_conditional_import = False
-        self.redirect_stdout_to_asl = False
-        self._python_app = None
-        self.use_old_sdk = False
-        self.expected_missing_imports = None
+    def initialize_options(self) -> None:
+        self.app: typing.Optional[typing.List[typing.Union[str, _ScriptInfo]]] = None
+        self.plugin: typing.Optional[typing.List[typing.Union[str, _ScriptInfo]]] = None
+        self.optimize: int = sys.flags.optimize
+        self.bdist_base: str = typing.cast(str, None)
+        self.xref: bool = False
+        self.graph: bool = False
+        self.arch: typing.Optional[str] = None
+        self.strip: bool = True
+        self.no_strip: bool = False  # XXX
+        self.iconfile: typing.Optional[str] = None
+        self.extension: str = typing.cast(str, None)
+        self.alias: int = 0  # XXX  bool?
+        self.argv_emulation: int = 0  # XXX: bool?
+        self.emulate_shell_environment: int = 0  # XXX: bool?
+        self.argv_inject: typing.Optional[typing.List[str]] = None
+        self.no_chdir: int = 0  # XXX: bool?
+        self.site_packages: bool = False
+        self.use_pythonpath: bool = False
+        self.use_faulthandler: bool = False
+        self.verbose_interpreter: bool = False
+        self.includes: typing.Set[str] = typing.cast(typing.Set[str], None)
+        self.packages: typing.Set[str] = typing.cast(typing.Set[str], None)
+        self.maybe_packages: typing.Set[str] = typing.cast(typing.Set[str], None)
+        self.excludes: typing.Set[str] = typing.cast(typing.Set[str], None)
+        self.dylib_excludes: typing.Set[str] = typing.cast(typing.Set[str], None)
+        self.frameworks: typing.List[str] = typing.cast(typing.List[str], None)
+        self.resources: typing.List[str] = typing.cast(typing.List[str], None)
+        self.datamodels: typing.List[str] = typing.cast(typing.List[str], None)
+        self.mappingmodels: typing.List[str] = typing.cast(typing.List[str], None)
+        self.plist: typing.Optional[dict] = None
+        self.compressed: bool = True
+        self.semi_standalone: bool = False
+        self.dist_dir: str = typing.cast(str, None)
+        self.debug_skip_macholib: bool = False
+        self.debug_modulegraph: bool = False
+        self.filters: typing.List[typing.Callable[[Node], bool]] = []
+        self.qt_plugins: typing.List[str] = typing.cast(typing.List[str], None)
+        self.matplotlib_backends: typing.List[str] = typing.cast(typing.List[str], None)
+        self.extra_scripts: typing.List[str] = typing.cast(typing.List[str], None)
+        self.include_plugins: typing.List[str] = typing.cast(typing.List[str], None)
+        self.report_missing_from_imports: bool = False
+        self.no_report_missing_conditional_import: bool = False
+        self.redirect_stdout_to_asl: bool = False
+        self._python_app: str = typing.cast(str, None)
+        self.use_old_sdk: bool = False
+        self.expected_missing_imports: typing.Set[str] = typing.cast(
+            typing.Set[str], None
+        )
 
-    def finalize_options(self):
+    def finalize_options(self) -> None:
         self.progress = Progress()
 
         if sys_base_prefix != sys.prefix:
@@ -581,7 +655,7 @@ class py2app(Command):
         self.includes.add("pkg_resources")
 
         dylib_excludes = fancy_split(self.dylib_excludes)
-        self.dylib_excludes = []
+        self.dylib_excludes = set()
         for fn in dylib_excludes:
             try:
                 res = macholib.dyld.framework_find(fn)
@@ -590,7 +664,7 @@ class py2app(Command):
                     res = macholib.dyld.dyld_find(fn)
                 except ValueError:
                     res = fn
-            self.dylib_excludes.append(res)
+            self.dylib_excludes.add(res)
         self.resources = fancy_split(self.resources)
         frameworks = fancy_split(self.frameworks)
         self.frameworks = []
@@ -636,7 +710,11 @@ class py2app(Command):
         if self.expected_missing_imports is None:
             self.expected_missing_imports = self.always_expected_missing_imports
         else:
-            if self.expected_missing_imports.startswith("@"):
+            # Slightly convoluted test in the if statement because the type declaration
+            # for the attribute is only valid after ``finalize``
+            if isinstance(
+                self.expected_missing_imports, str
+            ) and self.expected_missing_imports.startswith("@"):
                 self.expected_missing_imports = self.read_expected_missing_imports_file(
                     self.expected_missing_imports[1:]
                 )
@@ -658,17 +736,16 @@ class py2app(Command):
                 "add model files to the list of resources"
             )
 
-        if self.optimize is None:
-            self.optimize = sys.flags.optimize
-        else:
-            self.optimize = int(self.optimize)
+        self.optimize = int(self.optimize)
 
-    def read_expected_missing_imports_file(self, filename):
+    def read_expected_missing_imports_file(
+        self, filename: typing.Union[str, os.PathLike[str]]
+    ) -> typing.Set[str]:
         #
         #   ignore blank lines and lines that start with a '#'
         #   only one import per line
         #
-        expected_missing_imports = set()
+        expected_missing_imports: typing.Set[str] = set()
         with open(filename) as f:
             for line in f:
                 line = line.strip()
@@ -678,20 +755,22 @@ class py2app(Command):
 
         return expected_missing_imports
 
-    def get_version(self):
+    def get_version(self) -> str:
         version = self.distribution.get_version()
         if not isinstance(version, str):
             raise DistutilsOptionError("Version must be a string")
 
         if version == "0.0.0":
-            version = find_version(self.target.script)
-            if version is None:
+            maybe_version = find_version(self.target.script)
+            if maybe_version is None:
                 version = "0.0.0"
+            else:
+                version = maybe_version
 
         assert isinstance(version, str)
         return version
 
-    def get_default_plist(self):
+    def get_default_plist(self) -> dict:
         plist = {}
 
         version = self.get_version()
@@ -706,7 +785,9 @@ class py2app(Command):
 
         return plist
 
-    def get_runtime(self, prefix=None, version=None):
+    def get_runtime(
+        self, prefix: typing.Union[str, os.PathLike[str]] = None, version: str = None
+    ) -> typing.Tuple[str, str]:
         # XXX: this is a bit of a hack!
         # ideally we'd use dylib functions to figure this out
         if prefix is None:
@@ -741,7 +822,7 @@ class py2app(Command):
                     prefix = fp.read().strip()
 
         try:
-            fmwk = macholib.dyld.framework_find(prefix)
+            fmwk = macholib.dyld.framework_find(os.fspath(prefix))
         except ValueError:
             info = None
         else:
@@ -756,13 +837,15 @@ class py2app(Command):
 
         return dylib, runtime
 
-    def get_runtime_preferences(self, prefix=None, version=None):
+    def get_runtime_preferences(
+        self, prefix: typing.Union[str, os.PathLike[str]] = None, version: str = None
+    ) -> typing.Iterator[str]:
         dylib, runtime = self.get_runtime(prefix=prefix, version=version)
         yield os.path.join("@executable_path", "..", "Frameworks", dylib)
         if self.semi_standalone or self.alias:
             yield runtime
 
-    def run(self):
+    def run(self) -> None:
         if get_config_var("PYTHONFRAMEWORK") is None:
             if not get_config_var("Py_ENABLE_SHARED"):
                 raise DistutilsPlatformError(
@@ -796,7 +879,9 @@ class py2app(Command):
             self.progress.stop()
             sys.path = sys_old_path
 
-    def iter_datamodels(self, resdir):
+    def iter_datamodels(
+        self, resdir: typing.Union[str, os.PathLike[str]]
+    ) -> typing.Iterator[typing.Tuple[str, str]]:
         for (path, files) in (
             normalize_data_file(fn) for fn in (self.datamodels or ())
         ):
@@ -808,13 +893,15 @@ class py2app(Command):
                 destfn = os.path.basename(basefn) + ".mom"
                 yield fn, os.path.join(resdir, path, destfn)
 
-    def compile_datamodels(self, resdir):
+    def compile_datamodels(self, resdir: typing.Union[str, os.PathLike[str]]) -> None:
         for src, dest in self.iter_datamodels(resdir):
-            self.progress.info("compile datamodel", src, "->", dest)
+            self.progress.info(f"compile datamodel {src} -> {dest}")
             self.mkpath(os.path.dirname(dest))
             momc(src, dest)
 
-    def iter_mappingmodels(self, resdir):
+    def iter_mappingmodels(
+        self, resdir: typing.Union[str, os.PathLike[str]]
+    ) -> typing.Iterator[typing.Tuple[str, str]]:
         for (path, files) in (
             normalize_data_file(fn) for fn in (self.mappingmodels or ())
         ):
@@ -826,12 +913,16 @@ class py2app(Command):
                 destfn = os.path.basename(basefn) + ".cdm"
                 yield fn, os.path.join(resdir, path, destfn)
 
-    def compile_mappingmodels(self, resdir):
+    def compile_mappingmodels(
+        self, resdir: typing.Union[str, os.PathLike[str]]
+    ) -> None:
         for src, dest in self.iter_mappingmodels(resdir):
             self.mkpath(os.path.dirname(dest))
             mapc(src, dest)
 
-    def iter_extra_plugins(self):
+    def iter_extra_plugins(self) -> typing.Iterator[typing.Tuple[str, str]]:
+        if self.include_plugins is None:
+            return
         for item in self.include_plugins:
             if isinstance(item, (list, tuple)):
                 subdir, path = item
@@ -848,7 +939,7 @@ class py2app(Command):
 
             yield path, os.path.join(subdir, os.path.basename(path))
 
-    def iter_data_files(self):
+    def iter_data_files(self) -> typing.Iterator[typing.Tuple[str, str]]:
         dist = self.distribution
         allres = chain(getattr(dist, "data_files", ()) or (), self.resources)
         for (path, files) in (normalize_data_file(fn) for fn in allres):
@@ -858,7 +949,7 @@ class py2app(Command):
                 else:
                     yield fn, os.path.join(path, os.path.basename(fn))
 
-    def collect_scripts(self):
+    def collect_scripts(self) -> typing.Set[str]:
         # these contains file names
         scripts = set()
 
@@ -870,7 +961,7 @@ class py2app(Command):
         scripts.update(self.extra_scripts)
         return scripts
 
-    def get_plist_options(self):
+    def get_plist_options(self) -> dict:
         result = {
             "PyOptions": {
                 "use_pythonpath": bool(self.use_pythonpath),
@@ -881,16 +972,16 @@ class py2app(Command):
                 "no_chdir": bool(self.no_chdir),
                 "verbose": self.verbose_interpreter,
                 "use_faulthandler": self.use_faulthandler,
+                "optimize": self.optimize,
             },
         }
-        if self.optimize:
-            result["PyOptions"]["optimize"] = self.optimize
         return result
 
-    def initialize_plist(self):
+    def initialize_plist(self) -> dict:
         plist = self.get_default_plist()
         plist.update(getattr(self.target, "plist", {}))
-        plist.update(self.plist)
+        if self.plist:
+            plist.update(self.plist)
         plist.update(self.get_plist_options())
 
         if self.iconfile:
@@ -905,11 +996,11 @@ class py2app(Command):
         self.plist = plist
         return plist
 
-    def run_alias(self):
+    def run_alias(self) -> None:
         self.app_files = []
         extra_scripts = list(self.extra_scripts)
         if hasattr(self.target, "extra_scripts"):
-            extra_scripts.update(self.target.extra_scripts)
+            extra_scripts.extend(self.target.extra_scripts)
 
         dst = self.build_alias_executable(
             self.target, self.target.script, extra_scripts
@@ -935,10 +1026,10 @@ class py2app(Command):
         if arch in ("universal2", "arm64"):
             codesign_adhoc(self.target.appdir, self.progress)
 
-    def collect_recipedict(self):
+    def collect_recipedict(self) -> dict:  # XXX
         return dict(iter_recipes())
 
-    def get_modulefinder(self):
+    def get_modulefinder(self) -> ModuleGraph:
         if self.debug_modulegraph:
             debug = 4
         else:
@@ -951,10 +1042,16 @@ class py2app(Command):
             debug=debug,
         )
 
-    def collect_filters(self):
+    def collect_filters(self) -> typing.List[typing.Callable[[Node], bool]]:
         return [has_filename_filter] + list(self.filters)
 
-    def process_recipes(self, mf, filters, flatpackages, loader_files):
+    def process_recipes(
+        self,
+        mf: ModuleGraph,
+        filters: typing.List[typing.Callable[[Node], bool]],
+        flatpackages: typing.Dict[str, str],
+        loader_files: typing.List[str],
+    ) -> None:
         rdict = self.collect_recipedict()
         while True:
             for name, check in rdict.items():
@@ -1005,7 +1102,7 @@ class py2app(Command):
             else:
                 break
 
-    def _run(self):
+    def _run(self) -> None:
         try:
             if self.alias:
                 self.run_alias()
@@ -1022,7 +1119,9 @@ class py2app(Command):
         #
         self.progress.info("Done!")
 
-    def filter_dependencies(self, mf, filters):
+    def filter_dependencies(
+        self, mf: ModuleGraph, filters: typing.List[typing.Callable[[Node], bool]]
+    ) -> None:
         self.progress.info("*** filtering dependencies ***")
         nodes_seen, nodes_removed, nodes_orphaned = mf.filterStack(filters)
         self.progress.info("%d total" % (nodes_seen,))
@@ -1030,10 +1129,10 @@ class py2app(Command):
         self.progress.info("%d orphaned" % (nodes_orphaned,))
         self.progress.info("%d remaining" % (nodes_seen - nodes_removed,))
 
-    def get_appname(self):
+    def get_appname(self) -> str:
         return self.plist["CFBundleName"]
 
-    def build_xref(self, mf, flatpackages):
+    def build_xref(self, mf: ModuleGraph) -> None:
         base = self.target.get_dest_base()
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
@@ -1044,7 +1143,7 @@ class py2app(Command):
         with open(dgraph, "w") as fp:
             mf.create_xref(fp)
 
-    def build_graph(self, mf, flatpackages):
+    def build_graph(self, mf: ModuleGraph, flatpackages: typing.Dict[str, str]) -> None:
         base = self.target.get_dest_base()
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
@@ -1055,7 +1154,10 @@ class py2app(Command):
         with open(dgraph, "w") as fp:
             mf.graphreport(fp, flatpackages=flatpackages)
 
-    def finalize_modulefinder(self, mf):
+    def finalize_modulefinder(
+        self, mf: ModuleGraph
+    ) -> typing.Tuple[typing.List[Node], typing.List[Node]]:
+        # XXX: 'Node' can be made more specific
         for item in mf.flatten():
             if (
                 item.identifier in self.maybe_packages
@@ -1090,7 +1192,7 @@ class py2app(Command):
         extensions = list(extensions)
         return py_files, extensions
 
-    def collect_packagedirs(self):
+    def collect_packagedirs(self) -> typing.List[str]:
         return list(
             filter(
                 os.path.exists,
@@ -1102,7 +1204,7 @@ class py2app(Command):
             )
         )
 
-    def may_log_missing(self, module_name):
+    def may_log_missing(self, module_name: str) -> bool:
         module_parts = module_name.split(".")
         for num_parts in range(1, len(module_parts) + 1):
             module_id = ".".join(module_parts[0:num_parts])
@@ -1111,7 +1213,7 @@ class py2app(Command):
 
         return True
 
-    def run_normal(self):
+    def run_normal(self) -> None:
         mf = self.get_modulefinder()
         filters = self.collect_filters()
         flatpackages = {}
@@ -1128,7 +1230,7 @@ class py2app(Command):
         if self.graph:
             self.build_graph(mf, flatpackages)
         if self.xref:
-            self.build_xref(mf, flatpackages)
+            self.build_xref(mf)
 
         py_files, extensions = self.finalize_modulefinder(mf)
 
@@ -1376,7 +1478,13 @@ class py2app(Command):
         self.framework_dir = os.path.join(self.bdist_dir, "Frameworks")
         self.mkpath(self.framework_dir)
 
-    def create_binaries(self, py_files, pkgdirs, extensions, loader_files):
+    def create_binaries(
+        self,
+        py_files: types.Sequence[Node],
+        pkgdirs: type.Sequence[str],
+        extensions: type.Sequence[Node],
+        loader_files: type.Sequence[str],
+    ) -> None:
         self.progress.info("*** create binaries ***")
         dist = self.distribution
         pkgexts = []
@@ -1386,7 +1494,9 @@ class py2app(Command):
 
         metadata_infos = scan_for_metadata(sys.path)
 
-        def packagefilter(mod, pkgdirs=pkgdirs):
+        def packagefilter(
+            mod: Node, pkgdirs: type.Sequence[str] = pkgdirs
+        ) -> typing.Optional[str]:
             fn = os.path.realpath(getattr(mod, "filename", None))
             if fn is None:
                 return None
@@ -1406,7 +1516,9 @@ class py2app(Command):
             if dist_info_path is not None:
                 included_metadata.add(dist_info_path)
 
-        def files_in_dir(toplevel):
+        def files_in_dir(
+            toplevel: typing.Union[str, typing.PathLike[str]]
+        ) -> typing.Iterator[str]:
             for dirname, _, fns in os.walk(toplevel):
                 for fn in fns:
                     yield os.path.realpath(os.path.join(dirname, fn))
@@ -1584,7 +1696,9 @@ class py2app(Command):
                 codesign_adhoc(self.target.appdir, self.progress)
         self.app_files.append(dst)
 
-    def copy_package_data(self, package, target_dir):
+    def copy_package_data(
+        self, package: Package, target_dir: typing.Union[str, os.PathLike[str]]
+    ) -> None:
         """
         Copy any package data in a python package into the target_dir.
 
@@ -1596,7 +1710,7 @@ class py2app(Command):
         exts.append(".pyc")
         exts.append(".pyo")
 
-        def datafilter(item):
+        def datafilter(item: str) -> bool:
             for e in exts:
                 if item.endswith(e):
                     return False
@@ -1648,7 +1762,7 @@ class py2app(Command):
                 else:
                     copy_file(pth, os.path.join(target_dir, fname))
 
-    def strip_dsym(self, platfiles):
+    def strip_dsym(self, platfiles: typing.Sequence[str]) -> typing.Sequence[str]:
         """Remove .dSYM directories in the bundled application"""
 
         #
@@ -1665,7 +1779,9 @@ class py2app(Command):
                     dnames.remove(nm)
         return [file for file in platfiles if ".dSYM" not in file]
 
-    def strip_files(self, files):
+    def strip_files(
+        self, files: typing.Sequence[typing.Union[str, os.PathLike[str]]]
+    ) -> None:
         unstripped = 0
         stripfiles = []
         for fn in files:
@@ -1679,7 +1795,11 @@ class py2app(Command):
             f"stripping saved {unstripped - stripped} bytes ({stripped} / {unstripped})",
         )
 
-    def copy_dylib(self, src, dst):
+    def copy_dylib(
+        self,
+        src: typing.Union[str, os.PathLike[str]],
+        dst: typing.Union[str, os.PathLike[str]],
+    ) -> str:
         # will be copied from the framework?
         if src != sys.executable:
             force, self.force = self.force, True
@@ -1687,7 +1807,9 @@ class py2app(Command):
             self.force = force
         return dst
 
-    def copy_versioned_framework(self, info, dst):
+    def copy_versioned_framework(
+        self, info: _FrameworkInfo, dst: typing.Union[str, os.PathLike[str]]
+    ) -> typing.List[str]:
         # Boy is this ugly, but it makes sense because the developer
         # could have both Python 2.3 and 2.4, or Tk 8.4 and 8.5, etc.
         # Saves a good deal of space, and I'm pretty sure this ugly
@@ -1700,8 +1822,12 @@ class py2app(Command):
         outfile = os.path.join(dst, short)
         vsplit = os.path.join(infile, "Versions").split(os.sep)
 
-        def condition(src, vsplit=vsplit, version=version):
-            srcsplit = src.split(os.sep)
+        def condition(
+            src: typing.Union[str, os.PathLike[str]],
+            vsplit: typing.Sequence[str] = vsplit,
+            version: str = version,
+        ) -> bool:
+            srcsplit = os.fspath(src).split(os.sep)
             if (
                 len(srcsplit) > len(vsplit)
                 and srcsplit[: len(vsplit)] == vsplit
@@ -1717,7 +1843,9 @@ class py2app(Command):
             infile, outfile, preserve_symlinks=True, condition=condition
         )
 
-    def copy_framework(self, info, dst):
+    def copy_framework(
+        self, info: _FrameworkInfo, dst: typing.Union[str, os.PathLike[str]]
+    ) -> str:
         force, self.force = self.force, True
         if info["shortname"] == PYTHONFRAMEWORK:
             self.copy_python_framework(info, dst)
@@ -1726,7 +1854,9 @@ class py2app(Command):
         self.force = force
         return os.path.join(dst, info["name"])
 
-    def raw_copy_framework(self, info, dst):
+    def raw_copy_framework(
+        self, info: _FrameworkInfo, dst: typing.Union[str, os.PathLike[str]]
+    ) -> os.Sequence[str]:
         short = info["shortname"] + ".framework"
         infile = os.path.join(info["location"], short)
         outfile = os.path.join(dst, short)
@@ -1734,7 +1864,9 @@ class py2app(Command):
             infile, outfile, preserve_symlinks=True, condition=framework_copy_condition
         )
 
-    def copy_python_framework(self, info, dst):
+    def copy_python_framework(
+        self, info: _FrameworkInfo, dst: typing.Union[str, os.PathLike[str]]
+    ) -> None:
         # In this particular case we know exactly what we can
         # get away with.. should this be extended to the general
         # case?  Per-framework recipes?
@@ -1836,7 +1968,8 @@ class py2app(Command):
         if len(targets) != 1:
             raise DistutilsOptionError("Multiple targets not currently supported")
 
-        self.target = targets[0]
+        assert isinstance(targets[0], Target)
+        self.target: Target = targets[0]
         if not self.extension:
             self.extension = "." + self.style
 
@@ -1892,7 +2025,7 @@ class py2app(Command):
             # it.
             if self.alias or self.semi_standalone:
                 prescripts.append("virtualenv")
-                prescripts.append(StringIO(f"_fixup_virtualenv({sys.real_prefix!r})"))
+                prescripts.append(StringIO(f"_fixup_virtualenv({sys.base_prefix!r})"))
 
             if self.site_packages or self.alias:
                 import site
@@ -1907,7 +2040,7 @@ class py2app(Command):
                 prescripts.append(
                     StringIO(
                         "_site_packages(%r, %r, %d)"
-                        % (sys.prefix, sys.real_prefix, global_site_packages)
+                        % (sys.prefix, sys.base_prefix, global_site_packages)
                     )
                 )
 
@@ -1968,21 +2101,29 @@ class py2app(Command):
         prescripts = getattr(self.target, "prescripts", [])
         self.target.prescripts = newprescripts + prescripts
 
-    def get_bootstrap(self, bootstrap):
-        if isinstance(bootstrap, str):
-            if not os.path.exists(bootstrap):
-                bootstrap = imp_find_module(bootstrap)[1]
+    def get_bootstrap(
+        self, bootstrap: typing.Union[io.StringIO, str, os.PathLike[str]]
+    ) -> typing.Union[io.StringIO, str]:
+        if isinstance(bootstrap, io.StringIO):
+            return bootstrap
+
+        if not os.path.exists(bootstrap):
+            bootstrap = imp_find_module(bootstrap)[1]
         return bootstrap
 
-    def get_bootstrap_data(self, bootstrap):
+    def get_bootstrap_data(
+        self, bootstrap: typing.Union[io.StringIO, str, os.PathLike[str]]
+    ) -> str:
         bootstrap = self.get_bootstrap(bootstrap)
-        if not isinstance(bootstrap, str):
+        if isinstance(bootstrap, io.StringIO):
             return bootstrap.getvalue()
         else:
             with open(bootstrap) as fp:
                 return fp.read()
 
-    def create_pluginbundle(self, target, script, use_runtime_preference=True):
+    def create_pluginbundle(
+        self, target: Target, script: str, use_runtime_preference: bool = True
+    ) -> typing.Tuple[str, str, dict]:
         base = target.get_dest_base()
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
@@ -2000,7 +2141,9 @@ class py2app(Command):
         resdir = os.path.join(appdir, "Contents", "Resources")
         return appdir, resdir, plist
 
-    def create_appbundle(self, target, script, use_runtime_preference=True):
+    def create_appbundle(
+        self, target: Target, script: str, use_runtime_preference: bool = True
+    ) -> typing.Tuple[str, str, dict]:
         base = target.get_dest_base()
         appdir = os.path.join(self.dist_dir, os.path.dirname(base))
         appname = self.get_appname()
@@ -2023,9 +2166,19 @@ class py2app(Command):
         resdir = os.path.join(appdir, "Contents", "Resources")
         return appdir, resdir, plist
 
-    def create_bundle(self, target, script, use_runtime_preference=True):
-        fn = getattr(self, f"create_{self.style}bundle")
-        return fn(target, script, use_runtime_preference=use_runtime_preference)
+    def create_bundle(
+        self, target: Target, script: str, use_runtime_preference: bool = True
+    ) -> typing.Tuple[str, str, dict]:
+        if self.style == "app":
+            return self.create_appbundle(
+                target, script, use_runtime_preference=use_runtime_preference
+            )
+        elif self.style == "plugin":
+            return self.create_pluginbundle(
+                target, script, use_runtime_preference=use_runtime_preference
+            )
+        else:
+            raise RuntimeError(f"Unsupported style {self.style!r}")
 
     def iter_frameworks(self):
         for fn in self.frameworks:
@@ -2036,7 +2189,9 @@ class py2app(Command):
                 basename = fmwk["shortname"] + ".framework"
                 yield os.path.join(fmwk["location"], basename)
 
-    def build_alias_executable(self, target, script, extra_scripts):
+    def build_alias_executable(
+        self, target: Target, script: str, extra_scripts: typing.Sequence[str]
+    ) -> str:
         # Build an alias executable for the target
         appdir, resdir, plist = self.create_bundle(target, script)
 
@@ -2128,7 +2283,11 @@ class py2app(Command):
         target.appdir = appdir
         return appdir
 
-    def copy_loader_paths(self, sourcefn, destfn):
+    def copy_loader_paths(
+        self,
+        sourcefn: typing.Union[str, os.PathLike[str]],
+        destfn: typing.Union[str, os.PathLike[str]],
+    ) -> None:
         todo = [(sourcefn, destfn)]
 
         while todo:
@@ -2145,7 +2304,13 @@ class py2app(Command):
             todo = upcoming
 
     def build_executable(
-        self, target, arcname, pkgexts, copyexts, script, extra_scripts
+        self,
+        target: Target,
+        arcname: str,
+        pkgexts: typing.Sequence[str],
+        copyexts: typing.Sequence[str],
+        script: str,
+        extra_scripts: typing.Sequence[str],
     ):
         # Build an executable for the target
         appdir, resdir, plist = self.create_bundle(target, script)
@@ -2333,7 +2498,7 @@ class py2app(Command):
         target.appdir = appdir
         return appdir
 
-    def create_loader(self, item):
+    def create_loader(self, item: Extension) -> SourceModule:
         # Hm, how to avoid needless recreation of this file?
         slashname = item.identifier.replace(".", os.sep)
         pathname = os.path.join(self.temp_dir, "%s.py" % slashname)
@@ -2359,7 +2524,13 @@ class py2app(Command):
                 return
         return SourceModule(item.identifier, pathname)
 
-    def make_lib_archive(self, zip_filename, base_dir, verbose=0, dry_run=0):
+    def make_lib_archive(
+        self,
+        zip_filename: typing.Union[str, os.PathLike[str]],
+        base_dir: typing.Union[str, os.PathLike[str]],
+        verbose: bool = False,
+        dry_run: bool = False,
+    ) -> typing.Union[str, os.PathLike[str]]:
         # Like distutils "make_archive", except we can specify the
         # compression to use - default is ZIP_STORED to keep the
         # runtime performance up.
@@ -2399,14 +2570,14 @@ class py2app(Command):
 
     def copy_tree(
         self,
-        infile,
-        outfile,
-        preserve_mode=1,
-        preserve_times=1,
-        preserve_symlinks=0,
-        level=1,
-        condition=None,
-    ):
+        infile: typing.Union[str, os.PathLike[str]],
+        outfile: typing.Union[str, os.PathLike[str]],
+        preserve_mode: bool = True,
+        preserve_times: bool = True,
+        preserve_symlinks: bool = False,
+        level: int = 1,
+        condition: typing.Optional[typing.Callable[[str], bool]] = None,
+    ) -> typing.List[str]:
         """Copy an entire directory tree respecting verbose, dry-run,
         and force flags.
 
@@ -2426,13 +2597,19 @@ class py2app(Command):
             progress=self.progress,
         )
 
-    def copy_file(self, infile, outfile):
+    def copy_file(
+        self,
+        infile: typing.Union[str, os.PathLike[str]],
+        outfile: typing.Union[str, os.PathLike[str]],
+    ) -> str:
         """
         This version doesn't bork on existing symlinks
         """
         return copy_file(infile, outfile, progress=self.progress)
 
-    def mkpath(self, name, mode=0o777):
+    def mkpath(
+        self, name: typing.Union[str, os.PathLike[str]], mode: int = 0o777
+    ) -> None:
         if os.path.isdir(name):
             return
         if hasattr(self, "progress"):

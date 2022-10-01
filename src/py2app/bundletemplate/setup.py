@@ -2,6 +2,7 @@ import distutils.sysconfig
 import distutils.util
 import os
 import re
+import typing
 
 gPreBuildVariants = [
     {
@@ -25,7 +26,7 @@ gPreBuildVariants = [
 ]
 
 
-def main(buildall=False, arch=None):
+def main(buildall: bool = False, arch: typing.Optional[str] = None) -> str:
     basepath = os.path.dirname(__file__)
     builddir = os.path.join(basepath, "prebuilt")
     if not os.path.exists(builddir):
@@ -35,6 +36,7 @@ def main(buildall=False, arch=None):
     cfg = distutils.sysconfig.get_config_vars()
 
     BASE_CFLAGS = cfg["CFLAGS"]
+    assert isinstance(BASE_CFLAGS, str)
     BASE_CFLAGS = BASE_CFLAGS.replace("-dynamic", "")
     BASE_CFLAGS += " -bundle -framework Foundation -framework AppKit"
     while True:

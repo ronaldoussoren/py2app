@@ -1,3 +1,10 @@
+import typing
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
+
 AUTO_PACKAGES = [
     # Embedded datafiles accessed using
     # ``__file__`` relative paths.
@@ -25,7 +32,7 @@ AUTO_PACKAGES = [
 ]
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     to_include = []
     for python_package in AUTO_PACKAGES:
         m = mf.findNode(python_package)

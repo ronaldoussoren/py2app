@@ -1,4 +1,11 @@
-SIX_TAB = {
+import typing
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
+
+SIX_TAB: typing.Dict[str, str] = {
     "configparser": "configparser",
     "copyreg": "copyreg",
     "cPickle": "pickle",
@@ -59,7 +66,7 @@ SIX_TAB = {
 }
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     found = False
 
     six_moves = ["six.moves"]
@@ -95,15 +102,11 @@ def check(cmd, mf):
 
             alt = SIX_TAB[submod]
 
-            if not isinstance(alt, tuple):
-                alt = (alt,)
-
-            for nm in alt:
-                try:
-                    mf.import_hook(nm, m)
-                    found = True
-                except ImportError:
-                    pass
+            try:
+                mf.import_hook(alt, m)
+                found = True
+            except ImportError:
+                pass
 
         # Look for submodules that aren't automatically
         # processed.
@@ -115,12 +118,8 @@ def check(cmd, mf):
             m = mf.findNode(name)
             if m is not None:
                 alt = SIX_TAB[submod]
-                if not isinstance(alt, tuple):
-                    alt = (alt,)
-
-                for nm in alt:
-                    mf.import_hook(nm, m)
-                    found = True
+                mf.import_hook(alt, m)
+                found = True
 
     if found:
         return {}

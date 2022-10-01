@@ -1,19 +1,17 @@
-def _fixup_virtualenv(real_prefix):
+def _fixup_virtualenv(real_prefix: str) -> None:
     import os
     import sys
 
-    sys.real_prefix = real_prefix
+    sys.real_prefix = real_prefix  # type: ignore
 
     # NOTE: The adjustment code is based from logic in the site.py
     # installed by virtualenv 1.8.2 (but simplified by removing support
     # for platforms that aren't supported by py2app)
 
-    paths = [
-        os.path.join(sys.real_prefix, "lib", "python%d.%d" % (sys.version_info[:2]))
-    ]
+    paths = [os.path.join(real_prefix, "lib", "python%d.%d" % (sys.version_info[:2]))]
     hardcoded_relative_dirs = paths[:]
     plat_path = os.path.join(
-        sys.real_prefix,
+        real_prefix,
         "lib",
         "python%d.%d" % (sys.version_info[:2]),
         "plat-%s" % sys.platform,

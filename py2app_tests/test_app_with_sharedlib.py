@@ -180,16 +180,16 @@ class TestBasicAppWithExtension(unittest.TestCase):
 
         if not can_import_stdlib:
             # Not a dependency of the module (stdlib):
-            p.stdin.write(b'import_module("xdrlib")\n')
+            p.stdin.write(b'import_module("turtledemo")\n')
             p.stdin.flush()
             ln = p.stdout.readline().decode("utf-8")
             self.assertTrue(ln.strip().startswith("* import failed"), ln)
 
         else:
-            p.stdin.write(b'import_module("xdrlib")\n')
+            p.stdin.write(b'import_module("turtledemo")\n')
             p.stdin.flush()
             ln = p.stdout.readline()
-            self.assertEqual(ln.strip(), b"xdrlib")
+            self.assertEqual(ln.strip(), b"turtledemo")
 
         if sys.prefix.startswith("/System") or "--alias" in self.py2app_args:
             # py2app is included as part of the system install

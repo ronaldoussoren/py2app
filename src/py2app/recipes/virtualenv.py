@@ -6,21 +6,26 @@ distutils instead
 This recipe is rather compilicated and definitely not a
 good model for other recipes!!!
 """
-
 import imp
 import os
 import sys
+import typing
 
 from modulegraph.modulegraph import (
     CompiledModule,
     MissingModule,
+    ModuleGraph,
+    Node,
     Package,
     SourceModule,
     find_module,
 )
 
+from .. import build_app
+from ._types import RecipeInfo
 
-def retry_import(mf, m):
+
+def retry_import(mf: ModuleGraph, m: MissingModule) -> typing.Optional[Node]:
     """
     Try to reimport 'm', which should be a MissingModule
     """
@@ -33,7 +38,13 @@ def retry_import(mf, m):
 
     # This is basically mf.find_module inlined and with a
     # check disabled.
-    def fmod(name, path, parent):
+    def fmod(
+        name: str,
+        path: typing.Optional[typing.List[str]],
+        parent: typing.Optional[Node],
+    ) -> typing.Tuple[
+        typing.Optional[typing.IO, typing.Optional[str], typing.Tuple[str, str, int]]
+    ]:
         if path is None:
             if name in sys.builtin_module_names:
                 return (None, None, ("", "", imp.C_BUILTIN))
@@ -48,7 +59,7 @@ def retry_import(mf, m):
     try:
         fp, pathname, stuff = fmod(partname, parent and parent.packagepath, parent)
     except ImportError:
-        return
+        return None
 
     if stuff[-1] == imp.PKG_DIRECTORY:
         m.__class__ = Package
@@ -70,7 +81,7 @@ def retry_import(mf, m):
     return m
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     m = mf.findNode("distutils")
     if m is None or m.filename is None:
         return None
@@ -92,14 +103,11 @@ def check(cmd, mf):
         m.packagepath = [os.path.dirname(m.filename)]
 
         if mf.replace_paths:
-            co = mf.replace_paths_in_code(co)
+            co = mf._replace_paths_in_code(co)
 
         # Recent versions of modulegraph made scan_code private,
         # temporarily call the private version.
-        if hasattr(mf, "scan_code"):
-            mf.scan_code(co, m)
-        else:
-            mf._scan_code(co, m)
+        mf._scan_code(co, m)
 
         # That's not all there is to this, we need to look for
         # MissingModules in the distutils namespace as well and

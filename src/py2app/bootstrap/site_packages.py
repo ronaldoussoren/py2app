@@ -1,4 +1,4 @@
-def _site_packages():
+def _site_packages() -> None:
     import os
     import site
     import sys
@@ -45,7 +45,7 @@ def _site_packages():
     # site-packages way to early on sys.path and that breaks py2app bundles.
     # NOTE: this is hacks into an undocumented feature of setuptools and
     # might stop to work without warning.
-    sys.__egginsert = len(sys.path)
+    sys.__egginsert = len(sys.path)  # type: ignore
 
     for path in paths:
         site.addsitedir(path)

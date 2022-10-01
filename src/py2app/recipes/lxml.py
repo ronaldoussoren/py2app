@@ -5,9 +5,15 @@
 #
 # The dependency list was extracted from lxml 3.0.2
 import sys
+import typing
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     m = mf.findNode("lxml.etree")
     if m is not None and m.filename is not None:
         mf.import_hook("lxml._elementpath", m)

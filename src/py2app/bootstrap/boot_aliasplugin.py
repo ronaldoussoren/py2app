@@ -4,7 +4,7 @@ SCRIPT_MAP: "dict[str|None, str]"
 DEFAULT_SCRIPT: str
 
 
-def _run():
+def _run() -> None:
     global __file__
     import os
     import site  # noqa: F401

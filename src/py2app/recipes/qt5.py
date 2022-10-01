@@ -1,16 +1,19 @@
 import os
-import sys
+import typing
 
-from modulegraph.modulegraph import MissingModule
+from modulegraph.modulegraph import MissingModule, ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     m = mf.findNode("PyQt5")
     if m and not isinstance(m, MissingModule):
         try:
             # PyQt5 with sipconfig module, handled
             # by sip recipe
-            import sipconfig  # noqa: F401
+            import sipconfig  # type: ignore # noqa: F401
 
             return None
 
@@ -18,8 +21,8 @@ def check(cmd, mf):
             pass
 
         try:
-            import PyQt5
-            from PyQt5.QtCore import QLibraryInfo
+            import PyQt5  # type: ignore
+            from PyQt5.QtCore import QLibraryInfo  # type: ignore
         except ImportError:
             # PyQt5 in the graph, but not installed
             return None
@@ -44,23 +47,19 @@ def check(cmd, mf):
 
             # Ensure that the Qt plugins are copied into the "Contents/plugins"
             # folder, that's where the bundles Qt expects them to be
-            extra = {
-                "resources": [("..", [QLibraryInfo.location(QLibraryInfo.PluginsPath)])]
-            }
+            pluginspath = QLibraryInfo.location(QLibraryInfo.PluginsPath)
+            assert isinstance(pluginspath, str)
+            resources = [("..", [pluginspath])]
 
         else:
-            extra = {}
+            resources = None
 
-        if sys.version[0] != 2:
-            result = {
-                "packages": ["PyQt5"],
-                "expected_missing_imports": {"copy_reg", "cStringIO", "StringIO"},
-            }
-            result.update(extra)
-            return result
-        else:
-            result = {"packages": ["PyQt5"]}
-            result.update(extra)
-            return result
+        result: RecipeInfo = {
+            "packages": ["PyQt5"],
+            "expected_missing_imports": {"copy_reg", "cStringIO", "StringIO"},
+        }
+        if resources is not None:
+            result["resources"] = resources
+        return result
 
     return None

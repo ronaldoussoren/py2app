@@ -1,8 +1,14 @@
 import textwrap
+import typing
 from io import StringIO
 
+from modulegraph.modulegraph import ModuleGraph
 
-def check(cmd, mf):
+from .. import build_app
+from ._types import RecipeInfo
+
+
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     m = mf.findNode("multiprocessing")
     if m is None:
         return None

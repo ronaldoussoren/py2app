@@ -2,16 +2,22 @@ import glob
 import importlib.resources
 import io
 import os
+import typing
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     name = "PySide6"
     m = mf.findNode(name)
     if m is None or m.filename is None:
         return None
 
     try:
-        from PySide6 import QtCore
+        from PySide6 import QtCore  # type: ignore
     except ImportError:
         print("WARNING: macholib found PySide6, but cannot import")
         return {}
@@ -21,8 +27,14 @@ def check(cmd, mf):
     resource_data = importlib.resources.read_text("py2app.recipes", "qt.conf")
     resource_fp = io.StringIO(resource_data)
     resource_fp.name = "qt.conf"
+
+    resources: typing.Sequence[
+        typing.Union[
+            str, typing.Tuple[str, typing.Sequence[typing.Union[str, typing.IO[str]]]]
+        ]
+    ]
     resources = [("", [resource_fp])]
-    for item in cmd.qt_plugins:
+    for item in cmd.qt_plugins if cmd.qt_plugins is not None else ():
         if "/" not in item:
             item = item + "/*"
 
@@ -58,4 +70,4 @@ def check(cmd, mf):
     mf.import_hook("PySide6.support.signature.lib", m, ["*"])
     mf.import_hook("PySide6.support.signature.typing", m, ["*"])
 
-    return {"resources": resources, "packagse": ["PySide6"]}
+    return {"resources": resources, "packages": ["PySide6"]}

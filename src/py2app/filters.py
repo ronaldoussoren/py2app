@@ -56,4 +56,6 @@ def not_system_filter(module: modulegraph.Node) -> bool:
     """
     Return False if the module is located in a system directory
     """
+    if module.filename is None:
+        return False
     return not in_system_path(module.filename)

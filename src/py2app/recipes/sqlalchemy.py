@@ -1,3 +1,10 @@
+import typing
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
+
 # __import__ in sqlalchemy.dialects
 ENGINE_DEPS = {
     "asyncpg": ("asyncpg",),
@@ -22,7 +29,7 @@ CONNECTOR_DEPS = {
 }
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     m = mf.findNode("sqlalchemy")
     if m is None or m.filename is None:
         return None

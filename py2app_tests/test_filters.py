@@ -1,3 +1,4 @@
+import sys
 import unittest
 
 from py2app import filters
@@ -18,24 +19,22 @@ def return_false(value):
 
 class FilterTest(unittest.TestCase):
     def test_not_stdlib_filter(self):
-        prefix = "/system/python8.7"
+        prefix = sys.prefix
 
         # Outside the tree:
-        self.assertTrue(filters.not_stdlib_filter(Node("/foo/bar"), prefix))
-        self.assertTrue(filters.not_stdlib_filter(Node(prefix + "rest"), prefix))
+        self.assertTrue(filters.not_stdlib_filter(Node("/foo/bar")))
+        self.assertTrue(filters.not_stdlib_filter(Node(prefix + "rest")))
 
         # Site-specific directories within sys.prefix:
         self.assertTrue(
-            filters.not_stdlib_filter(
-                Node(prefix + "/lib/site-packages/foo.py"), prefix
-            )
+            filters.not_stdlib_filter(Node(prefix + "/lib/site-packages/foo.py"))
         )
         self.assertTrue(
-            filters.not_stdlib_filter(Node(prefix + "/lib/site-python/foo.py"), prefix)
+            filters.not_stdlib_filter(Node(prefix + "/lib/site-python/foo.py"))
         )
 
         # Inside the tree:
-        self.assertFalse(filters.not_stdlib_filter(Node(prefix + "/foo.py"), prefix))
+        self.assertFalse(filters.not_stdlib_filter(Node(prefix + "/foo.py")))
 
     def test_not_system_filter(self):
         cur_func = filters.in_system_path

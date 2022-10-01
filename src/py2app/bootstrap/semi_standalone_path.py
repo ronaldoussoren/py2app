@@ -1,4 +1,4 @@
-def _update_path():
+def _update_path() -> None:
     import os
     import sys
 

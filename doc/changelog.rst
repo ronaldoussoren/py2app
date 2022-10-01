@@ -1,8 +1,13 @@
 Release history
 ===============
 
-py2app 0.29
------------
+py2app 2.0a0
+------------
+
+This will be a major update to py2app, although I'm currently
+primarily focused on cleaning up the code base. At this phase
+in development I'm primarily working with Python 3.10 and 3.11,
+the code might not work on older versions due to using newish APIs.
 
 * The ``install_requires`` option in setup.py is now
   ignored by py2app. Ensure that requirements are installed
@@ -96,6 +101,23 @@ py2app 0.29
   The code now assumes that the "xcrun" command exists and can be
   used to find converter tools, and no longer contains hardcoded
   paths for some of the tools for use with Xcode 3.
+
+* Adding type annotations to the code base
+
+  This lead to some minor bugfixes (mostly due to typos). The type annotations
+  will improve over time, and also have some rough edges in recipes due to
+  missing annations for 3th-party projects.
+
+py2app 0.28.4
+-------------
+
+* Fix incompatibility with Python 3.11
+
+py2app 0.28.3
+-------------
+
+* #453: Fix crash in py2applet when specifying a directory to
+  include in the application bundle.
 
 py2app 0.28.2
 -------------

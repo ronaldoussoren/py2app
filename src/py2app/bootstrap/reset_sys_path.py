@@ -1,4 +1,4 @@
-def _reset_sys_path():
+def _reset_sys_path() -> None:
     # Clear generic sys.path[0]
     import os
     import sys

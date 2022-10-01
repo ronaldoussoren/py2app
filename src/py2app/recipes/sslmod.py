@@ -1,5 +1,11 @@
 import io
 import os
+import typing
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
 
 PRESCRIPT = """
 def _setup_openssl():
@@ -14,7 +20,7 @@ _setup_openssl()
 """
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     m = mf.findNode("ssl")
     if m is None or m.filename is None:
         return None

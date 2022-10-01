@@ -1,8 +1,10 @@
 import ast
+import collections.abc
 import contextlib
 import errno
 import fcntl
 import importlib.metadata
+import io
 import os
 import pathlib
 import stat
@@ -15,13 +17,19 @@ import macholib.util
 from macholib.util import is_platform_file
 from modulegraph import zipio
 from modulegraph.find_modules import PY_SUFFIXES
+from modulegraph.modulegraph import Node
 
-gConverterTab = {}
+from .progress import Progress
+
+gConverterTab: typing.Dict[str, typing.Callable[..., None]] = {}  # XXX
 
 
-def find_converter(source):
+def find_converter(
+    source: typing.Union[str, os.PathLike[str]]
+) -> typing.Optional[typing.Callable[..., None]]:
     if not gConverterTab:
         for ep in importlib.metadata.entry_points(group="py2app.converter"):
+            assert isinstance(ep, importlib.metadata.EntryPoint)
             function = ep.load()
             if hasattr(function, "py2app_suffix"):
                 print(f"WARNING: using 'py2app_suffix' is deprecated for {function}")
@@ -38,11 +46,16 @@ def find_converter(source):
         return None
 
 
-def copy_resource(source, destination, dry_run=0, symlink=0):
+def copy_resource(
+    source: typing.Union[io.StringIO, os.PathLike[str], str],
+    destination: typing.Union[os.PathLike[str], str],
+    dry_run: bool = False,
+    symlink: bool = False,
+) -> None:
     """
     Copy a resource file into the application bundle
     """
-    if hasattr(source, "getvalue"):
+    if isinstance(source, io.StringIO):
         if not dry_run:
             contents = source.getvalue()
 
@@ -66,7 +79,7 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
         if not dry_run:
             if not os.path.exists(destination):
                 os.mkdir(destination)
-        for fn in zipio.listdir(source):
+        for fn in zipio.listdir(os.fspath(source)):
             copy_resource(
                 os.path.join(source, fn),
                 os.path.join(destination, fn),
@@ -84,14 +97,14 @@ def copy_resource(source, destination, dry_run=0, symlink=0):
 
 
 def copy_file(
-    source,
-    destination,
-    preserve_mode=False,
-    preserve_times=False,
-    update=False,
-    dry_run=0,
-    progress=None,
-):
+    source: typing.Union[os.PathLike[str], str],
+    destination: typing.Union[os.PathLike[str], str],
+    preserve_mode: bool = False,
+    preserve_times: bool = False,
+    update: bool = False,
+    dry_run: bool = False,
+    progress: typing.Optional[Progress] = None,
+) -> None:
     while True:
         try:
             _copy_file(
@@ -110,25 +123,24 @@ def copy_file(
 
             if progress is not None:
                 progress.warning(
-                    "copying file %s failed due to spurious EAGAIN, "
+                    f"copying file {source} failed due to spurious EAGAIN, "
                     "retrying in 2 seconds",
-                    source,
                 )
             time.sleep(2)
 
 
 def _copy_file(
-    source,
-    destination,
-    preserve_mode=False,
-    preserve_times=False,
-    update=False,
-    dry_run=0,
-    progress=None,
-):
+    source: typing.Union[os.PathLike[str], str],
+    destination: typing.Union[os.PathLike[str], str],
+    preserve_mode: bool = False,
+    preserve_times: bool = False,
+    update: bool = False,
+    dry_run: bool = False,
+    progress: typing.Optional[Progress] = None,
+) -> None:
     if progress is not None:
         progress.trace(f"copying file {source} -> {destination}")
-    with zipio.open(source, "rb") as fp_in:
+    with zipio.open(os.fspath(source), "rb") as fp_in:
         if not dry_run:
             if os.path.isdir(destination):
                 destination = os.path.join(destination, os.path.basename(source))
@@ -142,7 +154,7 @@ def _copy_file(
             if preserve_mode:
                 mode = None
                 if hasattr(zipio, "getmode"):
-                    mode = zipio.getmode(source)
+                    mode = zipio.getmode(os.fspath(source))
 
                 elif os.path.isfile(source):
                     mode = stat.S_IMODE(os.stat(source).st_mode)
@@ -151,23 +163,29 @@ def _copy_file(
                     os.chmod(destination, mode)
 
             if preserve_times:
-                mtime = zipio.getmtime(source)
+                mtime = zipio.getmtime(os.fspath(source))
                 os.utime(destination, (mtime, mtime))
 
 
-def make_symlink(source, target):
+def make_symlink(
+    source: typing.Union[os.PathLike[str], str],
+    target: typing.Union[os.PathLike[str], str],
+) -> None:
     if os.path.islink(target):
         os.unlink(target)
 
     os.symlink(source, target)
 
 
-def newer(source, target):
+def newer(
+    source: typing.Union[os.PathLike[str], str],
+    target: typing.Union[os.PathLike[str], str],
+) -> bool:
     """
     distutils.dep_utils.newer with zipfile support
     """
     try:
-        return zipio.getmtime(source) > zipio.getmtime(target)
+        return zipio.getmtime(os.fspath(source)) > zipio.getmtime(os.fspath(target))
     except OSError:
         return True
 
@@ -210,49 +228,77 @@ def find_version(fn: os.PathLike) -> typing.Optional[str]:
     return result
 
 
-def in_system_path(filename):
+def in_system_path(filename: typing.Union[os.PathLike[str], str]) -> bool:
     """
     Return True if the file is in a system path
     """
-    return macholib.util.in_system_path(filename)
+    return macholib.util.in_system_path(os.fspath(filename))
 
 
-def make_exec(path):
+def make_exec(path: typing.Union[os.PathLike[str], str]) -> None:
     mask = os.umask(0)
     os.umask(mask)
     os.chmod(path, os.stat(path).st_mode | (0o111 & ~mask))
 
 
-def makedirs(path):
+def makedirs(path: typing.Union[os.PathLike[str], str]) -> None:
     if not os.path.exists(path):
         os.makedirs(path)
 
 
-def mergecopy(src, dest):
-    return macholib.util.mergecopy(src, dest)
+def mergecopy(
+    src: typing.Union[os.PathLike[str], str], dest: typing.Union[os.PathLike[str], str]
+) -> None:
+    macholib.util.mergecopy(os.fspath(src), os.fspath(dest))
 
 
-def mergetree(src, dst, condition=None, copyfn=mergecopy):
+def mergetree(
+    src: typing.Union[os.PathLike[str], str],
+    dst: typing.Union[os.PathLike[str], str],
+    condition: typing.Optional[
+        typing.Callable[[typing.Union[os.PathLike[str], str]], bool]
+    ] = None,
+    copyfn: typing.Callable[
+        [typing.Union[os.PathLike[str], str], typing.Union[os.PathLike[str], str]], None
+    ] = mergecopy,
+) -> None:
     """Recursively merge a directory tree using mergecopy()."""
-    return macholib.util.mergetree(src, dst, condition=condition, copyfn=copyfn)
+    macholib.util.mergetree(
+        os.fspath(src), os.fspath(dst), condition=condition, copyfn=copyfn
+    )
 
 
-def move(src, dst):
-    return macholib.util.move(src, dst)
+def move(
+    src: typing.Union[os.PathLike[str], str], dst: typing.Union[os.PathLike[str], str]
+) -> None:
+    macholib.util.move(os.fspath(src), os.fspath(dst))
 
 
-def copy2(src, dst):
-    return macholib.util.copy2(src, dst)
+def copy2(
+    src: typing.Union[os.PathLike[str], str], dst: typing.Union[os.PathLike[str], str]
+) -> None:
+    macholib.util.copy2(os.fspath(src), os.fspath(dst))
 
 
-def fancy_split(s, sep=","):
+def fancy_split(s: typing.Any, sep: str = ",") -> typing.List[str]:
     # a split which also strips whitespace from the items
     # passing a list or tuple will return it unchanged
+    # This accepts "Any" because the value is passed through setup.py
     if s is None:
         return []
-    if hasattr(s, "split"):
+    elif isinstance(s, str):
         return [item.strip() for item in s.split(sep)]
-    return s
+    elif isinstance(s, collections.abc.Sequence):
+        result: typing.List[str] = []
+        for item in s:
+            if isinstance(item, str):
+                result.append(item)
+            else:
+                raise RuntimeError(f"{item!r} is not a string")
+
+        return result
+    else:
+        raise RuntimeError("Invalid type for {s!r}")
 
 
 LOADER = """
@@ -273,18 +319,18 @@ del __load
 """
 
 
-def make_loader(fn):
+def make_loader(fn: str) -> str:
     return LOADER % fn
 
 
 def byte_compile(
-    py_files,
-    force=0,
-    target_dir=None,
-    progress=None,
-    dry_run=0,
-    optimize=-1,
-):
+    py_files: typing.Sequence[Node],
+    force: bool = False,
+    target_dir: typing.Optional[typing.Union[os.PathLike[str], str]] = None,
+    progress: typing.Optional[Progress] = None,
+    dry_run: bool = False,
+    optimize: int = -1,
+) -> None:
     if progress is not None:
         task_id = progress.add_task("Byte compiling", len(py_files))
     for mod in py_files:
@@ -304,6 +350,7 @@ def byte_compile(
         if target_dir:
             cfile = os.path.join(target_dir, dfile)
 
+        assert mod.filename is not None
         if force or newer(mod.filename, cfile):
             if progress is not None:
                 progress.trace(f"byte-compiling {mod.filename} to {dfile}")
@@ -347,24 +394,30 @@ def byte_compile(
 SCMDIRS = ["CVS", ".svn", ".hg", ".git"]
 
 
-def skipscm(ofn):
+def skipscm(ofn: typing.Union[os.PathLike[str], str]) -> bool:
     fn = os.path.basename(ofn)
     if fn in SCMDIRS:
         return False
     return True
 
 
-def skipfunc(junk=(), junk_exts=(), chain=()):
-    junk = set(junk)
-    junk_exts = set(junk_exts)
-    chain = tuple(chain)
+def skipfunc(
+    junk: typing.Sequence[str] = (),
+    junk_exts: typing.Sequence[str] = (),
+    chain: typing.Sequence[
+        typing.Callable[[typing.Union[os.PathLike[str], str]], bool]
+    ] = (),
+) -> typing.Callable[[typing.Union[os.PathLike[str], str]], bool]:
+    junk_set = set(junk)
+    junk_exts_set = set(junk_exts)
+    chain_funcs = tuple(chain)
 
-    def _skipfunc(fn):
-        if os.path.basename(fn) in junk:
+    def _skipfunc(fn: typing.Union[os.PathLike[str], str]) -> bool:
+        if os.path.basename(fn) in junk_set:
             return False
-        elif os.path.splitext(fn)[1] in junk_exts:
+        elif os.path.splitext(fn)[1] in junk_exts_set:
             return False
-        for func in chain:
+        for func in chain_funcs:
             if not func(fn):
                 return False
         else:
@@ -378,7 +431,10 @@ JUNK_EXTS = [".pbxuser", ".pyc", ".pyo", ".swp"]
 skipjunk = skipfunc(JUNK, JUNK_EXTS)
 
 
-def iter_platform_files(path, is_platform_file=macholib.util.is_platform_file):
+def iter_platform_files(
+    path: typing.Union[os.PathLike[str], str],
+    is_platform_file: typing.Callable[[str], bool] = macholib.util.is_platform_file,
+) -> typing.Iterator[str]:
     """
     Iterate over all of the platform files in a directory
     """
@@ -389,7 +445,12 @@ def iter_platform_files(path, is_platform_file=macholib.util.is_platform_file):
                 yield fn
 
 
-def strip_files(files, dry_run=0, progress=None):
+# XXX: Progress argument should not be optional
+def strip_files(
+    files: typing.Sequence[typing.Union[os.PathLike[str], str]],
+    dry_run: bool = False,
+    progress: typing.Optional[Progress] = None,
+) -> None:
     """
     Strip the given set of files
     """
@@ -399,30 +460,36 @@ def strip_files(files, dry_run=0, progress=None):
     # XXX: macholib.util.strip_files just calls strip(1)
     # return macholib.util.strip_files(files)
 
-    task_id = progress.add_task("Stripping binaries", len(files))
+    if progress is not None:
+        task_id = progress.add_task("Stripping binaries", len(files))
     for name in files:
-        progress.trace(f"Stripping {name}")
+        if progress is not None:
+            progress.trace(f"Stripping {name}")
         with reset_blocking_status():
             subprocess.check_call(
                 ["/usr/bin/strip", "-x", "-S", "-", name], stderr=subprocess.DEVNULL
             )
-        progress.step_task(task_id)
+        if progress is not None:
+            progress.step_task(task_id)
 
-    progress._progress.stop_task(task_id)
+    if progress is not None:
+        progress._progress.stop_task(task_id)
 
 
 def copy_tree(
-    src,
-    dst,
-    preserve_mode=1,
-    preserve_times=1,
-    preserve_symlinks=0,
-    update=0,
-    verbose=0,
-    dry_run=0,
-    condition=None,
-    progress=None,
-):
+    src: typing.Union[os.PathLike[str], str],
+    dst: typing.Union[os.PathLike[str], str],
+    preserve_mode: bool = True,
+    preserve_times: bool = True,
+    preserve_symlinks: bool = False,
+    update: bool = False,
+    verbose: int = 0,
+    dry_run: bool = False,
+    condition: typing.Optional[
+        typing.Callable[[typing.Union[os.PathLike[str], str]], bool]
+    ] = None,
+    progress: typing.Optional[Progress] = None,
+) -> typing.List[str]:
 
     """
     Copy an entire directory tree 'src' to a new location 'dst'.  Both
@@ -446,7 +513,7 @@ def copy_tree(
     assert isinstance(src, str), repr(src)
     assert isinstance(dst, str), repr(dst)
 
-    from distutils.dep_util import newer
+    from distutils.dep_util import newer as distutils_newer
     from distutils.errors import DistutilsFileError
 
     if condition is None:
@@ -488,7 +555,7 @@ def copy_tree(
             if progress is not None:
                 progress.trace(f"linking {dst_name} -> {link_dest}")
             if not dry_run:
-                if update and not newer(src, dst_name):
+                if update and not distutils_newer(src, dst_name):
                     pass
                 else:
                     make_symlink(link_dest, dst_name)
@@ -525,12 +592,12 @@ def copy_tree(
     return outputs
 
 
-def walk_files(path):
+def walk_files(path: typing.Union[os.PathLike[str], str]) -> typing.Iterator[str]:
     for _root, _dirs, files in os.walk(path):
         yield from files
 
 
-def find_app(app):
+def find_app(app: typing.Union[os.PathLike[str], str]) -> typing.Optional[str]:
     dpath = os.path.realpath(app)
     if os.path.exists(dpath):
         return dpath
@@ -543,32 +610,38 @@ def find_app(app):
     return None
 
 
-_tools = {}
+_tools: typing.Dict[str, str] = {}
 
 
-def get_tool(toolname):
+def get_tool(toolname: str) -> str:
     if toolname not in _tools:
         try:
-            _tools[toolname] = subprocess.check_output(
-                ["/usr/bin/xcrun", "-find", toolname]
-            )[:-1]
+            _tools[toolname] = (
+                subprocess.check_output(["/usr/bin/xcrun", "-find", toolname])
+                .decode()
+                .strip()
+            )
         except subprocess.CalledProcessError:
             raise OSError(f"Tool {toolname!r} not found")
 
     return _tools[toolname]
 
 
-def momc(src, dst):
+def momc(
+    src: typing.Union[os.PathLike[str], str], dst: typing.Union[os.PathLike[str], str]
+) -> None:
     with reset_blocking_status():
-        subprocess.check_call([get_tool("momc"), src, dst])
+        subprocess.check_call([get_tool("momc"), os.fspath(src), os.fspath(dst)])
 
 
-def mapc(src, dst):
+def mapc(
+    src: typing.Union[os.PathLike[str], str], dst: typing.Union[os.PathLike[str], str]
+) -> None:
     with reset_blocking_status():
-        subprocess.check_call([get_tool("mapc"), src, dst])
+        subprocess.check_call([get_tool("mapc"), os.fspath(src), os.fspath(dst)])
 
 
-def _macho_find(path):
+def _macho_find(path: typing.Union[os.PathLike[str], str]) -> typing.Iterator[str]:
     for basename, _dirs, files in os.walk(path):
         for fn in files:
             path = os.path.join(basename, fn)
@@ -576,7 +649,10 @@ def _macho_find(path):
                 yield path
 
 
-def _dosign(*path, progress=None):
+def _dosign(
+    *path: typing.Union[os.PathLike[str], str],
+    progress: typing.Optional[Progress] = None,
+) -> None:
     with reset_blocking_status():
         p = subprocess.Popen(
             (
@@ -594,11 +670,14 @@ def _dosign(*path, progress=None):
         out, _ = p.communicate()
         xit = p.wait()
         if xit != 0:
-            progress.warning(f"{path}: {out}")
+            if progress is not None:
+                progress.warning(f"{path}: {out.decode()}")
             raise subprocess.CalledProcessError(xit, "codesign")
 
 
-def codesign_adhoc(bundle, progress):
+def codesign_adhoc(
+    bundle: typing.Union[os.PathLike[str], str], progress: Progress
+) -> None:
     """
     (Re)sign a bundle
 
@@ -650,7 +729,7 @@ def codesign_adhoc(bundle, progress):
 
 
 @contextlib.contextmanager
-def reset_blocking_status():
+def reset_blocking_status() -> typing.Iterator[None]:
     """
     Contextmanager that resets the non-blocking status of
     the std* streams as necessary. Used with all calls of

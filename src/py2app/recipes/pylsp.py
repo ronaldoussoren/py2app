@@ -1,9 +1,17 @@
 import os
+import typing
+
+from modulegraph.modulegraph import ModuleGraph
+
+from .. import build_app
+from ._types import RecipeInfo
 
 
-def check(cmd, mf):
+def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInfo]:
     m = mf.findNode("pylsp")
     if m is None or m.filename is None:
+        return None
+    if m.packagepath is None:
         return None
 
     includes = ["pylsp.__main__", "pylsp.python_lsp"]

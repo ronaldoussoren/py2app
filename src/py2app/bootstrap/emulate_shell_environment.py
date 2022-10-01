@@ -1,4 +1,4 @@
-def _emulate_shell_environ():
+def _emulate_shell_environ() -> None:
     import os
     import time
 
@@ -14,7 +14,7 @@ def _emulate_shell_environ():
     # name, the application shouldn't crash when the shell information
     # cannot be retrieved
     try:
-        login = os.getlogin()
+        login: "str|None" = os.getlogin()
         if login == "root":
             # For some reason os.getlogin() returns
             # "root" for user sessions on Catalina.
@@ -54,12 +54,13 @@ def _emulate_shell_environ():
         os.write(master, b"exit\r\n")
         time.sleep(1)
 
-        data = []
+        data_parts = []
         b = os.read(master, 2048)
         while b:
-            data.append(b)
+            data_parts.append(b)
             b = os.read(master, 2048)
-        data = b"".join(data)
+        data = b"".join(data_parts)
+        del data_parts
         os.waitpid(pid, 0)
 
     in_data = False

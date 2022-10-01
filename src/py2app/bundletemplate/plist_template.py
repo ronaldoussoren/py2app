@@ -1,11 +1,12 @@
 import sys
+import typing
 
 import py2app
 
 __all__ = ["infoPlistDict"]
 
 
-def infoPlistDict(CFBundleExecutable, plist=None):
+def infoPlistDict(CFBundleExecutable: str, plist: typing.Optional[dict] = None) -> dict:
     if plist is None:
         plist = {}
     CFBundleExecutable = CFBundleExecutable

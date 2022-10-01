@@ -1,4 +1,4 @@
-def _argv_inject(argv):
+def _argv_inject(argv: "list[str]") -> None:
     import sys
 
     # only use if started by LaunchServices
