@@ -199,6 +199,7 @@ Options for 'py2app' command:
 
    * - ``--expected-missing-imports``
      - expected_missing_imports
+     - list of module or package names
      - A list of Python module/package names that are expected to be missing,
        or a string starting with a @-sign followed by the name of file containing
        this list (one name per line).

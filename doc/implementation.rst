@@ -22,7 +22,7 @@ the extensions built during this command.
 
 
 Dependency resolution via modulegraph
------------------------------------
+--------------------------------------
 
 The main script is compiled to Python bytecode and analyzed by modulegraph
 for ``import`` bytecode. It uses this to build a dependency graph of all

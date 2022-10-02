@@ -108,6 +108,9 @@ the code might not work on older versions due to using newish APIs.
   will improve over time, and also have some rough edges in recipes due to
   missing annations for 3th-party projects.
 
+  The annotations are fairly rough at this point, will be cleaned up
+  during refactoring the code base.
+
 py2app 0.28.4
 -------------
 
