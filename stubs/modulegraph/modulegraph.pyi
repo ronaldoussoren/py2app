@@ -10,6 +10,12 @@ DEFAULT_IMPORT_LEVEL: int
 class Graph(typing.Protocol):
     def node_list(self) -> typing.Iterator[str]: ...
 
+class DependencyInfo(typing.NamedTuple):
+    conditional: bool
+    function: bool
+    tryexcept: bool
+    fromlist: bool
+
 class Node:
     debug: int
     graphident: str | None
@@ -44,7 +50,10 @@ class AliasNode(Node): ...
 class BadModule(Node): ...
 class ExcludedModule(BadModule): ...
 class MissingModule(BadModule): ...
-class InvalidRelativeImport(BadModule): ...
+
+class InvalidRelativeImport(BadModule):
+    relative_path: str
+
 class Script(Node): ...
 class BaseModule(Node): ...
 class BuiltinModule(BaseModule): ...
@@ -63,6 +72,7 @@ class ModuleGraph:
     replace_paths: typing.Sequence[str] | None
     graph: Graph
     lazynodes: typing.Dict[str, Alias | typing.Tuple[str, ...] | None]
+    path: list[str]
 
     def __init__(
         self,
@@ -76,7 +86,6 @@ class ModuleGraph:
     def findNode(self, node: str | Node | None) -> Node | None: ...
     def _replace_paths_in_code(self, co: types.CodeType) -> types.CodeType: ...
     def _scan_code(self, co: types.CodeType, m: Node) -> None: ...
-    def flatten(self) -> typing.Iterator[Node]: ...
     def import_hook(
         self,
         name: str,
@@ -89,7 +98,52 @@ class ModuleGraph:
     def run_script(
         self, pathname: str, caller: typing.Optional[Node] = None
     ) -> Node: ...
+    def filterStack(
+        self, filters: typing.Sequence[typing.Callable[[Node], bool]]
+    ) -> typing.Tuple[int, int, int]: ...
+    def create_xref(self, fn: typing.IO[str]) -> None: ...
+    def graphreport(
+        self,
+        fileobj: typing.Optional[typing.IO[str]] = None,
+        flatpackages: typing.Union[
+            typing.Dict[str, str], typing.Sequence[typing.Tuple[str, str]]
+        ] = (),
+    ) -> None: ...
+    def nodes(self) -> typing.Iterator[Node]: ...
+    def flatten(
+        self,
+        condition: typing.Optional[typing.Callable[[Node], bool]] = None,
+        start: typing.Optional[typing.Union[str, Node]] = None,
+    ) -> typing.Iterable[Node]: ...
+    def getReferers(
+        self, tonode: typing.Union[str, Node], collapse_missing_modules: bool = True
+    ) -> typing.Iterator[Node]: ...
+    def edgeData(
+        self, fromNode: typing.Union[str, Node], toNode: typing.Union[str, Node]
+    ) -> typing.Optional[DependencyInfo]: ...
+    def get_edges(
+        self, node: str | Node | None
+    ) -> typing.Tuple[typing.Iterator[Node], typing.Iterator[Node]]: ...
+    def _load_module(
+        self,
+        fqname: str,
+        fp: typing.IO | None,
+        pathname: str | None,
+        info: tuple[str, str, int],
+    ) -> Node: ...
+    def createReference(
+        self,
+        fromnode: str | Node,
+        tonode: str | Node,
+        edge_data: str | DependencyInfo | None = "direct",
+    ) -> None: ...
+    def implyNodeReference(
+        self,
+        node: str | Node,
+        other: str | Node,
+        edge_data: str | DependencyInfo | None = None,
+    ) -> None: ...
 
 def find_module(
-    name: str, path: str | None = None
+    name: str, path: list[str] | None = None
 ) -> tuple[typing.IO[bytes] | None, str, tuple[str, str, int]]: ...

@@ -5,7 +5,7 @@ from macholib.util import in_system_path
 from modulegraph import modulegraph
 
 
-def has_filename_filter(module: modulegraph.Node) -> bool:
+def has_filename_filter(module: modulegraph.Node, /) -> bool:
     if isinstance(module, modulegraph.MissingModule):
         return True
     if hasattr(modulegraph, "InvalidRelativeImport") and isinstance(

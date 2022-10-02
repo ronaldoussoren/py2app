@@ -23,8 +23,8 @@ from ._types import RecipeInfo
 
 class Sip:
     def __init__(self) -> None:
-        self.packages = None
-        self.plugin_dir = None
+        self.packages: typing.Optional[typing.Set[str]] = None
+        self.plugin_dir: typing.Optional[str] = None
 
     def config(self) -> typing.Set[str]:
         if self.packages is not None:
@@ -63,7 +63,7 @@ class Sip:
             dyld_library_path.insert(0, qtdir)
             os.environ["DYLD_LIBRARY_PATH"] = ":".join(dyld_library_path)
 
-        self.packages: typing.Set[str] = set()
+        self.packages = set()
 
         for fn in os.listdir(sipdir):
             fullpath = os.path.join(sipdir, fn)

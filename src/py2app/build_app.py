@@ -7,6 +7,7 @@ Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 import collections
 import imp
 import io
+import itertools
 import os
 import plistlib
 import shlex
@@ -100,7 +101,8 @@ class Py2appDistribution(Distribution):
         ...
 
 
-PYTHONFRAMEWORK = get_config_var("PYTHONFRAMEWORK")
+PYTHONFRAMEWORK: str = typing.cast(str, get_config_var("PYTHONFRAMEWORK"))
+assert isinstance(PYTHONFRAMEWORK, str)
 
 
 PLUGIN_SUFFIXES = {
@@ -215,7 +217,9 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
                 m.loader_path = self.ext_map[m.filename]
         return m
 
-    def copy_dylib(self, src: str) -> str:
+    def copy_dylib(
+        self, src: typing.Union[str, os.PathLike[str]]
+    ) -> typing.Union[str, os.PathLike[str]]:
         dest = os.path.join(self.dest, os.path.basename(src))
         if os.path.islink(src):
             dest = os.path.join(self.dest, os.path.basename(os.path.realpath(src)))
@@ -261,7 +265,7 @@ def iter_recipes() -> typing.Iterator[
 # attribute.  Some attributes will be target specific.
 class Target:
     script: str
-    prescripts: typing.List[str]
+    prescripts: typing.List[typing.Union[str, StringIO]]
     extra_scripts: typing.List[str]
     appdir: str
 
@@ -354,6 +358,7 @@ class py2app(Command):
     distribution: Py2appDistribution
     qt_plugins: typing.Optional[typing.List[str]]
     style: typing.Literal["app", "plugin"]
+    force: bool  # XXX
 
     user_options = [
         ("app=", None, "application bundle to be built"),
@@ -853,17 +858,17 @@ class py2app(Command):
                 )
 
         build = self.reinitialize_command("build")
-        build.build_base = self.bdist_base
+        build.build_base = self.bdist_base  # type: ignore
         build.run()
         self.create_directories()
         self.fixup_distribution()
         self.initialize_plist()
 
         sys_old_path = sys.path[:]
-        extra_paths = [
+        extra_paths: typing.List[str] = [
             os.path.dirname(self.target.script),
-            build.build_platlib,
-            build.build_lib,
+            build.build_platlib,  # type: ignore
+            build.build_lib,  # type: ignore
         ]
         self.additional_paths = [
             os.path.abspath(p) for p in extra_paths if p is not None
@@ -944,10 +949,8 @@ class py2app(Command):
         allres = chain(getattr(dist, "data_files", ()) or (), self.resources)
         for (path, files) in (normalize_data_file(fn) for fn in allres):
             for fn in files:
-                if hasattr(fn, "name"):
-                    yield fn, os.path.join(path, os.path.basename(fn.name))
-                else:
-                    yield fn, os.path.join(path, os.path.basename(fn))
+                assert isinstance(fn, str)
+                yield fn, os.path.join(path, os.path.basename(fn))
 
     def collect_scripts(self) -> typing.Set[str]:
         # these contains file names
@@ -997,7 +1000,7 @@ class py2app(Command):
         return plist
 
     def run_alias(self) -> None:
-        self.app_files = []
+        self.app_files: typing.List[str] = []
         extra_scripts = list(self.extra_scripts)
         if hasattr(self.target, "extra_scripts"):
             extra_scripts.extend(self.target.extra_scripts)
@@ -1050,7 +1053,7 @@ class py2app(Command):
         mf: ModuleGraph,
         filters: typing.List[typing.Callable[[Node], bool]],
         flatpackages: typing.Dict[str, str],
-        loader_files: typing.List[str],
+        loader_files: typing.List[typing.Tuple[str, typing.List[str]]],
     ) -> None:
         rdict = self.collect_recipedict()
         while True:
@@ -1130,6 +1133,7 @@ class py2app(Command):
         self.progress.info("%d remaining" % (nodes_seen - nodes_removed,))
 
     def get_appname(self) -> str:
+        assert self.plist is not None
         return self.plist["CFBundleName"]
 
     def build_xref(self, mf: ModuleGraph) -> None:
@@ -1156,7 +1160,7 @@ class py2app(Command):
 
     def finalize_modulefinder(
         self, mf: ModuleGraph
-    ) -> typing.Tuple[typing.List[Node], typing.List[Node]]:
+    ) -> typing.Tuple[typing.List[Node], typing.List[Extension]]:
         # XXX: 'Node' can be made more specific
         for item in mf.flatten():
             if (
@@ -1193,16 +1197,14 @@ class py2app(Command):
         return py_files, extensions
 
     def collect_packagedirs(self) -> typing.List[str]:
-        return list(
-            filter(
-                os.path.exists,
-                [
-                    os.path.join(os.path.realpath(self.get_bootstrap(pkg)), "")
-                    for pkg in self.packages
-                    if print(pkg, type(pkg)) or True  # XXX
-                ],
+        return [
+            pth
+            for pth in (
+                os.path.join(os.path.realpath(self.get_bootstrap(pkg)), "")
+                for pkg in self.packages
             )
-        )
+            if os.path.exists(pth)
+        ]
 
     def may_log_missing(self, module_name: str) -> bool:
         module_parts = module_name.split(".")
@@ -1216,8 +1218,8 @@ class py2app(Command):
     def run_normal(self) -> None:
         mf = self.get_modulefinder()
         filters = self.collect_filters()
-        flatpackages = {}
-        loader_files = []
+        flatpackages: typing.Dict[str, str] = {}
+        loader_files: typing.List[typing.Tuple[str, typing.List[str]]] = []
         self.process_recipes(mf, filters, flatpackages, loader_files)
 
         if self.debug_modulegraph:
@@ -1258,10 +1260,18 @@ class py2app(Command):
                 invalid_relative_import.append(module)
 
         if missing:
-            missing_unconditional = collections.defaultdict(set)
-            missing_fromimport = collections.defaultdict(set)
-            missing_fromimport_conditional = collections.defaultdict(set)
-            missing_conditional = collections.defaultdict(set)
+            missing_unconditional: typing.DefaultDict[
+                str, typing.Set[str]
+            ] = collections.defaultdict(set)
+            missing_fromimport: typing.DefaultDict[
+                str, typing.Set[str]
+            ] = collections.defaultdict(set)
+            missing_fromimport_conditional: typing.DefaultDict[
+                str, typing.Set[str]
+            ] = collections.defaultdict(set)
+            missing_conditional: typing.DefaultDict[
+                str, typing.Set[str]
+            ] = collections.defaultdict(set)
 
             self.progress.info("")
             self.progress.info("checking for any import problems")
@@ -1275,9 +1285,7 @@ class py2app(Command):
                     except KeyError:
                         ed = None
 
-                    if hasattr(modulegraph, "DependencyInfo") and isinstance(
-                        ed, modulegraph.DependencyInfo
-                    ):
+                    if isinstance(ed, modulegraph.DependencyInfo):
                         c = missing_unconditional
                         if ed.conditional or ed.function:
                             if ed.fromlist:
@@ -1295,39 +1303,49 @@ class py2app(Command):
 
             if missing_unconditional:
                 warnings = []
-                for m in sorted(missing_unconditional):
+                for modname in sorted(missing_unconditional):
                     try:
-                        if "." in m:
-                            m1, m2 = m.rsplit(".", 1)
+                        if "." in modname:
+                            m1, m2 = modname.rsplit(".", 1)
                             try:
                                 o = __import__(m1, fromlist=[m2])
                                 o = getattr(o, m2)
                             except Exception:
-                                if self.may_log_missing(m):
+                                if self.may_log_missing(modname):
                                     warnings.append(
                                         " * %s (%s)"
                                         % (
-                                            m,
-                                            ", ".join(sorted(missing_unconditional[m])),
+                                            modname,
+                                            ", ".join(
+                                                sorted(missing_unconditional[modname])
+                                            ),
                                         )
                                     )
                                 continue
 
                         else:
-                            o = __import__(m)
+                            o = __import__(modname)
 
                         if isinstance(o, types.ModuleType):
-                            if self.may_log_missing(m):
+                            if self.may_log_missing(modname):
                                 warnings.append(
                                     " * %s (%s) [module alias]"
-                                    % (m, ", ".join(sorted(missing_unconditional[m])))
+                                    % (
+                                        modname,
+                                        ", ".join(
+                                            sorted(missing_unconditional[modname])
+                                        ),
+                                    )
                                 )
 
                     except ImportError:
-                        if self.may_log_missing(m):
+                        if self.may_log_missing(modname):
                             warnings.append(
                                 " * %s (%s)"
-                                % (m, ", ".join(sorted(missing_unconditional[m])))
+                                % (
+                                    modname,
+                                    ", ".join(sorted(missing_unconditional[modname])),
+                                )
                             )
 
                 if len(warnings) > 0:
@@ -1338,47 +1356,62 @@ class py2app(Command):
 
             if missing_conditional and not self.no_report_missing_conditional_import:
                 warnings = []
-                for m in sorted(missing_conditional):
+                for modname in sorted(missing_conditional):
                     try:
-                        if "." in m:
-                            m1, m2 = m.rsplit(".", 1)
+                        if "." in modname:
+                            m1, m2 = modname.rsplit(".", 1)
                             o = __import__(m1, fromlist=[m2])
                             try:
                                 o = getattr(o, m2)
                             except Exception:
-                                if self.may_log_missing(m):
+                                if self.may_log_missing(modname):
                                     warnings.append(
                                         " * %s (%s)"
                                         % (
-                                            m,
-                                            ", ".join(sorted(missing_unconditional[m])),
+                                            modname,
+                                            ", ".join(
+                                                sorted(missing_unconditional[modname])
+                                            ),
                                         )
                                     )
                                 continue
 
                         else:
                             try:
-                                o = __import__(m)
+                                o = __import__(modname)
                             except:  # noqa: E722, B001
                                 # Import may fail with other exceptions as well...
-                                if self.may_log_missing(m):
+                                if self.may_log_missing(modname):
                                     warnings.append(
                                         " * %s (%s)"
-                                        % (m, ", ".join(sorted(missing_conditional[m])))
+                                        % (
+                                            modname,
+                                            ", ".join(
+                                                sorted(missing_conditional[modname])
+                                            ),
+                                        )
                                     )
                                 continue
 
                         if isinstance(o, types.ModuleType):
-                            if self.may_log_missing(m):
+                            if self.may_log_missing(modname):
                                 warnings.append(
                                     " * %s (%s) [module alias]"
-                                    % (m, ", ".join(sorted(missing_unconditional[m])))
+                                    % (
+                                        modname,
+                                        ", ".join(
+                                            sorted(missing_unconditional[modname])
+                                        ),
+                                    )
                                 )
                     except ImportError:
-                        if self.may_log_missing(m):
+                        if self.may_log_missing(modname):
                             warnings.append(
                                 " * %s (%s)"
-                                % (m, ", ".join(sorted(missing_conditional[m])))
+                                % (
+                                    modname,
+                                    ", ".join(sorted(missing_conditional[modname])),
+                                )
                             )
 
                 if len(warnings) > 0:
@@ -1395,9 +1428,11 @@ class py2app(Command):
                 )
             ):
                 self.progress.warning("Modules not found ('from ... import y'):")
-                for m in sorted(missing_fromimport):
+                for modname in sorted(missing_fromimport):
                     self.progress.warning(
-                        " * {} ({})".format(m, ", ".join(sorted(missing_fromimport[m])))
+                        " * {} ({})".format(
+                            modname, ", ".join(sorted(missing_fromimport[modname]))
+                        )
                     )
 
                 if (
@@ -1406,10 +1441,15 @@ class py2app(Command):
                 ):
                     self.progress.warning("")
                     self.progress.warning("Conditional:")
-                    for m in sorted(missing_fromimport_conditional):
+                    for modname in sorted(missing_fromimport_conditional):
                         self.progress.warning(
                             " * %s (%s)"
-                            % (m, ", ".join(sorted(missing_fromimport_conditional[m])))
+                            % (
+                                modname,
+                                ", ".join(
+                                    sorted(missing_fromimport_conditional[modname])
+                                ),
+                            )
                         )
                 self.progress.warning("")
 
@@ -1441,8 +1481,8 @@ class py2app(Command):
 
             self.progress.warning("")
 
-    def create_directories(self):
-        bdist_base = self.bdist_base
+    def create_directories(self) -> None:
+        bdist_base: str = self.bdist_base  # type: ignore
         if self.semi_standalone:
             self.bdist_dir = os.path.join(
                 bdist_base,
@@ -1480,24 +1520,25 @@ class py2app(Command):
 
     def create_binaries(
         self,
-        py_files: types.Sequence[Node],
-        pkgdirs: type.Sequence[str],
-        extensions: type.Sequence[Node],
-        loader_files: type.Sequence[str],
+        py_files: typing.List[Node],
+        pkgdirs: typing.List[str],
+        extensions: typing.List[Extension],
+        loader_files: typing.List[typing.Tuple[str, typing.List[str]]],
     ) -> None:
         self.progress.info("*** create binaries ***")
         dist = self.distribution
-        pkgexts = []
-        copyexts = []
-        extmap = {}
-        included_metadata = set()
+        pkgexts: typing.List[Extension] = []
+        copyexts: typing.List[Extension] = []
+        extmap: typing.Dict[str, Extension] = {}
+        included_metadata: typing.Set[str] = set()
 
         metadata_infos = scan_for_metadata(sys.path)
 
         def packagefilter(
-            mod: Node, pkgdirs: type.Sequence[str] = pkgdirs
+            mod: Node, pkgdirs: typing.Sequence[str] = pkgdirs
         ) -> typing.Optional[str]:
-            fn = os.path.realpath(getattr(mod, "filename", None))
+            assert mod.filename is not None
+            fn = os.path.realpath(mod.filename)
             if fn is None:
                 return None
             for pkgdir in pkgdirs:
@@ -1505,8 +1546,9 @@ class py2app(Command):
                     return None
             return fn
 
-        for mod in py_files + extensions:
-            fn = os.path.realpath(getattr(mod, "filename", None))
+        for mod in itertools.chain(py_files, extensions):
+            assert mod.filename is not None
+            fn = os.path.realpath(mod.filename)
             if fn is None:
                 return None
 
@@ -1514,10 +1556,10 @@ class py2app(Command):
             if dist_info_path is None and (fn.endswith(".pyc") or fn.endswith(".pyo")):
                 dist_info_path = metadata_infos.get(fn[:-1], None)
             if dist_info_path is not None:
-                included_metadata.add(dist_info_path)
+                included_metadata.add(os.fspath(dist_info_path))
 
         def files_in_dir(
-            toplevel: typing.Union[str, typing.PathLike[str]]
+            toplevel: typing.Union[str, os.PathLike[str]]
         ) -> typing.Iterator[str]:
             for dirname, _, fns in os.walk(toplevel):
                 for fn in fns:
@@ -1534,20 +1576,21 @@ class py2app(Command):
                 ):
                     dist_info_path = metadata_infos.get(fn[:-1], None)
                 if dist_info_path is not None:
-                    included_metadata.add(dist_info_path)
+                    included_metadata.add(os.fspath(dist_info_path))
 
         if pkgdirs:
             py_files = list(filter(packagefilter, py_files))
         for ext in extensions:
-            fn = packagefilter(ext)
-            if fn is None:
-                fn = os.path.realpath(getattr(ext, "filename", None))
+            extfn = packagefilter(ext)
+            if extfn is None:
+                assert ext.filename is not None
+                extfn = os.path.realpath(ext.filename)
                 pkgexts.append(ext)
             else:
                 if "." in ext.identifier:
                     py_files.append(self.create_loader(ext))
                 copyexts.append(ext)
-            extmap[fn] = ext
+            extmap[extfn] = ext
 
         # byte compile the python modules into the target directory
         self.progress.info("*** byte compile python files ***")
@@ -1580,7 +1623,6 @@ class py2app(Command):
                     self.copy_tree(src, dst, preserve_symlinks=False)
                 else:
                     self.copy_file(src, dst)
-        self.lib_files = []
         self.app_files = []
 
         # create the shared zipfile containing all Python modules
@@ -1601,7 +1643,7 @@ class py2app(Command):
         arcname = self.make_lib_archive(
             archive_name,
             base_dir=self.collect_dir,
-            verbose=self.verbose,
+            verbose=bool(self.verbose),
             dry_run=self.dry_run,
         )
 
@@ -1611,7 +1653,12 @@ class py2app(Command):
             extra_scripts.extend(self.target.extra_scripts)
 
         dst = self.build_executable(
-            self.target, arcname, pkgexts, copyexts, self.target.script, extra_scripts
+            self.target,
+            os.fspath(arcname),
+            pkgexts,
+            copyexts,
+            self.target.script,
+            extra_scripts,
         )
         exp = os.path.join(dst, "Contents", "MacOS")
         execdst = os.path.join(exp, "python")
@@ -1717,7 +1764,7 @@ class py2app(Command):
             return True
 
         target_dir = os.path.join(target_dir, *(package.identifier.split(".")))
-        for dname in package.packagepath:
+        for dname in package.packagepath or ():
             filenames = list(filter(datafilter, zipio.listdir(dname)))
             for fname in filenames:
                 if fname in (".svn", "CVS", ".hg", ".git"):
@@ -1762,7 +1809,7 @@ class py2app(Command):
                 else:
                     copy_file(pth, os.path.join(target_dir, fname))
 
-    def strip_dsym(self, platfiles: typing.Sequence[str]) -> typing.Sequence[str]:
+    def strip_dsym(self, platfiles: typing.Sequence[str]) -> typing.Set[str]:
         """Remove .dSYM directories in the bundled application"""
 
         #
@@ -1777,10 +1824,10 @@ class py2app(Command):
                     self.progress.info(f"removing debug info: {dirpath}/{nm}")
                     shutil.rmtree(os.path.join(dirpath, nm))
                     dnames.remove(nm)
-        return [file for file in platfiles if ".dSYM" not in file]
+        return {file for file in platfiles if ".dSYM" not in file}
 
     def strip_files(
-        self, files: typing.Sequence[typing.Union[str, os.PathLike[str]]]
+        self, files: typing.Iterable[typing.Union[str, os.PathLike[str]]]
     ) -> None:
         unstripped = 0
         stripfiles = []
@@ -1799,7 +1846,7 @@ class py2app(Command):
         self,
         src: typing.Union[str, os.PathLike[str]],
         dst: typing.Union[str, os.PathLike[str]],
-    ) -> str:
+    ) -> typing.Union[str, os.PathLike[str]]:
         # will be copied from the framework?
         if src != sys.executable:
             force, self.force = self.force, True
@@ -1856,7 +1903,7 @@ class py2app(Command):
 
     def raw_copy_framework(
         self, info: _FrameworkInfo, dst: typing.Union[str, os.PathLike[str]]
-    ) -> os.Sequence[str]:
+    ) -> typing.Sequence[str]:
         short = info["shortname"] + ".framework"
         infile = os.path.join(info["location"], short)
         outfile = os.path.join(dst, short)
@@ -1870,8 +1917,10 @@ class py2app(Command):
         # In this particular case we know exactly what we can
         # get away with.. should this be extended to the general
         # case?  Per-framework recipes?
-        includedir = get_config_var("CONFINCLUDEPY")
-        configdir = get_config_var("LIBPL")
+        includedir: str = typing.cast(str, get_config_var("CONFINCLUDEPY"))
+        assert isinstance(includedir, str)
+        configdir: str = typing.cast(str, get_config_var("LIBPL"))
+        assert isinstance(configdir, str)
 
         if includedir is None:
             includedir = "python%d.%d" % (sys.version_info[:2])
@@ -1936,7 +1985,7 @@ class py2app(Command):
         for fn in fmwkfiles:
             self.copy_file(os.path.join(indir, fn), os.path.join(outdir, fn))
 
-    def fixup_distribution(self):
+    def fixup_distribution(self) -> None:
         dist = self.distribution
 
         # Trying to obtain app and plugin from dist for backward compatibility
@@ -1979,8 +2028,8 @@ class py2app(Command):
         self.app_dir = os.path.join(self.dist_dir, app_dir)
         self.mkpath(self.app_dir)
 
-    def initialize_prescripts(self):
-        prescripts = []
+    def initialize_prescripts(self) -> None:
+        prescripts: typing.List[typing.Union[str, StringIO]] = []
         prescripts.append("reset_sys_path")
         if self.semi_standalone:
             prescripts.append("semi_standalone_path")
@@ -1999,8 +2048,8 @@ class py2app(Command):
                         real_prefix = os.path.dirname(home_path.strip())
 
                     elif ln.startswith("include-system-site-packages = "):
-                        _, global_site_packages = ln.split("=", 1)
-                        global_site_packages = global_site_packages == "true"
+                        _, conifg_value = ln.split("=", 1)
+                        global_site_packages = conifg_value == "true"
 
             if real_prefix is None:
                 raise DistutilsPlatformError(
@@ -2060,6 +2109,7 @@ class py2app(Command):
             #      Warn when using argv_emultation with a plugin (where
             #      the option is ignored)
             prescripts.append("argv_emulation")
+            assert self.plist is not None
             if "CFBundleDocumentTypes" not in self.plist:
                 self.plist["CFBundleDocumentTypes"] = [
                     {
@@ -2108,8 +2158,8 @@ class py2app(Command):
             return bootstrap
 
         if not os.path.exists(bootstrap):
-            bootstrap = imp_find_module(bootstrap)[1]
-        return bootstrap
+            bootstrap = imp_find_module(os.fspath(bootstrap))[1]
+        return os.fspath(bootstrap)
 
     def get_bootstrap_data(
         self, bootstrap: typing.Union[io.StringIO, str, os.PathLike[str]]
@@ -2129,6 +2179,7 @@ class py2app(Command):
         appname = self.get_appname()
         self.progress.info(f"*** creating plugin bundle: {appname} ***")
         if self.runtime_preferences and use_runtime_preference:
+            assert self.plist is not None
             self.plist.setdefault("PyRuntimeLocations", self.runtime_preferences)
         appdir, plist = create_pluginbundle(
             appdir,
@@ -2149,7 +2200,9 @@ class py2app(Command):
         appname = self.get_appname()
         self.progress.info(f"*** creating application bundle: {appname} ***")
         if self.runtime_preferences and use_runtime_preference:
+            assert self.plist is not None
             self.plist.setdefault("PyRuntimeLocations", self.runtime_preferences)
+        assert self.plist is not None
         pythonInfo = self.plist.setdefault("PythonInfoDict", {})
         py2appInfo = pythonInfo.setdefault("py2app", {})
         py2appInfo.update({"alias": bool(self.alias)})
@@ -2180,7 +2233,7 @@ class py2app(Command):
         else:
             raise RuntimeError(f"Unsupported style {self.style!r}")
 
-    def iter_frameworks(self):
+    def iter_frameworks(self) -> typing.Iterator[str]:
         for fn in self.frameworks:
             fmwk = macholib.dyld.framework_info(fn)
             if fmwk is None:
@@ -2223,7 +2276,7 @@ class py2app(Command):
                 continue
             makedirs(os.path.dirname(dest))
             try:
-                copy_resource(src, dest, dry_run=self.dry_run, symlink=1)
+                copy_resource(src, dest, dry_run=self.dry_run, symlink=True)
             except:  # noqa: E722,B001
                 import traceback
 
@@ -2307,11 +2360,11 @@ class py2app(Command):
         self,
         target: Target,
         arcname: str,
-        pkgexts: typing.Sequence[str],
-        copyexts: typing.Sequence[str],
+        pkgexts: typing.List[Extension],
+        copyexts: typing.List[Extension],
         script: str,
         extra_scripts: typing.Sequence[str],
-    ):
+    ) -> str:
         # Build an executable for the target
         appdir, resdir, plist = self.create_bundle(target, script)
         self.appdir = appdir
@@ -2345,8 +2398,10 @@ class py2app(Command):
         if not self.dry_run:
             os.unlink(site_path)
 
-        includedir = get_config_var("CONFINCLUDEPY")
-        configdir = get_config_var("LIBPL")
+        includedir: str = typing.cast(str, get_config_var("CONFINCLUDEPY"))
+        assert isinstance(includedir, str)
+        configdir: str = typing.cast(str, get_config_var("LIBPL"))
+        assert isinstance(configdir, str)
 
         if includedir is None:
             includedir = "python%d.%d" % (sys.version_info[:2])

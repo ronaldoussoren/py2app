@@ -92,6 +92,6 @@ def check(cmd: "build_app.py2app", mf: ModuleGraph) -> typing.Optional[RecipeInf
 
     return {
         "prescripts": ["py2app.recipes.PIL.prescript", s],
-        "include": "PIL.JpegPresets",  # import from PIL.JpegPlugin in Pillow 2.0
+        "includes": ["PIL.JpegPresets"],  # import from PIL.JpegPlugin in Pillow 2.0
         "flatpackages": [os.path.dirname(m.filename)],
     }

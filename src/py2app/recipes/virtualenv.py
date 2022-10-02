@@ -25,7 +25,7 @@ from .. import build_app
 from ._types import RecipeInfo
 
 
-def retry_import(mf: ModuleGraph, m: MissingModule) -> typing.Optional[Node]:
+def retry_import(mf: ModuleGraph, m: Node) -> typing.Optional[Node]:
     """
     Try to reimport 'm', which should be a MissingModule
     """
@@ -38,12 +38,13 @@ def retry_import(mf: ModuleGraph, m: MissingModule) -> typing.Optional[Node]:
 
     # This is basically mf.find_module inlined and with a
     # check disabled.
+
     def fmod(
         name: str,
         path: typing.Optional[typing.List[str]],
         parent: typing.Optional[Node],
     ) -> typing.Tuple[
-        typing.Optional[typing.IO, typing.Optional[str], typing.Tuple[str, str, int]]
+        typing.Optional[typing.IO], typing.Optional[str], typing.Tuple[str, str, int]
     ]:
         if path is None:
             if name in sys.builtin_module_names:
@@ -57,7 +58,9 @@ def retry_import(mf: ModuleGraph, m: MissingModule) -> typing.Optional[Node]:
         return (fp, buf, stuff)
 
     try:
-        fp, pathname, stuff = fmod(partname, parent and parent.packagepath, parent)
+        fp, pathname, stuff = fmod(
+            partname, parent.packagepath if parent is not None else None, parent
+        )
     except ImportError:
         return None
 
@@ -68,12 +71,7 @@ def retry_import(mf: ModuleGraph, m: MissingModule) -> typing.Optional[Node]:
     else:
         m.__class__ = CompiledModule
 
-    # making this match the code later on that checks whether scan_code needs
-    # a leading _
-    if hasattr(mf, "load_module"):
-        m = mf.load_module(m.identifier, fp, pathname, stuff)
-    else:
-        m = mf._load_module(m.identifier, fp, pathname, stuff)
+    m = mf._load_module(m.identifier, fp, pathname, stuff)
 
     if parent:
         mf.createReference(m, parent)

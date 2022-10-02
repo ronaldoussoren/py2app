@@ -1,10 +1,13 @@
 """ """
 import typing
 import collections
+from macholib.MachOGraph import MachOGraph
 
 class MachOStandalone:
     dest: str
     pending: collections.deque
+    excludes: typing.List[str]
+    mm: MachOGraph
 
     def __init__(
         self,
@@ -14,3 +17,4 @@ class MachOStandalone:
         env: typing.Dict[str, str] = None,
         executable_path: typing.Optional[str] = None,
     ): ...
+    def run(self) -> typing.Set[str]: ...

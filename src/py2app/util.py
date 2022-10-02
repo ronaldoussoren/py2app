@@ -190,7 +190,7 @@ def newer(
         return True
 
 
-def find_version(fn: os.PathLike) -> typing.Optional[str]:
+def find_version(fn: typing.Union[str, os.PathLike]) -> typing.Optional[str]:
     """
     Try to find a toplevel statement assigning a constant
     to ``__version__`` and return the value. When multiple

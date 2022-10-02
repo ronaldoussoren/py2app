@@ -1,6 +1,8 @@
 """ """
 
-from .framework import framework_info
+__all__ = ("framework_info", "dyld_find", "framework_find")
+
+from macholib.framework import framework_info
 
 def dyld_find(
     name: str,

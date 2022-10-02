@@ -13,18 +13,6 @@ from .. import build_app
 from ._types import RecipeInfo
 
 
-@typing.overload
-def get_toplevel_package_name(
-    node: typing.Union[modulegraph.SourceModule, modulegraph.BaseModule]
-) -> str:
-    ...
-
-
-@typing.overload
-def get_toplevel_package_name(node: modulegraph.Node) -> None:
-    ...
-
-
 def get_toplevel_package_name(node: modulegraph.Node) -> typing.Optional[str]:
     if isinstance(node, modulegraph.Package):
         return node.identifier.split(".")[0]
@@ -40,10 +28,12 @@ def scan_bytecode_loads(names: typing.Set[str], co: types.CodeType) -> None:
     constants = co.co_consts
     for inst in dis.get_instructions(co):
         if inst.opname == "LOAD_NAME":
+            assert isinstance(inst.arg, int)
             name = co.co_names[inst.arg]
             names.add(name)
 
         elif inst.opname == "LOAD_GLOBAL":
+            assert isinstance(inst.arg, int)
             if sys.version_info[:2] >= (3, 11):
                 name = co.co_names[inst.arg >> 1]
             else:
