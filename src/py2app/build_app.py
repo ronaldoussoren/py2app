@@ -88,8 +88,8 @@ class Py2appDistribution(Distribution):
     # Type is only present to help with type checking, the attributes
     # are dynamically added to the Distribution by setuptools.
 
-    app: typing.List[typing.Union[str, _ScriptInfo, "Target"]]
-    plugin: typing.List[typing.Union[str, _ScriptInfo, "Target"]]
+    app: typing.Sequence[typing.Union[str, _ScriptInfo, "Target"]]
+    plugin: typing.Sequence[typing.Union[str, _ScriptInfo, "Target"]]
 
     def __new__(self) -> "Py2appDistribution":
         raise RuntimeError("Don't instantiate!")
@@ -301,7 +301,8 @@ class Target:
 
 
 def fixup_targets(
-    targets: typing.Sequence[typing.Union[str, dict, Target]], default_attribute: str
+    targets: typing.Sequence[typing.Union[str, _ScriptInfo, Target]],
+    default_attribute: str,
 ) -> typing.Sequence[Target]:
     if not targets:
         return []
@@ -318,7 +319,7 @@ def fixup_targets(
             if isinstance(target_def, dict):
                 d = target_def
             else:
-                d = target_def.__dict__
+                d = typing.cast(_ScriptInfo, target_def.__dict__)
             if default_attribute not in d:
                 raise DistutilsOptionError(
                     "This target class requires an attribute '%s'"
@@ -1197,14 +1198,12 @@ class py2app(Command):
         return py_files, extensions
 
     def collect_packagedirs(self) -> typing.List[str]:
-        return [
-            pth
-            for pth in (
-                os.path.join(os.path.realpath(self.get_bootstrap(pkg)), "")
-                for pkg in self.packages
-            )
-            if os.path.exists(pth)
-        ]
+        result: typing.List[str] = []
+        for pkg in self.packages:
+            bootstrap = self.get_bootstrap(pkg)
+            if isinstance(bootstrap, str):
+                result.append(os.path.join(os.path.realpath(bootstrap), ""))
+        return result
 
     def may_log_missing(self, module_name: str) -> bool:
         module_parts = module_name.split(".")
@@ -1809,7 +1808,7 @@ class py2app(Command):
                 else:
                     copy_file(pth, os.path.join(target_dir, fname))
 
-    def strip_dsym(self, platfiles: typing.Sequence[str]) -> typing.Set[str]:
+    def strip_dsym(self, platfiles: typing.Iterable[str]) -> typing.Set[str]:
         """Remove .dSYM directories in the bundled application"""
 
         #
@@ -1817,7 +1816,7 @@ class py2app(Command):
         # should be completely removed when the "strip" option is specified.
         #
         if self.dry_run:
-            return platfiles
+            return set(platfiles)
         for dirpath, dnames, _fnames in os.walk(self.appdir):
             for nm in list(dnames):
                 if nm.endswith(".dSYM"):
@@ -1850,7 +1849,7 @@ class py2app(Command):
         # will be copied from the framework?
         if src != sys.executable:
             force, self.force = self.force, True
-            self.copy_file(src, dst)
+            self.copy_file(os.fspath(src), os.fspath(dst))
             self.force = force
         return dst
 
@@ -1990,12 +1989,13 @@ class py2app(Command):
 
         # Trying to obtain app and plugin from dist for backward compatibility
         # reasons.
-        app = dist.app
-        plugin = dist.plugin
+        app: typing.Sequence[typing.Union[str, _ScriptInfo, Target]] = dist.app
+        plugin: typing.Sequence[typing.Union[str, _ScriptInfo, Target]] = dist.plugin
         # If we can get suitable values from self.app and self.plugin,
         # we prefer them.
-        if self.app is not None or self.plugin is not None:
+        if self.app is not None:
             app = self.app
+        if self.plugin is not None:
             plugin = self.plugin
 
         # Convert our args into target objects.
@@ -2341,10 +2341,16 @@ class py2app(Command):
         sourcefn: typing.Union[str, os.PathLike[str]],
         destfn: typing.Union[str, os.PathLike[str]],
     ) -> None:
+
         todo = [(sourcefn, destfn)]
 
         while todo:
-            upcoming = []
+            upcoming: typing.List[
+                typing.Tuple[
+                    typing.Union[str, os.PathLike[str]],
+                    typing.Union[str, os.PathLike[str]],
+                ]
+            ] = []
             for item in todo:
                 for s, d in loader_paths(*item):
                     if os.path.exists(d):
@@ -2418,8 +2424,8 @@ class py2app(Command):
 
         bootfn = "__boot__"
         bootfile = open(os.path.join(resdir, bootfn + ".py"), "w")
-        for fn in target.prescripts:
-            bootfile.write(self.get_bootstrap_data(fn))
+        for item in target.prescripts:
+            bootfile.write(self.get_bootstrap_data(item))
             bootfile.write("\n\n")
 
         bootfile.write(f"DEFAULT_SCRIPT={os.path.basename(script)!r}\n")
@@ -2499,6 +2505,7 @@ class py2app(Command):
         )
         for pkg_name in self.packages:
             pkg = self.get_bootstrap(pkg_name)
+            assert isinstance(pkg, str)
 
             if self.semi_standalone:
                 # For semi-standalone builds don't copy packages
@@ -2519,6 +2526,7 @@ class py2app(Command):
             # here (see issue 101)
 
         for copyext in copyexts:
+            assert copyext.filename is not None
             fn = os.path.join(
                 ext_dir,
                 (
@@ -2570,13 +2578,12 @@ class py2app(Command):
                     f"creating python loader for extension {item.identifier!r}"
                 )
 
+            assert item.filename is not None
             fname = slashname + os.path.splitext(item.filename)[1]
             source = make_loader(fname)
             if not self.dry_run:
                 with open(pathname, "w") as fp:
                     fp.write(source)
-            else:
-                return
         return SourceModule(item.identifier, pathname)
 
     def make_lib_archive(
@@ -2625,12 +2632,12 @@ class py2app(Command):
 
     def copy_tree(
         self,
-        infile: typing.Union[str, os.PathLike[str]],
-        outfile: typing.Union[str, os.PathLike[str]],
-        preserve_mode: bool = True,
-        preserve_times: bool = True,
-        preserve_symlinks: bool = False,
-        level: int = 1,
+        infile: str,
+        outfile: str,
+        preserve_mode: int = 1,
+        preserve_times: int = 1,
+        preserve_symlinks: int = 0,
+        level: typing.Any = 1,
         condition: typing.Optional[typing.Callable[[str], bool]] = None,
     ) -> typing.List[str]:
         """Copy an entire directory tree respecting verbose, dry-run,
@@ -2654,13 +2661,18 @@ class py2app(Command):
 
     def copy_file(
         self,
-        infile: typing.Union[str, os.PathLike[str]],
-        outfile: typing.Union[str, os.PathLike[str]],
-    ) -> str:
+        infile: str,
+        outfile: str,
+        preserve_mode: int = 1,
+        preserve_times: int = 1,
+        link: typing.Optional[str] = None,
+        level: typing.Any = None,
+    ) -> typing.Tuple[str, bool]:
         """
         This version doesn't bork on existing symlinks
         """
-        return copy_file(infile, outfile, progress=self.progress)
+        copy_file(infile, outfile, progress=self.progress)
+        return (outfile, True)
 
     def mkpath(
         self, name: typing.Union[str, os.PathLike[str]], mode: int = 0o777

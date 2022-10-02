@@ -255,12 +255,8 @@ def mergecopy(
 def mergetree(
     src: typing.Union[os.PathLike[str], str],
     dst: typing.Union[os.PathLike[str], str],
-    condition: typing.Optional[
-        typing.Callable[[typing.Union[os.PathLike[str], str]], bool]
-    ] = None,
-    copyfn: typing.Callable[
-        [typing.Union[os.PathLike[str], str], typing.Union[os.PathLike[str], str]], None
-    ] = mergecopy,
+    condition: typing.Optional[typing.Callable[[str], bool]] = None,
+    copyfn: typing.Callable[[str, str], None] = mergecopy,
 ) -> None:
     """Recursively merge a directory tree using mergecopy()."""
     macholib.util.mergetree(
@@ -477,17 +473,15 @@ def strip_files(
 
 
 def copy_tree(
-    src: typing.Union[os.PathLike[str], str],
-    dst: typing.Union[os.PathLike[str], str],
-    preserve_mode: bool = True,
-    preserve_times: bool = True,
-    preserve_symlinks: bool = False,
+    src: str,
+    dst: str,
+    preserve_mode: int = 1,
+    preserve_times: int = 1,
+    preserve_symlinks: int = 0,
     update: bool = False,
     verbose: int = 0,
     dry_run: bool = False,
-    condition: typing.Optional[
-        typing.Callable[[typing.Union[os.PathLike[str], str]], bool]
-    ] = None,
+    condition: typing.Optional[typing.Callable[[str], bool]] = None,
     progress: typing.Optional[Progress] = None,
 ) -> typing.List[str]:
 
@@ -581,8 +575,8 @@ def copy_tree(
             copy_file(
                 src_name,
                 dst_name,
-                preserve_mode,
-                preserve_times,
+                bool(preserve_mode),
+                bool(preserve_times),
                 update,
                 dry_run=dry_run,
                 progress=progress,
