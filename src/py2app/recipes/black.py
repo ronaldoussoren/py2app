@@ -1,5 +1,9 @@
 import typing
-from importlib.metadata import packages_distributions
+
+try:
+    from importlib.metadata import packages_distributions
+except ImportError:
+    from importlib_metadata import packages_distributions
 
 from modulegraph.modulegraph import ModuleGraph
 
