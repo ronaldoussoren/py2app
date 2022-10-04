@@ -3,12 +3,12 @@ import collections.abc
 import contextlib
 import errno
 import fcntl
-import importlib.metadata
 import io
 import os
 import pathlib
 import stat
 import subprocess
+import sys
 import time
 import typing
 from py_compile import compile
@@ -21,6 +21,11 @@ from modulegraph.modulegraph import Node
 
 from .progress import Progress
 
+if sys.version_info[:2] < (3, 10):
+    import importlib_metadata
+else:
+    import importlib.metadata as importlib_metadata
+
 gConverterTab: typing.Dict[str, typing.Callable[..., None]] = {}  # XXX
 
 
@@ -28,8 +33,11 @@ def find_converter(
     source: typing.Union[str, os.PathLike[str]]
 ) -> typing.Optional[typing.Callable[..., None]]:
     if not gConverterTab:
-        for ep in importlib.metadata.entry_points(group="py2app.converter"):
-            assert isinstance(ep, importlib.metadata.EntryPoint)
+        for ep in importlib_metadata.entry_points(group="py2app.converter"):
+            if sys.version_info[:2] >= (3, 10):
+                assert isinstance(
+                    ep, importlib_metadata.EntryPoint
+                ), f"{ep!r} is not an EntryPoint but {type(ep)!r}"
             function = ep.load()
             if hasattr(function, "py2app_suffix"):
                 print(f"WARNING: using 'py2app_suffix' is deprecated for {function}")

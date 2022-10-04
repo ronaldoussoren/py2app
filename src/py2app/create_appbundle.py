@@ -1,4 +1,10 @@
-import importlib.resources
+import sys
+
+if sys.version_info[:2] < (3, 10):
+    import importlib_resources
+else:
+    import importlib.resources as importlib_resources
+
 import os
 import plistlib
 import shutil
@@ -71,7 +77,7 @@ def create_appbundle(
     # XXX: Below here some pathlib.Path instances are converted
     # back to strings for compatibility with other code.
     # This will be changed when that legacy code has been updated.
-    with importlib.resources.path(apptemplate.__name__, "lib") as p:
+    with importlib_resources.path(apptemplate.__name__, "lib") as p:
         mergetree(
             str(p),
             str(resources),

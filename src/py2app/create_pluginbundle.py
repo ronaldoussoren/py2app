@@ -1,8 +1,13 @@
-import importlib.resources
 import os
 import plistlib
 import shutil
+import sys
 import typing
+
+if sys.version_info[:2] < (3, 10):
+    import importlib_resources
+else:
+    import importlib.resources as importlib_resources
 
 from . import bundletemplate, progress
 from .util import make_exec, make_path, mergecopy, mergetree, skipscm
@@ -64,7 +69,7 @@ def create_pluginbundle(
     # XXX: Below here some pathlib.Path instances are converted
     # back to strings for compatibility with other code.
     # This will be changed when that legacy code has been updated.
-    with importlib.resources.path(bundletemplate.__name__, "lib") as p:
+    with importlib_resources.path(bundletemplate.__name__, "lib") as p:
         mergetree(
             str(p),
             str(resources),

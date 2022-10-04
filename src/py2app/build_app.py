@@ -13,11 +13,16 @@ import plistlib
 import shlex
 import shutil
 import sys
+import traceback
 import types
 import typing
 import zipfile
 import zlib
-from distutils.errors import DistutilsOptionError, DistutilsPlatformError
+from distutils.errors import (
+    DistutilsError,
+    DistutilsOptionError,
+    DistutilsPlatformError,
+)
 from distutils.sysconfig import get_config_h_filename, get_config_var
 from distutils.util import convert_path, get_platform
 from io import StringIO
@@ -852,38 +857,46 @@ class py2app(Command):
             yield runtime
 
     def run(self) -> None:
-        if get_config_var("PYTHONFRAMEWORK") is None:
-            if not get_config_var("Py_ENABLE_SHARED"):
-                raise DistutilsPlatformError(
-                    "This python does not have a shared library or framework"
-                )
-
-        build = self.reinitialize_command("build")
-        build.build_base = self.bdist_base  # type: ignore
-        build.run()
-        self.create_directories()
-        self.fixup_distribution()
-        self.initialize_plist()
-
-        sys_old_path = sys.path[:]
-        extra_paths: typing.List[str] = [
-            os.path.dirname(self.target.script),
-            build.build_platlib,  # type: ignore
-            build.build_lib,  # type: ignore
-        ]
-        self.additional_paths = [
-            os.path.abspath(p) for p in extra_paths if p is not None
-        ]
-        sys.path[:0] = self.additional_paths
-
-        # this needs additional_paths
-        self.initialize_prescripts()
-
         try:
-            self._run()
-        finally:
-            self.progress.stop()
-            sys.path = sys_old_path
+            if get_config_var("PYTHONFRAMEWORK") is None:
+                if not get_config_var("Py_ENABLE_SHARED"):
+                    raise DistutilsPlatformError(
+                        "This python does not have a shared library or framework"
+                    )
+
+            build = self.reinitialize_command("build")
+            build.build_base = self.bdist_base  # type: ignore
+            build.run()
+            self.create_directories()
+            self.fixup_distribution()
+            self.initialize_plist()
+
+            sys_old_path = sys.path[:]
+            extra_paths: typing.List[str] = [
+                os.path.dirname(self.target.script),
+                build.build_platlib,  # type: ignore
+                build.build_lib,  # type: ignore
+            ]
+            self.additional_paths = [
+                os.path.abspath(p) for p in extra_paths if p is not None
+            ]
+            sys.path[:0] = self.additional_paths
+
+            # this needs additional_paths
+            self.initialize_prescripts()
+
+            try:
+                self._run()
+            finally:
+                self.progress.stop()
+                sys.path = sys_old_path
+
+        except DistutilsError:
+            raise
+
+        except Exception:
+            traceback.print_exc()
+            raise
 
     def iter_datamodels(
         self, resdir: typing.Union[str, os.PathLike[str]]
