@@ -30,6 +30,7 @@ Contents
    implementation
    py2applet
    changelog
+   pyproject
 
 Online Resources
 ----------------

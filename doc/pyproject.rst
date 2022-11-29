@@ -37,13 +37,16 @@ below, and generally have a command-line equivalent as well.
 ============================ ================= ===========================================================
 Key                          Value Type (TOML) Description
 ============================ ================= ===========================================================
-``semi-standalone``          bool              A semi-standalone distribution requires an installed Python
-                                               framework on the target machine. Defaults to ``false``.
+``build-type``               string            The type of build, one of:
 
-``alias``                    bool              Alias build (defaults to ``false``).
+                                               * ``standalone`` (default): Create a bundle that can be used
+                                                 on a different machine.
 
-                                               XXX: Merge these two options in a "build-type" option with
-                                               3 values.
+                                               * ``semi-standalone``: Create a bundle that embeds all resources
+                                                 except the python interpreter
+
+                                               * ``alias``: Debug builds that links to source files instead
+                                                 of copying them into the bundle.
 
 ``strip``                    bool              Strip debug information and local system from MachO files
                                                included in the bundle.  Defaults to ``true``.
@@ -145,6 +148,9 @@ Key                           Value Type (TOML) Description
 ``redirect-to-asl``           bool              Redirect the stdout and stderr streams to Console.app using
                                                 ASL. Defaults to ``false``. Deprecated, do no use.
 ============================= ================= ===========================================================
+
+For now only a single bundle is supported. In the future there will be support for multiple bundles,
+including embedding bundles (e.g. an application with embedded plugins).
 
 
 Code signing configuration

@@ -3,9 +3,12 @@ Representation of the py2app configuration.
 
 XXX: It should be possible to simplify this code
      a lot.
+XXX: Should this module validate existence of paths?
 """
 
+import enum
 import pathlib
+import plistlib
 import re
 import sys
 import sysconfig
@@ -14,6 +17,20 @@ import typing
 T = typing.TypeVar("T")
 
 _, _DEFAULT_TARGET, _DEFAULT_ARCH = sysconfig.get_platform().split("-")
+
+
+class ConfigurationError(Exception):
+    """
+    Invalid configuration detected.
+    """
+
+    pass
+
+
+class BuildType(enum.Enum):
+    STANDALONE = "standalone"
+    ALIAS = "alias"
+    SEMI_STANDALINE = "semi-standalone"
 
 
 class _NoDefault:
@@ -65,24 +82,66 @@ class local(typing.Generic[T]):
             return self._default
 
 
+class Resource:
+    __slots__ = {
+        "destination": "Destination, relative to the Resources folder",
+        "sources": "Source paths relative to the configuration folder",
+    }
+
+    @classmethod
+    def from_config(
+        cls, config_item: typing.Any, config_root: pathlib.Path, location: str
+    ):
+        if isinstance(config_item, str):
+            return cls(pathlib.Path("."), [config_root / config_item])
+        elif isinstance(config_item, list):
+            if len(config_item) != 2:
+                raise ConfigurationError(f"{location}: invalid item {config_item!r}")
+            dst, src = config_item
+            if (
+                not isinstance(dst, str)
+                or not isinstance(src, list)
+                or not all(isinstance(item, str) for item in src)
+            ):
+                raise ConfigurationError(f"{location}: invalid item {config_item!r}")
+            return cls(pathlib.Path(dst), [config_root / s for s in src])
+        else:
+            raise ConfigurationError(f"{location}: invalid item {config_item!r}")
+
+    def __init__(
+        self, destination: pathlib.Path, sources: typing.Sequence[pathlib.Path]
+    ):
+        self.destination = destination
+        self.sources = list(sources)
+
+    def __eq__(self, other):
+        if not isinstance(other, Resource):
+            return False
+
+        return (self.destination == other.destination) and (
+            self.sources == other.sources
+        )
+
+
 class BundleOptions:
     def __init__(self, global_options, local_options):
         self._global = global_options
         self._local = local_options
 
+    build_type = inherited[BuildType]("build-type", "build_type")
     macho_strip = inherited[bool]("strip", "macho_strip")
     macho_arch = inherited[bool]("arch", "macho_arch")
     deployment_target = inherited[str]("deployment-target", "deployment_target")
     python_optimize = inherited[int]("python.optimize", "python_optimize")
     python_verbose = inherited[bool]("python.verbose", "python_verbose")
     python_use_pythonpath = inherited[bool](
-        "python.use_pythonpath", "python_use_pythonpath"
+        "python.use-pythonpath", "python_use_pythonpath"
     )
     python_use_sitepackages = inherited[bool](
-        "python.use_sitepackages", "python_use_sitepackages"
+        "python.use-sitepackages", "python_use_sitepackages"
     )
     python_use_faulthandler = inherited[bool](
-        "python.faulthandler", "python_use_faulthandler"
+        "python.use-faulthandler", "python_use_faulthandler"
     )
 
     @property
@@ -114,6 +173,7 @@ class BundleOptions:
     def __repr__(self):
         result = []
         result.append("<BundleOptions \n")
+        result.append(f"  build_type = {self.build_type}\n")
         result.append(f"  name = {self.name!r}\n")
         result.append(f"  script = {self.script!r}\n")
         result.append(f"  plugin = {self.plugin!r}\n")
@@ -176,14 +236,15 @@ class Py2appConfiguration:
         for bundle in bundles:
             bundle._global = self._local
 
+    build_type = local[BuildType]("build-type", BuildType.STANDALONE)
     deployment_target = local[str]("deployment-target", _DEFAULT_TARGET)
     macho_strip = local[bool]("strip", True)
     macho_arch = local[str]("arch", _DEFAULT_ARCH)
     python_optimize = local[int]("python.optimize", sys.flags.optimize)
     python_verbose = local[bool]("python.verbose", bool(sys.flags.verbose))
-    python_use_pythonpath = local[bool]("python.use_pythonpath", False)
-    python_use_sitepackages = local[bool]("python.use_sitepackages", False)
-    python_use_faulthandler = local[bool]("python.faulthandler", False)
+    python_use_pythonpath = local[bool]("python.use-pythonpath", False)
+    python_use_sitepackages = local[bool]("python.use-sitepackages", False)
+    python_use_faulthandler = local[bool]("python.use-faulthandler", False)
 
     def __repr__(self):
         result = []
@@ -196,6 +257,7 @@ class Py2appConfiguration:
         result.append(f"  python_use_pythonpath = {self.python_use_pythonpath!r}\n")
         result.append(f"  python_use_sitepackages = {self.python_use_sitepackages!r}\n")
         result.append(f"  python_use_faulthandler = {self.python_use_faulthandler!r}\n")
+        result.append(f"  build_type = {self.build_type}\n")
         result.append("\n")
         recipe = repr(self.recipe)
         lines = recipe.splitlines()
@@ -215,78 +277,99 @@ class Py2appConfiguration:
         return "".join(result)
 
 
-def parse_pyproject(file_contents):
+def parse_pyproject(file_contents: dict, config_root: pathlib.Path):
     try:
-        config = file_contents["tools"]["py2app"]
+        config = file_contents["tool"]["py2app"]
     except KeyError:
-        raise ValueError("TOML doesn't contain a 'tools.py2app' key") from None
+        raise ConfigurationError(
+            "Configuration doesn't contain a 'tool.py2app' key"
+        ) from None
 
     global_options = {}
-    recipe_options = {}
+    recipe_options = {"zip-unsafe": []}
     bundles = []
 
     result = Py2appConfiguration(bundles, global_options, RecipeOptions(recipe_options))
     for key, value in config.items():
-        if key in {"bundle", "recipe"}:
+        if key in {"bundle"}:
             continue
         elif key == "recipe":
             if not isinstance(config["recipe"], dict):
-                raise ValueError("'recipe' is not a dictionary")
-            for key, value in config["recipe"].items():
-                if key in {"zip-unsafe", "qt-plugins", "matplotlib-plugins"}:
-                    if not isinstance(value, list) or not all(
-                        isinstance(v, str) for v in value
+                raise ConfigurationError("'tool.py2app.recipe' is not a dictionary")
+            for py_key, py_value in config["recipe"].items():
+                if py_key in {"zip-unsafe", "qt-plugins", "matplotlib-plugins"}:
+                    if not isinstance(py_value, list) or not all(
+                        isinstance(v, str) for v in py_value
                     ):
-                        raise ValueError(f"Invalid value for 'recipe.{key}'")
-                    recipe_options[key] = value
+                        raise ConfigurationError(
+                            f"'tool.py2app.recipe.{py_key}' is not a list of strings"
+                        )
+                    recipe_options[py_key] = py_value
                 else:
-                    raise ValueError("Invalid key 'recipe.{key}")
+                    raise ConfigurationError(
+                        f"'tool.py2app.recipe.{py_key}' is not a valid key"
+                    )
+
+        elif key == "build-type":
+            try:
+                global_options["build-type"] = BuildType(value)
+            except ValueError:
+                raise ConfigurationError(
+                    "'tool.py2app.build-type' has invalid value"
+                ) from None
 
         elif key == "strip":
             if not isinstance(value, bool):
-                raise ValueError("'strip' is not a boolean")
-            global_options["macho_strip"] = value
+                raise ConfigurationError("'tool.py2app.strip' is not a boolean")
+            global_options["strip"] = value
         elif key == "arch":
             if value not in {"x86_64", "arm64", "universal2"}:
-                raise ValueError(f"'arch' has invalid value: {value!r}")
-            global_options["macho_arch"] = value
+                raise ConfigurationError("'tool.py2app.arch' has invalid value")
+            global_options["arch"] = value
         elif key == "deployment-target":
-            if not isinstance(value, str) or re.fullmatch("[0-9]+([.][0-9]+)?", value):
-                raise ValueError(f"'deployment-target' has invalid value: {value!r}")
-            global_options["deployment_target"] = value
+            if (
+                not isinstance(value, str)
+                or re.fullmatch("[0-9]+([.][0-9]+)?", value) is None
+            ):
+                raise ConfigurationError("'tool.py2app.deployment-target' is not valid")
+            global_options[key] = value
         elif key == "python":
             if not isinstance(value, dict):
-                raise ValueError("'python' is not a dictionary")
-            for py_key, py_value in value:
-                if key in {
-                    "use_pythonpath",
-                    "use_sitepackages",
-                    "use_faulthandler",
+                raise ConfigurationError("'tool.py2app.python' is not a dictionary")
+            for py_key, py_value in value.items():
+                if py_key in {
+                    "use-pythonpath",
+                    "use-sitepackages",
+                    "use-faulthandler",
                     "verbose",
                 }:
                     if not isinstance(py_value, bool):
-                        raise ValueError(f"'python.{py_key}' is not a boolean")
-                    global_options[py_key] = py_value
+                        raise ConfigurationError(
+                            f"'tool.py2app.python.{py_key}' is not a boolean"
+                        )
+                    global_options[f"python.{py_key}"] = py_value
                 elif py_key == "optimize":
                     if not isinstance(py_value, int):
-                        raise ValueError("'python.optimize' is not an integer")
-                    global_options["python_optimize"] = py_value
+                        raise ConfigurationError(
+                            "'tool.py2app.python.optimize' is not an integer"
+                        )
+                    global_options["python.optimize"] = py_value
                 else:
-                    raise ValueError(
-                        f"Unknown global configuration option 'python.{py_key}'"
+                    raise ConfigurationError(
+                        f"invalid key 'tool.py2app.python.{py_key}'"
                     )
 
         else:
-            raise ValueError(f"Unknown global configuration option '{key}'")
+            raise ConfigurationError(f"invalid key 'tool.py2app.{key}'")
 
     if "bundle" not in config:
-        raise ValueError("Missing key: 'bundle'")
+        raise ConfigurationError("missing key: 'tool.py2app.bundle'")
 
     bundle_config = config["bundle"]
     if not isinstance(bundle_config, dict) or not all(
         isinstance(item, dict) for item in bundle_config.values()
     ):
-        raise ValueError("'bundle' is not a sequence of dicts")
+        raise ConfigurationError("'tool.py2app.bundle' is not a sequence of dicts")
 
     for bundle_name, bundle_value in bundle_config.items():
         local_options = {
@@ -302,13 +385,17 @@ def parse_pyproject(file_contents):
         for key, value in bundle_value.items():
             if key in {"extension", "name"}:
                 if not isinstance(value, str):
-                    raise ValueError("'{key}' is not a string")
+                    raise ConfigurationError(
+                        f"'tool.py2app.bundle.{bundle_name}.{key}' is not a string"
+                    )
                 local_options[key] = value
 
             elif key in {"script", "iconfile"}:
                 if not isinstance(value, str):
-                    raise ValueError("'{key}' is not a string")
-                local_options[key] = pathlib.Path(value).resolve()
+                    raise ConfigurationError(
+                        f"'tool.py2app.bundle.{bundle_name}.{key}' is not a string"
+                    )
+                local_options[key] = config_root / pathlib.Path(value)
 
             elif key in {
                 "plugin",
@@ -316,81 +403,149 @@ def parse_pyproject(file_contents):
                 "argv-emulator",
                 "emulate-shell-environment",
                 "redirect-to-asl",
-                "stip",
+                "strip",
             }:
                 if not isinstance(value, bool):
-                    raise ValueError("'{key}' is not a boolean")
+                    raise ConfigurationError(
+                        f"'tool.py2app.bundle.{bundle_name}.{key}' is not a boolean"
+                    )
                 local_options[key] = value
 
             elif key == "resources":
-                # XXX: Parse/validate resource structure
-                local_options[key] = value
+                if not isinstance(value, list):
+                    raise ConfigurationError(
+                        f"'tool.py2app.bundle.{bundle_name}.{key}' is not a list"
+                    )
+
+                # XXX: Should this merge "Resource" definitions for the same destination?
+                local_options[key] = [
+                    Resource.from_config(
+                        item, config_root, f"'tool.py2app.bundle.{bundle_name}.{key}"
+                    )
+                    for item in value
+                ]
 
             elif key == "plist":
                 if isinstance(value, str):
                     # Load plist path
-                    value = {}
-                elif not isinstance(value, dict):
-                    raise ValueError("'{key}' is not a dict or string")
+                    try:
+                        with open(config_root / value, "rb") as stream:
+                            value = plistlib.load(stream)
+
+                    except OSError:
+                        raise ConfigurationError(
+                            f"'tool.py2app.bundle.{bundle_name}.{key}' cannot open {value!r}"
+                        )
+                    except plistlib.InvalidFileException:
+                        raise ConfigurationError(
+                            f"'tool.py2app.bundle.{bundle_name}.{key}' invalid plist file"
+                        )
+
+                elif isinstance(value, dict):
+                    # Check that the value can be serialized as a plist
+                    try:
+                        plistlib.dumps(value)
+                    except Exception:
+                        raise ConfigurationError(
+                            f"'tool.py2app.bundle.{bundle_name}.{key}' invalid plist contents"
+                        )
+
+                else:
+                    raise ConfigurationError(
+                        f"'tool.py2app.bundle.{bundle_name}.{key}' is not a dict or string"
+                    )
 
                 local_options[key] = value
 
-            elif key in {"include", "exclude", "dylib-include", "dylib-exclude"}:
+            elif key in {
+                "include",
+                "exclude",
+                "dylib-include",
+                "dylib-exclude",
+                "argv-inject",
+            }:
                 if not isinstance(value, list) or not all(
                     isinstance(item, str) for item in value
                 ):
-                    raise ValueError(f"{key} is not a list of string")
+                    raise ConfigurationError(
+                        f"'tool.py2app.bundle.{bundle_name}.{key}' is not a list of string"
+                    )
                 local_options[key] = value
 
             elif key == "extra-scripts":
                 if not isinstance(value, list) or not all(
                     isinstance(item, str) for item in value
                 ):
-                    raise ValueError(f"{key} is not a list of string")
-                local_options[key] = [pathlib.Path(item).resolve for item in value]
+                    raise ConfigurationError(
+                        f"'tool.py2app.bundle.{bundle_name}.{key}' is not a list of string"
+                    )
+                local_options[key] = [
+                    config_root / pathlib.Path(item) for item in value
+                ]
 
             # XXX: From her to end is replication of 'global options', refactor
+            elif key == "build-type":
+                try:
+                    local_options["build-type"] = BuildType(value)
+                except ValueError:
+                    raise ConfigurationError(
+                        f"'tool.py2app.bundle.{bundle_name}.build-type' has invalid value"
+                    ) from None
+
             elif key == "arch":
                 if value not in {"x86_64", "arm64", "universal2"}:
-                    raise ValueError(f"'arch' has invalid value: {value!r}")
-                local_options["macho_arch"] = value
+                    raise ConfigurationError(
+                        f"'tool.py2app.bundle.{bundle_name}.arch' has invalid value"
+                    )
+                local_options["arch"] = value
 
             elif key == "deployment-target":
-                if not isinstance(value, str) or re.fullmatch(
-                    "[0-9]+([.][0-9]+)?", value
+                if (
+                    not isinstance(value, str)
+                    or re.fullmatch(r"[0-9]+([.][0-9]+)?", value) is None
                 ):
-                    raise ValueError(
-                        f"'deployment-target' has invalid value: {value!r}"
+                    raise ConfigurationError(
+                        f"'tool.py2app.bundle.{bundle_name}.deployment-target' is not valid"
                     )
-                local_options["deployment_target"] = value
+                local_options[key] = value
 
             elif key == "python":
                 if not isinstance(value, dict):
-                    raise ValueError("'python' is not a dictionary")
-                for py_key, py_value in value:
-                    if key in {
-                        "use_pythonpath",
-                        "use_sitepackages",
-                        "use_faulthandler",
+                    raise ConfigurationError(
+                        f"'tool.py2app.bundle.{bundle_name}.python' is not a dictionary"
+                    )
+                for py_key, py_value in value.items():
+                    if py_key in {
+                        "use-pythonpath",
+                        "use-sitepackages",
+                        "use-faulthandler",
                         "verbose",
                     }:
                         if not isinstance(py_value, bool):
-                            raise ValueError(f"'python.{py_key}' is not a boolean")
-                        local_options[py_key] = py_value
-                    elif key == "optimize":
+                            raise ConfigurationError(
+                                f"'tool.py2app.bundle.{bundle_name}.python.{py_key}' is not a boolean"
+                            )
+                        local_options[f"python.{py_key}"] = py_value
+                    elif py_key == "optimize":
                         if not isinstance(py_value, int):
-                            raise ValueError("'python.optimize' is not an integer")
-                        local_options["python_optimize"] = py_value
+                            raise ConfigurationError(
+                                f"'tool.py2app.bundle.{bundle_name}.python.optimize' is not an integer"
+                            )
+                        local_options["python.optimize"] = py_value
                     else:
-                        raise ValueError(
-                            f"Unknown global configuration option 'python.{py_key}'"
+                        raise ConfigurationError(
+                            f"invalid key: 'tool.py2app.bundle.{bundle_name}.python.{py_key}'"
                         )
 
             else:
-                raise ValueError(f"Invalid key 'bundle.{bundle_name}.{key}'")
+                raise ConfigurationError(
+                    f"invalid key 'tool.py2app.bundle.{bundle_name}.{key}'"
+                )
 
-            if "script" not in local_options:
-                raise ValueError(f"Missing 'script' in 'bundle.{bundle_name}'")
+        if "script" not in local_options:
+            raise ConfigurationError(
+                f"missing 'script' in 'tool.py2app.bundle.{bundle_name}'"
+            )
 
         if "extension" not in local_options:
             local_options["extension"] = (
@@ -398,7 +553,7 @@ def parse_pyproject(file_contents):
             )
 
         if "chdir" not in local_options:
-            local_options["chdir"] = bool(local_options.get("plugin"))
+            local_options["chdir"] = not bool(local_options.get("plugin"))
 
     return result
 
@@ -408,4 +563,4 @@ if __name__ == "__main__":
 
     with open("example.toml", "rb") as stream:
         file_contents = tomllib.load(stream)
-    print(parse_pyproject(file_contents))
+    print(parse_pyproject(file_contents, pathlib.Path(".").resolve()))
