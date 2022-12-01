@@ -102,9 +102,18 @@ Key                           Value Type (TOML) Description
                                                 even when they are not detected by
                                                 the dependency checker.
 
+                                                Note that packages will only include the
+                                                package itself and anything found relative
+                                                to the package ``__init__``.
+
 ``exclude``                   array of string   Array of modules or packages that won't
                                                 be included even when detected by the
                                                 dependency checker.
+
+``full-package``              array of string   Array of packages that will be included
+                                                entirely when they are part of the dependency
+                                                graph.
+
 
 ``dylib-include``             array of string   Array of shared libraries and frameworks
                                                 that will be included, even if not

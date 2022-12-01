@@ -30,7 +30,7 @@ class ConfigurationError(Exception):
 class BuildType(enum.Enum):
     STANDALONE = "standalone"
     ALIAS = "alias"
-    SEMI_STANDALINE = "semi-standalone"
+    SEMI_STANDALONE = "semi-standalone"
 
 
 class _NoDefault:
@@ -94,7 +94,7 @@ class Resource:
     ):
         if isinstance(config_item, str):
             return cls(pathlib.Path("."), [config_root / config_item])
-        elif isinstance(config_item, list):
+        elif isinstance(config_item, (list, tuple)):
             if len(config_item) != 2:
                 raise ConfigurationError(f"{location}: invalid item {config_item!r}")
             dst, src = config_item
@@ -159,8 +159,16 @@ class BundleOptions:
     plist = local[dict]("plist", {})
     extra_scripts = local[typing.Sequence[pathlib.Path]]("extra-scripts", ())
 
+    # Python modules or packages to include unconditionally:
     py_include = local[typing.Sequence[str]]("include", ())
+
+    # Python modules or packages to exclude unconditionally:
     py_exclude = local[typing.Sequence[str]]("exclude", ())
+
+    # Python packages that will be included in their entirety
+    # when they are a dependency.
+    py_full_package = local[typing.Sequence[str]]("full-package", ())
+
     macho_include = local[typing.Sequence[str]]("dylib-include", ())  # XXX: Path?
     macho_exclude = local[typing.Sequence[str]]("dylib-exclude", ())  # XXX: Path?
 
@@ -184,6 +192,7 @@ class BundleOptions:
         result.append(f"  extra_scripts = {self.extra_scripts!r}\n")
         result.append(f"  py_include = {self.py_include!r}\n")
         result.append(f"  py_exclude = {self.py_exclude!r}\n")
+        result.append(f"  py_full_package = {self.py_full_package!r}\n")
         result.append(f"  macho_include = {self.macho_include!r}\n")
         result.append(f"  macho_exclude = {self.macho_exclude!r}\n")
         result.append(f"  chdir = {self.chdir!r}\n")
@@ -376,6 +385,7 @@ def parse_pyproject(file_contents: dict, config_root: pathlib.Path):
             "plist": {},
             "include": [],
             "exclude": [],
+            "full-package": [],
             "dylib-include": [],
             "dylib-exclude": [],
         }
@@ -460,6 +470,7 @@ def parse_pyproject(file_contents: dict, config_root: pathlib.Path):
             elif key in {
                 "include",
                 "exclude",
+                "full-package",
                 "dylib-include",
                 "dylib-exclude",
                 "argv-inject",
