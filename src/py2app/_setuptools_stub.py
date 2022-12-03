@@ -37,7 +37,7 @@ def fancy_split(name: str, s: typing.Any) -> typing.List[str]:
     if s is None:
         return []
     elif isinstance(s, str):
-        return [item.strip() for item in s.split(", ")]
+        return [item.strip() for item in s.split(",")]
     elif isinstance(s, collections.abc.Sequence):
         result: typing.List[str] = []
         for item in s:
@@ -45,12 +45,12 @@ def fancy_split(name: str, s: typing.Any) -> typing.List[str]:
                 result.append(item)
             else:
                 raise DistutilsOptionError(
-                    f"Invalid value for {name!r}: {item!r} is not a string"
+                    f"invalid value for {name!r}: {item!r} is not a string"
                 )
 
         return result
     else:
-        raise DistutilsOptionError("Invalid value for {name!r}")
+        raise DistutilsOptionError(f"invalid value for {name!r}")
 
 
 class Target:
@@ -484,7 +484,9 @@ class py2app(Command):
             raise DistutilsOptionError(
                 "Target 'extra_scripts' is not a list of strings"
             )
-        bundle_options["extra-scripts"] = extra_scripts
+        bundle_options["extra-scripts"] = [
+            pathlib.Path(".") / item for item in extra_scripts
+        ]
 
         if self.semi_standalone:
             bundle_options["build-type"] = _config.BuildType.SEMI_STANDALONE
@@ -506,7 +508,7 @@ class py2app(Command):
         else:
             bundle_options["argv-inject"] = []
 
-        bundle_options["include"] = fancy_split("include", self.includes)
+        bundle_options["include"] = fancy_split("includes", self.includes)
         packages = fancy_split("packages", self.packages)
         bundle_options["include"].extend(packages)
         bundle_options["full-package"] = fancy_split("maybe-packages", self.packages)
@@ -561,6 +563,8 @@ class py2app(Command):
             except Exception:
                 raise DistutilsOptionError("Cannot serialize 'plist' value")
 
+            bundle_options["plist"] = self.plist
+
         else:
             raise DistutilsOptionError("Invalid value for 'plist'")
 
@@ -568,7 +572,10 @@ class py2app(Command):
             bundle_options["iconfile"] = pathlib.Path(self.iconfile)
 
         bundle_options["extra-scripts"].extend(
-            fancy_split("extra-scripts", self.extra_scripts)
+            [
+                pathlib.Path(".") / item
+                for item in fancy_split("extra-scripts", self.extra_scripts)
+            ]
         )
 
         # XXX: Not yet present in new configuration

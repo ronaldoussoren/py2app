@@ -1,3 +1,5 @@
+# XXX: This currently uses "py2app2" as the command name, change
+#      later (global search & replace)
 import pathlib
 import plistlib
 import sys
@@ -65,7 +67,8 @@ class TestSetuptoolsConfiguration(TestCase):
         plistlib.dumps(bundle.plist)
         self.assertIsInstance(bundle.extra_scripts, list)
         self.assertTrue(
-            all(isinstance(item, pathlib.Path) for item in bundle.extra_scripts)
+            all(isinstance(item, pathlib.Path) for item in bundle.extra_scripts),
+            f"not all extra_scripts items are Paths: {bundle.extra_scripts!r}",
         )
         self.assertIsInstance(bundle.py_include, list)
         self.assertTrue(all(isinstance(item, str) for item in bundle.py_include))
@@ -337,4 +340,319 @@ class TestSetuptoolsConfiguration(TestCase):
                     },
                 )
 
-    # test_target_extra_scripts (for kind in app, plugin)
+    def test_target_extra_scripts(self):
+        for kind in ["app", "plugin"]:
+            command = self.run_setuptools(
+                commandline_options=["setup.py", "py2app2"],
+                setup_keywords={
+                    kind: [
+                        {
+                            "script": "script.py",
+                            "extra_scripts": ["first.py", "second.py"],
+                        }
+                    ]
+                },
+            )
+
+            self.assert_config_types(command.config)
+            self.assert_global_options(command.config)
+            self.assert_recipe_options(command.config.recipe)
+            self.assertEqual(len(command.config.bundles), 1)
+            self.assert_bundle_options(
+                command.config.bundles[0],
+                plugin=(kind == "plugin"),
+                script=pathlib.Path("./script.py"),
+                extra_scripts=[pathlib.Path("./first.py"), pathlib.Path("./second.py")],
+            )
+
+    def test_target_extra_scripts_with_more_in_options(self):
+        for kind in ["app", "plugin"]:
+            command = self.run_setuptools(
+                commandline_options=["setup.py", "py2app2"],
+                setup_keywords={
+                    kind: [
+                        {
+                            "script": "script.py",
+                            "extra_scripts": ["first.py", "second.py"],
+                        }
+                    ],
+                    "options": {
+                        "py2app2": {
+                            "extra_scripts": ["third.py"],
+                        }
+                    },
+                },
+            )
+
+            self.assert_config_types(command.config)
+            self.assert_global_options(command.config)
+            self.assert_recipe_options(command.config.recipe)
+            self.assertEqual(len(command.config.bundles), 1)
+            self.assert_bundle_options(
+                command.config.bundles[0],
+                plugin=(kind == "plugin"),
+                script=pathlib.Path("./script.py"),
+                extra_scripts=[
+                    pathlib.Path("./first.py"),
+                    pathlib.Path("./second.py"),
+                    pathlib.Path("./third.py"),
+                ],
+            )
+
+    # XXX: test_target_build_directory
+    # XXX: test_target_prescripts (?)
+
+    def test_option_stringlists(self):
+        for key, option in [
+            ("includes", "py_include"),
+            ("excludes", "py_exclude"),
+            ("frameworks", "macho_include"),
+            ("dylib_excludes", "macho_exclude"),
+        ]:
+            with self.subTest(f"{key} through setup.py, valid sequence"):
+                command = self.run_setuptools(
+                    commandline_options=["setup.py", "py2app2"],
+                    setup_keywords={
+                        "app": ["script.py"],
+                        "options": {
+                            "py2app2": {
+                                key: (
+                                    "one",
+                                    "two",
+                                ),
+                            }
+                        },
+                    },
+                )
+
+                self.assert_config_types(command.config)
+                self.assert_global_options(command.config)
+                self.assert_recipe_options(command.config.recipe)
+                self.assertEqual(len(command.config.bundles), 1)
+                self.assert_bundle_options(
+                    command.config.bundles[0],
+                    plugin=False,
+                    script=pathlib.Path("./script.py"),
+                    **{option: ["one", "two"]},
+                )
+
+            with self.subTest(f"{key} through setup.py, valid string"):
+                command = self.run_setuptools(
+                    commandline_options=["setup.py", "py2app2"],
+                    setup_keywords={
+                        "app": ["script.py"],
+                        "options": {
+                            "py2app2": {
+                                key: "one, two",
+                            }
+                        },
+                    },
+                )
+
+                self.assert_config_types(command.config)
+                self.assert_global_options(command.config)
+                self.assert_recipe_options(command.config.recipe)
+                self.assertEqual(len(command.config.bundles), 1)
+                self.assert_bundle_options(
+                    command.config.bundles[0],
+                    plugin=False,
+                    script=pathlib.Path("./script.py"),
+                    **{option: ["one", "two"]},
+                )
+
+            with self.subTest(f"{key} through setup.py, invalid value"):
+                with self.assertRaisesRegex(
+                    SystemExit, f"error: invalid value for '{key.replace('_', '-')}'"
+                ):
+                    self.run_setuptools(
+                        commandline_options=["setup.py", "py2app2"],
+                        setup_keywords={
+                            "app": ["script.py"],
+                            "options": {
+                                "py2app2": {
+                                    key: 42,
+                                }
+                            },
+                        },
+                    )
+
+            with self.subTest(f"{key} through setup.py, invalid item"):
+                with self.assertRaisesRegex(
+                    SystemExit,
+                    f"error: invalid value for '{key.replace('_', '-')}': 42 is not a string",
+                ):
+                    self.run_setuptools(
+                        commandline_options=["setup.py", "py2app2"],
+                        setup_keywords={
+                            "app": ["script.py"],
+                            "options": {
+                                "py2app2": {
+                                    key: [42],
+                                }
+                            },
+                        },
+                    )
+
+            with self.subTest(f"{key} through command-line"):
+                command = self.run_setuptools(
+                    commandline_options=[
+                        "setup.py",
+                        "py2app2",
+                        f"--{key.replace('_', '-')}=one,two",
+                    ],
+                    setup_keywords={
+                        "app": ["script.py"],
+                    },
+                )
+
+                self.assert_config_types(command.config)
+                self.assert_global_options(command.config)
+                self.assert_recipe_options(command.config.recipe)
+                self.assertEqual(len(command.config.bundles), 1)
+                self.assert_bundle_options(
+                    command.config.bundles[0],
+                    plugin=False,
+                    script=pathlib.Path("./script.py"),
+                    **{option: ["one", "two"]},
+                )
+
+
+"""
+    user_options = [
+        ("packages=", "p", "comma-separated list of packages to include"),
+        (
+            "maybe-packages=",
+            "p",
+            "comma-separated list of packages that will be added outside of the zip file when detected as a dependency",
+        ),
+        ("iconfile=", None, "Icon file to use"),
+        (
+            "optimize=",
+            "O",
+            'optimization level: -O1 for "python -O", '
+            '-O2 for "python -OO", and -O0 to disable [default: -O0]',
+        ),
+        ("datamodels=", None, "xcdatamodels to be compiled and copied into Resources"),
+        (
+            "expected-missing-imports=",
+            None,
+            "expected missing imports either a comma sperated list "
+            "or @ followed by file containing a list of imports, one per line",
+        ),
+        (
+            "mappingmodels=",
+            None,
+            "xcmappingmodels to be compiled and copied into Resources",
+        ),
+        (
+            "resources=",
+            "r",
+            "comma-separated list of additional data files and folders to "
+            "include (not for code!)",
+        ),
+        ("plist=", "P", "Info.plist template file, dict, or plistlib.Plist"),
+        (
+            "extension=",
+            None,
+            "Bundle extension [default:.app for app, .plugin for plugin]",
+        ),
+        ("graph", "g", "output module dependency graph"),
+        ("xref", "x", "output module cross-reference as html"),
+        ("no-strip", None, "do not strip debug and local symbols from output"),
+        (
+            "no-chdir",
+            "C",
+            "do not change to the data directory (Contents/Resources) "
+            "[forced for plugins]",
+        ),
+        (
+            "semi-standalone",
+            "s",
+            "depend on an existing installation of Python " + installation_info(),
+        ),
+        ("alias", "A", "Use an alias to current source file (for development only!)"),
+        ("argv-emulation", "a", "Use argv emulation [disabled for plugins]."),
+        ("argv-inject=", None, "Inject some commands into the argv"),
+        (
+            "emulate-shell-environment",
+            None,
+            "Emulate the shell environment you get in a Terminal window",
+        ),
+        (
+            "use-pythonpath",
+            None,
+            "Allow PYTHONPATH to effect the interpreter's environment",
+        ),
+        (
+            "use-faulthandler",
+            None,
+            "Enable the faulthandler in the generated bundle (Python 3.3+)",
+        ),
+        ("verbose-interpreter", None, "Start python in verbose mode"),
+        ("bdist-base=", "b", "base directory for build library (default is build)"),
+        (
+            "dist-dir=",
+            "d",
+            "directory to put final built distributions in (default is dist)",
+        ),
+        (
+            "site-packages",
+            None,
+            "include the system and user site-packages into sys.path",
+        ),
+        (
+            "strip",
+            "S",
+            "strip debug and local symbols from output (on by default, for "
+            "compatibility)",
+        ),
+        (
+            "debug-modulegraph",
+            None,
+            "Drop to pdb console after the module finding phase is complete",
+        ),
+        (
+            "debug-skip-macholib",
+            None,
+            "skip macholib phase (app will not be standalone!)",
+        ),
+        (
+            # XXX: Fetch default architecture to show in help.
+            "arch=",
+            None,
+            "set of architectures to use (x86_64, arm64, universal2; "
+            "default is the set for the current python binary)",
+        ),
+        (
+            "qt-plugins=",
+            None,
+            "set of Qt plugins to include in the application bundle " "(default None)",
+        ),
+        (
+            "matplotlib-backends=",
+            None,
+            "set of matplotlib backends to include (default: all)",
+        ),
+        (
+            "extra-scripts=",
+            None,
+            "set of additional scripts to include in the application bundle",
+        ),
+        ("include-plugins=", None, "List of plugins to include"),
+        (
+            "report-missing-from-imports",
+            None,
+            "Report the list of missing names for 'from module import name'",
+        ),
+        (
+            "no-report-missing-conditional-import",
+            None,
+            "Don't report missing modules from conditional imports",
+        ),
+        (
+            "redirect-stdout-to-asl",
+            None,
+            "Forward the stdout/stderr streams to Console.app using ASL",
+        ),
+    ]
+    """
