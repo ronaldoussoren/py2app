@@ -276,7 +276,7 @@ class TestParsing(TestCase):
             self.assertEqual(config.build_type, _config.BuildType.STANDALONE)
             self.assertEqual(config.deployment_target, osrelease)
             self.assertEqual(config.macho_strip, True)
-            self.assertEqual(config.macho_arch, cpuarch)
+            self.assertEqual(config.macho_arch, _config.BuildArch(cpuarch))
             self.assertEqual(config.python_optimize, sys.flags.optimize)
             self.assertEqual(config.python_verbose, bool(sys.flags.verbose))
             self.assertEqual(config.python_use_pythonpath, False)
@@ -286,7 +286,7 @@ class TestParsing(TestCase):
             self.assertEqual(config.bundles[0].build_type, _config.BuildType.STANDALONE)
             self.assertEqual(config.bundles[0].deployment_target, osrelease)
             self.assertEqual(config.bundles[0].macho_strip, True)
-            self.assertEqual(config.bundles[0].macho_arch, cpuarch)
+            self.assertEqual(config.bundles[0].macho_arch, _config.BuildArch(cpuarch))
             self.assertEqual(config.bundles[0].python_optimize, sys.flags.optimize)
             self.assertEqual(config.bundles[0].python_verbose, bool(sys.flags.verbose))
             self.assertEqual(config.bundles[0].python_use_pythonpath, False)
@@ -528,8 +528,8 @@ class TestParsing(TestCase):
                     },
                     pathlib.Path("."),
                 )
-                self.assertEqual(config.macho_arch, value)
-                self.assertEqual(config.bundles[0].macho_arch, value)
+                self.assertEqual(config.macho_arch, _config.BuildArch(value))
+                self.assertEqual(config.bundles[0].macho_arch, _config.BuildArch(value))
 
         with self.subTest("arch (invalid)"):
             with self.assertRaisesRegex(
@@ -1405,7 +1405,7 @@ class TestParsing(TestCase):
 
             self.assertEqual(config.bundles[0].deployment_target, osrelease)
             self.assertEqual(config.bundles[0].macho_strip, True)
-            self.assertEqual(config.bundles[0].macho_arch, cpuarch)
+            self.assertEqual(config.bundles[0].macho_arch, config._BuildArch(cpuarch))
             self.assertEqual(config.bundles[0].python_optimize, sys.flags.optimize)
             self.assertEqual(config.bundles[0].python_verbose, bool(sys.flags.verbose))
             self.assertEqual(config.bundles[0].python_use_pythonpath, False)
@@ -1641,7 +1641,7 @@ class TestParsing(TestCase):
                     },
                     pathlib.Path("."),
                 )
-                self.assertEqual(config.bundles[0].macho_arch, value)
+                self.assertEqual(config.bundles[0].macho_arch, _config.BuildArch(value))
 
         with self.subTest("arch (invalid)"):
             with self.assertRaisesRegex(

@@ -33,6 +33,12 @@ class BuildType(enum.Enum):
     SEMI_STANDALONE = "semi-standalone"
 
 
+class BuildArch(enum.Enum):
+    ARM64 = "arm64"
+    X86_64 = "x86_64"
+    UNIVERSAL2 = "universal2"
+
+
 class _NoDefault:
     __slots__ = ()
 
@@ -130,7 +136,7 @@ class BundleOptions:
 
     build_type = inherited[BuildType]("build-type", "build_type")
     macho_strip = inherited[bool]("strip", "macho_strip")
-    macho_arch = inherited[bool]("arch", "macho_arch")
+    macho_arch = inherited[BuildArch]("arch", "macho_arch")
     deployment_target = inherited[str]("deployment-target", "deployment_target")
     python_optimize = inherited[int]("python.optimize", "python_optimize")
     python_verbose = inherited[bool]("python.verbose", "python_verbose")
@@ -172,7 +178,7 @@ class BundleOptions:
     macho_include = local[typing.Sequence[str]]("dylib-include", ())  # XXX: Path?
     macho_exclude = local[typing.Sequence[str]]("dylib-exclude", ())  # XXX: Path?
 
-    chdir = local[bool]("chdir", True)  # Default depends on "plugin"
+    chdir = local[bool]("chdir")
     argv_emulator = local[bool]("argv-emulator", False)
     argv_inject = local[typing.Sequence[str]]("argv-inject", ())
     emulate_shell_environment = local[bool]("emulate-shell-environment", False)
@@ -248,7 +254,7 @@ class Py2appConfiguration:
     build_type = local[BuildType]("build-type", BuildType.STANDALONE)
     deployment_target = local[str]("deployment-target", _DEFAULT_TARGET)
     macho_strip = local[bool]("strip", True)
-    macho_arch = local[str]("arch", _DEFAULT_ARCH)
+    macho_arch = local[BuildArch]("arch", BuildArch(_DEFAULT_ARCH))
     python_optimize = local[int]("python.optimize", sys.flags.optimize)
     python_verbose = local[bool]("python.verbose", bool(sys.flags.verbose))
     python_use_pythonpath = local[bool]("python.use-pythonpath", False)
@@ -332,9 +338,10 @@ def parse_pyproject(file_contents: dict, config_root: pathlib.Path):
                 raise ConfigurationError("'tool.py2app.strip' is not a boolean")
             global_options["strip"] = value
         elif key == "arch":
-            if value not in {"x86_64", "arm64", "universal2"}:
+            try:
+                global_options["arch"] = BuildArch(value)
+            except ValueError:
                 raise ConfigurationError("'tool.py2app.arch' has invalid value")
-            global_options["arch"] = value
         elif key == "deployment-target":
             if (
                 not isinstance(value, str)

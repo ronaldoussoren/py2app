@@ -6,6 +6,7 @@ for py2app.
 XXX:
     - finish implementation
     - add option for generating a pyrpoject.toml
+    - target.prescripts (although current impl. is buggy)
 """
 
 import collections.abc
@@ -347,7 +348,7 @@ class py2app(Command):
         self.argv_emulation = False
         self.emulate_shell_environment = False
         self.argv_inject = None
-        self.no_chdir = False
+        self.no_chdir = None
         self.site_packages = False
         self.use_pythonpath = None
         self.use_faulthandler = None
@@ -386,7 +387,7 @@ class py2app(Command):
             "bdist", ("dist_dir", "dist_dir"), ("bdist_base", "bdist_base")
         )
 
-        recipe_options = {}
+        recipe_options = {"zip-unsafe": []}
         global_options = {}
 
         # the setuptools interface allows for exactly 1 bundle configuration
@@ -458,6 +459,10 @@ class py2app(Command):
                 bundle_options["extension"] = ".app"
             bundle_options["script"] = pathlib.Path(app[0].script)
             extra_scripts = app[0].extra_scripts
+            if self.no_chdir is not None:
+                bundle_options["chdir"] = not self.no_chdir
+            else:
+                bundle_options["chdir"] = True
 
         elif plugin:
             if len(plugin) != 1:
@@ -465,7 +470,12 @@ class py2app(Command):
             bundle_options["plugin"] = True
             if "extension" not in bundle_options:
                 bundle_options["extension"] = ".bundle"
-            bundle_options["script"] = pathlib.Path(dist[0].plugin.script)
+            if self.no_chdir is not None:
+                bundle_options["chdir"] = not self.no_chdir
+            else:
+                bundle_options["chdir"] = False
+
+            bundle_options["script"] = pathlib.Path(plugin[0].script)
             extra_scripts = plugin[0].extra_scripts
 
         if not isinstance(extra_scripts, collections.abc.Sequence) or not all(
@@ -481,7 +491,8 @@ class py2app(Command):
         elif self.alias:
             bundle_options["build-type"] = _config.BuildType.ALIAS
         else:
-            bundle_options["build-type"] = _config.BuildType.STANDALONE
+            # Use the global default, which is STANDALONE.
+            pass
 
         if self.argv_inject:
             if isinstance(self.argv_inject, str):
@@ -492,6 +503,8 @@ class py2app(Command):
                 bundle_options["argv-inject"] = list(self.argv_inject)
             else:
                 raise DistutilsOptionError("Invalid configuration for 'argv-inject'")
+        else:
+            bundle_options["argv-inject"] = []
 
         bundle_options["include"] = fancy_split("include", self.includes)
         packages = fancy_split("packages", self.packages)
