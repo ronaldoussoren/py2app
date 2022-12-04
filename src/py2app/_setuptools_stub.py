@@ -54,6 +54,7 @@ def fancy_split(name: str, s: typing.Any) -> typing.List[str]:
 
 
 class Target:
+    # XXX: Target class is not necessary, remove it and related functions.
     script: str
     prescripts: typing.List[typing.Union[str, StringIO]]
     extra_scripts: typing.List[str]
@@ -213,6 +214,12 @@ class py2app(Command):
         ("graph", "g", "output module dependency graph"),
         ("xref", "x", "output module cross-reference as html"),
         (
+            "chdir",
+            None,
+            "change to the data directory (Contents/Resources) "
+            "[default for application]",
+        ),
+        (
             "no-chdir",
             "C",
             "do not change to the data directory (Contents/Resources) "
@@ -225,6 +232,11 @@ class py2app(Command):
         ),
         ("alias", "A", "Use an alias to current source file (for development only!)"),
         ("argv-emulation", "a", "Use argv emulation [disabled for plugins]."),
+        (
+            "no-argv-emulation",
+            "a",
+            "Do not use argv emulation [default, forced for plugins].",
+        ),
         ("argv-inject=", None, "Inject some commands into the argv"),
         (
             "emulate-shell-environment",
@@ -232,16 +244,32 @@ class py2app(Command):
             "Emulate the shell environment you get in a Terminal window",
         ),
         (
+            "no-emulate-shell-environment",
+            None,
+            "Do not emulate the shell environment (default)",
+        ),
+        (
             "use-pythonpath",
             None,
             "Allow PYTHONPATH to effect the interpreter's environment",
+        ),
+        (
+            "no-use-pythonpath",
+            None,
+            "Do not allow PYTHONPATH to effect the interpreter's environment (default)",
         ),
         (
             "use-faulthandler",
             None,
             "Enable the faulthandler in the generated bundle (Python 3.3+)",
         ),
+        (
+            "no-use-faulthandler",
+            None,
+            "Disable the faulthandler in the generated bundle (Python 3.3+, default)",
+        ),
         ("verbose-interpreter", None, "Start python in verbose mode"),
+        ("no-verbose-interpreter", None, "Start python in regular mode (default)"),
         ("bdist-base=", "b", "base directory for build library (default is build)"),
         (
             "dist-dir=",
@@ -254,22 +282,17 @@ class py2app(Command):
             "include the system and user site-packages into sys.path",
         ),
         (
+            "no-site-packages",
+            None,
+            "do not include the system and user site-packages into sys.path (default)",
+        ),
+        (
             "strip",
             "S",
             "strip debug and local symbols from output (on by default, for "
             "compatibility)",
         ),
         ("no-strip", None, "do not strip debug and local symbols from output"),
-        (
-            "debug-modulegraph",
-            None,
-            "Drop to pdb console after the module finding phase is complete",
-        ),
-        (
-            "debug-skip-macholib",
-            None,
-            "skip macholib phase (app will not be standalone!)",
-        ),
         (
             "arch=",
             None,
@@ -307,30 +330,50 @@ class py2app(Command):
             None,
             "Forward the stdout/stderr streams to Console.app using ASL",
         ),
+        (
+            "no-redirect-stdout-to-asl",
+            None,
+            "Don't the stdout/stderr streams to Console.app using ASL (default)",
+        ),
     ]
 
     boolean_options = [
         "xref",
         "strip",
+        "no-strip",
         "site-packages",
+        "no-site-packages",
         "semi-standalone",
         "alias",
         "argv-emulation",
+        "no-argv-emulation",
         "use-pythonpath",
+        "no-use-pythonpath",
         "use-faulthandler",
+        "no-use-faulthandler",
         "verbose-interpreter",
+        "no-verbose-interpreter",
+        "chdir",
         "no-chdir",
-        "debug-modulegraph",
-        "debug-skip-macholib",
         "graph",
         "emulate-shell-environment",
+        "no-emulate-shell-environment",
         "report-missing-from-imports",
         "no-report-missing-conditional-import",
         "redirect-stdout-to-asl",
+        "no-redirect-stdout-to-asl",
     ]
 
     negative_opt = {
         "no-strip": "strip",
+        "no-chdir": "chdir",
+        "no-emulate-shell-environment": "emulate-shell-environment",
+        "no-redirect-stdout-to-asl": "redirect-stdout-to-asl",
+        "no-argv-emulation": "argv-emulation",
+        "no-use-pythonpath": "use-pythonpath",
+        "no-use-faulthandler": "use-faulthandler",
+        "no-site-packages": "site-packages",
+        "no-verbose-interpreter": "verbose-interpreter",
     }
 
     def initialize_options(self) -> None:
@@ -341,15 +384,15 @@ class py2app(Command):
         self.xref = False
         self.graph = False
         self.arch = None
-        self.strip = True
+        self.strip = None
         self.iconfile = None
         self.extension = None
         self.alias = False
-        self.argv_emulation = False
-        self.emulate_shell_environment = False
+        self.argv_emulation = None
+        self.emulate_shell_environment = None
         self.argv_inject = None
-        self.no_chdir = None
-        self.site_packages = False
+        self.chdir = None
+        self.site_packages = None
         self.use_pythonpath = None
         self.use_faulthandler = None
         self.verbose_interpreter = None
@@ -364,7 +407,7 @@ class py2app(Command):
         self.mappingmodels = None
         self.plist = None
         self.compressed = None
-        self.semi_standalone = None
+        self.semi_standalone = False
         self.dist_dir = None
         self.debug_skip_macholib = None
         self.debug_modulegraph = None
@@ -375,11 +418,11 @@ class py2app(Command):
         self.include_plugins = None
         self.report_missing_from_imports = False
         self.no_report_missing_conditional_import = False
-        self.redirect_stdout_to_asl = False
-        self.use_old_sdk = False
+        self.redirect_stdout_to_asl = None
         self.expected_missing_imports = None
 
     def finalize_options(self) -> None:
+        self.warnings = []
         # XXX: Reorder the initialisation of the option dictionaries.
 
         # XXX: dist directories are not yet used in configuration
@@ -404,30 +447,18 @@ class py2app(Command):
         )
 
         # Global options
+        if self.strip is not None:
+            if not isinstance(self.strip, (int, bool)):
+                # The documented interface uses "bool", but setuptools option
+                # parsing will set the attribute to an integer.
+                raise DistutilsOptionError("Strip is not a boolean")
 
-        if not isinstance(self.strip, (int, bool)):
-            # The documented interface uses "bool", but setuptools option
-            # parsing will set the attribute to an integer.
-            raise DistutilsOptionError("Strip is not a boolean")
-
-        global_options["strip"] = bool(self.strip)
-
-        if self.use_faulthandler is not None:
-            if not isinstance(self.use_faulthandler, bool):
-                raise DistutilsOptionError("use-faulthandler is not a boolean")
-
-            global_options["python.use-faulthandler"] = self.use_faulthandler
-
-        if self.optimize is not None:
-            if not isinstance(self.optimize, int):
-                raise DistutilsOptionError("optimize is not an integer")
-
-            global_options["python.optimize"] = int(self.optimize)
+            global_options["strip"] = bool(self.strip)
 
         # Recipe options
 
         recipe_options["qt-plugins"] = fancy_split("qt-plugins", self.qt_plugins)
-        recipe_options["matplotlib-plugins"] = fancy_split(
+        recipe_options["matplotlib-backends"] = fancy_split(
             "matplotlib-backends", self.matplotlib_backends
         )
 
@@ -459,8 +490,8 @@ class py2app(Command):
                 bundle_options["extension"] = ".app"
             bundle_options["script"] = pathlib.Path(app[0].script)
             extra_scripts = app[0].extra_scripts
-            if self.no_chdir is not None:
-                bundle_options["chdir"] = not self.no_chdir
+            if self.chdir is not None:
+                bundle_options["chdir"] = bool(self.chdir)
             else:
                 bundle_options["chdir"] = True
 
@@ -470,8 +501,8 @@ class py2app(Command):
             bundle_options["plugin"] = True
             if "extension" not in bundle_options:
                 bundle_options["extension"] = ".bundle"
-            if self.no_chdir is not None:
-                bundle_options["chdir"] = not self.no_chdir
+            if self.chdir is not None:
+                bundle_options["chdir"] = bool(self.chdir)
             else:
                 bundle_options["chdir"] = False
 
@@ -488,6 +519,14 @@ class py2app(Command):
             pathlib.Path(".") / item for item in extra_scripts
         ]
 
+        if not isinstance(self.semi_standalone, (bool, int)):
+            raise DistutilsOptionError("Invalid configuration for 'semi-standalone'")
+        if not isinstance(self.alias, (bool, int)):
+            raise DistutilsOptionError("Invalid configuration for 'alias'")
+
+        if self.semi_standalone and self.alias:
+            raise DistutilsOptionError("Cannot have both alias and semi-standalone")
+
         if self.semi_standalone:
             bundle_options["build-type"] = _config.BuildType.SEMI_STANDALONE
         elif self.alias:
@@ -496,9 +535,14 @@ class py2app(Command):
             # Use the global default, which is STANDALONE.
             pass
 
-        if self.argv_inject:
+        if self.argv_inject is not None:
             if isinstance(self.argv_inject, str):
-                bundle_options["argv-inject"] = shlex.split(self.argv_inject)
+                try:
+                    bundle_options["argv-inject"] = shlex.split(self.argv_inject)
+                except ValueError:
+                    raise DistutilsOptionError(
+                        "Invalid configuration for 'argv-inject'"
+                    )
             elif isinstance(self.argv_inject, collections.abc.Sequence) and all(
                 isinstance(item, str) for item in self.argv_inject
             ):
@@ -511,7 +555,9 @@ class py2app(Command):
         bundle_options["include"] = fancy_split("includes", self.includes)
         packages = fancy_split("packages", self.packages)
         bundle_options["include"].extend(packages)
-        bundle_options["full-package"] = fancy_split("maybe-packages", self.packages)
+        bundle_options["full-package"] = fancy_split(
+            "maybe-packages", self.maybe_packages
+        )
         bundle_options["full-package"].extend(packages)
 
         bundle_options["exclude"] = fancy_split("excludes", self.excludes)
@@ -530,7 +576,7 @@ class py2app(Command):
 
         for attr in ("datamodels", "mappingmodels"):
             if getattr(self, attr):
-                print(
+                self.warnings.append(
                     f"WARNING: the {attr} option is deprecated, "
                     "add model files to the list of resources"
                 )
@@ -544,6 +590,20 @@ class py2app(Command):
             except _config.ConfigurationError:
                 raise DistutilsOptionError(f"Invalid value for '{attr}'")
 
+        for attr, key in [
+            ("redirect_stdout_to_asl", "redirect-to-asl"),
+            ("use_pythonpath", "python.use-pythonpath"),
+            ("use_faulthandler", "python.use-faulthandler"),
+            ("site_packages", "python.use-sitepackages"),
+            ("argv_emulation", "argv-emulator"),
+            ("verbose_interpreter", "python.verbose"),
+        ]:
+            value = getattr(self, attr)
+            if value is not None:
+                if not isinstance(value, (bool, int)):
+                    raise DistutilsOptionError(f"Invalid value for '{attr}'")
+                bundle_options[key] = bool(value)
+
         if self.plist is None:
             bundle_options["plist"] = {}
 
@@ -553,9 +613,9 @@ class py2app(Command):
                     bundle_options["plist"] = plistlib.load(fp)
 
             except OSError:
-                raise DistutilsOptionError("Cannot open plist file {self.plist!r}")
+                raise DistutilsOptionError(f"Cannot open plist file {self.plist!r}")
             except plistlib.InvalidFileException:
-                raise DistutilsOptionError("Invalid plist file {self.plist!r}")
+                raise DistutilsOptionError(f"Invalid plist file {self.plist!r}")
 
         elif isinstance(self.plist, dict):
             try:
@@ -568,8 +628,15 @@ class py2app(Command):
         else:
             raise DistutilsOptionError("Invalid value for 'plist'")
 
+        if self.emulate_shell_environment is not None:
+            bundle_options["emulate-shell-environment"] = bool(
+                self.emulate_shell_environment
+            )
+
         if isinstance(self.iconfile, str):
             bundle_options["iconfile"] = pathlib.Path(self.iconfile)
+        elif self.iconfile is not None:
+            raise DistutilsOptionError("Invalid value for 'iconfile'")
 
         bundle_options["extra-scripts"].extend(
             [
@@ -582,6 +649,9 @@ class py2app(Command):
         # self.include_plugins = fancy_split("include-plugins", self.include_plugins)
 
     def run(self):
+        if self.warnings:
+            for w in self.warnings:
+                print(w)
         print(self.config)
 
         # XXX: Invoke the new builder with self.config

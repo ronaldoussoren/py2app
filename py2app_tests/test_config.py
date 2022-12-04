@@ -140,7 +140,7 @@ class TestParsing(TestCase):
             )
             self.assertEqual(config.recipe.zip_unsafe, [])
             self.assertEqual(config.recipe.qt_plugins, None)
-            self.assertEqual(config.recipe.matplotlib_plugins, None)
+            self.assertEqual(config.recipe.matplotlib_backends, None)
 
         with self.subTest("invalid main key"):
             with self.assertRaisesRegex(
@@ -188,7 +188,7 @@ class TestParsing(TestCase):
         for subkey, attribute in [
             ("zip-unsafe", "zip_unsafe"),
             ("qt-plugins", "qt_plugins"),
-            ("matplotlib-plugins", "matplotlib_plugins"),
+            ("matplotlib-backends", "matplotlib_backends"),
         ]:
             with self.subTest(f"setting {subkey} (valid)"):
                 config = _config.parse_pyproject(

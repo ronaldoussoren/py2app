@@ -227,8 +227,8 @@ class RecipeOptions:
 
     zip_unsafe = local[typing.Sequence[str]]("zip-unsafe", ())
     qt_plugins = local[typing.Optional[typing.Sequence[str]]]("qt-plugins", None)
-    matplotlib_plugins = local[typing.Optional[typing.Sequence[str]]](
-        "matplotlib-plugins", None
+    matplotlib_backends = local[typing.Optional[typing.Sequence[str]]](
+        "matplotlib-backends", None
     )
 
     def __repr__(self):
@@ -236,7 +236,7 @@ class RecipeOptions:
         result.append("<RecipeOptions \n")
         result.append(f"  zip_unsafe = {self.zip_unsafe!r}\n")
         result.append(f"  qt_plugins = {self.qt_plugins!r}\n")
-        result.append(f"  matplotlib_plugins = {self.matplotlib_plugins!r}\n")
+        result.append(f"  matplotlib_backends = {self.matplotlib_backends!r}\n")
 
         result.append(">")
         return "".join(result)
@@ -312,7 +312,7 @@ def parse_pyproject(file_contents: dict, config_root: pathlib.Path):
             if not isinstance(config["recipe"], dict):
                 raise ConfigurationError("'tool.py2app.recipe' is not a dictionary")
             for py_key, py_value in config["recipe"].items():
-                if py_key in {"zip-unsafe", "qt-plugins", "matplotlib-plugins"}:
+                if py_key in {"zip-unsafe", "qt-plugins", "matplotlib-backends"}:
                     if not isinstance(py_value, list) or not all(
                         isinstance(v, str) for v in py_value
                     ):
