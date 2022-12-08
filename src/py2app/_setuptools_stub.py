@@ -509,6 +509,9 @@ class py2app(Command):
             bundle_options["script"] = pathlib.Path(plugin[0].script)
             extra_scripts = plugin[0].extra_scripts
 
+        else:
+            raise DistutilsOptionError("Must specify 'app' or 'plugin'")
+
         if not isinstance(extra_scripts, collections.abc.Sequence) or not all(
             isinstance(item, str) for item in extra_scripts
         ):
@@ -518,6 +521,12 @@ class py2app(Command):
         bundle_options["extra-scripts"] = [
             pathlib.Path(".") / item for item in extra_scripts
         ]
+
+        if self.extension is not None:
+            if isinstance(self.extension, str):
+                bundle_options["extension"] = self.extension
+            else:
+                raise DistutilsOptionError("Invalid configuration for 'extension'")
 
         if not isinstance(self.semi_standalone, (bool, int)):
             raise DistutilsOptionError("Invalid configuration for 'semi-standalone'")
@@ -566,13 +575,23 @@ class py2app(Command):
         )
         bundle_options["dylib-include"] = fancy_split("frameworks", self.frameworks)
 
-        try:
-            bundle_options["resources"] = [
-                _config.Resource.from_item(item)
-                for item in fancy_split("resources", self.resources)
-            ]
-        except _config.ConfigurationError:
-            raise DistutilsOptionError("Invalid value for 'resources'")
+        bundle_options["resources"] = []
+
+        if self.resources is not None:
+            if isinstance(self.resources, str):
+                items = fancy_split("resources", self.resources)
+            else:
+                items = self.resources
+
+            for item in items:
+                try:
+                    bundle_options["resources"].append(
+                        _config.Resource.from_config(
+                            item, pathlib.Path("."), "resources"
+                        )
+                    )
+                except _config.ConfigurationError:
+                    raise DistutilsOptionError("Invalid value for 'resources'")
 
         for attr in ("datamodels", "mappingmodels"):
             if getattr(self, attr):
@@ -580,15 +599,18 @@ class py2app(Command):
                     f"WARNING: the {attr} option is deprecated, "
                     "add model files to the list of resources"
                 )
-            try:
-                bundle_options["resources"].extend(
-                    [
-                        _config.Resource.from_item(item)
-                        for item in fancy_split(attr, getattr(self, attr))
-                    ]
-                )
-            except _config.ConfigurationError:
-                raise DistutilsOptionError(f"Invalid value for '{attr}'")
+                if isinstance(getattr(self, attr), str):
+                    items = fancy_split(attr, getattr(self, attr))
+                else:
+                    items = getattr(self, attr)
+
+                for item in items:
+                    try:
+                        bundle_options["resources"].append(
+                            _config.Resource.from_config(item, pathlib.Path("."), attr)
+                        )
+                    except _config.ConfigurationError:
+                        raise DistutilsOptionError(f"Invalid value for '{attr}'")
 
         for attr, key in [
             ("redirect_stdout_to_asl", "redirect-to-asl"),
@@ -603,6 +625,18 @@ class py2app(Command):
                 if not isinstance(value, (bool, int)):
                     raise DistutilsOptionError(f"Invalid value for '{attr}'")
                 bundle_options[key] = bool(value)
+
+        if self.optimize is not None:
+            if not isinstance(self.optimize, (str, int)):
+                # This allows for string options in a call to setup(),
+                # that's needed to support the command-line and setup.cfg
+                # as distutils cannot parse integers for us.
+                raise DistutilsOptionError("Invalid value for 'optimize'")
+
+            try:
+                bundle_options["python.optimize"] = int(self.optimize)
+            except ValueError:
+                raise DistutilsOptionError("Invalid value for 'optimize'")
 
         if self.plist is None:
             bundle_options["plist"] = {}
@@ -644,6 +678,12 @@ class py2app(Command):
                 for item in fancy_split("extra-scripts", self.extra_scripts)
             ]
         )
+
+        if self.arch is not None:
+            try:
+                bundle_options["arch"] = _config.BuildArch(self.arch)
+            except ValueError:
+                raise DistutilsOptionError("Invalid value for 'arch'")
 
         # XXX: Not yet present in new configuration
         # self.include_plugins = fancy_split("include-plugins", self.include_plugins)

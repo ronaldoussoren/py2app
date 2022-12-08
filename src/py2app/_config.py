@@ -94,6 +94,9 @@ class Resource:
         "sources": "Source paths relative to the configuration folder",
     }
 
+    def __repr__(self):
+        return f"<Resource destination={self.destination!r} sources={self.sources!r}>"
+
     @classmethod
     def from_config(
         cls, config_item: typing.Any, config_root: pathlib.Path, location: str
