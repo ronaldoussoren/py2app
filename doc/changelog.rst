@@ -111,6 +111,17 @@ the code might not work on older versions due to using newish APIs.
   The annotations are fairly rough at this point, will be cleaned up
   during refactoring the code base.
 
+* Parsing of arguments in the setuptools commands was rewritten and can be
+  more strict, although valid configuration should be accepted just as before.
+
+  Known incompatibilities:
+  - pyapp 0.28 accepted "prescripts" as an alias for "extra_scripts" in a
+    target definition (e.g. "``setup(app=[{"script": "main.py", "prescripts": [ ...])``").
+
+    This is no longer supported and will result in an error.
+
+  - Unsupported extra keys in a target definition are now an error.
+
 py2app 0.28.4
 -------------
 

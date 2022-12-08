@@ -485,6 +485,10 @@ class py2app(Command):
             if len(app) != 1:
                 raise DistutilsOptionError("Multiple targets not currently supported")
 
+            rest = app[0].__dict__.keys() - {"script", "extra_scripts"}
+            if rest:
+                raise DistutilsOptionError("Invalid key in target definition")
+
             bundle_options["plugin"] = False
             if "extension" not in bundle_options:
                 bundle_options["extension"] = ".app"
@@ -498,6 +502,11 @@ class py2app(Command):
         elif plugin:
             if len(plugin) != 1:
                 raise DistutilsOptionError("Multiple targets not currently supported")
+
+            rest = plugin[0].__dict__.keys() - {"script", "extra_scripts"}
+            if rest:
+                raise DistutilsOptionError("Invalid key in target definition")
+
             bundle_options["plugin"] = True
             if "extension" not in bundle_options:
                 bundle_options["extension"] = ".bundle"

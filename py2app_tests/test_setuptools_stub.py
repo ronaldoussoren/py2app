@@ -408,8 +408,16 @@ class TestSetuptoolsConfiguration(TestCase):
                 ],
             )
 
-    # XXX: test_target_build_directory
-    # XXX: test_target_prescripts (?)
+    def test_target_extra_keys(self):
+        for kind in ("app", "plugin"):
+            with self.subTest(kind):
+                with self.assertRaisesRegex(
+                    SystemExit, "error: Invalid key in target definition"
+                ):
+                    self.run_setuptools(
+                        commandline_options=["setup.py", "py2app2"],
+                        setup_keywords={kind: [{"script": "script.py", "unknown": 42}]},
+                    )
 
     def test_option_alias(self):
         with self.subTest("alias in setup.py (true-ish)"):
@@ -1409,7 +1417,6 @@ class TestSetuptoolsConfiguration(TestCase):
                 python_optimize=2,
             )
 
-    # XXX
     def test_option_resources(self):
         pwd = pathlib.Path(".")
 
@@ -1549,9 +1556,144 @@ class TestSetuptoolsConfiguration(TestCase):
                 ],
             )
 
-    # XXX
-    # def test_option_extra_scripts(self):
-    #     pass
+    def test_option_extra_scripts(self):
+        with self.subTest("through setup.py, valid sequence"):
+            command = self.run_setuptools(
+                commandline_options=["setup.py", "py2app2"],
+                setup_keywords={
+                    "app": ["script.py"],
+                    "options": {
+                        "py2app2": {
+                            "extra_scripts": (
+                                "one",
+                                "two",
+                            ),
+                        }
+                    },
+                },
+            )
+
+            self.assert_config_types(command.config)
+            self.assert_global_options(command.config)
+            self.assert_recipe_options(command.config.recipe)
+            self.assertEqual(len(command.config.bundles), 1)
+            self.assert_bundle_options(
+                command.config.bundles[0],
+                plugin=False,
+                script=pathlib.Path("./script.py"),
+                extra_scripts=[pathlib.Path("./one"), pathlib.Path("./two")],
+            )
+
+        with self.subTest("through setup.py, valid string"):
+            command = self.run_setuptools(
+                commandline_options=["setup.py", "py2app2"],
+                setup_keywords={
+                    "app": ["script.py"],
+                    "options": {
+                        "py2app2": {
+                            "extra_scripts": "one, two",
+                        }
+                    },
+                },
+            )
+
+            self.assert_config_types(command.config)
+            self.assert_global_options(command.config)
+            self.assert_recipe_options(command.config.recipe)
+            self.assertEqual(len(command.config.bundles), 1)
+            self.assert_bundle_options(
+                command.config.bundles[0],
+                plugin=False,
+                script=pathlib.Path("./script.py"),
+                extra_scripts=[pathlib.Path("./one"), pathlib.Path("./two")],
+            )
+
+        with self.subTest("through setup.py, invalid value"):
+            with self.assertRaisesRegex(
+                SystemExit, "error: invalid value for 'extra-scripts'"
+            ):
+                self.run_setuptools(
+                    commandline_options=["setup.py", "py2app2"],
+                    setup_keywords={
+                        "app": ["script.py"],
+                        "options": {
+                            "py2app2": {
+                                "extra_scripts": 42,
+                            }
+                        },
+                    },
+                )
+
+        with self.subTest("through setup.py, invalid item"):
+            with self.assertRaisesRegex(
+                SystemExit,
+                "error: invalid value for 'extra-scripts': 42 is not a string",
+            ):
+                self.run_setuptools(
+                    commandline_options=["setup.py", "py2app2"],
+                    setup_keywords={
+                        "app": ["script.py"],
+                        "options": {
+                            "py2app2": {
+                                "extra_scripts": [42],
+                            }
+                        },
+                    },
+                )
+
+        with self.subTest("through command-line"):
+            command = self.run_setuptools(
+                commandline_options=[
+                    "setup.py",
+                    "py2app2",
+                    "--extra-scripts=one,two",
+                ],
+                setup_keywords={
+                    "app": ["script.py"],
+                },
+            )
+
+            self.assert_config_types(command.config)
+            self.assert_global_options(command.config)
+            self.assert_recipe_options(command.config.recipe)
+            self.assertEqual(len(command.config.bundles), 1)
+            self.assert_bundle_options(
+                command.config.bundles[0],
+                plugin=False,
+                script=pathlib.Path("./script.py"),
+                extra_scripts=[pathlib.Path("./one"), pathlib.Path("./two")],
+            )
+
+        with self.subTest("through setup.py with target, valid sequence"):
+            command = self.run_setuptools(
+                commandline_options=["setup.py", "py2app2"],
+                setup_keywords={
+                    "app": [{"script": "script.py", "extra_scripts": ["three"]}],
+                    "options": {
+                        "py2app2": {
+                            "extra_scripts": (
+                                "one",
+                                "two",
+                            ),
+                        }
+                    },
+                },
+            )
+
+            self.assert_config_types(command.config)
+            self.assert_global_options(command.config)
+            self.assert_recipe_options(command.config.recipe)
+            self.assertEqual(len(command.config.bundles), 1)
+            self.assert_bundle_options(
+                command.config.bundles[0],
+                plugin=False,
+                script=pathlib.Path("./script.py"),
+                extra_scripts=[
+                    pathlib.Path("./one"),
+                    pathlib.Path("./two"),
+                    pathlib.Path("./three"),
+                ],
+            )
 
     def test_option_argv_inject(self):
         with self.subTest("value as tuple of strings"):
@@ -1876,6 +2018,8 @@ class TestSetuptoolsConfiguration(TestCase):
 
 # XXX: These options have not yet been been ported to the new
 #      setuptools command:
+# XXX: test_target_build_directory
+# XXX: test_target_prescripts (?)
 """
     user_options = [
     # Reporting options:
