@@ -57,15 +57,15 @@ dependencies=[
 py2applet = "py2app.script_py2applet:main"
 
 [project.entry-points."setuptools.finalize_distribution_options"]
-py2app = "py2app.build_app:finalize_distribution_options"
+py2app = "py2app._setuptools_stub:finalize_distribution_options"
 
 [project.entry-points."distutils.commands"]
 py2app = "py2app.build_app:py2app"
 py2app2 = "py2app._setuptools_stub:py2app"
 
 [project.entry-points."distutils.setup_keywords"]
-app =    "py2app.build_app:validate_target"
-plugin = "py2app.build_app:validate_target"
+app =    "py2app._setuptools_stub:validate_target"
+plugin = "py2app._setuptools_stub:validate_target"
 
 [project.entry-points."py2app.converter"]
 xib            = "py2app.converters.nibfile:convert_xib"

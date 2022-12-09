@@ -4,6 +4,7 @@ import pathlib
 import plistlib
 import sys
 import sysconfig
+import textwrap
 from unittest import TestCase, mock
 
 from py2app import _config
@@ -42,7 +43,7 @@ class TestPropertyHelpers(TestCase):
         value._global = bag
         value._local = {}
 
-        with self.assertRaisesRegex(AttributeError, "first_value"):
+        with self.assertRaisesRegex(AttributeError, "first-value"):
             value.first
 
         with self.assertRaisesRegex(AttributeError, "second"):
@@ -68,6 +69,11 @@ class TestResource(TestCase):
         self.assertIsInstance(value, _config.Resource)
         self.assertEqual(value.destination, pathlib.Path("."))
         self.assertEqual(value.sources, [root / "value"])
+
+        self.assertEqual(
+            repr(value),
+            "<Resource destination=PosixPath('.') sources=[PosixPath('etc/value')]>",
+        )
 
     def test_from_item(self):
         root = pathlib.Path("etc")
@@ -104,6 +110,199 @@ class TestResource(TestCase):
             _config.ConfigurationError, "my_location: invalid item 42"
         ):
             _config.Resource.from_config(42, root, "my_location")
+
+    def test_comparison(self):
+        root = pathlib.Path("etc")
+        v1 = _config.Resource.from_config(
+            ["dir", ["file1", "file2"]], root, "my_location"
+        )
+        v2 = _config.Resource.from_config(
+            ["dir", ["file1", "file2"]], root, "other_location"
+        )
+        v3 = _config.Resource.from_config(
+            ["dir", ["file1", "file3"]], root, "other_location"
+        )
+        v4 = _config.Resource.from_config(
+            ["dir2", ["file1", "file2"]], root, "other_location"
+        )
+
+        self.assertTrue(v1 == v2)
+        self.assertFalse(v1 != v2)
+        self.assertFalse(v1 == 1)
+        self.assertTrue(v1 != 1)
+
+        self.assertTrue(v1 != v3)
+        self.assertFalse(v1 == v3)
+
+        self.assertTrue(v1 != v4)
+        self.assertFalse(v1 == v4)
+
+
+class TestBundleOptions(TestCase):
+    def test_repr(self):
+        option = _config.BundleOptions(
+            _config.Py2appConfiguration([], {}, _config.RecipeOptions({})),
+            {"script": pathlib.Path("foo"), "extension": ".app", "chdir": False},
+        )
+        self.maxDiff = None
+        self.assertEqual(
+            repr(option),
+            textwrap.dedent(
+                """\
+            <BundleOptions
+              build_type = BuildType.STANDALONE
+              name = 'foo'
+              script = PosixPath('foo')
+              plugin = False
+              extension = '.app'
+              iconfile = None
+              resources = ()
+              plist = {}
+              extra_scripts = ()
+              py_include = ()
+              py_exclude = ()
+              py_full_package = ()
+              macho_include = ()
+              macho_exclude = ()
+              chdir = False
+              argv_emulator = False
+              argv_inject = ()
+              emulate_shell_environment = False
+              redirect_to_asl = False
+
+              macho_strip = True
+              macho_arch = <BuildArch.UNIVERSAL2: 'universal2'>
+              deployment_target = '10.9'
+              python_optimize = 0
+              python_verbose = False
+              python_use_pythonpath = False
+              python_use_sitepackages = False
+              python_use_faulthandler = False
+            >"""
+            ),
+        )
+
+
+class TestRecipeOptions(TestCase):
+    def test_repr(self):
+        value = _config.RecipeOptions({})
+        self.assertEqual(
+            repr(value),
+            textwrap.dedent(
+                """\
+            <RecipeOptions
+              zip_unsafe = ()
+              qt_plugins = None
+              matplotlib_backends = None
+            >"""
+            ),
+        )
+
+
+class TestPy2appConfiguration(TestCase):
+    def test_repr(self):
+        recipes = _config.RecipeOptions({})
+        bundles = []
+        value = _config.Py2appConfiguration(bundles, {}, recipes)
+        bundles.append(
+            _config.BundleOptions(
+                value,
+                {"script": pathlib.Path("foo"), "extension": ".app", "chdir": False},
+            )
+        )
+        bundles.append(
+            _config.BundleOptions(
+                value,
+                {"script": pathlib.Path("bar"), "extension": ".app", "chdir": True},
+            )
+        )
+
+        self.assertEqual(
+            repr(value),
+            textwrap.dedent(
+                """\
+            <Py2appConfiguration
+              deployment_target = '10.9'
+              macho_strip = True
+              macho_arch = <BuildArch.UNIVERSAL2: 'universal2'>
+              python_optimize = 0
+              python_verbose = False
+              python_use_pythonpath = False
+              python_use_sitepackages = False
+              python_use_faulthandler = False
+              build_type = BuildType.STANDALONE
+
+              recipes = <RecipeOptions
+                zip_unsafe = ()
+                qt_plugins = None
+                matplotlib_backends = None
+              >
+
+              bundles = [
+                <BundleOptions
+                  build_type = BuildType.STANDALONE
+                  name = 'foo'
+                  script = PosixPath('foo')
+                  plugin = False
+                  extension = '.app'
+                  iconfile = None
+                  resources = ()
+                  plist = {}
+                  extra_scripts = ()
+                  py_include = ()
+                  py_exclude = ()
+                  py_full_package = ()
+                  macho_include = ()
+                  macho_exclude = ()
+                  chdir = False
+                  argv_emulator = False
+                  argv_inject = ()
+                  emulate_shell_environment = False
+                  redirect_to_asl = False
+
+                  macho_strip = True
+                  macho_arch = <BuildArch.UNIVERSAL2: 'universal2'>
+                  deployment_target = '10.9'
+                  python_optimize = 0
+                  python_verbose = False
+                  python_use_pythonpath = False
+                  python_use_sitepackages = False
+                  python_use_faulthandler = False
+                >,
+                <BundleOptions
+                  build_type = BuildType.STANDALONE
+                  name = 'bar'
+                  script = PosixPath('bar')
+                  plugin = False
+                  extension = '.app'
+                  iconfile = None
+                  resources = ()
+                  plist = {}
+                  extra_scripts = ()
+                  py_include = ()
+                  py_exclude = ()
+                  py_full_package = ()
+                  macho_include = ()
+                  macho_exclude = ()
+                  chdir = True
+                  argv_emulator = False
+                  argv_inject = ()
+                  emulate_shell_environment = False
+                  redirect_to_asl = False
+
+                  macho_strip = True
+                  macho_arch = <BuildArch.UNIVERSAL2: 'universal2'>
+                  deployment_target = '10.9'
+                  python_optimize = 0
+                  python_verbose = False
+                  python_use_pythonpath = False
+                  python_use_sitepackages = False
+                  python_use_faulthandler = False
+                >,
+              ]
+            >"""
+            ),
+        )
 
 
 class TestParsing(TestCase):
@@ -583,6 +782,29 @@ class TestParsing(TestCase):
                             "py2app": {
                                 "python": {
                                     "optimize": "off",
+                                },
+                                "bundle": {
+                                    "main": {
+                                        "script": "main.py",
+                                    }
+                                },
+                            }
+                        }
+                    },
+                    pathlib.Path("."),
+                )
+
+        with self.subTest("invalid python subkey"):
+            with self.assertRaisesRegex(
+                _config.ConfigurationError,
+                "invalid key 'tool.py2app.python.invalid'",
+            ):
+                _config.parse_pyproject(
+                    {
+                        "tool": {
+                            "py2app": {
+                                "python": {
+                                    "invalid": "off",
                                 },
                                 "bundle": {
                                     "main": {
@@ -1182,6 +1404,34 @@ class TestParsing(TestCase):
                 self.assertEqual(config.bundles[0].plist, {"key": "value"})
             mock_open.assert_called_once_with(pathlib.Path("./data/Info.plist"), "rb")
 
+        with self.subTest("plist (invalid, path to existing file)"):
+            data = b"this is not valid"
+            stream = io.BytesIO(data)
+
+            with self.assertRaisesRegex(
+                _config.ConfigurationError,
+                "'tool.py2app.bundle.test.plist' invalid plist file",
+            ):
+                with mock.patch(
+                    "py2app._config.open", return_value=stream
+                ) as mock_open:
+                    _config.parse_pyproject(
+                        {
+                            "tool": {
+                                "py2app": {
+                                    "bundle": {
+                                        "test": {
+                                            "script": "scriptmod.py",
+                                            "plist": "data/Info.plist",
+                                        }
+                                    },
+                                }
+                            }
+                        },
+                        pathlib.Path("."),
+                    )
+            mock_open.assert_called_once_with(pathlib.Path("./data/Info.plist"), "rb")
+
         with self.subTest("plist (invalid value type)"):
             with self.assertRaisesRegex(
                 _config.ConfigurationError,
@@ -1405,7 +1655,7 @@ class TestParsing(TestCase):
 
             self.assertEqual(config.bundles[0].deployment_target, osrelease)
             self.assertEqual(config.bundles[0].macho_strip, True)
-            self.assertEqual(config.bundles[0].macho_arch, config._BuildArch(cpuarch))
+            self.assertEqual(config.bundles[0].macho_arch, _config.BuildArch(cpuarch))
             self.assertEqual(config.bundles[0].python_optimize, sys.flags.optimize)
             self.assertEqual(config.bundles[0].python_verbose, bool(sys.flags.verbose))
             self.assertEqual(config.bundles[0].python_use_pythonpath, False)
@@ -1784,6 +2034,29 @@ class TestParsing(TestCase):
                                     "main": {
                                         "script": "main.py",
                                         "python": 42,
+                                    }
+                                },
+                            }
+                        }
+                    },
+                    pathlib.Path("."),
+                )
+
+        with self.subTest("unknown python key"):
+            with self.assertRaisesRegex(
+                _config.ConfigurationError,
+                "invalid key: 'tool.py2app.bundle.main.python.unknown'",
+            ):
+                _config.parse_pyproject(
+                    {
+                        "tool": {
+                            "py2app": {
+                                "bundle": {
+                                    "main": {
+                                        "script": "main.py",
+                                        "python": {
+                                            "unknown": "off",
+                                        },
                                     }
                                 },
                             }

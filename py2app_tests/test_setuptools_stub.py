@@ -4,6 +4,7 @@ import io
 import pathlib
 import plistlib
 import sys
+from distutils import errors
 from unittest import TestCase, mock
 
 import setuptools
@@ -16,6 +17,21 @@ NOT_SET = object()
 class TestSetuptoolsConfiguration(TestCase):
     # This class tests the argument parsing of
     # the setuptools compatibility stub.
+
+    def setUp(self):
+        # Setuptools picks up configuration from  pyproject.toml
+        # and that messes up these tests..
+        #
+        # This is a pretty crude hack...
+        self._patcher = mock.patch(
+            "setuptools.dist.Distribution._get_project_config_files",
+            spec=True,
+            return_value=([], []),
+        )
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
 
     def assert_config_types(self, config):
         # Check that the py2app configuration has fields of the right
@@ -283,6 +299,35 @@ class TestSetuptoolsConfiguration(TestCase):
 
         return result.get_command_obj("py2app2")
 
+    def test_finalize_options(self):
+        with self.subTest("basic settings"):
+            command = self.run_setuptools(
+                commandline_options=["setup.py", "py2app2"],
+                setup_keywords={
+                    "app": ["script.py"],
+                },
+            )
+            self.assertEqual(command.distribution.metadata.name, "script")
+
+        with self.subTest("basic settings without suffix"):
+            command = self.run_setuptools(
+                commandline_options=["setup.py", "py2app2"],
+                setup_keywords={
+                    "app": ["path/to/main_script"],
+                },
+            )
+            self.assertEqual(command.distribution.metadata.name, "main_script")
+
+        with self.subTest("with name"):
+            command = self.run_setuptools(
+                commandline_options=["setup.py", "py2app2"],
+                setup_keywords={
+                    "name": "hello",
+                    "app": ["script.py"],
+                },
+            )
+            self.assertEqual(command.distribution.metadata.name, "hello")
+
     def test_default_app_config(self):
         command = self.run_setuptools(
             commandline_options=["setup.py", "py2app2"],
@@ -299,12 +344,40 @@ class TestSetuptoolsConfiguration(TestCase):
             command.config.bundles[0], plugin=False, script=pathlib.Path("./script.py")
         )
 
+    def test_default_app_config_through_command_line(self):
+        command = self.run_setuptools(
+            commandline_options=["setup.py", "py2app2", "--app=script.py"],
+            setup_keywords={},
+        )
+
+        self.assert_config_types(command.config)
+        self.assert_global_options(command.config)
+        self.assert_recipe_options(command.config.recipe)
+        self.assertEqual(len(command.config.bundles), 1)
+        self.assert_bundle_options(
+            command.config.bundles[0], plugin=False, script=pathlib.Path("./script.py")
+        )
+
     def test_default_plugin_config(self):
         command = self.run_setuptools(
             commandline_options=["setup.py", "py2app2"],
             setup_keywords={
                 "plugin": ["script.py"],
             },
+        )
+
+        self.assert_config_types(command.config)
+        self.assert_global_options(command.config)
+        self.assert_recipe_options(command.config.recipe)
+        self.assertEqual(len(command.config.bundles), 1)
+        self.assert_bundle_options(
+            command.config.bundles[0], plugin=True, script=pathlib.Path("./script.py")
+        )
+
+    def test_default_plugin_config_through_command_line(self):
+        command = self.run_setuptools(
+            commandline_options=["setup.py", "py2app2", "--plugin=script.py"],
+            setup_keywords={},
         )
 
         self.assert_config_types(command.config)
@@ -349,30 +422,91 @@ class TestSetuptoolsConfiguration(TestCase):
                 setup_keywords={},
             )
 
+    def test_target_not_list(self):
+        for kind in ("app", "plugin"):
+            with self.subTest(kind):
+                with self.assertRaisesRegex(
+                    errors.DistutilsOptionError,
+                    "target definition should be a sequence: 42",
+                ):
+
+                    self.run_setuptools(
+                        commandline_options=["setup.py", "py2app2"],
+                        setup_keywords={kind: 42},
+                    )
+
+    def test_target_entry_invalid(self):
+        for kind in ("app", "plugin"):
+            with self.subTest(kind):
+                with self.assertRaisesRegex(
+                    errors.DistutilsOptionError, "42 is not a valid target definition"
+                ):
+
+                    self.run_setuptools(
+                        commandline_options=["setup.py", "py2app2"],
+                        setup_keywords={kind: [42]},
+                    )
+
     def test_target_extra_scripts(self):
         for kind in ["app", "plugin"]:
-            command = self.run_setuptools(
-                commandline_options=["setup.py", "py2app2"],
-                setup_keywords={
-                    kind: [
-                        {
-                            "script": "script.py",
-                            "extra_scripts": ["first.py", "second.py"],
-                        }
-                    ]
-                },
-            )
+            with self.subTest(f"{kind} valid definition"):
+                command = self.run_setuptools(
+                    commandline_options=["setup.py", "py2app2"],
+                    setup_keywords={
+                        kind: [
+                            {
+                                "script": "script.py",
+                                "extra_scripts": ["first.py", "second.py"],
+                            }
+                        ]
+                    },
+                )
 
-            self.assert_config_types(command.config)
-            self.assert_global_options(command.config)
-            self.assert_recipe_options(command.config.recipe)
-            self.assertEqual(len(command.config.bundles), 1)
-            self.assert_bundle_options(
-                command.config.bundles[0],
-                plugin=(kind == "plugin"),
-                script=pathlib.Path("./script.py"),
-                extra_scripts=[pathlib.Path("./first.py"), pathlib.Path("./second.py")],
-            )
+                self.assert_config_types(command.config)
+                self.assert_global_options(command.config)
+                self.assert_recipe_options(command.config.recipe)
+                self.assertEqual(len(command.config.bundles), 1)
+                self.assert_bundle_options(
+                    command.config.bundles[0],
+                    plugin=(kind == "plugin"),
+                    script=pathlib.Path("./script.py"),
+                    extra_scripts=[
+                        pathlib.Path("./first.py"),
+                        pathlib.Path("./second.py"),
+                    ],
+                )
+
+            with self.subTest(f"{kind} non-string entry"):
+                with self.assertRaisesRegex(
+                    SystemExit, "error: Target 'extra_scripts' is not a list of strings"
+                ):
+                    command = self.run_setuptools(
+                        commandline_options=["setup.py", "py2app2"],
+                        setup_keywords={
+                            kind: [
+                                {
+                                    "script": "script.py",
+                                    "extra_scripts": ["first.py", 42],
+                                }
+                            ]
+                        },
+                    )
+
+            with self.subTest(f"{kind} not list"):
+                with self.assertRaisesRegex(
+                    SystemExit, "error: Target 'extra_scripts' is not a list of strings"
+                ):
+                    command = self.run_setuptools(
+                        commandline_options=["setup.py", "py2app2"],
+                        setup_keywords={
+                            kind: [
+                                {
+                                    "script": "script.py",
+                                    "extra_scripts": 42,
+                                }
+                            ]
+                        },
+                    )
 
     def test_target_extra_scripts_with_more_in_options(self):
         for kind in ["app", "plugin"]:
@@ -412,7 +546,7 @@ class TestSetuptoolsConfiguration(TestCase):
         for kind in ("app", "plugin"):
             with self.subTest(kind):
                 with self.assertRaisesRegex(
-                    SystemExit, "error: Invalid key in target definition"
+                    errors.DistutilsOptionError, "Invalid key in target definition"
                 ):
                     self.run_setuptools(
                         commandline_options=["setup.py", "py2app2"],
@@ -856,25 +990,55 @@ class TestSetuptoolsConfiguration(TestCase):
             ("verbose_interpreter", "python_verbose", False),
             ("argv_emulation", "argv_emulator", False),
         ]:
-            for value in (True, False, 0, 42):
-                with self.subTest(f"{key} through setup.py, {value}"):
+            for kind in ("app", "plugin"):
+                for value in (True, False, 0, 42):
+                    with self.subTest(f"{key} through setup.py, {value} in {kind}"):
+                        command = self.run_setuptools(
+                            commandline_options=["setup.py", "py2app2"],
+                            setup_keywords={
+                                kind: ["script.py"],
+                                "options": {
+                                    "py2app2": {
+                                        key: value,
+                                    }
+                                },
+                            },
+                        )
+
+                        global_options = local_options = {}
+                        if is_global:
+                            global_options = {option: bool(value)}
+                        else:
+                            local_options = {option: bool(value)}
+
+                        self.assert_config_types(command.config)
+                        self.assert_global_options(command.config, **global_options)
+                        self.assert_recipe_options(command.config.recipe)
+                        self.assertEqual(len(command.config.bundles), 1)
+                        self.assert_bundle_options(
+                            command.config.bundles[0],
+                            plugin=(kind == "plugin"),
+                            script=pathlib.Path("./script.py"),
+                            **local_options,
+                        )
+
+                with self.subTest(f"{key} through setup.py, 'on' in {kind}"):
                     command = self.run_setuptools(
                         commandline_options=["setup.py", "py2app2"],
                         setup_keywords={
                             "app": ["script.py"],
                             "options": {
                                 "py2app2": {
-                                    key: value,
+                                    key: "on",
                                 }
                             },
                         },
                     )
-
-                    global_options = local_options = {}
+                    local_options = global_options = {}
                     if is_global:
-                        global_options = {option: bool(value)}
+                        global_options = {option: True}
                     else:
-                        local_options = {option: bool(value)}
+                        local_options = {option: True}
 
                     self.assert_config_types(command.config)
                     self.assert_global_options(command.config, **global_options)
@@ -887,138 +1051,109 @@ class TestSetuptoolsConfiguration(TestCase):
                         **local_options,
                     )
 
-            with self.subTest(f"{key} through setup.py, 'on'"):
-                command = self.run_setuptools(
-                    commandline_options=["setup.py", "py2app2"],
-                    setup_keywords={
-                        "app": ["script.py"],
-                        "options": {
-                            "py2app2": {
-                                key: "on",
-                            }
-                        },
-                    },
-                )
-                local_options = global_options = {}
-                if is_global:
-                    global_options = {option: True}
-                else:
-                    local_options = {option: True}
-
-                self.assert_config_types(command.config)
-                self.assert_global_options(command.config, **global_options)
-                self.assert_recipe_options(command.config.recipe)
-                self.assertEqual(len(command.config.bundles), 1)
-                self.assert_bundle_options(
-                    command.config.bundles[0],
-                    plugin=False,
-                    script=pathlib.Path("./script.py"),
-                    **local_options,
-                )
-
-            with self.subTest(f"{key} through setup.py, 'off'"):
-                command = self.run_setuptools(
-                    commandline_options=["setup.py", "py2app2"],
-                    setup_keywords={
-                        "app": ["script.py"],
-                        "options": {
-                            "py2app2": {
-                                key: "off",
-                            }
-                        },
-                    },
-                )
-
-                local_options = global_options = {}
-                if is_global:
-                    global_options = {option: False}
-                else:
-                    local_options = {option: False}
-
-                self.assert_config_types(command.config)
-                self.assert_global_options(command.config, **global_options)
-                self.assert_recipe_options(command.config.recipe)
-                self.assertEqual(len(command.config.bundles), 1)
-                self.assert_bundle_options(
-                    command.config.bundles[0],
-                    plugin=False,
-                    script=pathlib.Path("./script.py"),
-                    **local_options,
-                )
-
-            with self.subTest(f"{key} through setup.py, invalid value"):
-                with self.assertRaisesRegex(
-                    SystemExit, "error: invalid truth value 'bla bla'"
-                ):
-                    self.run_setuptools(
+                with self.subTest(f"{key} through setup.py, 'off' in {kind}"):
+                    command = self.run_setuptools(
                         commandline_options=["setup.py", "py2app2"],
                         setup_keywords={
                             "app": ["script.py"],
                             "options": {
                                 "py2app2": {
-                                    key: "bla bla",
+                                    key: "off",
                                 }
                             },
                         },
                     )
 
-            with self.subTest(f"{key} through command-line (on)"):
-                command = self.run_setuptools(
-                    commandline_options=[
-                        "setup.py",
-                        "py2app2",
-                        f"--{key.replace('_', '-')}",
-                    ],
-                    setup_keywords={
-                        "app": ["script.py"],
-                    },
-                )
+                    local_options = global_options = {}
+                    if is_global:
+                        global_options = {option: False}
+                    else:
+                        local_options = {option: False}
 
-                local_options = global_options = {}
-                if is_global:
-                    global_options = {option: True}
-                else:
-                    local_options = {option: True}
+                    self.assert_config_types(command.config)
+                    self.assert_global_options(command.config, **global_options)
+                    self.assert_recipe_options(command.config.recipe)
+                    self.assertEqual(len(command.config.bundles), 1)
+                    self.assert_bundle_options(
+                        command.config.bundles[0],
+                        plugin=False,
+                        script=pathlib.Path("./script.py"),
+                        **local_options,
+                    )
 
-                self.assert_config_types(command.config)
-                self.assert_global_options(command.config, **global_options)
-                self.assert_recipe_options(command.config.recipe)
-                self.assertEqual(len(command.config.bundles), 1)
-                self.assert_bundle_options(
-                    command.config.bundles[0],
-                    plugin=False,
-                    script=pathlib.Path("./script.py"),
-                    **local_options,
-                )
+                with self.subTest(f"{key} through setup.py, invalid value in {kind}"):
+                    with self.assertRaisesRegex(
+                        SystemExit, "error: invalid truth value 'bla bla'"
+                    ):
+                        self.run_setuptools(
+                            commandline_options=["setup.py", "py2app2"],
+                            setup_keywords={
+                                "app": ["script.py"],
+                                "options": {
+                                    "py2app2": {
+                                        key: "bla bla",
+                                    }
+                                },
+                            },
+                        )
 
-            with self.subTest(f"{key} through command-line (off)"):
-                command = self.run_setuptools(
-                    commandline_options=[
-                        "setup.py",
-                        "py2app2",
-                        f"--no-{key.replace('_', '-')}",
-                    ],
-                    setup_keywords={
-                        "app": ["script.py"],
-                    },
-                )
+                with self.subTest(f"{key} through command-line (on) in {kind}"):
+                    command = self.run_setuptools(
+                        commandline_options=[
+                            "setup.py",
+                            "py2app2",
+                            f"--{key.replace('_', '-')}",
+                        ],
+                        setup_keywords={
+                            "app": ["script.py"],
+                        },
+                    )
 
-                local_options = global_options = {}
-                if is_global:
-                    global_options = {option: False}
-                else:
-                    local_options = {option: False}
+                    local_options = global_options = {}
+                    if is_global:
+                        global_options = {option: True}
+                    else:
+                        local_options = {option: True}
 
-                self.assert_config_types(command.config)
-                self.assert_global_options(command.config, **global_options)
-                self.assert_recipe_options(command.config.recipe)
-                self.assertEqual(len(command.config.bundles), 1)
-                self.assert_bundle_options(
-                    command.config.bundles[0],
-                    plugin=False,
-                    script=pathlib.Path("./script.py"),
-                    **local_options,
-                )
+                    self.assert_config_types(command.config)
+                    self.assert_global_options(command.config, **global_options)
+                    self.assert_recipe_options(command.config.recipe)
+                    self.assertEqual(len(command.config.bundles), 1)
+                    self.assert_bundle_options(
+                        command.config.bundles[0],
+                        plugin=False,
+                        script=pathlib.Path("./script.py"),
+                        **local_options,
+                    )
+
+                with self.subTest(f"{key} through command-line (off) in {kind}"):
+                    command = self.run_setuptools(
+                        commandline_options=[
+                            "setup.py",
+                            "py2app2",
+                            f"--no-{key.replace('_', '-')}",
+                        ],
+                        setup_keywords={
+                            "app": ["script.py"],
+                        },
+                    )
+
+                    local_options = global_options = {}
+                    if is_global:
+                        global_options = {option: False}
+                    else:
+                        local_options = {option: False}
+
+                    self.assert_config_types(command.config)
+                    self.assert_global_options(command.config, **global_options)
+                    self.assert_recipe_options(command.config.recipe)
+                    self.assertEqual(len(command.config.bundles), 1)
+                    self.assert_bundle_options(
+                        command.config.bundles[0],
+                        plugin=False,
+                        script=pathlib.Path("./script.py"),
+                        **local_options,
+                    )
 
     def test_option_plist(self):
         with self.subTest("valid dict in setup.py"):
@@ -1054,6 +1189,21 @@ class TestSetuptoolsConfiguration(TestCase):
                     setup_keywords={
                         "app": ["script.py"],
                         "options": {"py2app2": {"plist": 42}},
+                    },
+                )
+
+        with self.subTest("value not serializable in setup.py"):
+            with self.assertRaisesRegex(
+                SystemExit, "error: Cannot serialize 'plist' value"
+            ):
+                self.run_setuptools(
+                    commandline_options=[
+                        "setup.py",
+                        "py2app2",
+                    ],
+                    setup_keywords={
+                        "app": ["script.py"],
+                        "options": {"py2app2": {"plist": {42: "ok"}}},
                     },
                 )
 
@@ -1513,6 +1663,44 @@ class TestSetuptoolsConfiguration(TestCase):
                         _config.Resource(pathlib.Path("b"), [pwd / "c", pwd / "d"]),
                     ],
                 )
+
+            with self.subTest(f"invalid value for {key} in setup.py"):
+                with self.assertRaisesRegex(
+                    SystemExit, f"error: invalid value for '{key}'"
+                ):
+                    self.run_setuptools(
+                        commandline_options=[
+                            "setup.py",
+                            "py2app2",
+                        ],
+                        setup_keywords={
+                            "app": ["script.py"],
+                            "options": {
+                                "py2app2": {
+                                    key: 42,
+                                }
+                            },
+                        },
+                    )
+
+            with self.subTest(f"invalid value for {key} in setup.py"):
+                with self.assertRaisesRegex(
+                    SystemExit, f"error: invalid value for '{key}'"
+                ):
+                    self.run_setuptools(
+                        commandline_options=[
+                            "setup.py",
+                            "py2app2",
+                        ],
+                        setup_keywords={
+                            "app": ["script.py"],
+                            "options": {
+                                "py2app2": {
+                                    key: [42],
+                                }
+                            },
+                        },
+                    )
 
         with self.subTest("specify all"):
             command = self.run_setuptools(

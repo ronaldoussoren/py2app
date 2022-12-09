@@ -17,7 +17,6 @@ import sys
 import sysconfig
 import typing
 from distutils.errors import DistutilsOptionError
-from io import StringIO
 
 from setuptools import Command, Distribution
 
@@ -53,72 +52,68 @@ def fancy_split(name: str, s: typing.Any) -> typing.List[str]:
         raise DistutilsOptionError(f"invalid value for {name!r}")
 
 
-class Target:
-    # XXX: Target class is not necessary, remove it and related functions.
-    script: str
-    prescripts: typing.List[typing.Union[str, StringIO]]
-    extra_scripts: typing.List[str]
-    appdir: str
-
-    def __init__(self, **kw: typing.Any) -> None:  # XXX
-        self.__dict__.update(kw)
-        # If modules is a simple string, assume they meant list
-        m = self.__dict__.get("modules")
-        if m and isinstance(m, str):
-            self.modules = [m]
-
-        if not hasattr(self, "extra_scripts"):
-            self.extra_scripts = []
-
-    def __repr__(self) -> str:
-        return f"<Target {self.__dict__}>"
-
-
 def fixup_targets(
-    targets: typing.Sequence[typing.Union[str, _ScriptInfo, Target]],
-    default_attribute: str,
-) -> typing.Sequence[Target]:
-    if not targets:
+    targets: typing.Sequence[typing.Union[str, _ScriptInfo]],
+) -> typing.Sequence[_ScriptInfo]:
+
+    if targets is None:
         return []
 
     if isinstance(targets, str):
-        raise DistutilsOptionError("Target definition should be a sequence")
+        targets = [targets]
 
-    ret = []
+    if not isinstance(targets, collections.abc.Sequence):
+        raise DistutilsOptionError(
+            f"target definition should be a sequence: {targets!r}"
+        )
+
+    result = []
     for target_def in targets:
         if isinstance(target_def, str):
-            # Create a default target object, with the string as the attribute
-            target = Target(**{default_attribute: target_def})
+            result.append({"script": target_def, "extra_scripts": []})
+
+        elif isinstance(target_def, dict):
+            rest = target_def.keys() - {"script", "extra_scripts"}
+            if rest:
+                raise DistutilsOptionError("Invalid key in target definition")
+
+            result.append(
+                {
+                    "script": target_def["script"],
+                    "extra_scripts": target_def.get("extra_scripts", []),
+                }
+            )
         else:
-            if isinstance(target_def, dict):
-                d = target_def
-            else:
-                d = typing.cast(_ScriptInfo, target_def.__dict__)
-            if default_attribute not in d:
-                raise DistutilsOptionError(
-                    "This target class requires an attribute '%s'"
-                    % (default_attribute,)
-                )
-            target = Target(**d)
-        ret.append(target)
-    return ret
+            raise DistutilsOptionError(
+                f"{target_def!r} is not a valid target definition"
+            )
+
+    return result
+
+
+def validate_target(
+    dist: "Py2appDistribution",
+    attr: str,
+    value: typing.Sequence[typing.Union[str, _ScriptInfo]],
+) -> None:
+    fixup_targets(value)
 
 
 class Py2appDistribution(Distribution):
     # Type is only present to help with type checking, the attributes
     # are dynamically added to the Distribution by setuptools.
 
-    app: typing.Sequence[typing.Union[str, _ScriptInfo, "Target"]]
-    plugin: typing.Sequence[typing.Union[str, _ScriptInfo, "Target"]]
+    app: typing.Sequence[typing.Union[str, _ScriptInfo]]
+    plugin: typing.Sequence[typing.Union[str, _ScriptInfo]]
 
     def __new__(self) -> "Py2appDistribution":
-        raise RuntimeError("Don't instantiate!")
+        raise RuntimeError("Don't instantiate!")  # pragma: no-cover
 
     def get_version(self) -> str:
-        ...
+        ...  # pragma: no-cover
 
     def get_name(self) -> str:
-        ...
+        ...  # pragma: no-cover
 
 
 def finalize_distribution_options(dist: Py2appDistribution) -> None:
@@ -127,29 +122,26 @@ def finalize_distribution_options(dist: Py2appDistribution) -> None:
     point for py2app, to deal with autodiscovery in
     setuptools 61.
 
-    This addin will set the name and py_modules attributes
+    This addin will set the name attribute
     when a py2app distribution is detected that does not
-    yet have these attributes.
-    are not already set
+    yet have this attribute.
     """
     if getattr(dist, "app", None) is None and getattr(dist, "plugin", None) is None:
         return
 
-    if getattr(dist.metadata, "py_modules", None) is None:
-        dist.py_modules = []
-
     name = getattr(dist.metadata, "name", None)
     if name is None or name == "UNKNOWN":
-        targets: typing.Sequence[Target]
-        if dist.app:  # type: ignore
-            targets = fixup_targets(dist.app, "script")  # type: ignore
-        else:
-            targets = fixup_targets(dist.plugin, "script")  # type: ignore
-
-        if not targets:
+        try:
+            if dist.app:  # type: ignore
+                targets = fixup_targets(dist.app)  # type: ignore
+            else:
+                targets = fixup_targets(dist.plugin)  # type: ignore
+        except DistutilsOptionError:
             return
 
-        name = targets[0].script
+        name = targets[0]["script"]
+        if "/" in name:
+            name = name.rsplit("/", 1)[-1]
         if "." in name:
             name = name.rsplit(".", 1)[0]
         dist.metadata.name = name
@@ -448,10 +440,11 @@ class py2app(Command):
 
         # Global options
         if self.strip is not None:
-            if not isinstance(self.strip, (int, bool)):
-                # The documented interface uses "bool", but setuptools option
-                # parsing will set the attribute to an integer.
-                raise DistutilsOptionError("Strip is not a boolean")
+            # XXX: Test is not necessary because setuptools validates the type.
+            # if not isinstance(self.strip, (int, bool)):
+            #    # The documented interface uses "bool", but setuptools option
+            #    # parsing will set the attribute to an integer.
+            #    raise DistutilsOptionError("Strip is not a boolean")
 
             global_options["strip"] = bool(self.strip)
 
@@ -467,14 +460,14 @@ class py2app(Command):
 
         dist = self.distribution
         if self.app is not None:
-            app = fixup_targets(self.app, "script")
+            app = fixup_targets(self.app)
         else:
-            app = fixup_targets(dist.app, "script")
+            app = fixup_targets(dist.app)
 
         if self.plugin is not None:
-            plugin = fixup_targets(self.plugin, "script")
+            plugin = fixup_targets(self.plugin)
         else:
-            plugin = fixup_targets(dist.plugin, "script")
+            plugin = fixup_targets(dist.plugin)
 
         if app and plugin:
             raise DistutilsOptionError(
@@ -483,17 +476,14 @@ class py2app(Command):
 
         if app:
             if len(app) != 1:
-                raise DistutilsOptionError("Multiple targets not currently supported")
-
-            rest = app[0].__dict__.keys() - {"script", "extra_scripts"}
-            if rest:
-                raise DistutilsOptionError("Invalid key in target definition")
+                raise DistutilsOptionError(
+                    f"Multiple targets not currently supported: {app!r}"
+                )
 
             bundle_options["plugin"] = False
-            if "extension" not in bundle_options:
-                bundle_options["extension"] = ".app"
-            bundle_options["script"] = pathlib.Path(app[0].script)
-            extra_scripts = app[0].extra_scripts
+            bundle_options["extension"] = ".app"
+            bundle_options["script"] = pathlib.Path(app[0]["script"])
+            extra_scripts = app[0]["extra_scripts"]
             if self.chdir is not None:
                 bundle_options["chdir"] = bool(self.chdir)
             else:
@@ -503,20 +493,15 @@ class py2app(Command):
             if len(plugin) != 1:
                 raise DistutilsOptionError("Multiple targets not currently supported")
 
-            rest = plugin[0].__dict__.keys() - {"script", "extra_scripts"}
-            if rest:
-                raise DistutilsOptionError("Invalid key in target definition")
-
             bundle_options["plugin"] = True
-            if "extension" not in bundle_options:
-                bundle_options["extension"] = ".bundle"
+            bundle_options["extension"] = ".bundle"
             if self.chdir is not None:
                 bundle_options["chdir"] = bool(self.chdir)
             else:
                 bundle_options["chdir"] = False
 
-            bundle_options["script"] = pathlib.Path(plugin[0].script)
-            extra_scripts = plugin[0].extra_scripts
+            bundle_options["script"] = pathlib.Path(plugin[0]["script"])
+            extra_scripts = plugin[0]["extra_scripts"]
 
         else:
             raise DistutilsOptionError("Must specify 'app' or 'plugin'")
@@ -591,6 +576,8 @@ class py2app(Command):
                 items = fancy_split("resources", self.resources)
             else:
                 items = self.resources
+                if not isinstance(items, collections.abc.Sequence):
+                    raise DistutilsOptionError("invalid value for 'resources'")
 
             for item in items:
                 try:
@@ -600,7 +587,7 @@ class py2app(Command):
                         )
                     )
                 except _config.ConfigurationError:
-                    raise DistutilsOptionError("Invalid value for 'resources'")
+                    raise DistutilsOptionError("invalid value for 'resources'")
 
         for attr in ("datamodels", "mappingmodels"):
             if getattr(self, attr):
@@ -612,6 +599,8 @@ class py2app(Command):
                     items = fancy_split(attr, getattr(self, attr))
                 else:
                     items = getattr(self, attr)
+                    if not isinstance(items, collections.abc.Sequence):
+                        raise DistutilsOptionError(f"invalid value for '{attr}'")
 
                 for item in items:
                     try:
@@ -619,7 +608,7 @@ class py2app(Command):
                             _config.Resource.from_config(item, pathlib.Path("."), attr)
                         )
                     except _config.ConfigurationError:
-                        raise DistutilsOptionError(f"Invalid value for '{attr}'")
+                        raise DistutilsOptionError(f"invalid value for '{attr}'")
 
         for attr, key in [
             ("redirect_stdout_to_asl", "redirect-to-asl"),
@@ -631,8 +620,9 @@ class py2app(Command):
         ]:
             value = getattr(self, attr)
             if value is not None:
-                if not isinstance(value, (bool, int)):
-                    raise DistutilsOptionError(f"Invalid value for '{attr}'")
+                # Setuptools performs type validation here:
+                # if not isinstance(value, (bool, int)):
+                #    raise DistutilsOptionError(f"Invalid value for '{attr}'")
                 bundle_options[key] = bool(value)
 
         if self.optimize is not None:

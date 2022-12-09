@@ -122,6 +122,18 @@ the code might not work on older versions due to using newish APIs.
 
   - Unsupported extra keys in a target definition are now an error.
 
+  As a side effect of this it is now possible to specify a target without
+  an enclosing list, e.g.:
+
+  .. source-code:: python
+
+     setup(
+        app="script.py",
+        ...
+     )
+
+
+
 py2app 0.28.4
 -------------
 

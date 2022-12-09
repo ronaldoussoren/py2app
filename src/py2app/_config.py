@@ -67,7 +67,7 @@ class inherited(typing.Generic[T]):
             return typing.cast(T, instance._local[self._key])
         try:
             return typing.cast(T, getattr(instance._global, self._parent_attr))
-        except KeyError:
+        except AttributeError:
             raise AttributeError(self._key) from None
 
 
@@ -122,6 +122,9 @@ class Resource:
     ):
         self.destination = destination
         self.sources = list(sources)
+
+    def __ne__(self, other):
+        return not (self == other)
 
     def __eq__(self, other):
         if not isinstance(other, Resource):
@@ -189,7 +192,7 @@ class BundleOptions:
 
     def __repr__(self):
         result = []
-        result.append("<BundleOptions \n")
+        result.append("<BundleOptions\n")
         result.append(f"  build_type = {self.build_type}\n")
         result.append(f"  name = {self.name!r}\n")
         result.append(f"  script = {self.script!r}\n")
@@ -236,7 +239,7 @@ class RecipeOptions:
 
     def __repr__(self):
         result = []
-        result.append("<RecipeOptions \n")
+        result.append("<RecipeOptions\n")
         result.append(f"  zip_unsafe = {self.zip_unsafe!r}\n")
         result.append(f"  qt_plugins = {self.qt_plugins!r}\n")
         result.append(f"  matplotlib_backends = {self.matplotlib_backends!r}\n")
@@ -251,9 +254,6 @@ class Py2appConfiguration:
         self.bundles = bundles
         self.recipe = recipe_options
 
-        for bundle in bundles:
-            bundle._global = self._local
-
     build_type = local[BuildType]("build-type", BuildType.STANDALONE)
     deployment_target = local[str]("deployment-target", _DEFAULT_TARGET)
     macho_strip = local[bool]("strip", True)
@@ -266,7 +266,7 @@ class Py2appConfiguration:
 
     def __repr__(self):
         result = []
-        result.append("<Py2appConfiguration \n")
+        result.append("<Py2appConfiguration\n")
         result.append(f"  deployment_target = {self.deployment_target!r}\n")
         result.append(f"  macho_strip = {self.macho_strip!r}\n")
         result.append(f"  macho_arch = {self.macho_arch!r}\n")
@@ -287,7 +287,10 @@ class Py2appConfiguration:
         result.append("  bundles = [\n")
         for entry in self.bundles:
             for cur in repr(entry).splitlines()[:-1]:
-                result.append(f"    {cur}\n")
+                if cur:
+                    result.append(f"    {cur}\n")
+                else:
+                    result.append("\n")
             result.append("    >,\n")
         result.append("  ]\n")
 
@@ -518,7 +521,7 @@ def parse_pyproject(file_contents: dict, config_root: pathlib.Path):
                     raise ConfigurationError(
                         f"'tool.py2app.bundle.{bundle_name}.arch' has invalid value"
                     )
-                local_options["arch"] = value
+                local_options["arch"] = BuildArch(value)
 
             elif key == "deployment-target":
                 if (
@@ -577,11 +580,3 @@ def parse_pyproject(file_contents: dict, config_root: pathlib.Path):
             local_options["chdir"] = not bool(local_options.get("plugin"))
 
     return result
-
-
-if __name__ == "__main__":
-    import tomllib
-
-    with open("example.toml", "rb") as stream:
-        file_contents = tomllib.load(stream)
-    print(parse_pyproject(file_contents, pathlib.Path(".").resolve()))

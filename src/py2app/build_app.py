@@ -309,6 +309,8 @@ def fixup_targets(
     targets: typing.Sequence[typing.Union[str, _ScriptInfo, Target]],
     default_attribute: str,
 ) -> typing.Sequence[Target]:
+    if not isinstance(targets, (list, tuple)):
+        return []
     if not targets:
         return []
 
@@ -324,7 +326,10 @@ def fixup_targets(
             if isinstance(target_def, dict):
                 d = target_def
             else:
-                d = typing.cast(_ScriptInfo, target_def.__dict__)
+                try:
+                    d = typing.cast(_ScriptInfo, target_def.__dict__)
+                except AttributeError:
+                    continue
             if default_attribute not in d:
                 raise DistutilsOptionError(
                     "This target class requires an attribute '%s'"
