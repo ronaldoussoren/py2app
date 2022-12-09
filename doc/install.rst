@@ -10,42 +10,29 @@ of py2app:
 
 .. code-block:: sh
 
-  $ pip3 install -U py2app
+   $ pip3 install -U py2app
 
+Setuptools support in py2app is optional, to force the installation
+of `setuptools`_ install the setuptools extra:
+
+.. code-block:: sh
+
+   $ pip install -U 'py2app[setuptools]'
+
+Note that `setuptools`_ is installed by default in most Python
+installations and virtual environments, which means that
+the default installation command will likely work even when
+using the legacy setuptools interface of py2app.
 
 Installing from source
 ----------------------
 
-To install py2app from source, simply use the normal procedure for
-installing any Python package. Since py2app uses `setuptools`_,
-all dependencies (including `setuptools`_ itself) will be automatically
-acquired and installed for you as appropriate:
+The preferred way to install py2app from source is to
+invoke pip in the root of the py2app source directory:
 
 .. code-block:: sh
 
-    $ python setup.py install
-
-Upgrade Notes
--------------
-
-The ``setup.py`` template has changed slightly in py2app 0.3 in order
-to accommodate the enhancements brought on by `setuptools`_. Old ``setup.py``
-scripts look like this::
-
-    from distutils.core import setup
-    import py2app
-
-    setup(
-        app=["myscript.py"],
-    )
-
-New py2app scripts should look like this::
-
-    from setuptools import setup
-    setup(
-        app=["myscript.py"],
-	setup_requires=["py2app"],
-    )
+    $ pip install .
 
 .. _`setuptools`: http://pypi.python.org/pypi/setuptools/
 .. _`pip`: http://www.pip-installer.org/en/latest/

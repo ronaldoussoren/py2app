@@ -18,6 +18,8 @@ Contents
    :maxdepth: 2
 
    install
+   command-line
+   pyproject
    tutorial
    debugging
    dependencies
@@ -25,12 +27,9 @@ Contents
    faq
    tweaking
    examples
-   options
    recipes
-   implementation
-   py2applet
+   setuptools
    changelog
-   pyproject
 
 Online Resources
 ----------------

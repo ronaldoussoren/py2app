@@ -1,5 +1,5 @@
-py2app Configuration
-====================
+py2app Setuptools Configuration
+===============================
 
 Setup function arguments
 ------------------------

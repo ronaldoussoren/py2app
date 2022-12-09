@@ -115,6 +115,7 @@ the code might not work on older versions due to using newish APIs.
   more strict, although valid configuration should be accepted just as before.
 
   Known incompatibilities:
+
   - pyapp 0.28 accepted "prescripts" as an alias for "extra_scripts" in a
     target definition (e.g. "``setup(app=[{"script": "main.py", "prescripts": [ ...])``").
 
@@ -125,7 +126,7 @@ the code might not work on older versions due to using newish APIs.
   As a side effect of this it is now possible to specify a target without
   an enclosing list, e.g.:
 
-  .. source-code:: python
+  .. sourcecode:: python
 
      setup(
         app="script.py",

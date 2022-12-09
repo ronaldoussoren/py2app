@@ -24,19 +24,17 @@ to fetch exported environment variables and inject them into your application.
 It is also possible to inject extra variables into the environment by using
 the ``LSEnvironment`` key in the Info.plist file, for example like so:
 
-.. sourcecode:: python
+.. sourcecode:: toml
+   :caption: pyproject configuration for changing the app environment
 
-   setup(
-       name='BasicApp',
-       app=['main.py'],
-       options=dict(py2app=dict(
-           plist=dict(
-               LSEnvironment=dict(
-                   LANG='nl_NL.latin1',
-                   LC_CTYPE='nl_NL.UTF-8',
-                   EXTRA_VAR='hello world',
-                   KNIGHT='ni!',
-               )
-              )
-       )),
-   )
+   [tool.py2app.bundle.main]
+   name = "BasicApp"
+   script = main.py
+   plist = {
+      LSEnvironment = {
+           LANG = "nl_NL.latin1",
+           LC_CTYPE = "nl_NL.UTF-8",
+           EXTRA_VAR = "hello world",
+           KNIGHT = "ni!",
+      }
+   }
