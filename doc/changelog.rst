@@ -1,6 +1,20 @@
 Release history
 ===============
 
+py2app 0.28.5
+-------------
+
+* #476: Update black recipe
+
+  The black recipe no longer worked with recent versions of black
+  due to relying on a metadata file from the "egg" spec that's not
+  included by black's current build tool.
+
+  The recipe now scans the python code that's next to the mypyc
+  compiled extension modules for dependencies and uses that to update
+  the dependency graph. This should ensure that new dependencies of
+  black will be automaticly detected in the future.
+
 py2app 0.28.4
 -------------
 
