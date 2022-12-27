@@ -15,6 +15,8 @@ py2app 0.28.5
   the dependency graph. This should ensure that new dependencies of
   black will be automaticly detected in the future.
 
+* Update wheel dependencies
+
 py2app 0.28.4
 -------------
 
