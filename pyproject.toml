@@ -5,12 +5,11 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "py2app"
 authors = [
-  #{ name = "Bob Ippolito", email = "bob@redivi.com" }
   { name = "Ronald Oussoren", email = "ronaldoussoren@mac.com" }
 ]
 description = "Create standalone macOS applications with Python"
 dynamic = [ "version"]
-requires-python = ">=3.6,<4"
+requires-python = ">=3.7,<4"
 readme = "README.rst"
 license = { text = "MIT" }
 keywords=[".app", "standalone"]
@@ -59,8 +58,8 @@ setuptools = [
 "Issue Tracker" = "https://github.com/ronaldoussoren/py2app/issues"
 "Supporting" = "https://blog.ronaldoussoren.net/support/"
 
-[project.scripts]
-py2applet = "py2app.script_py2applet:main"
+#[project.scripts]
+#py2app = "py2app.__main__:main"
 
 [project.entry-points."setuptools.finalize_distribution_options"]
 py2app = "py2app._setuptools_stub:finalize_distribution_options"

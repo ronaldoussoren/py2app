@@ -133,7 +133,7 @@ the code might not work on older versions due to using newish APIs.
         ...
      )
 
-
+* The "py2applet" script has been removed.
 
 py2app 0.28.4
 -------------
