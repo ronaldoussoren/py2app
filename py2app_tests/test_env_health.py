@@ -9,3 +9,6 @@ class TestEnvironmentHealth(TestCase):
     def test_health(self):
         if pathlib.Path("py2app.egg-info").exists():
             self.fail("Old 'py2app.egg-info' found")
+
+        if pathlib.Path("py2app").exists():
+            self.fail("Old 'py2app' source tree found")
