@@ -129,6 +129,14 @@ def finalize_distribution_options(dist: Py2appDistribution) -> None:
     if getattr(dist, "app", None) is None and getattr(dist, "plugin", None) is None:
         return
 
+    # Setuptools will automatically detect py_modules and
+    # packages when they are not specified, that's not
+    # something that's needed or even wanted with py2app.
+    if getattr(dist.metadata, "py_modules", None) is None:
+        dist.py_modules = []
+    if getattr(dist.metadata, "packages", None) is None:
+        dist.packages = []
+
     name = getattr(dist.metadata, "name", None)
     if name is None or name == "UNKNOWN":
         try:
