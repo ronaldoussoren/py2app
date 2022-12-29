@@ -360,7 +360,7 @@ Options for 'py2app' command:
        launcher (when double clicking the application in the Finder), which
        is does not include environment variables set in the users shell profile.
 
-       Only use this when the application needs to access environment varialbes
+       Only use this when the application needs to access environment variables
        set in the Terminal. This option is not meant for general use.
 
    * - ``--use-pythonpath``
