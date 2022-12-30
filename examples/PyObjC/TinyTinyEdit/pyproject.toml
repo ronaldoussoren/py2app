@@ -1,0 +1,13 @@
+[tool.py2app.bundle.main]
+  script = "TinyTinyEdit.py"
+  resources = [ "MainMenu.nib", "TinyTinyDocument.nib" ]
+  plist = {
+    "CFBundleDocumentTypes": [
+        {
+            "CFBundleTypeExtensions": ["txt", "text", "*"],
+            "CFBundleTypeName": "Text File",
+            "CFBundleTypeRole": "Editor",
+            "NSDocumentClass": "TinyTinyDocument",
+        },
+    ],
+  }

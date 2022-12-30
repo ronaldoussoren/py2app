@@ -1,0 +1,4 @@
+[tool.py2app.bundle.main]
+  name = "Viewer"
+  script = "main.py"
+  resources = [ "view.qml" ]

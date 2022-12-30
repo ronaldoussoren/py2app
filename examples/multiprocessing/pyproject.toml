@@ -1,0 +1,3 @@
+[tool.py2app.bundle.main]
+  name = "MPExample"
+  script = "main.py"

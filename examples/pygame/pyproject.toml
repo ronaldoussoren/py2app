@@ -1,0 +1,9 @@
+[tool.py2app.bundle.main]
+  name = "Aliens"
+  script = "demo.py"
+  plist = {
+    "CFBundleShortVersionString": "0.1",
+    "CFBundleGetInfoString": "aliens 0.1",
+    "CFBundleIdentifier": "org.pygame.examples.aliens",
+  }
+  resources = ["data", "English.lproj"]

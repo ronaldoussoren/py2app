@@ -1,0 +1,3 @@
+[tool.py2app.bundle.main]
+  script = "ICSSharingWatcher.py"
+  resources = [ "MainMenu.nib" ]
