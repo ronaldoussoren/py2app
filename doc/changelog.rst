@@ -135,6 +135,9 @@ the code might not work on older versions due to using newish APIs.
 
 * The "py2applet" script has been removed.
 
+* Add reporting on the supported macOS versions and CPU architectures
+  for a build artefact.
+
 py2app 0.28.4
 -------------
 
