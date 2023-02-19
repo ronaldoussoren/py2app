@@ -1,3 +1,4 @@
+# XXX: Replace this logic with importlib.metadata
 import os
 import typing
 
