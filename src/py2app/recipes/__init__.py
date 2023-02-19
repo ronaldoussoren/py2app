@@ -12,7 +12,6 @@ from . import opencv  # noqa: F401
 from . import pandas  # noqa: F401
 from . import platformdirs  # noqa: F401
 from . import pydantic  # noqa: F401
-from . import pydoc  # noqa: F401
 from . import pyenchant  # noqa: F401
 from . import pygame  # noqa: F401
 from . import pylsp  # noqa: F401
@@ -31,6 +30,7 @@ from . import six  # noqa: F401
 from . import sphinx  # noqa: F401
 from . import sqlalchemy  # noqa: F401
 from . import sslmod  # noqa: F401
+from . import stdlib_refs  # noqa: F401
 from . import sysconfig_module  # noqa: F401
 from . import tkinter  # noqa: F401
 from . import virtualenv  # noqa: F401
