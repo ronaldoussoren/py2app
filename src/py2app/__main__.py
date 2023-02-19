@@ -7,7 +7,7 @@ try:
 except ImportError:
     import tomli as tomllib
 
-from . import _config
+from . import _builder, _config
 
 
 def parse_arguments(argv):
@@ -61,7 +61,12 @@ def parse_arguments(argv):
 
 def main():
     config = parse_arguments(sys.argv[1:])
-    print(config)
+
+    for bundle in config.bundles:
+        scanner = _builder.Scanner(config)
+        scanner.process_bundle(bundle)
+        # scanner.graph.report()
+        # print(list(scanner.graph.roots()))
 
 
 if __name__ == "__main__":
