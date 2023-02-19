@@ -40,6 +40,7 @@ dependencies=[
     "rich >= 12.0",
     "altgraph>=0.17",
     "modulegraph>=0.19",
+    "modulegraph2",
     "macholib>=1.16",
     "importlib_metadata>=4.7; python_version < '3.10'",
     "importlib_resources; python_version < '3.10'",
