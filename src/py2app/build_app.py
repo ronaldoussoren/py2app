@@ -516,6 +516,11 @@ class py2app(Command):
             None,
             "Forward the stdout/stderr streams to Console.app using ASL",
         ),
+        (
+            "skip-sign",
+            None,
+            "Skip the sign step of build even if current arch is universal2 or arm64",
+        ),
     ]
 
     boolean_options = [
@@ -537,6 +542,7 @@ class py2app(Command):
         "report-missing-from-imports",
         "no-report-missing-conditional-import",
         "redirect-stdout-to-asl",
+        "skip-sign"
     ]
 
     always_expected_missing_imports = {
@@ -594,6 +600,7 @@ class py2app(Command):
         self.expected_missing_imports: typing.Set[str] = typing.cast(
             typing.Set[str], None
         )
+        self.skip_sign: bool = False
 
     def finalize_options(self) -> None:
         self.progress = Progress()
@@ -1040,7 +1047,7 @@ class py2app(Command):
             make_exec(tgt_fn)
 
         arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
-        if arch in ("universal2", "arm64"):
+        if not self.skip_sign and arch in ("universal2", "arm64"):
             codesign_adhoc(self.target.appdir, self.progress)
 
     def collect_recipedict(self) -> dict:  # XXX
@@ -1751,7 +1758,7 @@ class py2app(Command):
 
             arch = self.arch if self.arch is not None else get_platform().split("-")[-1]
 
-            if arch in ("universal2", "arm64"):
+            if not self.skip_sign and arch in ("universal2", "arm64"):
                 codesign_adhoc(self.target.appdir, self.progress)
         self.app_files.append(dst)
 

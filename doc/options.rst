@@ -416,6 +416,11 @@ Options for 'py2app' command:
      - None (use ``True`` in setup.py)
      - Forward the stdout/stderr streams to Console.app using ASL
 
+   * - ``--skip-sign``
+     - skip_sign
+     - None (use ``True`` in setup.py)
+     - Skip the signing step of build even if arch is universal2 or arm64
+
    * - ``--debug-modulegraph``
      - debug_modulegraph
      - None (use ``True`` in setup.py)
