@@ -661,6 +661,7 @@ def _dosign(
                 "codesign",
                 "-s",
                 "-",
+                "--deep"
                 "--preserve-metadata=identifier,entitlements,flags,runtime",
                 "-f",
             )
