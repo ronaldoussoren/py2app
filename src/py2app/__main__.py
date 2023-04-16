@@ -7,7 +7,7 @@ try:
 except ImportError:
     import tomli as tomllib
 
-from . import _builder, _config
+from . import _builder, _config, _progress
 
 
 def parse_arguments(argv):
@@ -62,11 +62,22 @@ def parse_arguments(argv):
 def main():
     config = parse_arguments(sys.argv[1:])
 
+    progress = _progress.Progress()
+    task_id = progress.add_task("Processing bundles", len(config.bundles))
+
+    ok = True
     for bundle in config.bundles:
-        scanner = _builder.Scanner(config)
-        scanner.process_bundle(bundle)
-        # scanner.graph.report()
-        # print(list(scanner.graph.roots()))
+        progress.update(
+            task_id,
+            current=f"{bundle.build_type.value} {'plugin' if bundle.plugin else 'application'} {bundle.name!r}",
+        )
+        ok = _builder.build_bundle(config, bundle, progress) and ok
+        progress.step_task(task_id)
+    progress.update(task_id, current="")
+    progress._progress.stop()
+
+    if not ok:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

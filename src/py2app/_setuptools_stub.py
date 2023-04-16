@@ -16,11 +16,11 @@ import shlex
 import sys
 import sysconfig
 import typing
-from distutils.errors import DistutilsOptionError
+from distutils.errors import DistutilsError, DistutilsOptionError
 
 from setuptools import Command, Distribution
 
-from . import _config
+from . import _builder, _config, _progress
 
 
 class _ScriptInfo(typing.TypedDict, total=False):
@@ -701,4 +701,19 @@ class py2app(Command):
                 print(w)
         print(self.config)
 
-        # XXX: Invoke the new builder with self.config
+        progress = _progress.Progress()
+        task_id = progress.add_task("Processing bundles", len(self.config.bundles))
+
+        ok = True
+        for bundle in self.config.bundles:
+            progress.update(
+                task_id,
+                current=f"{bundle.build_type.value} {'plugin' if bundle.plugin else 'application'} {bundle.name!r}",
+            )
+            ok = _builder.build_bundle(self.config, bundle, progress) and ok
+            progress.step_task(task_id)
+        progress.update(task_id, current="")
+        progress._progress.stop()
+
+        if not ok:
+            raise DistutilsError("Building bundles failed")

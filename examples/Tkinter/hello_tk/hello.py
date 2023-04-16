@@ -2,6 +2,8 @@ import tkinter
 
 __version__ = "2.5b3"
 
+import objc  # noqa: F401
+
 
 class Application(tkinter.Frame):
     def say_hi(self):

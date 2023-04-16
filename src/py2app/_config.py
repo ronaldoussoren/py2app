@@ -30,6 +30,8 @@ class ConfigurationError(Exception):
 class BuildType(enum.Enum):
     STANDALONE = "standalone"
     ALIAS = "alias"
+
+    # XXX: Still support semi-standalone?
     SEMI_STANDALONE = "semi-standalone"
 
 
