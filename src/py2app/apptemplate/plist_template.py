@@ -9,7 +9,7 @@ def infoPlistDict(
     CFBundleExecutable: str, plist: dict = {}  # noqa: B006, M511
 ) -> dict:
     CFBundleExecutable = CFBundleExecutable
-    version = sys.version[:3]
+    version = ".".join(map(str, sys.version_info[:2]))
     pdict = {
         "CFBundleDevelopmentRegion": "English",
         "CFBundleDisplayName": plist.get("CFBundleName", CFBundleExecutable),

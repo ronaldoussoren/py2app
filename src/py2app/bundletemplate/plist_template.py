@@ -11,7 +11,7 @@ def infoPlistDict(CFBundleExecutable: str, plist: typing.Optional[dict] = None) 
         plist = {}
     CFBundleExecutable = CFBundleExecutable
     NSPrincipalClass = "".join(CFBundleExecutable.split())
-    version = sys.version[:3]
+    version = ".".join(map(str, sys.version_info[:2]))
     pdict = {
         "CFBundleDevelopmentRegion": "English",
         "CFBundleDisplayName": plist.get("CFBundleName", CFBundleExecutable),
