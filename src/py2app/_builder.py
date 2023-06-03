@@ -368,7 +368,7 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
 
     main_path = root / f"Contents/MacOS/{bundle.name}"
     main_path.write_bytes(stub.read_bytes())
-    main_path.chmod(755)
+    main_path.chmod(0o755)
     progress.step_task(task_id)
 
     if bundle.extra_scripts:
@@ -380,7 +380,7 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
             )
             exe_path = root / f"Contents/MacOS/{script.stem}"
             exe_path.write_bytes(stub.read_bytes())
-            exe_path.chmod(755)
+            exe_path.chmod(0o755)
 
 
 def add_plist(root: pathlib.Path, plist: Dict[str, Any], progress: Progress) -> None:
@@ -397,7 +397,11 @@ def add_plist(root: pathlib.Path, plist: Dict[str, Any], progress: Progress) -> 
 def add_bootstrap(
     root: pathlib.Path, plist: Dict[str, Any], progress: Progress
 ) -> None:
-    ...
+    bootstrap_path = root / "Contents/Resources/__boot__.py"
+
+    with open(bootstrap_path, "w") as stream:
+        stream.write("hello")
+        pass
 
 
 def get_info_plist(bundle: BundleOptions) -> Dict[str, Any]:
