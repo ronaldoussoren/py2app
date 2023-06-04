@@ -1,6 +1,14 @@
 Release history
 ===============
 
+py2app 0.28.6
+-------------
+
+* Fix support for Python 2.7
+
+  These are best-effort changes, I no longer have a setup where I
+  can perform a good test run for Python 2.7.
+
 py2app 0.28.5
 -------------
 

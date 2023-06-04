@@ -1,7 +1,7 @@
 import re
 import sys
 
-cookie_re = re.compile(rb"coding[:=]\s*([-\w.]+)")
+cookie_re = re.compile(br"coding[:=]\s*([-\w.]+)")
 if sys.version_info[0] == 2:
     default_encoding = "ascii"
 else:
