@@ -7,6 +7,23 @@ def _included_subpackages(packages):
 
 
 class Finder(object):
+    def find_spec(self, fullname, path, target=None):
+        if fullname in _path_hooks: # noqa: F821
+            from importlib.machinery import ModuleSpec, SourcelessFileLoader, SourceFileLoader
+            from importlib.util import spec_from_loader
+            import os
+            pkg_dir = os.path.join(
+                os.environ["RESOURCEPATH"], "lib", "python%d.%d" % (sys.version_info[:2])
+            )
+            init_path = os.path.join(pkg_dir, fullname, "__init__.py")
+            if os.path.exists(init_path):
+                loader = SourceFileLoader(fullname, init_path)
+            else:
+                loader = SourcelessFileLoader(fullname, init_path + "c")
+
+            return spec_from_loader(fullname, loader)
+
+
     def find_module(self, fullname, path=None):
         if fullname in _path_hooks:  # noqa: F821
             return Loader()

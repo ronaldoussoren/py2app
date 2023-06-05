@@ -9,6 +9,8 @@ py2app 0.28.6
   These are best-effort changes, I no longer have a setup where I
   can perform a good test run for Python 2.7.
 
+* Introduce support for Python 3.12
+
 py2app 0.28.5
 -------------
 
