@@ -1741,6 +1741,12 @@ class py2app(Command):
                 mm.excludes.append(runtime)
             else:
                 mm.mm.run_file(runtime)
+
+            dylib_dir = os.path.dirname(runtime)
+            for fn in os.listdir(dylib_dir):
+                if fn.endswith(".dylib"):
+                    mm.mm.run_file(os.path.join(dylib_dir, fn))
+
             for exclude in self.dylib_excludes:
                 info = macholib.dyld.framework_info(exclude)
                 if info is not None:
