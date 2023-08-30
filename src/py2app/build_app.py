@@ -805,35 +805,11 @@ class py2app(Command):
         # XXX: this is a bit of a hack!
         # ideally we'd use dylib functions to figure this out
         if prefix is None:
-            prefix = sys.prefix
+            prefix = sys.base_prefix
         if version is None:
             version = sys.version
         version = ".".join(version.split(".")[:2])
         info = None
-        if sys.base_prefix != sys.prefix:
-            prefix = sys.base_prefix
-
-        elif os.path.exists(os.path.join(prefix, "pyvenv.cfg")):
-            with open(os.path.join(prefix, "pyvenv.cfg")) as fp:
-                for ln in fp:
-                    if ln.startswith("home = "):
-                        _, home_path = ln.split("=", 1)
-                        prefix = os.path.dirname(home_path.strip())
-                        break
-                else:
-                    raise DistutilsPlatformError(
-                        "Pyvenv detected, cannot determine base prefix"
-                    )
-
-        elif os.path.exists(os.path.join(prefix, ".Python")):
-            # We're in a virtualenv environment, locate the real prefix
-            fn = os.path.join(
-                prefix, "lib", "python%d.%d" % (sys.version_info[:2]), "orig-prefix.txt"
-            )
-
-            if os.path.exists(fn):
-                with open(fn) as fp:
-                    prefix = fp.read().strip()
 
         try:
             fmwk = macholib.dyld.framework_find(os.fspath(prefix))
