@@ -809,10 +809,9 @@ class py2app(Command):
         if version is None:
             version = sys.version
         version = ".".join(version.split(".")[:2])
-        info = None
 
         try:
-            fmwk = macholib.dyld.framework_find(os.fspath(prefix))
+            fmwk = macholib.dyld.framework_find(prefix)
         except ValueError:
             info = None
         else:
@@ -821,7 +820,7 @@ class py2app(Command):
         if info is not None:
             dylib = info["name"]
             runtime = os.path.join(info["location"], info["name"])
-        else:
+        else: # For Anaconda Python Environments
             dylib = "libpython%d.%d.dylib" % (sys.version_info[:2])
             runtime = os.path.join(prefix, "lib", dylib)
 
