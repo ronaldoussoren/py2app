@@ -601,44 +601,7 @@ class py2app(Command):
     def finalize_options(self) -> None:
         self.progress = Progress()
 
-        if sys.base_prefix != sys.prefix:
-            self._python_app = os.path.join(sys.base_prefix, "Resources", "Python.app")
-
-        elif os.path.exists(os.path.join(sys.prefix, "pyvenv.cfg")):
-            with open(os.path.join(sys.prefix, "pyvenv.cfg")) as fp:
-                for line in fp:
-                    if line.startswith("home = "):
-                        _, home_path = line.split("=", 1)
-                        prefix = os.path.dirname(home_path.strip())
-                        break
-
-                else:
-                    raise DistutilsPlatformError(
-                        "Pyvenv detected, but cannot determine base prefix"
-                    )
-
-                self._python_app = os.path.join(prefix, "Resources", "Python.app")
-
-        elif os.path.exists(os.path.join(sys.prefix, ".Python")):
-            # XXX: Python 2 virtualenv, check if this is still needed for
-            #      modern virtualenv on Python 3.
-            fn = os.path.join(
-                sys.prefix,
-                "lib",
-                "python%d.%d" % (sys.version_info[:2]),
-                "orig-prefix.txt",
-            )
-            if os.path.exists(fn):
-                with open(fn) as fp:
-                    prefix = fp.read().strip()
-                    self._python_app = os.path.join(prefix, "Resources", "Python.app")
-            else:
-                raise DistutilsPlatformError(
-                    "Virtualenv detected, but cannot determine base prefix"
-                )
-
-        else:
-            self._python_app = os.path.join(sys.prefix, "Resources", "Python.app")
+        self._python_app = os.path.join(sys.base_prefix, "Resources", "Python.app")
 
         if not self.strip:
             self.no_strip = True
@@ -2031,33 +1994,24 @@ class py2app(Command):
             # We're in a venv, which means sys.path
             # will be broken in alias builds unless we fix
             # it.
-            real_prefix = None
             global_site_packages = False
             with open(os.path.join(sys.prefix, "pyvenv.cfg")) as fp:
 
                 for ln in fp:
-                    if ln.startswith("home = "):
-                        _, home_path = ln.split("=", 1)
-                        real_prefix = os.path.dirname(home_path.strip())
-
-                    elif ln.startswith("include-system-site-packages = "):
+                    if ln.startswith("include-system-site-packages = "):
                         _, conifg_value = ln.split("=", 1)
                         global_site_packages = conifg_value == "true"
-
-            if real_prefix is None:
-                raise DistutilsPlatformError(
-                    "Pyvenv detected, cannot determine base prefix"
-                )
+                        break
 
             if self.site_packages or self.alias:
                 self.progress.info(
-                    f"Add paths for VENV ({real_prefix}, {global_site_packages}"
+                    f"Add paths for VENV ({sys.base_prefix}, {global_site_packages}"
                 )
                 prescripts.append("virtualenv_site_packages")
                 prescripts.append(
                     StringIO(
                         "_site_packages(%r, %r, %d)"
-                        % (sys.prefix, real_prefix, global_site_packages)
+                        % (sys.prefix, sys.base_prefix, global_site_packages)
                     )
                 )
 
