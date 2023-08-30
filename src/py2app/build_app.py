@@ -122,10 +122,6 @@ PLUGIN_SUFFIXES = {
     ".action": "Automator",
 }
 
-
-sys_base_prefix = sys.base_prefix
-
-
 def finalize_distribution_options(dist: Py2appDistribution) -> None:
     """
     setuptools.finalize_distribution_options extension
@@ -605,8 +601,8 @@ class py2app(Command):
     def finalize_options(self) -> None:
         self.progress = Progress()
 
-        if sys_base_prefix != sys.prefix:
-            self._python_app = os.path.join(sys_base_prefix, "Resources", "Python.app")
+        if sys.base_prefix != sys.prefix:
+            self._python_app = os.path.join(sys.base_prefix, "Resources", "Python.app")
 
         elif os.path.exists(os.path.join(sys.prefix, "pyvenv.cfg")):
             with open(os.path.join(sys.prefix, "pyvenv.cfg")) as fp:
@@ -814,8 +810,8 @@ class py2app(Command):
             version = sys.version
         version = ".".join(version.split(".")[:2])
         info = None
-        if sys_base_prefix != sys.prefix:
-            prefix = sys_base_prefix
+        if sys.base_prefix != sys.prefix:
+            prefix = sys.base_prefix
 
         elif os.path.exists(os.path.join(prefix, "pyvenv.cfg")):
             with open(os.path.join(prefix, "pyvenv.cfg")) as fp:
