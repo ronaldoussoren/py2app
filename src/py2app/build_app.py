@@ -1665,28 +1665,6 @@ class py2app(Command):
                     sfile = os.path.join(dpath, "Python")
                 self.copy_file(sfile, execdst)
                 make_exec(execdst)
-
-            elif os.path.exists(os.path.join(sys.prefix, ".Python")):
-                fn = os.path.join(
-                    sys.prefix,
-                    "lib",
-                    "python%d.%d" % (sys.version_info[:2]),
-                    "orig-prefix.txt",
-                )
-
-                if os.path.exists(fn):
-                    with open(fn) as fp:
-                        prefix = fp.read().strip()
-
-                rest_path = os.path.normpath(sys.executable)[
-                    len(os.path.normpath(sys.prefix)) + 1 :  # noqa: E203
-                ]
-                if rest_path.startswith("."):
-                    rest_path = rest_path[1:]
-
-                self.copy_file(os.path.join(prefix, rest_path), execdst)
-                make_exec(execdst)
-
             else:
                 self.copy_file(sys.executable, execdst)
                 make_exec(execdst)
