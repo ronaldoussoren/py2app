@@ -122,6 +122,7 @@ PLUGIN_SUFFIXES = {
     ".action": "Automator",
 }
 
+
 def finalize_distribution_options(dist: Py2appDistribution) -> None:
     """
     setuptools.finalize_distribution_options extension
@@ -783,7 +784,7 @@ class py2app(Command):
         if info is not None:
             dylib = info["name"]
             runtime = os.path.join(info["location"], info["name"])
-        else: # For Anaconda Python Environments
+        else:  # For Anaconda Python Environments
             dylib = "libpython%d.%d.dylib" % (sys.version_info[:2])
             runtime = os.path.join(prefix, "lib", dylib)
 
