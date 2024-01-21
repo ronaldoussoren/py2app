@@ -8,7 +8,11 @@ good model for other recipes!!!
 """
 from __future__ import absolute_import
 
-import imp
+try:
+    import imp
+except ImportError:
+    from modulegraph import _imp as imp
+
 import os
 import sys
 

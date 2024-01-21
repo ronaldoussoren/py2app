@@ -7,7 +7,10 @@ It's expected that only one Python script is dragged in.
 """
 from __future__ import print_function
 
-import imp
+try:
+    import imp
+except ImportError:
+    from modulegraph import _imp as imp
 import os
 import plistlib
 import pprint

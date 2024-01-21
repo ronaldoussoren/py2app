@@ -6,7 +6,10 @@ Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 from __future__ import print_function
 
 import collections
-import imp
+try:
+    import imp
+except ImportError:
+    from modulegraph import _imp as imp
 import os
 import plistlib
 import shlex
