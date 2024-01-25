@@ -1,5 +1,9 @@
 import subprocess, os, signal, sys
 
+
+def version_tuple(version):
+    return tuple(int(x) for x in version.split('.'))
+
 def kill_child_processes():
     parent_pid = os.getpid()
     sig = signal.SIGKILL

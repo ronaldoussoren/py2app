@@ -14,10 +14,9 @@ import time
 import os
 import signal
 from distutils.sysconfig import get_config_var, get_config_vars
-from distutils.version import LooseVersion
 import py2app
 import platform
-from .tools import kill_child_processes
+from .tools import kill_child_processes, version_tuple
 
 try:
     unichr
@@ -92,7 +91,7 @@ class TestBasicPlugin (unittest.TestCase):
             if sys.version_info[0] != 2:
                 root = root.decode('utf-8')
 
-            if LooseVersion(platform.mac_ver()[0]) < LooseVersion('10.7'):
+            if version_tuple(platform.mac_ver()[0]) < version_tuple('10.7'):
                 cc = [get_config_var('CC')]
                 env = dict(os.environ)
                 env['MACOSX_DEPLOYMENT_TARGET'] = get_config_var('MACOSX_DEPLOYMENT_TARGET')
@@ -103,7 +102,7 @@ class TestBasicPlugin (unittest.TestCase):
 
             cflags = get_config_var('CFLAGS').split()
             ldflags = get_config_var('LDFLAGS').split()
-            if LooseVersion(platform.mac_ver()[0]) >= LooseVersion('10.14'):
+            if version_tuple(platform.mac_ver()[0]) >= version_tuple('10.14'):
                 for idx, val in enumerate(cflags):
                     if val == '-arch' and cflags[idx+1] == 'i386':
                         del cflags[idx+1]

@@ -15,11 +15,10 @@ import os
 import signal
 import platform
 import py2app
-from distutils.version import LooseVersion
 if __name__ == "__main__":
-    from tools import kill_child_processes
+    from tools import kill_child_processes, version_tuple
 else:
-    from .tools import kill_child_processes
+    from .tools import kill_child_processes, version_tuple
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
@@ -136,7 +135,7 @@ class TestArgvEmulation (unittest.TestCase):
 
         self.assertEqual(data.strip(), repr([os.path.join(self.app_dir, 'dist/BasicApp.app/Contents/Resources/main.py'), self.open_argument]))
 
-    @unittest.skipIf(LooseVersion(platform.mac_ver()[0]) < LooseVersion('10.6'), "Test cannot work on OSX 10.5 or earlier")
+    @unittest.skipIf(version_tuple(platform.mac_ver()[0]) < version_tuple('10.6'), "Test cannot work on OSX 10.5 or earlier")
     def test_start_with_two_args(self):
         if not self.open_argument.startswith('/'):
             unittest.skip("Only relevant for base class")
