@@ -10,6 +10,7 @@ import sys
 import time
 import warnings
 import zipfile
+import textwrap
 from distutils import log
 
 import macholib.util
@@ -23,6 +24,11 @@ try:
 except NameError:
     unicode = str
 
+
+try:
+    import imp
+except ImportError:
+    imp = None
 
 # Deprecated functionality
 
@@ -356,22 +362,45 @@ class FileSet(object):
         return res
 
 
-LOADER = """
-def __load():
-    import imp, os, sys
-    ext = %r
-    for path in sys.path:
-        if not path.endswith('lib-dynload'):
-            continue
-        ext_path = os.path.join(path, ext)
-        if os.path.exists(ext_path):
-            mod = imp.load_dynamic(__name__, ext_path)
-            break
-    else:
-        raise ImportError(repr(ext) + " not found")
-__load()
-del __load
-"""
+
+if imp is None:
+        LOADER = textwrap.dedent("""\
+                def __load():
+                    import os, sys, importlib.machinery, importlib._bootstrap
+                    ext = %r
+                    for path in sys.path:
+                        if not path.endswith('lib-dynload'):
+                            continue
+                        ext_path = os.path.join(path, ext)
+                        if os.path.exists(ext_path):
+                            loader = importlib.machinery.ExtensionFileLoader(__name__, ext_path)
+                            spec = importlib.machinery.ModuleSpec(
+                                name=__name__, loader=loader, origin=ext_path)
+                            importlib._bootstrap._load(spec)
+                            break
+                    else:
+                        raise ImportError(repr(ext) + " not found")
+                __load()
+                del __load
+                """)
+
+else:
+        LOADER = textwrap.dedent("""\
+                def __load():
+                    import os, sys, imp
+                    ext = %r
+                    for path in sys.path:
+                        if not path.endswith('lib-dynload'):
+                            continue
+                        ext_path = os.path.join(path, ext)
+                        if os.path.exists(ext_path):
+                            mod = imp.load_dynamic(__name__, ext_path)
+                            break
+                    else:
+                        raise ImportError(repr(ext) + " not found")
+                __load()
+                del __load
+                """)
 
 
 def make_loader(fn):
