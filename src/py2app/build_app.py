@@ -101,11 +101,9 @@ class Py2appDistribution(Distribution):
     def __new__(self) -> "Py2appDistribution":
         raise RuntimeError("Don't instantiate!")
 
-    def get_version(self) -> str:
-        ...
+    def get_version(self) -> str: ...
 
-    def get_name(self) -> str:
-        ...
+    def get_name(self) -> str: ...
 
 
 PYTHONFRAMEWORK: str = typing.cast(str, get_config_var("PYTHONFRAMEWORK"))
@@ -255,11 +253,13 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
         return destfn
 
 
-def iter_recipes() -> typing.Iterator[
-    typing.Tuple[
-        str, typing.Callable[["py2app", ModuleGraph], typing.Optional[RecipeInfo]]
+def iter_recipes() -> (
+    typing.Iterator[
+        typing.Tuple[
+            str, typing.Callable[["py2app", ModuleGraph], typing.Optional[RecipeInfo]]
+        ]
     ]
-]:
+):
     for name in dir(recipes):
         if name.startswith("_"):
             continue
@@ -908,9 +908,7 @@ class py2app(Command):
     def iter_datamodels(
         self, resdir: typing.Union[str, os.PathLike[str]]
     ) -> typing.Iterator[typing.Tuple[str, str]]:
-        for (path, files) in (
-            normalize_data_file(fn) for fn in (self.datamodels or ())
-        ):
+        for path, files in (normalize_data_file(fn) for fn in (self.datamodels or ())):
             for fn in files:
                 basefn, ext = os.path.splitext(fn)
                 if ext != ".xcdatamodel":
@@ -928,7 +926,7 @@ class py2app(Command):
     def iter_mappingmodels(
         self, resdir: typing.Union[str, os.PathLike[str]]
     ) -> typing.Iterator[typing.Tuple[str, str]]:
-        for (path, files) in (
+        for path, files in (
             normalize_data_file(fn) for fn in (self.mappingmodels or ())
         ):
             for fn in files:
@@ -968,7 +966,7 @@ class py2app(Command):
     def iter_data_files(self) -> typing.Iterator[typing.Tuple[str, str]]:
         dist = self.distribution
         allres = chain(getattr(dist, "data_files", ()) or (), self.resources)
-        for (path, files) in (normalize_data_file(fn) for fn in allres):
+        for path, files in (normalize_data_file(fn) for fn in allres):
             for fn in files:
                 assert isinstance(fn, str)
                 yield fn, os.path.join(path, os.path.basename(fn))
@@ -1279,18 +1277,18 @@ class py2app(Command):
                 invalid_relative_import.append(module)
 
         if missing:
-            missing_unconditional: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
-            missing_fromimport: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
-            missing_fromimport_conditional: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
-            missing_conditional: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
+            missing_unconditional: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
+            missing_fromimport: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
+            missing_fromimport_conditional: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
+            missing_conditional: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
 
             self.progress.info("")
             self.progress.info("checking for any import problems")

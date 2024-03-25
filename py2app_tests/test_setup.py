@@ -1,6 +1,7 @@
 """
 Tests for typechecking of input arguments
 """
+
 import os
 import unittest
 

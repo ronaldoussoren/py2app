@@ -1,6 +1,7 @@
 """
 Recipe to remove unnecessary imports between stdlib modules
 """
+
 import typing
 
 from modulegraph.modulegraph import ModuleGraph

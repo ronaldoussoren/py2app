@@ -1,6 +1,7 @@
 """
 Recipes related to the standard library
 """
+
 from modulegraph2 import MissingModule, ModuleGraph
 
 from .._config import RecipeOptions

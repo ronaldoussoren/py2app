@@ -4,6 +4,7 @@ Interaction with macholib.MachOStandalone
 XXX: Longer term this needs a complete rewrite, but
 that requires rewriting macholib as well.
 """
+
 import pathlib
 import typing
 from os import sep as PATH_SEP

@@ -5,6 +5,7 @@ The interface is a work in progress, and might
 be dropped later in favour of direct usage of
 rich.progress
 """
+
 import rich.progress
 
 

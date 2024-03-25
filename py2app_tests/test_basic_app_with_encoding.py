@@ -15,6 +15,7 @@ The app itself:
     - add another test that does something simular, using virtualenv to
       manage a python installation
 """
+
 import hashlib
 import os
 import shutil

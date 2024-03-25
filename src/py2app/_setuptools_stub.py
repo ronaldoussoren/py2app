@@ -109,11 +109,9 @@ class Py2appDistribution(Distribution):
     def __new__(self) -> "Py2appDistribution":
         raise RuntimeError("Don't instantiate!")  # pragma: no-cover
 
-    def get_version(self) -> str:
-        ...  # pragma: no-cover
+    def get_version(self) -> str: ...  # pragma: no-cover
 
-    def get_name(self) -> str:
-        ...  # pragma: no-cover
+    def get_name(self) -> str: ...  # pragma: no-cover
 
 
 def finalize_distribution_options(dist: Py2appDistribution) -> None:

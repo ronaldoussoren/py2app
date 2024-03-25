@@ -27,4 +27,5 @@ keys in the dictionary are recognized, most are optional:
     dest_base - directory and basename for the executable
                 if a directory is contained, must be the same for all targets
 """
+
 __version__ = "2.0a0"

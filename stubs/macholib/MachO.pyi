@@ -1,4 +1,5 @@
 """ """
+
 import typing
 
 class MachO:

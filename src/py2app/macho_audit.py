@@ -3,6 +3,7 @@ Helpers for auditing the result
 of "MachoStandalone" for issues
 that might affect portability.
 """
+
 import os
 import pathlib
 import typing
@@ -110,9 +111,11 @@ def audit_macho_issues(
 
     return (
         architecture,
-        decode_deployment_target(deployment_target)
-        if deployment_target is not None
-        else None,
+        (
+            decode_deployment_target(deployment_target)
+            if deployment_target is not None
+            else None
+        ),
         warnings,
     )
 

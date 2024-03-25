@@ -1,6 +1,7 @@
 """
 Simular to test_basic_app, but for plugin bundles
 """
+
 import os
 import shutil
 import signal
@@ -61,7 +62,7 @@ class TestBasicPlugin(unittest.TestCase):
                 print(lines)
                 try:
                     os.waitpid(0, 0)
-                except os.error:
+                except OSError:
                     pass
                 raise AssertionError("Creating basic_plugin bundle failed")
 
@@ -72,7 +73,7 @@ class TestBasicPlugin(unittest.TestCase):
             if p.wait() != 0:
                 try:
                     os.waitpid(0, 0)
-                except os.error:
+                except OSError:
                     pass
                 raise AssertionError("Fetching Xcode root failed")
 
@@ -103,13 +104,13 @@ class TestBasicPlugin(unittest.TestCase):
                 print(lines)
                 try:
                     os.waitpid(0, 0)
-                except os.error:
+                except OSError:
                     pass
                 raise AssertionError("Creating bundle_loader failed")
 
             try:
                 os.waitpid(0, 0)
-            except os.error:
+            except OSError:
                 pass
 
         except:  # noqa: E722, B001
