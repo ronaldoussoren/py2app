@@ -396,8 +396,7 @@ def add_plist(root: pathlib.Path, plist: Dict[str, Any], progress: Progress) -> 
 
 def add_bootstrap(
     root: pathlib.Path, plist: Dict[str, Any], progress: Progress
-) -> None:
-    ...
+) -> None: ...
 
 
 def get_info_plist(bundle: BundleOptions) -> Dict[str, Any]:

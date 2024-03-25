@@ -9,6 +9,7 @@ The problem with SIP is that all inter-module dependencies (for example from
 PyQt4.Qt to PyQt4.QtCore) are handled in C code and therefore cannot be
 detected by the python code in py2app).
 """
+
 import glob
 import importlib.resources
 import io

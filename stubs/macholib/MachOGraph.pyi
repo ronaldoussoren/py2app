@@ -1,4 +1,5 @@
 import typing
+
 from .MachO import MachO
 
 class MachOGraph:

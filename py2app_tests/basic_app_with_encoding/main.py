@@ -4,6 +4,7 @@ This is a script with a non-ASCII encoding
 
 German for Lion is Löwe.
 """
+
 import sys
 
 

@@ -51,7 +51,7 @@ class TestBasicAppWithCTypes(unittest.TestCase):
             print(lines)
             try:
                 os.waitpid(0, 0)
-            except os.error:
+            except OSError:
                 pass
 
             raise AssertionError("Running sharedlib failed")
@@ -72,13 +72,13 @@ class TestBasicAppWithCTypes(unittest.TestCase):
             print(lines)
             try:
                 os.waitpid(0, 0)
-            except os.error:
+            except OSError:
                 pass
             raise AssertionError("Creating basic_app bundle failed")
 
         try:
             os.waitpid(0, 0)
-        except os.error:
+        except OSError:
             pass
 
     @classmethod

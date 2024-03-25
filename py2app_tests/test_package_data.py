@@ -3,6 +3,7 @@ Testcase that tests a python package that contains data files
 
 See also issue #53 on the py2app tracker
 """
+
 import hashlib
 import os
 import shutil

@@ -1,6 +1,7 @@
 """
 Automatic compilation of CoreData model files
 """
+
 import os
 import typing
 

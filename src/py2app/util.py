@@ -492,7 +492,6 @@ def copy_tree(
     condition: typing.Optional[typing.Callable[[str], bool]] = None,
     progress: typing.Optional[Progress] = None,
 ) -> typing.List[str]:
-
     """
     Copy an entire directory tree 'src' to a new location 'dst'.  Both
     'src' and 'dst' must be directory names.  If 'src' is not a
@@ -525,7 +524,7 @@ def copy_tree(
         raise DistutilsFileError("cannot copy tree '%s': not a directory" % src)
     try:
         names = zipio.listdir(src)
-    except os.error as exc:
+    except OSError as exc:
         (errno, errstr) = exc.args
         if dry_run:
             names = []
