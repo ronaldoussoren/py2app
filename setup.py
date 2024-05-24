@@ -128,6 +128,8 @@ class my_egg_info(egg_info.egg_info):
 
         with open(path, "w") as fp:
             fp.write(first)
+            if not first.endswith("\n"):
+                fp.write("\n")
             fp.write(
                 "Project-URL: Documentation, "
                 "https://py2app.readthedocs.io/en/latest/\n"
@@ -301,8 +303,8 @@ setup(
     long_description_content_type="text/x-rst; charset=UTF-8",
     classifiers=CLASSIFIERS,
     keywords=[".app", "standalone"],
-    install_requires=["altgraph>=0.17.3", "modulegraph>=0.19.6", "macholib>=1.16.2"],
-    setup_requires=["altgraph>=0.17.3", "modulegraph>=0.19.6", "macholib>=1.16.2"],
+    install_requires=["altgraph>=0.17.3", "modulegraph>=0.19.6", "macholib>=1.16.2", "packaging"],
+    setup_requires=["altgraph>=0.17.3", "modulegraph>=0.19.6", "macholib>=1.16.2", "packaging"],
     tests_require=["pyobjc"],
     cmdclass=cmdclass,
     packages=find_packages(exclude=["py2app_tests"]),

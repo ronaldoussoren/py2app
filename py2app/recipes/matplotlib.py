@@ -2,8 +2,7 @@ from __future__ import absolute_import
 
 import os
 
-from pkg_resources import packaging
-
+import packaging
 
 def check(cmd, mf):
     m = mf.findNode("matplotlib")

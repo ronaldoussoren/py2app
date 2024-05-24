@@ -1,6 +1,11 @@
 Release history
 ===============
 
+py2app 0.28.8
+-------------
+
+* #525: Fix breakage with setuptools 70.
+
 py2app 0.28.7
 -------------
 
@@ -39,7 +44,7 @@ py2app 0.28.4
 py2app 0.28.3
 -------------
 
-* #453: Fix crash in py2applet when specifying a directory to 
+* #453: Fix crash in py2applet when specifying a directory to
   include in the application bundle.
 
 py2app 0.28.2
@@ -71,9 +76,9 @@ py2app 0.28.1
 py2app 0.28
 -----------
 
-.. note:: 
+.. note::
 
-   This is the last version of py2app with compatibility with 
+   This is the last version of py2app with compatibility with
    Python 2.7. Future versions will require Python 3.6 or later.
 
 * PR #410: Fix typo in NamedTemporyFile call
@@ -84,9 +89,9 @@ py2app 0.28
 
   Setuptools 61.0 introduces autodiscovery of distribution
   attributes, and that broke py2app. This version introduces
-  a ``setuptools.finalize_distribution_options`` entrypoint 
+  a ``setuptools.finalize_distribution_options`` entrypoint
   in py2app that will set the distributions's *name* and
-  *py_modules* attributes in a way that is compatible with 
+  *py_modules* attributes in a way that is compatible with
   the main code of py2app when they are not yet set (before
   autodiscovery kicks in).
 
@@ -116,7 +121,7 @@ py2app 0.28
   this release fixes this.
 
   This is the last release with Python 2.7 support, the next
-  release will contain package metadata that ensures it can 
+  release will contain package metadata that ensures it can
   only be installed on Python 3.
 
 * #413: Find dist-info in included pythonXX.zip
@@ -132,9 +137,9 @@ py2app 0.28
 
 * #408: Add definition of ``site.PREFIXES``
 
-* #412: Fix incompatibility with setuptools 60.8.1 
+* #412: Fix incompatibility with setuptools 60.8.1
 
-  The setuptools recipe did not recoginize all vendored dependencies 
+  The setuptools recipe did not recoginize all vendored dependencies
   in ``pkg_resources`` and that breaks app bundles that use ``pkg_resoures``.
 
 * PR #388: Add builtin definitions for 'quit' and 'exit' in site.py
@@ -161,7 +166,7 @@ py2app 0.27
 
 * #387: Add ``site.ENABLE_USER_SITE`` in the site.py file
   for applications (value is always ``False``).
-  
+
 
 py2app 0.26.1
 -------------
@@ -182,7 +187,7 @@ py2app 0.26
 
 * #1: Include ".egg-info" and ".dist-info" information in the bundled application
 
-  This fixes any python package that uses ``pkg_resources`` to look for 
+  This fixes any python package that uses ``pkg_resources`` to look for
   specific distributions.
 
 * ``py2app.filters.not_stdlib_filter`` now knows about Python's "venv"
@@ -191,8 +196,8 @@ py2app 0.26
 
   This recipe will ensure that a Python package is stored outside
   of site-packages.zip when a module in that package uses the
-  ``__file__`` variable. 
-  
+  ``__file__`` variable.
+
   This variable is most commonly used to load resources stored in
   the package (instead of the newer ``importlib.resources`` and ``pkg_resources``
   libraries).
@@ -224,24 +229,24 @@ py2app 0.26
 
 * #110: Add recipe for SQLAlchemy
 
-  The recipe includes all dialects and connectors, including implicit 
+  The recipe includes all dialects and connectors, including implicit
   dependencies, because SQLAlchemy uses ``__import__`` to load dependencies.
 
 * #328: Add recipe for gcloud
 
-* #195: Add ``USER_BASE``, ``getuserbase()`` and ``getusersitepackages()``  to 
+* #195: Add ``USER_BASE``, ``getuserbase()`` and ``getusersitepackages()``  to
   py2app's version of ``site.py``.
 
 * #184: Add recipe for 'ssl'
 
-  This recipe is only used for Python 3.4 or later and ensures that the 
-  CA bundle used by Python's ssl module is included in the app bundle and OpenSSL 
+  This recipe is only used for Python 3.4 or later and ensures that the
+  CA bundle used by Python's ssl module is included in the app bundle and OpenSSL
   is configured to look for that bundle in the application bundle.
 
 * #371: change default error message on launch problems
 
   The default error message shown when the application cannot be launched is now
-  slightly more useful and refers the 
+  slightly more useful and refers the
   `py2app debug page <https://py2app.readthedocs.io/en/latest/debugging.html>`_.
 
 * #345, #169: Adjust qt5 and qt6 recipes for non-PyPI installations
@@ -293,7 +298,7 @@ py2app 0.25
 py2app 0.24
 -----------
 
-* Consolidate recipes that just include a package 
+* Consolidate recipes that just include a package
   as is into a single recipe to reduce code complexity.
 
 * Consolidate recipes that just mark imports as expected
