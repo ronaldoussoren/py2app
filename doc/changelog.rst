@@ -6,6 +6,8 @@ py2app 0.28.8
 
 * #525: Fix breakage with setuptools 70.
 
+* Add support for python 3.13
+
 py2app 0.28.7
 -------------
 

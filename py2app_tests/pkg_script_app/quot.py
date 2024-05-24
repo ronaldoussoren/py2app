@@ -4,10 +4,19 @@ def function():
     import quot
     import quot.queue
 
+def _fetch_path(gl, name):
+    parts = name.split('.')
+    gl = gl[parts[0]]
+
+    for n in parts[1:]:
+        gl = getattr(gl, n)
+    return gl
+
 def import_module(name):
     try:
-        exec("import %s"%(name,))
-        m = eval(name)
+        gl = {}
+        exec("import %s"%(name,), gl, gl)
+        m = _fetch_path(gl, name)
     except ImportError as exc:
         print("* import failed: %s path: %s"%(exc, sys.path))
 

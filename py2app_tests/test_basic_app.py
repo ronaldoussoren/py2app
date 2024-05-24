@@ -192,16 +192,16 @@ class TestBasicApp (unittest.TestCase):
 
         if not can_import_stdlib:
             # Not a dependency of the module (stdlib):
-            p.stdin.write('import_module("xdrlib")\n'.encode('latin1'))
+            p.stdin.write('import_module("tabnanny")\n'.encode('latin1'))
             p.stdin.flush()
             ln = p.stdout.readline().decode('utf-8')
             self.assertTrue(ln.strip().startswith("* import failed"), ln)
 
         else:
-            p.stdin.write('import_module("xdrlib")\n'.encode('latin1'))
+            p.stdin.write('import_module("tabnanny")\n'.encode('latin1'))
             p.stdin.flush()
             ln = p.stdout.readline()
-            self.assertEqual(ln.strip(), b"xdrlib")
+            self.assertEqual(ln.strip(), b"tabnanny")
 
         if sys.prefix.startswith('/System') or '--alias' in self.py2app_args:
             # py2app is included as part of the system install
