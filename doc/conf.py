@@ -17,7 +17,7 @@ def get_version():
     setup_py = os.path.join(os.path.dirname(
             os.path.dirname(
                 os.path.abspath(__file__))), "setup.py")
-    for ln in open(setup_py, 'rU'):
+    for ln in open(setup_py, 'r'):
         ln = ln.strip()
         if ln.startswith('version='):
             return ln.split("\"")[1]
