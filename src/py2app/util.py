@@ -11,7 +11,7 @@ import subprocess
 import sys
 import time
 import typing
-from py_compile import compile
+from py_compile import compile  # noqa: A004
 
 import macholib.util
 from macholib.util import is_platform_file
@@ -34,10 +34,13 @@ def find_converter(
 ) -> typing.Optional[typing.Callable[..., None]]:
     if not gConverterTab:
         for ep in importlib_metadata.entry_points(group="py2app.converter"):
-            if sys.version_info[:2] >= (3, 10):
-                assert isinstance(
-                    ep, importlib_metadata.EntryPoint
-                ), f"{ep!r} is not an EntryPoint but {type(ep)!r}"
+            # if sys.version_info[:2] >= (3, 10):
+            #    XXX: Disabled because setuptool's vendoring of importlib_metadata
+            #    XXX: messes things up.
+            #
+            #    assert isinstance(
+            #        ep, importlib_metadata.EntryPoint
+            #    ), f"{ep!r} is not an EntryPoint but {type(ep)!r}"
             function = ep.load()
             if hasattr(function, "py2app_suffix"):
                 print(f"WARNING: using 'py2app_suffix' is deprecated for {function}")
@@ -324,6 +327,7 @@ del __load
 
 
 def make_loader(fn: str) -> str:
+    # XXX: Replace by an importlib finder
     return LOADER % fn
 
 
@@ -492,7 +496,6 @@ def copy_tree(
     condition: typing.Optional[typing.Callable[[str], bool]] = None,
     progress: typing.Optional[Progress] = None,
 ) -> typing.List[str]:
-
     """
     Copy an entire directory tree 'src' to a new location 'dst'.  Both
     'src' and 'dst' must be directory names.  If 'src' is not a
