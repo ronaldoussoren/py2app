@@ -14,7 +14,6 @@ def _included_subpackages(packages: "list[str]") -> None:
 
 class Loader:
     def load_module(self, fullname: str) -> types.ModuleType:
-
         pkg_dir = os.path.join(
             os.environ["RESOURCEPATH"], "lib", "python%d.%d" % (sys.version_info[:2])
         )

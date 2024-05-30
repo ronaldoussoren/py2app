@@ -109,7 +109,6 @@ def _ctypes_setup() -> ctypes.CDLL:
 
 
 def _run_argvemulator(timeout: float = 60.0) -> None:
-
     # Configure ctypes
     carbon = _ctypes_setup()
 

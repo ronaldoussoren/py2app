@@ -7,7 +7,6 @@ def _setup_pkgresources() -> None:
     resource_path = os.getenv("RESOURCEPATH")
     assert resource_path is not None
     with open(os.path.join(os.path.dirname(resource_path), "Info.plist"), "rb") as fp:
-
         pl = plistlib.load(fp)
 
     appname = pl.get("CFBundleIdentifier")
