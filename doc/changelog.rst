@@ -13,12 +13,11 @@ the code might not work on older versions due to using newish APIs.
   ignored by py2app. Ensure that requirements are installed
   before invoking py2app.
 
-* Drop support for Python 3.5 or earlier, including
-  Python 2.7.
+* Py2app now only supports Python 3.8 or later.
 
-  The wheel metadata now contains "python_requires>=3.6",
-  which means pip will install py2app 0.28 for users of older
-  version of Python.
+* There is no "dryrun" option anymore, the new interface does not
+  have the option at all and the setuptools command ignores
+  the option.
 
 * Drop the "prefer_ppc" option, use the "arch" option instead
 

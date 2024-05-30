@@ -31,6 +31,13 @@ Contents
    setuptools
    changelog
 
+Internals
+---------
+.. toctree::
+   :maxdepth: 2
+
+   bundle-structure
+
 Online Resources
 ----------------
 
