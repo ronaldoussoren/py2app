@@ -28,6 +28,10 @@ from ._progress import Progress
 class ModuleGraphProxy:
     # XXX: Class name is suboptimal
     # XXX: Typing...
+    #
+    # XXX: This functionality should be part of ObjectGraph,
+    #      e.g. add a 'changecount' attribute that's incremented
+    #      by adding/removing nodes and edges.
     def __init__(self, graph):
         self.__graph = graph
         self.__updated = False
@@ -192,4 +196,5 @@ def process_recipes(graph: ModuleGraph, options: RecipeOptions, progress: Progre
         else:
             break
 
-    progress.update(task_id, total=steps, current="")
+    # progress.update(task_id, count=steps, current="")
+    progress.task_done(task_id)

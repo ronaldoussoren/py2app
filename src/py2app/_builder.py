@@ -3,6 +3,7 @@ import itertools
 import marshal
 import pathlib
 import plistlib
+import shutil
 import sys
 import types
 import zipfile
@@ -26,6 +27,7 @@ from ._config import BundleOptions, Py2appConfiguration
 from ._modulegraph import ModuleGraph
 from ._progress import Progress
 from ._recipes import process_recipes
+from ._standalone import PythonStandalone
 from .apptemplate.plist_template import (
     infoPlistDict as app_info_plist_dict,  # XXX: Replace
 )
@@ -34,6 +36,7 @@ from .bundletemplate.plist_template import (
     infoPlistDict as bundle_info_plist_dict,  # XXX: Replace
 )
 from .bundletemplate.setup import main as bundle_stub_path  # XXX: Replace
+from .util import find_converter  # XXX: Replace
 
 
 def _pack_uint32(x):
@@ -143,39 +146,6 @@ def zip_script_node(
     zf.writestr(relpath_for_script(node), code_to_bytes(node.code))
 
 
-# The Python interpreter cannot load extensions from zipfiles
-# on macOS (because the system doesn't allow for this), therefore
-# extension modules will be stored outside of the zipf file.
-#
-# The 'EXT_LOADER' code is used to place a Python module in
-# the zipfile that will load the extension when imported.
-#
-# Such a loader is needed to support extension modules for
-# a the ``__init__`` module in a package. Using it for every
-# extension module simplifies the py2app code and is harmless.
-#
-# XXX: Is use of __spec__ correct?
-EXT_LOADER = """
-def __load():
-    from importlib.machinery import ExtensionFileLoader
-    ext = {ext_module!r}
-    for path in sys.path:
-        if not path.endswith('lib-dynload'):
-            continue
-        ext_path = os.path.join(path, ext)
-        if os.path.exists(ext_path):
-            loader = ExtensionFileLoader(__name__, ext_path)
-            module = loader.create_module(__spec__)
-            loader.exec_module(module)
-            sys.modules[__name__] = module
-            break
-    else:
-        raise ImportError(repr(ext) + " not found")
-__load()
-del __load
-"""
-
-
 @zip_node.register
 def zip_ext_node(
     node: ExtensionModule,
@@ -185,22 +155,11 @@ def zip_ext_node(
     """
     Include an ExtensionModule into the zipfile.
 
-    This will do two things because Python cannot load extensions
-    from a zipfile:
-    - Store a python stub in the zipfile
-    - Copy the extension itself to the location expected by the stub
+    macOS cannot load shared libraries from memory, especially not
+    when code signing is used. Therefore the extension is copied to
+    a separate directory where it is picked up by a custom importlib
+    Finder.
     """
-    loader_source = EXT_LOADER.format(ext_module=f"{node.identifier}.so")
-    loader_code = compile(
-        loader_source, f"{node.identifier}", "exec", dont_inherit=True
-    )
-
-    if node.filename.stem == "__init__":
-        path = node.identifier.replace(".", "/") + "/__init__.pyc"
-    else:
-        path = node.identifier.replace(".", "/") + ".pyc"
-    zf.writestr(path, code_to_bytes(loader_code))
-
     more_extensions[f"{node.identifier}.so"] = node
 
 
@@ -308,7 +267,6 @@ def fs_package_node(node: Union[Package, NamespacePackage], root: pathlib.Path) 
 BUNDLE_FOLDERS = (
     "Contents/MacOS",
     "Contents/Resources",
-    "Contents/Resources/lib",
     "Contents/Frameworks",
 )
 
@@ -404,6 +362,40 @@ def add_bootstrap(
         pass
 
 
+# Filter function for shutil.copytree ignoring SCM directories,
+# backup files and temporary files.
+ignore_filter = shutil.ignore_patterns(".git", ".svn", "*.sv", "*.bak", "*~", "._*.swp")
+
+
+def add_resources(
+    paths: BundlePaths, bundle: BundleOptions, progress: Progress
+) -> None:
+    # XXX: Add a mechanisme for recipes to add resources as well.
+    if not bundle.resources:
+        return
+
+    for rsrc in progress.iter_task(
+        bundle.resources, "Copy resources", lambda n: str(n)
+    ):
+        for src in rsrc.sources:
+            converter = find_converter(src)
+            if converter is not None:
+                converter(src, paths.resources / rsrc.destination / src.name)
+            elif src.is_file():
+                shutil.copy2(
+                    src,
+                    paths.resources / rsrc.destination / src.name,
+                    follow_symlinks=False,
+                )
+            else:
+                shutil.copytree(
+                    src,
+                    paths.resources / rsrc.destination / src.name,
+                    ignore=ignore_filter,
+                    symlinks=True,
+                )
+
+
 def get_info_plist(bundle: BundleOptions) -> Dict[str, Any]:
     """
     Get the base Info.plist contents for the bundle, based
@@ -422,7 +414,7 @@ def get_info_plist(bundle: BundleOptions) -> Dict[str, Any]:
 
 def collect_python(
     bundle: BundleOptions, paths: BundlePaths, graph: ModuleGraph, progress: Progress
-):
+) -> Dict[pathlib.Path, pathlib.Path]:
     # XXX: This isn't really 'Scanning' any more
     #
     # XXX: ExtensionModules need more work to be able to
@@ -469,6 +461,7 @@ def collect_python(
         ):
             fs_node(node, paths.pylib)
 
+    ext_map = {}
     if more_extensions:
         for ext_name, node in progress.iter_task(
             more_extensions.items(),
@@ -476,6 +469,8 @@ def collect_python(
             lambda n: n[1].identifier,
         ):
             (paths.extlib / ext_name).write_bytes(node.filename.read_bytes())
+            ext_map[paths.extlib / ext_name] = node.filename
+    return ext_map
 
 
 def make_readonly(
@@ -484,6 +479,7 @@ def make_readonly(
     """
     Make the bundle read only.
     """
+    # XXX: To be implemented
     ...
 
 
@@ -496,7 +492,10 @@ def get_module_graph(bundle: BundleOptions, progress: Progress) -> ModuleGraph:
         scan_count += 1
 
         if isinstance(node, (Package, NamespacePackage)):
-            if node.identifier in bundle.py_full_package:
+            if (
+                node.identifier in bundle.py_full_package
+                or node.identifier == "encodings"
+            ):
                 graph.import_package(node, node.identifier)
 
     graph = ModuleGraph()
@@ -511,8 +510,19 @@ def get_module_graph(bundle: BundleOptions, progress: Progress) -> ModuleGraph:
     for module_name in bundle.py_include:
         graph.add_module(module_name)
 
-    progress.update(task_id, count=scan_count, current="")
+    progress.task_done(task_id)
     return graph
+
+
+def macho_standalone(
+    root: pathlib.Path,
+    graph: ModuleGraph,
+    bundle: BundleOptions,
+    ext_map: Dict[pathlib.Path, pathlib.Path],
+    progress: Progress,
+) -> None:
+    standalone = PythonStandalone(root, graph, bundle.build_type, ext_map, progress)
+    standalone.run()
 
 
 def build_bundle(
@@ -521,23 +531,46 @@ def build_bundle(
     """
     Build the output for *bundle*. Returns *True* if successful and *False* otherwise.
     """
+    # XXX: There is no nice way to report errors at this point
+    #      (ok, errors, fatal errors) other than in progress output.
+
     graph = get_module_graph(bundle, progress)
 
     process_recipes(graph, config.recipe, progress)
 
+    # XXX: Warn about various types of "missing" nodes in
+    #      the graph.
+
+    # XXX: Consider dynamically calculating the order of
+    #      steps by adding a decorator that documents
+    #      dependencies between steps.
     root = create_bundle_structure(bundle, progress)
     paths = bundle_paths(root, bundle.build_type)
     plist = get_info_plist(bundle)
     add_iconfile(root, plist, bundle, progress)
     add_loader(root, bundle, progress)
-    collect_python(bundle, paths, graph, progress)
+    add_resources(paths, bundle, progress)
+    ext_map = collect_python(bundle, paths, graph, progress)
     add_bootstrap(
         root, bundle, progress
     )  # XXX: Needs more info which is collected in collect_python
     add_plist(root, plist, progress)
 
+    macho_standalone(root, graph, bundle, ext_map, progress)
+
     # - Run machostandalone
     # XXX: Does machostandalone affect other stuff?
+    # XXX: Longer term replace 'macholib' by 'macholib2' with
+    #      a nicer interface.
+    # - Use 'macho_audit' (or functionally similar to
+    #   check if deployment target for binaries matches
+    #    what's specified in the configuration.
+    #    If there is no explicit configuration: Adjust
+    #    deployment target in Info.plist and stub
+    #    executables(?).
+    #    In any case warn about mismatches (or
+    #
+    #
     # - Run codesigning:
     #   - Strip signatures
     #   - Add ad-hoc signature for arm64
@@ -546,5 +579,4 @@ def build_bundle(
 
     make_readonly(root, bundle, progress)
 
-    # XXX: Should track status!
-    return True
+    # XXX: Print summary about the bundle

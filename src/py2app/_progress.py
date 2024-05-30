@@ -14,11 +14,12 @@ class Progress:
         )
         self._progress.start()
         self._level = level
+        self.have_error = False
 
     def stop(self) -> None:
         self._progress.stop()
 
-    def add_task(self, name: str, count: int) -> rich.progress.TaskID:
+    def add_task(self, name: str, count: int | None) -> rich.progress.TaskID:
         return self._progress.add_task(name, total=count, current="", start=True)
 
     def step_task(self, task_id: rich.progress.TaskID) -> None:
@@ -39,6 +40,11 @@ class Progress:
     def update(self, task_id: rich.progress.TaskID, **kwds):
         self._progress.update(task_id, **kwds)
 
+    def task_done(self, task_id: rich.progress.TaskID):
+        task = self._progress.tasks[task_id]
+        if task.total is None:
+            self._progress.update(task_id, total=task.completed, current="")
+
     def info(self, message: str) -> None:
         if self._level >= 1:
             self._progress.print(message)
@@ -48,4 +54,8 @@ class Progress:
             self._progress.print(message)
 
     def warning(self, message: str) -> None:
+        self._progress.print(f"[orange]{message}[/orange]")
+
+    def error(self, message: str) -> None:
         self._progress.print(f"[red]{message}[/red]")
+        self.have_error = True

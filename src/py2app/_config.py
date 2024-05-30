@@ -99,6 +99,9 @@ class Resource:
     def __repr__(self):
         return f"<Resource destination={self.destination!r} sources={self.sources!r}>"
 
+    def __str__(self):
+        return f"{self.destination} <-- {', '.join(str(s) for s in self.sources)}"
+
     @classmethod
     def from_config(
         cls, config_item: typing.Any, config_root: pathlib.Path, location: str

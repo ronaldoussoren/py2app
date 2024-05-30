@@ -7,20 +7,35 @@ try:
 except ImportError:
     import tomli as tomllib
 
-from . import _builder, _config, _progress
+from . import __version__, _builder, _config, _progress
+
+DESCRIPTION = """\
+Build macOS executable bundles, in particular ".app" bundles.
+
+By default this will build fully standalone bundles, that is
+applications that can be used on different machines without
+installing dependencies.
+"""
 
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(
-        prog=f"{sys.executable} -mpy2app", description="Build macOS executable bundles"
+        prog=f"{sys.executable} -mpy2app",
+        description=DESCRIPTION,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        allow_abbrev=False,
     )
+
+    # XXX: Consider walking up the tree upto to the top of
+    # project tree (the directory containing a `.git` directory)
     parser.add_argument(
         "--pyproject-toml",
+        "-c",
         dest="pyproject",
-        default="pyproject.toml",
+        default="./pyproject.toml",
         metavar="FILE",
         type=pathlib.Path,
-        help="pyproject.toml path",
+        help="path to pyproject.toml (default: %(default)s)",
     )
     parser.add_argument(
         "--semi-standalone",
@@ -28,15 +43,32 @@ def parse_arguments(argv):
         default=None,
         action="store_const",
         const=_config.BuildType.SEMI_STANDALONE,
-        help="build a semi-standalone bundle",
+        help="build a semi-standalone bundle.",
     )
     parser.add_argument(
         "--alias",
+        "-A",
         dest="build_type",
         default=_config.BuildType.SEMI_STANDALONE,
         action="store_const",
         const=_config.BuildType.ALIAS,
-        help="build an alias bundle",
+        help="build an alias bundle.",
+    )
+
+    # XXX, consider  making this multi-value
+    #      (but: at the moment there is no verbosity
+    #       in the first place)
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="print more information while building.",
+    )
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     args = parser.parse_args(argv)
 
@@ -56,13 +88,13 @@ def parse_arguments(argv):
     # XXX: I don't particularly like poking directly in '_locals'
     if args.build_type is not None:
         config._local["build-type"] = args.build_type
-    return config
+    return args.verbose, config
 
 
 def main():
-    config = parse_arguments(sys.argv[1:])
+    verbose, config = parse_arguments(sys.argv[1:])
 
-    progress = _progress.Progress()
+    progress = _progress.Progress(level=2 if verbose else 1)
     task_id = progress.add_task("Processing bundles", len(config.bundles))
 
     ok = True
@@ -71,13 +103,13 @@ def main():
             task_id,
             current=f"{bundle.build_type.value} {'plugin' if bundle.plugin else 'application'} {bundle.name!r}",
         )
-        ok = _builder.build_bundle(config, bundle, progress) and ok
+        _builder.build_bundle(config, bundle, progress) and ok
         progress.step_task(task_id)
     progress.update(task_id, current="")
     progress._progress.stop()
 
-    if not ok:
-        raise SystemExit(1)
+    # XXX: Report on the results
+    sys.exit(1 if progress.have_error else 0)
 
 
 if __name__ == "__main__":

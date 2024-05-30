@@ -55,7 +55,6 @@ def fancy_split(name: str, s: typing.Any) -> typing.List[str]:
 def fixup_targets(
     targets: typing.Sequence[typing.Union[str, _ScriptInfo]],
 ) -> typing.Sequence[_ScriptInfo]:
-
     if targets is None:
         return []
 
