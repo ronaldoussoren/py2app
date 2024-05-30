@@ -255,11 +255,13 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
         return destfn
 
 
-def iter_recipes() -> typing.Iterator[
-    typing.Tuple[
-        str, typing.Callable[["py2app", ModuleGraph], typing.Optional[RecipeInfo]]
+def iter_recipes() -> (
+    typing.Iterator[
+        typing.Tuple[
+            str, typing.Callable[["py2app", ModuleGraph], typing.Optional[RecipeInfo]]
+        ]
     ]
-]:
+):
     for name in dir(recipes):
         if name.startswith("_"):
             continue
@@ -697,7 +699,6 @@ class py2app(Command):
         if not self.plist:
             self.plist = {}
         if isinstance(self.plist, str):
-
             with open(self.plist, "rb") as fp:
                 self.plist = plistlib.load(fp)
 
@@ -908,9 +909,7 @@ class py2app(Command):
     def iter_datamodels(
         self, resdir: typing.Union[str, os.PathLike[str]]
     ) -> typing.Iterator[typing.Tuple[str, str]]:
-        for (path, files) in (
-            normalize_data_file(fn) for fn in (self.datamodels or ())
-        ):
+        for path, files in (normalize_data_file(fn) for fn in (self.datamodels or ())):
             for fn in files:
                 basefn, ext = os.path.splitext(fn)
                 if ext != ".xcdatamodel":
@@ -928,7 +927,7 @@ class py2app(Command):
     def iter_mappingmodels(
         self, resdir: typing.Union[str, os.PathLike[str]]
     ) -> typing.Iterator[typing.Tuple[str, str]]:
-        for (path, files) in (
+        for path, files in (
             normalize_data_file(fn) for fn in (self.mappingmodels or ())
         ):
             for fn in files:
@@ -968,7 +967,7 @@ class py2app(Command):
     def iter_data_files(self) -> typing.Iterator[typing.Tuple[str, str]]:
         dist = self.distribution
         allres = chain(getattr(dist, "data_files", ()) or (), self.resources)
-        for (path, files) in (normalize_data_file(fn) for fn in allres):
+        for path, files in (normalize_data_file(fn) for fn in allres):
             for fn in files:
                 assert isinstance(fn, str)
                 yield fn, os.path.join(path, os.path.basename(fn))
@@ -1195,7 +1194,7 @@ class py2app(Command):
             if isinstance(item, Package) and item.filename == "-":
                 # In python3.3 or later the default importer supports namespace
                 # packages without an __init__ file, don't use that
-                # funcionality because that causes problems with our support
+                # functionality because that causes problems with our support
                 # for loading C extensions.
                 #
                 fn = os.path.join(self.temp_dir, "empty_package", "__init__.py")
@@ -2085,7 +2084,6 @@ class py2app(Command):
             real_prefix = None
             global_site_packages = False
             with open(os.path.join(sys.prefix, "pyvenv.cfg")) as fp:
-
                 for ln in fp:
                     if ln.startswith("home = "):
                         _, home_path = ln.split("=", 1)
@@ -2172,7 +2170,6 @@ class py2app(Command):
             prescripts.append("disable_linecache")
             prescripts.append("boot_" + self.style)
         else:
-
             # Add ctypes prescript because it is needed to
             # find libraries in the bundle, but we don't run
             # recipes and hence the ctypes recipe is not used
@@ -2385,7 +2382,6 @@ class py2app(Command):
         sourcefn: typing.Union[str, os.PathLike[str]],
         destfn: typing.Union[str, os.PathLike[str]],
     ) -> None:
-
         todo = [(sourcefn, destfn)]
 
         while todo:
