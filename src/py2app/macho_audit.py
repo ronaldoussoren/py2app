@@ -42,7 +42,7 @@ def audit_macho_issues(
        single-architecture files for different architectures.
 
     * ``deployment_target`` is the most recent deployment target for files in the
-      bunlde (for example "13.2")
+      bundle (for example "13.2")
 
     * The ``warnings`` are a list of warnings to be shown to the user.
     """
