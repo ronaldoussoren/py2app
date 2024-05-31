@@ -354,13 +354,21 @@ def add_plist(root: pathlib.Path, plist: Dict[str, Any], progress: Progress) -> 
 
 
 def add_bootstrap(
-    root: pathlib.Path, plist: Dict[str, Any], progress: Progress
+    root: pathlib.Path, bundle: BundleOptions, progress: Progress
 ) -> None:
     bootstrap_path = root / "Contents/Resources/__boot__.py"
 
     with open(bootstrap_path, "w") as stream:
-        stream.write("hello")
-        pass
+        stream.write(
+            importlib.resources.files("py2app.bootstrap")
+            .joinpath("boot_app.py")
+            .read_text(encoding="utf-8")
+        )
+        stream.write("\n")
+
+        stream.write(f'DEFAULT_SCRIPT = "{bundle.script}"\n')
+        stream.write("SCRIPT_MAP = {}\n")
+        stream.write("_run()\n")
 
 
 # Filter function for shutil.copytree ignoring SCM directories,
@@ -536,6 +544,7 @@ def build_bundle(
     #      (ok, errors, fatal errors) other than in progress output.
 
     graph = get_module_graph(bundle, progress)
+    graph.add_module("zipfile")
 
     process_recipes(graph, config.recipe, progress)
 
