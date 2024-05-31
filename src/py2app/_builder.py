@@ -359,6 +359,15 @@ def add_bootstrap(
     bootstrap_path = root / "Contents/Resources/__boot__.py"
 
     with open(bootstrap_path, "w") as stream:
+        # XXX: This ignores all bootstrap additions other than
+        #      what's needed for running the main script.
+        stream.write(
+            importlib.resources.files("py2app.bootstrap")
+            .joinpath("_setup_importlib.py")
+            .read_text(encoding="utf-8")
+        )
+        stream.write("\n")
+
         stream.write(
             importlib.resources.files("py2app.bootstrap")
             .joinpath("boot_app.py")

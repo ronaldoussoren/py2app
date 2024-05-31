@@ -16,7 +16,9 @@ class Py2AppExtensionLoader(MetaPathFinder):
             return None
 
         loader = importlib.machinery.ExtensionFileLoader(fullname, ext_path)
-        return importlib.machinery.ModuleSpec(name=fullname, loader=loader, origin=path)
+        return importlib.machinery.ModuleSpec(
+            name=fullname, loader=loader, origin=ext_path
+        )
 
 
 for p in sys.path:
