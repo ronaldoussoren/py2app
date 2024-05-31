@@ -29,12 +29,12 @@ the ``LSEnvironment`` key in the Info.plist file, for example like so:
 
    [tool.py2app.bundle.main]
    name = "BasicApp"
-   script = main.py
+   script = "main.py"
    plist = {
       LSEnvironment = {
            LANG = "nl_NL.latin1",
            LC_CTYPE = "nl_NL.UTF-8",
            EXTRA_VAR = "hello world",
-           KNIGHT = "ni!",
+           KNIGHT = "ni!"
       }
    }

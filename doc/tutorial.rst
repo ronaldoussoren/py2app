@@ -8,13 +8,13 @@ Create a setup.py file
 
 The first step is to create a ``setup.py`` file for your script. ``setup.py``
 is the "project file" that tells `setuptools`_ everything it needs to know
-to build your application. We'll use the :doc:`py2applet` script to do that::
+to build your application. We'll use the py2applet script to do that::
 
     $ py2applet --make-setup MyApplication.py
     Wrote setup.py
 
 If your application has an icon (in ``.icns`` format) or data files that it
-requires, you should also specify them as arguments to :doc:`py2applet`.
+requires, you should also specify them as arguments to py2applet.
 
 
 Clean up your build directories

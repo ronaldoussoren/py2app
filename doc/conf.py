@@ -40,7 +40,25 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # needs_sphinx = '1.0'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.intersphinx"]
+extensions = [
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.extlinks",
+    "sphinxcontrib.blockdiag",
+    "sphinx_sitemap",
+    "sphinx_copybutton",
+    "sphinx_design",
+    "sphinx_tabs.tabs",
+    "sphinx_togglebutton",
+    "sphinxcontrib.mermaid",
+    "sphinx_reredirects",
+]
+
+extlinks = {
+    "issue": ("https://github.com/ronaldoussoren/py2app/issues/%s", "#%s"),
+    "pr": ("https://github.com/ronaldoussoren/py2app/pull/%s", "#%s"),
+}
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -107,12 +125,48 @@ pygments_style = "sphinx"
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "nature"
+html_theme = "shibuya"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 # html_theme_options = {}
+html_theme_options = {
+    "accent_color": "jade",
+    "nav_links": [
+        {
+            "title": "GitHub",
+            "url": "https://github.com/ronaldoussoren/py2app",
+            "external": True,
+        },
+        {
+            "title": "Module Index",
+            "url": "py-modindex",
+        },
+        {
+            "title": "Support Me",
+            "url": "https://blog.ronaldoussoren.net/support/",
+            "external": True,
+        },
+        {
+            "title": "Resources",
+            "children": [
+                {
+                    "title": "Changelog",
+                    "url": "changelog",
+                    "summary": "Overview of updates",
+                },
+            ],
+        },
+    ],
+    "globaltoc_expand_depth": 1,
+    "twitter_url": "https://twitter.com/ronaldoussoren",
+    "github_url": "https://github.com/ronaldoussoren/py2app",
+    "mastodon_url": "https://blog.ronaldoussoren.com/@ronald",
+}
+
+html_baseurl = "https://py2app.readthedocs.io/en/latest/"
+
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -237,8 +291,15 @@ man_pages = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    "python": ("http://docs.python.org/", None),
-    "altgraph": ("http://altgraph.readthedocs.io/en/latest/", None),
-    "macholib": ("http://macholib.readthedocs.io/en/latest/", None),
-    "modulegraph": ("http://modulegraph.readthedocs.io/en/latest/", None),
+    "python": ("https://docs.python.org/3/", None),
+    "altgraph": ("https://altgraph.readthedocs.io/en/latest/", None),
+    "macholib": ("https://macholib.readthedocs.io/en/latest/", None),
+    "modulegraph": ("https://modulegraph.readthedocs.io/en/latest/", None),
+    # "modulegraph2": ("https://modulegraph2.readthedocs.io/en/latest/", None),
+    # "objectgraph": ("https://objectgraph.readthedocs.io/en/latest/", None),
 }
+
+redirects = {}
+
+todo_include_todos = True
+copybutton_exclude = ".linenos, .gp"

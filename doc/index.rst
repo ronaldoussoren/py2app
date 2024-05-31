@@ -1,15 +1,53 @@
-py2app - Create standalone Mac OS X applications with Python
-============================================================
+:layout: landing
+:description: py2app creates application and plugin bundles for Python scripts on macOS
 
-py2app is a Python `setuptools`_ command which will allow you
-to make standalone application bundles and plugins from Python
-scripts. py2app is similar in purpose and design to `py2exe`_ for
-Windows.
+.. rst-class:: lead
 
-.. note::
+   Py2app packages Python GUI applications as macOS application or
+   plugin bundles.
 
-   Py2app must be run on macOS and cannot be used to cross build
-   macOS applications on Windows or Linux.
+
+.. container:: buttons
+
+   `GitHub <https://github.com/ronaldoussoren/py2app>`_ `License <license.html>`_
+
+.. grid:: 1 1 2 3
+   :gutter: 2
+   :padding:  0
+   :class-row: surface
+
+   .. grid-item-card:: Release Info
+      :link: changelog
+      :link-type: doc
+
+      py2app 2.0 was released on 2024-XX-XX.  See the :doc:`changelog <changelog>` for more information.
+
+
+   .. grid-item-card:: Supported Platforms
+      :link: supported-platforms
+      :link-type: doc
+
+      - macOS 10.9 and later
+      - Python 3.7 and later
+      - x86_64 and arm64
+
+   .. grid-item-card:: Installing py2app
+      :link: install
+      :link-type: doc
+
+      .. sourcecode:: sh
+
+         $ python3 -mpip \
+           install -U py2app
+
+.. toctree::
+   :hidden:
+
+   install
+   changelog
+   supported-platforms
+   license
+
 
 Contents
 --------
@@ -17,7 +55,6 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   install
    command-line
    pyproject
    tutorial
@@ -29,7 +66,6 @@ Contents
    examples
    recipes
    setuptools
-   changelog
 
 Internals
 ---------
@@ -37,38 +73,3 @@ Internals
    :maxdepth: 2
 
    bundle-structure
-
-Online Resources
-----------------
-
-There are several online resources to help you get along with py2app.
-
-Mailing list:
-    http://www.python.org/community/sigs/current/pythonmac-sig/
-
-Issue tracker:
-    https://github.com/ronaldoussoren/py2app/issues
-
-Source code repository:
-    https://github.com/ronaldoussoren/py2app
-
-PyPI Entry:
-    https://pypi.org/project/py2app/
-
-If you're looking for help, pay special attention to the ``examples``
-folder in the source, which demonstrates many common use cases.
-
-License
--------
-
-py2app may be distributed under the `MIT`_ or `PSF`_ open source
-licenses.
-
-Copyright (c) 2004-2006 Bob Ippolito <bob at redivi.com>.
-
-Copyright (c) 2010-2012 Ronald Oussoren <ronaldoussoren at mac.com>.
-
-.. _`setuptools`: http://pypi.python.org/pypi/setuptools/
-.. _`py2exe`: http://pypi.python.org/pypi/py2exe/
-.. _`PSF`: http://www.python.org/psf/license.html
-.. _`MIT`: http://www.opensource.org/licenses/mit-license.php

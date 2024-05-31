@@ -1,21 +1,20 @@
 Installation
 ============
 
-
 Installing with pip
 -------------------
 
 To install py2app using `pip`_, or to upgrade to the latest released version
 of py2app:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ pip3 install -U py2app
 
 Setuptools support in py2app is optional, to force the installation
 of `setuptools`_ install the setuptools extra:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ pip install -U 'py2app[setuptools]'
 
@@ -30,7 +29,7 @@ Installing from source
 The preferred way to install py2app from source is to
 invoke pip in the root of the py2app source directory:
 
-.. code-block:: sh
+.. code-block:: console
 
     $ pip install .
 
