@@ -258,7 +258,6 @@ def main(winstyle=0):
         all.add(Score())
 
     while player.alive():
-
         # get input
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
