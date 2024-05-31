@@ -3,9 +3,11 @@
 
 .. rst-class:: lead
 
-   Py2app packages Python GUI applications as macOS application or
+   Py2app packages Python GUI applications as standalone macOS application or
    plugin bundles.
 
+   This allows distributing such application to others that don't have
+   Python installed on their system.
 
 .. container:: buttons
 
@@ -42,34 +44,40 @@
 
 .. toctree::
    :hidden:
+   :maxdepth: 1
 
    install
    changelog
    supported-platforms
    license
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Introduction
 
-Contents
---------
+   tutorial
+   examples
 
 .. toctree::
-   :maxdepth: 2
+   :caption: Usage
+   :maxdepth: 1
 
    command-line
    pyproject
-   tutorial
-   debugging
-   dependencies
-   environment
-   faq
-   tweaking
-   examples
-   recipes
    setuptools
 
-Internals
----------
 .. toctree::
-   :maxdepth: 2
+   :caption: Finetuning
+   :maxdepth: 1
+
+   debugging
+   environment
+   tweaking
+   faq
+
+.. toctree::
+   :caption: Internals
+   :maxdepth: 1
 
    bundle-structure
+   recipes

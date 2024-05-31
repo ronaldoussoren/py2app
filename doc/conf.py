@@ -75,7 +75,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "py2app"
-copyright = "2010, Ronald Oussoren, Bob Ippolito"  # noqa: A001
+copyright = "2010-2024, Ronald Oussoren, Bob Ippolito"  # noqa: A001
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

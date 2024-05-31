@@ -4,7 +4,10 @@ py2app Setuptools Configuration
 Setup function arguments
 ------------------------
 
-The primary way to configure py2app is to use a "setup.py" script that
+.. deprecated:: 2.0
+   Please move away from using the setuptools command interface
+
+The legacy way to configure py2app is to use a "setup.py" script that
 calls ``setuptools.setup()`` with a number of specific arguments.
 
 The basic structure:
