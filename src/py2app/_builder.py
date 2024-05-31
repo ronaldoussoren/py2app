@@ -22,16 +22,13 @@ from modulegraph2 import (
     SourceModule,
 )
 
+from ._apptemplate import copy_app_launcher, get_app_plist
 from ._bundlepaths import BundlePaths, bundle_paths
 from ._config import BundleOptions, Py2appConfiguration
 from ._modulegraph import ModuleGraph
 from ._progress import Progress
 from ._recipes import process_recipes
 from ._standalone import PythonStandalone
-from .apptemplate.plist_template import (
-    infoPlistDict as app_info_plist_dict,  # XXX: Replace
-)
-from .apptemplate.setup import main as app_stub_path  # XXX: Replace
 from .bundletemplate.plist_template import (
     infoPlistDict as bundle_info_plist_dict,  # XXX: Replace
 )
@@ -319,27 +316,32 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
     """
     Add stub executables for the main executable and additional scripts
     """
-    task_id = progress.add_task("Add stub executable", count=1)
+    task_id = progress.add_task(
+        "Add stub executable", count=1 + len(bundle.extra_scripts)
+    )
     if bundle.plugin:
         stub = pathlib.Path(bundle_stub_path(arch=bundle.macho_arch.value))
-    else:
-        stub = pathlib.Path(app_stub_path(arch=bundle.macho_arch.value))
 
-    main_path = root / f"Contents/MacOS/{bundle.name}"
-    main_path.write_bytes(stub.read_bytes())
-    main_path.chmod(0o755)
+        main_path = root / f"Contents/MacOS/{bundle.name}"
+        main_path.write_bytes(stub.read_bytes())
+        main_path.chmod(0o755)
+    else:
+        copy_app_launcher(
+            root / f"Contents/MacOS/{bundle.name}", arch=bundle.macho_arch
+        )
+
     progress.step_task(task_id)
 
     if bundle.extra_scripts:
         for script in progress.iter_task(
             bundle.extra_scripts, "Add stubs for extra-scripts", lambda n: n.name
         ):
-            stub = pathlib.Path(
-                app_stub_path(arch=bundle.macho_arch.value, secondary=True)
+            copy_app_launcher(
+                root / f"Contents/MacOS/{script.stem}",
+                arch=bundle.macho_arch,
+                secondary=True,
             )
-            exe_path = root / f"Contents/MacOS/{script.stem}"
-            exe_path.write_bytes(stub.read_bytes())
-            exe_path.chmod(0o755)
+            progress.step_task(task_id)
 
 
 def add_plist(root: pathlib.Path, plist: Dict[str, Any], progress: Progress) -> None:
@@ -427,7 +429,7 @@ def get_info_plist(bundle: BundleOptions) -> Dict[str, Any]:
     if bundle.plugin:
         return bundle_info_plist_dict(bundle.name, bundle.plist)
     else:
-        return app_info_plist_dict(bundle.name, bundle.plist)
+        return get_app_plist(bundle.name, bundle.plist)
 
 
 def collect_python(

@@ -95,6 +95,7 @@ class PythonStandalone(MachOStandalone):
         return str(dst_path)
 
     def copy_framework(self, info: _FrameworkInfo) -> str:
+        return None
         destfn = self.appbuilder.copy_framework(info, self.dest)
         dest = self.dest / (info["shortname"] + ".framework")
         self.pending.append((destfn, iter_platform_files(str(dest))))
