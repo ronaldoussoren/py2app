@@ -36,6 +36,7 @@ from .bundletemplate.plist_template import (
     infoPlistDict as bundle_info_plist_dict,  # XXX: Replace
 )
 from .bundletemplate.setup import main as bundle_stub_path  # XXX: Replace
+from .macho_audit import audit_macho_issues
 from .util import find_converter  # XXX: Replace
 
 
@@ -562,14 +563,6 @@ def build_bundle(
     # XXX: Does machostandalone affect other stuff?
     # XXX: Longer term replace 'macholib' by 'macholib2' with
     #      a nicer interface.
-    # - Use 'macho_audit' (or functionally similar to
-    #   check if deployment target for binaries matches
-    #    what's specified in the configuration.
-    #    If there is no explicit configuration: Adjust
-    #    deployment target in Info.plist and stub
-    #    executables(?).
-    #    In any case warn about mismatches (or
-    #
     #
     # - Run codesigning:
     #   - Strip signatures
@@ -578,5 +571,13 @@ def build_bundle(
     #     only allowed for "standalone" bundles.
 
     make_readonly(root, bundle, progress)
+
+    # XXX: The information is printed *before* the progress bars, not after
+    architecture, deployment_target, warnings = audit_macho_issues(root)
+    progress.info(f"Common architectures: {architecture}")
+    progress.info(f"Deployment target: macOS {deployment_target}")
+    progress.info("")
+    for w in warnings:
+        progress.warning(w)
 
     # XXX: Print summary about the bundle

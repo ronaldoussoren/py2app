@@ -54,6 +54,7 @@ class Progress:
             self._progress.print(message)
 
     def warning(self, message: str) -> None:
+        # XXX: Color doesn't work?
         self._progress.print(f"[orange]{message}[/orange]")
 
     def error(self, message: str) -> None:

@@ -65,6 +65,7 @@ def audit_macho_issues(
                 continue
             cur_archs.add(hdr_arch)
 
+            # Look for a version command to check the deployment target.
             for cmd in hdr.commands:
                 if isinstance(cmd[1], mach_o.build_version_command):
                     deployment_targets[hdr_arch] = cmd[1].minos
@@ -79,6 +80,22 @@ def audit_macho_issues(
                 #
                 # That's generally harmless, but do warn about this.
                 warnings.append(f"no deployment target in {macho_path}")
+
+            # Check that all link commands refer to either a system location
+            # or start with '@' (@rpath, @executable_path, ...)
+            # XXX: The '@' check can be made stricter
+            # XXX: Check that linked to libraries actually exist in the bundle
+            for cmd in hdr.commands:
+                if isinstance(cmd[1], mach_o.dylib_command):
+                    name = MachO.lc_str_value(cmd[1].name, cmd).decode()
+                    if (
+                        not name.startswith("/usr/lib")
+                        and not name.startswith("/System/Library/Frameworks")
+                        and not name.startswith("@")
+                    ):
+                        warnings.append(
+                            f"{macho_path} links to library {name!r} outside of system locations"
+                        )
 
         if "x86_64" in cur_archs and "arm64" in cur_archs:
             continue
@@ -113,7 +130,7 @@ def audit_macho_issues(
         decode_deployment_target(deployment_target)
         if deployment_target is not None
         else None,
-        warnings,
+        sorted(set(warnings)),  # Deduplicate
     )
 
 
