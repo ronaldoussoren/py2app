@@ -76,8 +76,10 @@ class ModuleGraph(modulegraph2.ModuleGraph):
         elif isinstance(node, Package):
             if ATTR_ZIPSAFE in node.init_module.extension_attributes:
                 if not node.init_module.extension_attributes[ATTR_ZIPSAFE]:
+                    node.extension_attributes[ATTR_ZIPSAFE] = False
                     return False
             elif node.init_module.uses_dunder_file:
+                node.extension_attributes[ATTR_ZIPSAFE] = False
                 return False
 
         # Try to avoid having packages that are partially zipsafe,
