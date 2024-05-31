@@ -24,18 +24,34 @@ def pyflags():
         sysconfig.get_config_var("LIBS").split()
         + sysconfig.get_config_var("SYSLIBS").split()
     )
+    if "-g" in flags:
+        flags.remove("-g")
 
-    print(" ".join(flags))
     return flags
 
 
-def copy_app_launcher(path, *, arch: BuildArch, secondary: bool = False) -> None:
+def copy_app_launcher(
+    path, *, arch: BuildArch, deployment_target: str, secondary: bool = False
+) -> None:
     """
     Copy the app launcher template into the specified location
     """
-    # XXX: For now the template gets compiled every time, need to find
-    #      a way to build these executables when generating the wheel.
+    # XXX: Need to arrange for creating relevant launcher templates
+    #      during wheel building
     # XXX: Maybe need to add the deployment target as well.
+    # XXX: 'secondary' is not used yet.
+
+    if secondary:
+        source_fn = f"launcher-{arch}-{deployment_target}-secondary"
+    else:
+        source_fn = f"launcher-{arch}-{deployment_target}"
+
+    launcher = importlib.resources.files(__name__).joinpath(source_fn)
+    if launcher.exists():
+        path.write_bytes(launcher.read_bytes())
+        path.chmod(0o755)
+        return
+
     launcher = importlib.resources.files(__name__).joinpath("launcher.m")
     subprocess.run(
         [
@@ -48,6 +64,7 @@ def copy_app_launcher(path, *, arch: BuildArch, secondary: bool = False) -> None
             "-Wl,-headerpad_max_install_names",
             "-framework",
             "Foundation",
+            f"-mmacosx-version-min={deployment_target}",
         ]
         + ARCH_FLAGS[arch]
         + pyflags(),

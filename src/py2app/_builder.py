@@ -327,7 +327,9 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
         main_path.chmod(0o755)
     else:
         copy_app_launcher(
-            root / f"Contents/MacOS/{bundle.name}", arch=bundle.macho_arch
+            root / f"Contents/MacOS/{bundle.name}",
+            arch=bundle.macho_arch,
+            deployment_target=bundle.deployment_target,
         )
 
     progress.step_task(task_id)
@@ -339,6 +341,7 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
             copy_app_launcher(
                 root / f"Contents/MacOS/{script.stem}",
                 arch=bundle.macho_arch,
+                deployment_target=bundle.deployment_target,
                 secondary=True,
             )
             progress.step_task(task_id)

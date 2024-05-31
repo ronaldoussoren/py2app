@@ -42,8 +42,8 @@ def audit_macho_issues(
        (``univeral2``, ``x86_64`` or ``arm64``), and is None when there are two
        single-architecture files for different architectures.
 
-    * ``deployment_target`` is the most recent deployment target for files in the
-      bundle (for example "13.2")
+    * ``deployment_target`` is the most recent deployment target supported by all
+      files in the bundle bundle (for example "13.2")
 
     * The ``warnings`` are a list of warnings to be shown to the user.
     """
@@ -69,11 +69,15 @@ def audit_macho_issues(
             # Look for a version command to check the deployment target.
             for cmd in hdr.commands:
                 if isinstance(cmd[1], mach_o.build_version_command):
-                    deployment_targets[hdr_arch] = cmd[1].minos
+                    deployment_targets[hdr_arch] = max(
+                        cmd[1].minos, deployment_targets[hdr_arch]
+                    )
                     break
 
                 elif isinstance(cmd[1], mach_o.version_min_command):
-                    deployment_targets[hdr_arch] = cmd[1].version
+                    deployment_targets[hdr_arch] = max(
+                        cmd[1].version, deployment_targets[hdr_arch]
+                    )
                     break
             else:
                 # The header does not have a load command with

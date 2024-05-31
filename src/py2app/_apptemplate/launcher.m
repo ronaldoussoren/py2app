@@ -178,11 +178,15 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
     config.module_search_paths.items = NULL;
     config.module_search_paths.length = 0;
 
-    static NSArray* path_suffixes = @[
-        @"python-libraries.zip",
-        @"python-libraries",
-        @"lib-dynload",
-    ];
+    static NSArray* path_suffixes = nil;
+    if (path_suffixes == nil) {
+        path_suffixes = [NSArray arrayWithObjects:
+            @"python-libraries.zip",
+            @"python-libraries",
+            @"lib-dynload",
+            NULL
+        ];
+    }
 
     for (NSString* suffix in path_suffixes) {
         wchar_t* wstr;
