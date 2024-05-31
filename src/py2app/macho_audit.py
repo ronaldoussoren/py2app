@@ -16,6 +16,10 @@ def decode_deployment_target(value):
     micro = value & 0xFF
     minor = value >> 8 & 0xFF
     macro = value >> 16 & 0xFF
+    if micro == 0:
+        if minor == 0:
+            return f"{macro}"
+        return f"{macro}.{minor}"
     return f"{macro}.{minor}.{micro}"
 
 
