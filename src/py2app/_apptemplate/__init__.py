@@ -29,7 +29,9 @@ def _pyflags() -> List[str]:
         sysconfig.get_config_var("LIBS").split()
         + sysconfig.get_config_var("SYSLIBS").split()
     )
-    if "-g" in flags:
+
+    # XXX: Replace this with code merging the dSYM file into the executable
+    while "-g" in flags:
         flags.remove("-g")
 
     return flags
