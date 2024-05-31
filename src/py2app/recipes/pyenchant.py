@@ -5,6 +5,7 @@ PyEnchant is a python library that wraps a C library
 using ctypes, hence the usual way to find the library
 won't work.
 """
+
 import os
 import typing
 

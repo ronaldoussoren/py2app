@@ -335,7 +335,7 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
             bundle.extra_scripts, "Add stubs for extra-scripts", lambda n: n.name
         ):
             stub = pathlib.Path(
-                app_stub_path(arch=bundle.macho_arch.value, seconary=True)
+                app_stub_path(arch=bundle.macho_arch.value, secondary=True)
             )
             exe_path = root / f"Contents/MacOS/{script.stem}"
             exe_path.write_bytes(stub.read_bytes())

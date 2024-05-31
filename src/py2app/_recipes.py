@@ -15,6 +15,7 @@ Support for recipes
 - Non-goal (for now) is making it easy/possible to maintain
   recipes out of tree.
 """
+
 import dataclasses
 import typing
 

@@ -268,7 +268,7 @@ Options for 'py2app' command:
 
    * - ``--extension``
      - extensionn
-     - file extension, includding the dot
+     - file extension, including the dot
      - The extension to use of the output, defaults to ".app" for applications
        and ".plugin" for plugins. Commonly only used for plugins.
 
@@ -369,7 +369,7 @@ Options for 'py2app' command:
    * - ``--use-pythonpath``
      - use_pythonpath
      - None (use ``True`` in setup.py)
-     - Allow the PYTHONPATH environment varialble to affect the interpreter's
+     - Allow the PYTHONPATH environment variable to affect the interpreter's
        search path.
 
        This is generally not useful, PYTHONPATH is not included in the minimal

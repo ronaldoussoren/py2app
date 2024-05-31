@@ -1,6 +1,7 @@
 """
 Testcase for checking emulate_shell_environment
 """
+
 import os
 import shutil
 import subprocess

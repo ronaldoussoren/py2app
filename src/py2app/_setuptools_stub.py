@@ -108,11 +108,9 @@ class Py2appDistribution(Distribution):
     def __new__(self) -> "Py2appDistribution":
         raise RuntimeError("Don't instantiate!")  # pragma: no-cover
 
-    def get_version(self) -> str:
-        ...  # pragma: no-cover
+    def get_version(self) -> str: ...  # noqa: E704
 
-    def get_name(self) -> str:
-        ...  # pragma: no-cover
+    def get_name(self) -> str: ...  # # noqa: E704
 
 
 def finalize_distribution_options(dist: Py2appDistribution) -> None:
@@ -121,7 +119,7 @@ def finalize_distribution_options(dist: Py2appDistribution) -> None:
     point for py2app, to deal with autodiscovery in
     setuptools 61.
 
-    This addin will set the name attribute
+    This action will set the name attribute
     when a py2app distribution is detected that does not
     yet have this attribute.
     """
@@ -185,7 +183,7 @@ class py2app(Command):
         (
             "expected-missing-imports=",
             None,
-            "expected missing imports either a comma sperated list "
+            "expected missing imports either a comma separated list "
             "or @ followed by file containing a list of imports, one per line",
         ),
         (

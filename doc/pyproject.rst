@@ -5,7 +5,7 @@ Introduction
 ------------
 
 As of py2app 2.0 the primary way to configure a build is using
-configurration in ``pyproject.toml`` (as introduced in
+configuration in ``pyproject.toml`` (as introduced in
 `PEP 518  <https://peps.python.org/pep-0518/>`_).  Note that
 py2app is not a build system as described in PEP 518, using
 py2app as the ``build-backend`` in  the ``build-system`` table is

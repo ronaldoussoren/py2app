@@ -1,4 +1,5 @@
 """ """
+
 import typing
 from .modulegraph import Node, Extension, ModuleGraph
 

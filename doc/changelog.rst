@@ -198,7 +198,7 @@ py2app 0.28
   the main code of py2app when they are not yet set (before
   autodiscovery kicks in).
 
-  In older versions of py2app buildin an app can fail in two
+  In older versions of py2app building an app can fail in two
   ways with setuptools 61.0 or later:
 
   - The name of the generated application is not based on
@@ -242,7 +242,7 @@ py2app 0.28
 
 * #412: Fix incompatibility with setuptools 60.8.1
 
-  The setuptools recipe did not recoginize all vendored dependencies
+  The setuptools recipe did not recognize all vendored dependencies
   in ``pkg_resources`` and that breaks app bundles that use ``pkg_resoures``.
 
 * PR #388: Add builtin definitions for 'quit' and 'exit' in site.py
@@ -550,7 +550,7 @@ Bug fixes:
 
 * Issue #226: Py2app could fail while reporting on possibly missing modules
 
-* Issue #228: The python executable included in the app bundle as ``sys.exectuable`` was not executable
+* Issue #228: The python executable included in the app bundle as ``sys.executable`` was not executable
 
 
 py2app 0.13

@@ -18,7 +18,7 @@ def kill_child_processes():
             continue
         try:
             os.kill(int(pid), sig)
-        except os.error:
+        except OSError:
             pass
 
     ps_command = subprocess.Popen("ps -ax", shell=True, stdout=subprocess.PIPE)
@@ -33,10 +33,10 @@ def kill_child_processes():
             pid, _ = line.split(None, 1)
             try:
                 os.kill(int(pid), sig)
-            except os.error:
+            except OSError:
                 pass
 
     try:
         os.waitpid(0, 0)
-    except os.error:
+    except OSError:
         pass

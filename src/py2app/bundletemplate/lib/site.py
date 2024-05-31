@@ -80,7 +80,7 @@ def addsitedir(sitedir: str) -> None:
         sys.path.append(sitedir)  # Add path component
     try:
         names = os.listdir(sitedir)
-    except os.error:
+    except OSError:
         return
     names.sort()
     for name in names:

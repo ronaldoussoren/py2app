@@ -101,11 +101,9 @@ class Py2appDistribution(Distribution):
     def __new__(self) -> "Py2appDistribution":
         raise RuntimeError("Don't instantiate!")
 
-    def get_version(self) -> str:
-        ...
+    def get_version(self) -> str: ...  # noqa: E704
 
-    def get_name(self) -> str:
-        ...
+    def get_name(self) -> str: ...  # noqa: E704
 
 
 PYTHONFRAMEWORK: str = typing.cast(str, get_config_var("PYTHONFRAMEWORK"))
@@ -132,7 +130,7 @@ def finalize_distribution_options(dist: Py2appDistribution) -> None:
     point for py2app, to deal with autodiscovery in
     setuptools 61.
 
-    This addin will set the name and py_modules attributes
+    This action will set the name and py_modules attributes
     when a py2app distribution is detected that does not
     yet have these attributes.
     are not already set
@@ -402,7 +400,7 @@ class py2app(Command):
         (
             "expected-missing-imports=",
             None,
-            "expected missing imports either a comma sperated list "
+            "expected missing imports either a comma separated list "
             "or @ followed by file containing a list of imports, one per line",
         ),
         (
@@ -1278,18 +1276,18 @@ class py2app(Command):
                 invalid_relative_import.append(module)
 
         if missing:
-            missing_unconditional: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
-            missing_fromimport: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
-            missing_fromimport_conditional: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
-            missing_conditional: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
+            missing_unconditional: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
+            missing_fromimport: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
+            missing_fromimport_conditional: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
+            missing_conditional: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
 
             self.progress.info("")
             self.progress.info("checking for any import problems")

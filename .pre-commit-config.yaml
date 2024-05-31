@@ -8,7 +8,7 @@ repos:
         additional_dependencies: [toml]
 
   - repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 24.4.2
     hooks:
       - id: black
         # override until resolved: https://github.com/ambv/black/issues/402
@@ -16,20 +16,20 @@ repos:
         types: []
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.10.1
+    rev: v3.15.2
     hooks:
     -   id: pyupgrade
         args: ['--py36-plus']
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.5
+    rev: v2.3.0
     hooks:
     -   id: codespell
         args: ["--config", ".codespellrc"]
         exclude: PyObjCTest|_metadata\.py$|\.fwinfo$|\.rtf$|\.mht$
 
   - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
+    rev: 7.0.0
     hooks:
       - id: flake8
         args: ["--config", ".flake8" ]
@@ -46,7 +46,7 @@ repos:
         - flake8-tidy-imports
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.6.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer

@@ -16,7 +16,7 @@ XXX: This document is very much a work in progress.
 Environment usage
 -----------------
 
-The stub exectables that py2app includes in the bundle will
+The stub executables that py2app includes in the bundle will
 ignore the environment when configuring the python interpreter,
 which means settings like ``PYTHONPATH`` will not work. This is
 also true for ``sys.executable`` in the bundle.

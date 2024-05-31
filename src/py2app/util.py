@@ -528,7 +528,7 @@ def copy_tree(
         raise DistutilsFileError("cannot copy tree '%s': not a directory" % src)
     try:
         names = zipio.listdir(src)
-    except os.error as exc:
+    except OSError as exc:
         (errno, errstr) = exc.args
         if dry_run:
             names = []
