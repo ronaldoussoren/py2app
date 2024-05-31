@@ -2,6 +2,7 @@ import importlib.resources
 import subprocess
 import sys
 import sysconfig
+from typing import List
 
 from .._config import BuildArch
 
@@ -12,7 +13,11 @@ ARCH_FLAGS = {
 }
 
 
-def pyflags():
+def _pyflags() -> List[str]:
+    """
+    Return compiler flags to be used to compile for the current python
+    version/build.
+    """
     flags = [
         "-I" + sysconfig.get_path("include"),
         "-I" + sysconfig.get_path("platinclude"),
@@ -40,11 +45,13 @@ def copy_app_launcher(
     #      during wheel building
     # XXX: Maybe need to add the deployment target as well.
     # XXX: 'secondary' is not used yet.
+    # XXX: Probably need to pass progress instance to warn when
+    #      the launcher needs to be compiled.
 
     if secondary:
-        source_fn = f"launcher-{arch}-{deployment_target}-secondary"
+        source_fn = f"launcher-{arch}-{deployment_target}-{sys.abiflags}-secondary"
     else:
-        source_fn = f"launcher-{arch}-{deployment_target}"
+        source_fn = f"launcher-{arch}-{deployment_target}-{sys.abiflags}"
 
     launcher = importlib.resources.files(__name__).joinpath(source_fn)
     if launcher.exists():
@@ -67,12 +74,17 @@ def copy_app_launcher(
             f"-mmacosx-version-min={deployment_target}",
         ]
         + ARCH_FLAGS[arch]
-        + pyflags(),
+        + _pyflags(),
         check=True,
     )
 
 
 def get_app_plist(bundle_executable: str, plist: dict = {}) -> dict:  # noqa: B006, M511
+    """
+    Return a plist template for an app bundle, merging 'plist' into the
+    default values.
+    """
+    # XXX: Need to audit the default plist
     pdict = {
         "CFBundleDevelopmentRegion": "English",
         "CFBundleDisplayName": plist.get("CFBundleName", bundle_executable),
