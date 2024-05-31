@@ -208,7 +208,7 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
     if (PyStatus_Exception(status)) goto configerror;
 
 
-    /* 6. Inject `sys.bundle_resources` */
+    /* 6. Inject `sys.py2app_bundle_resources` */
     const char* resourcePath = mainBundle.resourcePath.UTF8String;
     PyObject* value = PyUnicode_DecodeUTF8(resourcePath, strlen(resourcePath), NULL);
     if (!value) {
@@ -217,9 +217,24 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
     }
 
     if (PySys_SetObject("py2app_bundle_resources", value) == -1) {
-        status = PyStatus_Error("cannot set sys.bundle_resources");
+        status = PyStatus_Error("cannot set sys.py2app_bundle_resources");
+        Py_DECREF(value);
         goto pyerror;
     }
+    Py_DECREF(value);
+
+    /* 7. Inject `sys.py2app_argv0` */
+    value = PyUnicode_DecodeUTF8(argv[0], strlen(argv[0]), NULL);
+    if (!value) {
+        status = PyStatus_Error("cannot convert argv[0] to python");
+        goto pyerror;
+    }
+    if (PySys_SetObject("py2app_argv0", value) == -1) {
+        status = PyStatus_Error("cannot set sys.py2app_argv0");
+        Py_DECREF(value);
+        goto pyerror;
+    }
+    Py_DECREF(value);
     return;
 
 pyerror:
