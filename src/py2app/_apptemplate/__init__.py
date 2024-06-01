@@ -1,3 +1,4 @@
+import enum
 import importlib.resources
 import subprocess
 import sys
@@ -5,6 +6,13 @@ import sysconfig
 from typing import List
 
 from .._config import BuildArch
+
+
+class LauncherType(enum.Enum):
+    MAIN_PROGRAM = "main"
+    SECONDARY_PROGRAM = "secondary"
+    PYTHON_BINARY = "python"
+
 
 ARCH_FLAGS = {
     BuildArch.ARM64: ["-arch", "arm64"],
@@ -39,7 +47,11 @@ def _pyflags() -> List[str]:
 
 
 def copy_app_launcher(
-    path, *, arch: BuildArch, deployment_target: str, secondary: bool = False
+    path,
+    *,
+    arch: BuildArch,
+    deployment_target: str,
+    program_type: LauncherType = LauncherType.MAIN_PROGRAM,
 ) -> None:
     """
     Copy the app launcher template into the specified location
@@ -47,15 +59,13 @@ def copy_app_launcher(
     # XXX: Need to arrange for creating relevant launcher templates
     #      during wheel building
     # XXX: Maybe need to add the deployment target as well.
-    # XXX: 'secondary' is not used yet.
+    # XXX: 'program_type' is not used yet.
     # XXX: Probably need to pass progress instance to warn when
     #      the launcher needs to be compiled.
 
-    if secondary:
-        source_fn = f"launcher-{arch}-{deployment_target}-{sys.abiflags}-secondary"
-    else:
-        source_fn = f"launcher-{arch}-{deployment_target}-{sys.abiflags}"
-
+    source_fn = (
+        f"launcher-{arch}-{deployment_target}-{sys.abiflags}-{program_type.value}"
+    )
     launcher = importlib.resources.files(__name__).joinpath(source_fn)
     if launcher.exists():
         path.write_bytes(launcher.read_bytes())

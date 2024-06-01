@@ -22,7 +22,7 @@ from modulegraph2 import (
     SourceModule,
 )
 
-from ._apptemplate import copy_app_launcher, get_app_plist
+from ._apptemplate import LauncherType, copy_app_launcher, get_app_plist
 from ._bundlepaths import BundlePaths, bundle_paths
 from ._config import BundleOptions, Py2appConfiguration
 from ._modulegraph import ModuleGraph
@@ -317,7 +317,7 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
     Add stub executables for the main executable and additional scripts
     """
     task_id = progress.add_task(
-        "Add stub executable", count=1 + len(bundle.extra_scripts)
+        "Add stub executable", count=2 + len(bundle.extra_scripts)
     )
     if bundle.plugin:
         stub = pathlib.Path(bundle_stub_path(arch=bundle.macho_arch.value))
@@ -332,6 +332,13 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
             deployment_target=bundle.deployment_target,
         )
 
+    copy_app_launcher(
+        root / "Contents/MacOS/python",
+        arch=bundle.macho_arch,
+        deployment_target=bundle.deployment_target,
+        program_type=LauncherType.PYTHON_BINARY,
+    )
+
     progress.step_task(task_id)
 
     if bundle.extra_scripts:
@@ -342,7 +349,7 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
                 root / f"Contents/MacOS/{script.stem}",
                 arch=bundle.macho_arch,
                 deployment_target=bundle.deployment_target,
-                secondary=True,
+                program_type=LauncherType.SECONDARY_PROGRAM,
             )
             progress.step_task(task_id)
 
