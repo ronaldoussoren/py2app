@@ -30,7 +30,8 @@ def _pyflags() -> List[str]:
         + sysconfig.get_config_var("SYSLIBS").split()
     )
 
-    # XXX: Replace this with code merging the dSYM file into the executable
+    # Remove debug flags, those result in a dSYM directory for the build
+    # and those aren't useful for us.
     while "-g" in flags:
         flags.remove("-g")
 

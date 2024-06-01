@@ -5,6 +5,7 @@ Recipes related to the standard library
 from modulegraph2 import MissingModule, ModuleGraph
 
 from .._config import RecipeOptions
+from .._modulegraph import ATTR_ZIPSAFE
 from .._recipes import recipe
 
 # References between modules in the standard
@@ -90,7 +91,14 @@ def mark_importlib_zipsafe(graph: ModuleGraph, options: RecipeOptions) -> None:
     if node is None:
         return
 
-    node.init_module.extension_attributes["py2app.zipsafe"] = True
+    node.init_module.extension_attributes[ATTR_ZIPSAFE] = True
+    node.extension_attributes[ATTR_ZIPSAFE] = True
+
+    node = graph.find_node("importlib.resources._common")
+    if node is None:
+        return
+
+    node.extension_attributes[ATTR_ZIPSAFE] = True
 
 
 @recipe("mark expected missing stdlib references", modules=_mods(EXPECTED_MISSING))

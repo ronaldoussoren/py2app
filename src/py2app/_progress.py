@@ -11,6 +11,7 @@ class Progress:
             *rich.progress.Progress.get_default_columns()[:-1],
             rich.progress.TimeElapsedColumn(),
             rich.progress.TextColumn("{task.fields[current]}"),
+            transient=True,
         )
         self._progress.start()
         self._level = level
