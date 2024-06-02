@@ -111,4 +111,5 @@ def macho_standalone(
             rewrite_headers(current, m)
 
     progress.update(task_id, current=None)
+    progress.update(task_id, current="")
     progress.task_done(task_id)

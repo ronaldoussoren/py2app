@@ -332,6 +332,8 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
             deployment_target=bundle.deployment_target,
         )
 
+    progress.step_task(task_id)
+
     copy_app_launcher(
         root / "Contents/MacOS/python",
         arch=bundle.macho_arch,
