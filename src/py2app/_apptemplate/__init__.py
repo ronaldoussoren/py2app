@@ -80,7 +80,7 @@ def copy_app_launcher(
             path,
             launcher,
             "-rpath",
-            "@executable_path/../../Frameworks",
+            "@loader_path/../Frameworks",
             "-Wl,-headerpad_max_install_names",
             "-framework",
             "Foundation",

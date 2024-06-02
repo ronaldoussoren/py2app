@@ -28,7 +28,7 @@ from ._config import BundleOptions, Py2appConfiguration
 from ._modulegraph import ModuleGraph
 from ._progress import Progress
 from ._recipes import process_recipes
-from ._standalone import PythonStandalone
+from ._standalone import macho_standalone
 from .bundletemplate.plist_template import (
     infoPlistDict as bundle_info_plist_dict,  # XXX: Replace
 )
@@ -542,17 +542,6 @@ def get_module_graph(bundle: BundleOptions, progress: Progress) -> ModuleGraph:
 
     progress.task_done(task_id)
     return graph
-
-
-def macho_standalone(
-    root: pathlib.Path,
-    graph: ModuleGraph,
-    bundle: BundleOptions,
-    ext_map: Dict[pathlib.Path, pathlib.Path],
-    progress: Progress,
-) -> None:
-    standalone = PythonStandalone(root, graph, bundle.build_type, ext_map, progress)
-    standalone.run()
 
 
 def build_bundle(

@@ -5,98 +5,110 @@ XXX: Longer term this needs a complete rewrite, but
 that requires rewriting macholib as well.
 """
 
+import contextlib
 import pathlib
 import shutil
 import typing
 
 import macholib.MachO
-from macholib.MachOStandalone import MachOStandalone
+from macholib.util import in_system_path
 
-from ._config import BuildType
+from ._config import BundleOptions
 from ._modulegraph import ModuleGraph
 from .progress import Progress
 from .util import iter_platform_files
 
 
-class _FrameworkInfo(typing.TypedDict):
-    # XXX: should be imported...
-    location: str
-    name: str
-    shortname: str
-    version: str
-    suffix: str
+@contextlib.contextmanager
+def writable(path: pathlib.Path):
+    mode = path.stat().st_mode
+
+    path.chmod(mode | 0o200)
+    try:
+        yield
+    finally:
+        path.chmod(mode)
 
 
-class PythonStandalone(MachOStandalone):
-    def __init__(
-        self,
-        base: pathlib.Path,
-        graph: ModuleGraph,
-        build_type: BuildType,
-        ext_map: typing.Dict[pathlib.Path, pathlib.Path],
-        progress: Progress,
-    ) -> None:
-        env = None
-        super().__init__(
-            base=str(base),
-            dest=None,
-            env=env,
-            executable_path=str(base / "Contents/MacOS"),
-        )
-        self.ext_map: typing.Dict[pathlib.Path, pathlib.Path] = ext_map
-        self.progress = progress
-        self.task_id = progress.add_task("Copy MachO dependencies", count=None)
+def rewrite_headers(path: pathlib.Path, m: macholib.MachO.MachO) -> None:
+    with writable(path):
+        with path.open("rb+") as fp:
+            for _header in m.headers:
+                fp.seek(0)
+                m.write(fp)
+            fp.seek(0, 2)
+            fp.flush()
 
-    def run(self):
-        super().run()
-        self.progress.task_done(self.task_id)
 
-    def update_node(
-        self, m: typing.Optional[macholib.MachO.MachO]
-    ) -> typing.Optional[macholib.MachO.MachO]:
-        if isinstance(m, macholib.MachO.MachO):
-            assert m.filename is not None
-            file_path = pathlib.Path(m.filename)
-            if file_path in self.ext_map:
-                m.loader_path = str(self.ext_map[file_path])
-        return m
+def macho_standalone(
+    root: pathlib.Path,
+    graph: ModuleGraph,
+    bundle: BundleOptions,
+    ext_map: typing.Dict[pathlib.Path, pathlib.Path],
+    progress: Progress,
+) -> None:
+    """
+    Integrate dependent shared libraries into the bundle.
 
-    def copy_dylib(self, src: str) -> str:
-        src_path = pathlib.Path(src)
-        dst_path = pathlib.Path(self.dest) / src_path.name
+    This will:
+        - Copy shared libraries into the 'Frameworks' directory
+          of the bundle;
+        - If the shared library is a framework: copy the right
+          bits of a framework into the bundle (with hooks for
+          recipes!)
+        - Set the link path in load commands to a path starting
+          with '@rpath'
+    """
+    # XXX:
+    # - Recipe interaction
+    # - 'Excludes'
+    # - 'Includes'
+    # - Fill 'todo' based on the module graph (Extension modules),
+    #   plus the load commands (should make recipe interaction
+    #   easier)
+    todo = {pathlib.Path(p) for p in iter_platform_files(root)}
+    seen = set()
+    task_id = progress.add_task("Copy MachO dependencies", count=len(todo))
 
-        self.progress.update(self.task_id, current=f"{src_path} -> {dst_path}")
-        self.progress.step_task(self.task_id)
+    while todo:
+        current = todo.pop()
+        progress.step_task(task_id)
+        progress.update(task_id, current=current)
 
-        if src_path.resolve() == dst_path.resolve():
-            return
+        seen.add(current)
+        m = macholib.MachO.MachO(str(current))
+        changes = {str(current): f"@rpath/{current.name}"}
+        for header in m.headers:
+            for _idx, _name, filename in header.walkRelocatables():
+                if in_system_path(filename):
+                    continue
 
-        if dst_path.exists():
-            return
+                filename = pathlib.Path(filename)
+                if not filename.exists():
+                    progress.error(
+                        f"Required MachO library file {filename} does not exist"
+                    )
+                    continue
 
-        if src_path.is_symlink():
-            # Ensure that the original name also exists, avoids problems when
-            # the filename is used from Python (see issue #65)
-            #
-            # NOTE: The if statement checks that the target link won't
-            #       point to itself, needed for systems like homebrew that
-            #       store symlinks in "public" locations that point to
-            #       files of the same name in a per-package install location.
-            link_dest = self.dest / src_path.name
-            if link_dest.name != dst_path.name:
-                link_dest.symlink_to(dst_path.name)
+                # XXX: Needs adjustments for frameworks
+                target_path = root / "Contents/Frameworks" / filename.name
+                rpath = f"@rpath/{filename.name}"
 
-        self.ext_map[dst_path] = src_path.parent
+                changes[str(filename)] = rpath
 
-        # XXX:
-        # 1. Should use Path arguments here
-        # 2. Too much indirection!
-        shutil.copy2(src_path, dst_path, follow_symlinks=False)
-        return str(dst_path)
+                if target_path not in seen and target_path not in todo:
+                    progress.update(task_id, total=len(todo) + len(seen))
+                    if not target_path.exists():
+                        shutil.copy2(filename, target_path, follow_symlinks=False)
+                        todo.add(target_path)
 
-    def copy_framework(self, info: _FrameworkInfo) -> str:
-        return None
-        destfn = self.appbuilder.copy_framework(info, self.dest)
-        dest = self.dest / (info["shortname"] + ".framework")
-        self.pending.append((destfn, iter_platform_files(str(dest))))
-        return destfn
+        def changefunc(name):
+            result = changes.get(name, name)  # noqa: B023
+            return result
+
+        changed = m.rewriteLoadCommands(changefunc)
+        if changed:
+            rewrite_headers(current, m)
+
+    progress.update(task_id, current=None)
+    progress.task_done(task_id)

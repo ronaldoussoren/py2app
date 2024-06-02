@@ -51,6 +51,10 @@ def audit_macho_issues(
 
     * The ``warnings`` are a list of warnings to be shown to the user.
     """
+    # XXX: Adjust for py2app's needs:
+    # - Check if linked to libraries actually exist:
+    #   1. @rpath/... should be present in Frameworks folder
+    #   2. system paths should be in FS or in dyld "cache"
 
     # Deployment target per CPU type, this allows us to report more clearly
     # about issues.
