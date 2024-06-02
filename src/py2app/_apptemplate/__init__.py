@@ -64,7 +64,7 @@ def copy_app_launcher(
     #      the launcher needs to be compiled.
 
     source_fn = (
-        f"launcher-{arch}-{deployment_target}-{sys.abiflags}-{program_type.value}"
+        f"launcher-{arch.value}-{deployment_target}-{sys.abiflags}-{program_type.value}"
     )
     launcher = importlib.resources.files(__name__).joinpath(source_fn)
     if launcher.exists():

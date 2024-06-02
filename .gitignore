@@ -15,3 +15,4 @@ syntax: glob
 *.pyo
 *.so
 .coverage*
+launcher-*-*
