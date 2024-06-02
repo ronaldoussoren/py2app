@@ -722,7 +722,6 @@ def codesign_adhoc(
 
     for _ in range(5):
         try:
-            progress.info(f"Signing {bundle}")
             _dosign(bundle, progress=progress)
             break
         except subprocess.CalledProcessError:
