@@ -34,7 +34,7 @@ from .bundletemplate.plist_template import (
 )
 from .bundletemplate.setup import main as bundle_stub_path  # XXX: Replace
 from .macho_audit import audit_macho_issues
-from .util import find_converter  # XXX: Replace
+from .util import codesign_adhoc, find_converter  # XXX: Replace
 
 
 def _pack_uint32(x):
@@ -544,6 +544,12 @@ def get_module_graph(bundle: BundleOptions, progress: Progress) -> ModuleGraph:
     return graph
 
 
+def codesign(root: pathlib.Path, progress: Progress) -> None:
+    # task_id = progress.add_task("Perform ad-hoc code signature", count=1)
+    codesign_adhoc(root, progress)
+    # progress.step_task(task_id)
+
+
 def build_bundle(
     config: Py2appConfiguration, bundle: BundleOptions, progress: Progress
 ) -> bool:
@@ -577,6 +583,8 @@ def build_bundle(
     add_plist(root, plist, progress)
 
     macho_standalone(root, graph, bundle, ext_map, progress)
+
+    codesign(root, progress)
 
     # - Run machostandalone
     # XXX: Does machostandalone affect other stuff?
