@@ -11,14 +11,14 @@ py2app is not a build system as described in PEP 518, using
 py2app as the ``build-backend`` in  the ``build-system`` table is
 not supported and will result in an error.
 
-Configuration for py2app is stored in the ``tools.py2app`` table.
+Configuration for py2app is stored in the ``tool.py2app`` table.
 
 A basic example of a configuration file:
 
 
 .. sourcecode:: toml
 
-   [tools.py2app.bundle.main]
+   [tool.py2app.bundle.main]
 
    script = "main.py"
    semi-standalone = true
@@ -166,7 +166,7 @@ Code signing configuration
 --------------------------
 
 Configuration for code signing is stored in the
-``tools.py2app.codesign`` table. And can be stored in
+``tool.py2app.codesign`` table. And can be stored in
 a ``codesign`` subtable for specific bundles.
 
 This section is intentionally left blank.
@@ -176,7 +176,7 @@ Recipe configuration
 --------------------
 
 Configuration for the recipe system is stored in the
-``tools.py2app.recipes`` table. And can be stored in
+``tool.py2app.recipes`` table. And can be stored in
 a ``recipes`` subtable for specific bundles.
 
 ============================ ================= ===========================================================
