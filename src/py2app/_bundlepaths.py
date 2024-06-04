@@ -14,7 +14,20 @@ class BundlePaths:
     extlib: pathlib.Path
     pylib: pathlib.Path
     framework: pathlib.Path
-    dylib: pathlib.Path
+
+    def all_directories(self):
+        """
+        Return all directories for the bundle paths
+        """
+        return [
+            self.root,
+            self.bin,
+            self.resources,
+            self.main,
+            self.pylib,
+            self.extlib,
+            self.framework,
+        ]
 
 
 def bundle_paths(root: pathlib.Path, build_type: BuildType) -> BundlePaths:
@@ -28,5 +41,4 @@ def bundle_paths(root: pathlib.Path, build_type: BuildType) -> BundlePaths:
         pylib=root / "Contents/Resources/python-libraries",
         extlib=root / "Contents/Resources/lib-dynload",
         framework=root / "Contents/Frameworks",
-        dylib=root / "Contents/Frameworks/lib",
     )

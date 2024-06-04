@@ -262,13 +262,6 @@ def fs_package_node(node: Union[Package, NamespacePackage], root: pathlib.Path) 
         (root / path / relname).write_bytes(data)
 
 
-BUNDLE_FOLDERS = (
-    "Contents/MacOS",
-    "Contents/Resources",
-    "Contents/Frameworks",
-)
-
-
 def create_bundle_structure(bundle: BundleOptions, progress: Progress) -> pathlib.Path:
     """
     Create the directory structure for a bundle and return the
@@ -276,19 +269,23 @@ def create_bundle_structure(bundle: BundleOptions, progress: Progress) -> pathli
     """
 
     root = pathlib.Path("dist2") / f"{bundle.name}{bundle.extension}"
+    paths = bundle_paths(root, bundle.build_type)
 
-    # XXX: Should clear this directory first.
+    if root.is_dir():
+        # Remove an existing build to ensure that builds
+        # are consistent.
+        shutil.rmtree(root)
 
     # XXX: These paths are also in _bundlepaths.py
-    for relpath in progress.iter_task(
-        BUNDLE_FOLDERS, "Create bundle structure", lambda n: n
+    for subpath in progress.iter_task(
+        paths.all_directories(), "Create bundle structure", lambda n: n
     ):
-        (root / relpath).mkdir(parents=True, exist_ok=True)
-    return root
+        subpath.mkdir(parents=True, exist_ok=True)
+    return paths
 
 
 def add_iconfile(
-    root: pathlib.Path, plist: Dict[str, Any], bundle: BundleOptions, progress: Progress
+    paths: BundlePaths, plist: Dict[str, Any], bundle: BundleOptions, progress: Progress
 ) -> None:
     """
     Add an icon file to the bundle if one is available.
@@ -307,12 +304,12 @@ def add_iconfile(
         iconfile = bundle.iconfile
 
     data = iconfile.read_bytes()
-    (root / f"Contents/Resources/{bundle.name}.icns").write_bytes(data)
+    (paths.resources / f"{bundle.name}.icns").write_bytes(data)
     plist["CFBundleIconFile"] = f"{bundle.name}.icns"
     progress.step_task(task_id)
 
 
-def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) -> None:
+def add_loader(paths: BundlePaths, bundle: BundleOptions, progress: Progress) -> None:
     """
     Add stub executables for the main executable and additional scripts
     """
@@ -322,12 +319,12 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
     if bundle.plugin:
         stub = pathlib.Path(bundle_stub_path(arch=bundle.macho_arch.value))
 
-        main_path = root / f"Contents/MacOS/{bundle.name}"
+        main_path = paths.main / bundle.name
         main_path.write_bytes(stub.read_bytes())
         main_path.chmod(0o755)
     else:
         copy_app_launcher(
-            root / f"Contents/MacOS/{bundle.name}",
+            paths.main / bundle.name,
             arch=bundle.macho_arch,
             deployment_target=bundle.deployment_target,
         )
@@ -335,7 +332,7 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
     progress.step_task(task_id)
 
     copy_app_launcher(
-        root / "Contents/MacOS/python",
+        paths.main / "python",
         arch=bundle.macho_arch,
         deployment_target=bundle.deployment_target,
         program_type=LauncherType.PYTHON_BINARY,
@@ -348,7 +345,7 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
             bundle.extra_scripts, "Add stubs for extra-scripts", lambda n: n.name
         ):
             copy_app_launcher(
-                root / f"Contents/MacOS/{script.stem}",
+                paths.main / script.stem,
                 arch=bundle.macho_arch,
                 deployment_target=bundle.deployment_target,
                 program_type=LauncherType.SECONDARY_PROGRAM,
@@ -356,21 +353,21 @@ def add_loader(root: pathlib.Path, bundle: BundleOptions, progress: Progress) ->
             progress.step_task(task_id)
 
 
-def add_plist(root: pathlib.Path, plist: Dict[str, Any], progress: Progress) -> None:
+def add_plist(paths: BundlePaths, plist: Dict[str, Any], progress: Progress) -> None:
     """
     Create the Info.plist file in the output.
     """
     task_id = progress.add_task("Add Info.plist", count=1)
-    info_plist = root / "Contents/Info.plist"
+    info_plist = paths.root / "Info.plist"
     with open(info_plist, "wb") as stream:
         plistlib.dump(plist, stream)
     progress.step_task(task_id)
 
 
 def add_bootstrap(
-    root: pathlib.Path, bundle: BundleOptions, progress: Progress
+    paths: BundlePaths, bundle: BundleOptions, progress: Progress
 ) -> None:
-    bootstrap_path = root / "Contents/Resources/__boot__.py"
+    bootstrap_path = paths.resources / "__boot__.py"
 
     with open(bootstrap_path, "w") as stream:
         # XXX: This ignores all bootstrap additions other than
@@ -572,21 +569,20 @@ def build_bundle(
     # XXX: Consider dynamically calculating the order of
     #      steps by adding a decorator that documents
     #      dependencies between steps.
-    root = create_bundle_structure(bundle, progress)
-    paths = bundle_paths(root, bundle.build_type)
+    paths = create_bundle_structure(bundle, progress)
     plist = get_info_plist(bundle)
-    add_iconfile(root, plist, bundle, progress)
-    add_loader(root, bundle, progress)
+    add_iconfile(paths, plist, bundle, progress)
+    add_loader(paths, bundle, progress)
     add_resources(paths, bundle, progress)
     ext_map = collect_python(bundle, paths, graph, progress)
     add_bootstrap(
-        root, bundle, progress
+        paths, bundle, progress
     )  # XXX: Needs more info which is collected in collect_python
-    add_plist(root, plist, progress)
+    add_plist(paths, plist, progress)
 
-    macho_standalone(root, graph, bundle, ext_map, progress)
+    macho_standalone(paths.root.parent, graph, bundle, ext_map, progress)
 
-    codesign(root, progress)
+    codesign(paths.root.parent, progress)
 
     # - Run machostandalone
     # XXX: Does machostandalone affect other stuff?
@@ -599,10 +595,10 @@ def build_bundle(
     #   - or sign using given identity (with signing modes!)
     #     only allowed for "standalone" bundles.
 
-    make_readonly(root, bundle, progress)
+    make_readonly(paths.root.parent, bundle, progress)
 
     # XXX: The information is printed *before* the progress bars, not after
-    architecture, deployment_target, warnings = audit_macho_issues(root)
+    architecture, deployment_target, warnings = audit_macho_issues(paths.root.parent)
     progress.info(f"Common architectures: {architecture}")
     progress.info(f"Deployment target: macOS {deployment_target}")
     progress.info("")
