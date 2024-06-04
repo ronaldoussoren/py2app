@@ -1,3 +1,8 @@
+"""
+Wrapper around class:`modulegraph2.ModuleGraph` with additional
+functionality useful for py2app.
+"""
+
 import typing
 
 import modulegraph2
@@ -23,9 +28,6 @@ class ModuleGraph(modulegraph2.ModuleGraph):
     Subclass of *modulegraph2.ModuleGraph* that adds some
     py2app-specific functionality.
     """
-
-    # NOTE: Anything that fits into the generic goals for
-    #       modulegraph2 should be added there.
 
     def set_bootstrap(self, node: BaseNode, bootstrap: str) -> None:
         """

@@ -99,6 +99,8 @@ def main():
 
     ok = True
     for bundle in config.bundles:
+        # XXX: Sort bundles to ensure nested bundles get build
+        #      after their enclosing bundle.
         progress.update(
             task_id,
             current=f"{bundle.build_type.value} {'plugin' if bundle.plugin else 'application'} {bundle.name!r}",

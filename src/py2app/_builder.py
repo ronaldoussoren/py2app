@@ -1,4 +1,5 @@
 import importlib.resources
+import io
 import itertools
 import marshal
 import pathlib
@@ -25,7 +26,7 @@ from modulegraph2 import (
 
 from ._apptemplate import LauncherType, copy_app_launcher, get_app_plist
 from ._bundlepaths import BundlePaths, bundle_paths
-from ._config import BundleOptions, Py2appConfiguration
+from ._config import BuildType, BundleOptions, Py2appConfiguration
 from ._modulegraph import ModuleGraph
 from ._progress import Progress
 from ._recipes import process_recipes
@@ -388,14 +389,35 @@ def add_plist(paths: BundlePaths, plist: Dict[str, Any], progress: Progress) -> 
     progress.step_task(task_id)
 
 
+BOOTSTRAP_MOD = {
+    (False, BuildType.STANDALONE): "boot_app.py",
+    (False, BuildType.ALIAS): "boot_aliasapp.py",
+    (False, BuildType.SEMI_STANDALONE): "boot_app.py",
+    (True, BuildType.STANDALONE): "boot_plugin.py",
+    (True, BuildType.ALIAS): "boot_aliasplugin.py",
+    (True, BuildType.SEMI_STANDALONE): "boot_plugin.py",
+}
+
+
 def add_bootstrap(
-    paths: BundlePaths, bundle: BundleOptions, progress: Progress
+    paths: BundlePaths, bundle: BundleOptions, graph: ModuleGraph, progress: Progress
 ) -> None:
+    # XXX:
+    # - This doesn't work (yet) inside an app bundle because py2app won't
+    #   include .py files in the bundle. Either add a recipe that "fixes"
+    #   this for py2app, or restructure the bootstrap code to load
+    #   bootstrap .pyc files from python-libraries.zip (and load the
+    #   code using a Loader instead of through importlib.resources.
+    #
+    # - Maybe add support for a sequence of bootstrap scripts to support
+    #   recipes that add a generic bootstrap module with some dynamic code
+    #   (see "_run" invocation below)
+    #
+    # - Setting DEFAULT_SCRIPT and SCRIPT_MAP is incorrect/incomplete
+
     bootstrap_path = paths.resources / "__boot__.py"
 
     with open(bootstrap_path, "w") as stream:
-        # XXX: This ignores all bootstrap additions other than
-        #      what's needed for running the main script.
         stream.write(
             importlib.resources.files("py2app.bootstrap")
             .joinpath("_setup_importlib.py")
@@ -403,9 +425,26 @@ def add_bootstrap(
         )
         stream.write("\n")
 
+        for node in graph.iter_graph():
+            bootstrap = graph.bootstrap(node)
+            if bootstrap is None:
+                continue
+
+            if isinstance(bootstrap, io.StringIO):
+                stream.write(bootstrap.read())
+            else:
+                package, _, fname = bootstrap.partition(":")
+                stream.write(
+                    importlib.resources.files(package)
+                    .joinpath(fname)
+                    .read_text(encoding="utf-8")
+                )
+
+            stream.write("\n")
+
         stream.write(
             importlib.resources.files("py2app.bootstrap")
-            .joinpath("boot_app.py")
+            .joinpath(BOOTSTRAP_MOD[(bundle.plugin, bundle.build_type)])
             .read_text(encoding="utf-8")
         )
         stream.write("\n")
@@ -424,6 +463,14 @@ def add_resources(
     paths: BundlePaths, bundle: BundleOptions, progress: Progress
 ) -> None:
     # XXX: Add a mechanisme for recipes to add resources as well.
+    #      (Those resources will likely be files included with py2app)
+    #
+    # XXX: Cleanly handle mach-o resources, in particular the '.dylib'
+    #      folders added by `delocate` tool (move those libraries to
+    #      .../Frameworks)
+    #      Special care is needed to support ctypes, add symlinks for
+    #      shared libraries outside of .dylibs to .../Frameworks.
+    #
     if not bundle.resources:
         return
 
@@ -455,11 +502,11 @@ def get_info_plist(bundle: BundleOptions) -> Dict[str, Any]:
     on the template for the bundle kind and the specified
     Info.plist contents.
     """
-    # XXX: This uses code from the 'old' codebase and needs to
-    #      be replaced:
-    #      1. Use resource files for the Info.plist templates
-    #      2. Move merging into this function
+    # XXX: Consider moving plist merging to this file, logic should
+    #      be similar between app and plugin types.
     if bundle.plugin:
+        # XXX: Switch bundle template to similar structure as the
+        #      new app template.
         return bundle_info_plist_dict(bundle.name, bundle.plist)
     else:
         return get_app_plist(bundle.name, bundle.plist)
@@ -568,6 +615,12 @@ def get_module_graph(bundle: BundleOptions, progress: Progress) -> ModuleGraph:
 
 
 def codesign(root: pathlib.Path, progress: Progress) -> None:
+    # XXX:
+    # - add support for explicit code signing, including notarization
+    # - ad-hoc signing is only needed when arm64 is used (incl. universal2)
+    # - make signature stripping an explicit step
+    # - move codesign_adhoc logic to this file (and clean it up, it is a bit
+    #   too magic at the moment)
     # task_id = progress.add_task("Perform ad-hoc code signature", count=1)
     codesign_adhoc(root, progress)
     # progress.step_task(task_id)
@@ -600,7 +653,7 @@ def build_bundle(
     add_resources(paths, bundle, progress)
     ext_map = collect_python(bundle, paths, graph, progress)
     add_bootstrap(
-        paths, bundle, progress
+        paths, bundle, graph, progress
     )  # XXX: Needs more info which is collected in collect_python
     add_plist(paths, plist, progress)
 
@@ -623,6 +676,11 @@ def build_bundle(
 
     # XXX: The information is printed *before* the progress bars, not after
     architecture, deployment_target, warnings = audit_macho_issues(paths.root.parent)
+    progress.info("")
+    progress.info(
+        f"[bold]Built {'plugin' if bundle.plugin else 'app'} {bundle.name}[/bold]"
+    )
+    progress.info("")
     progress.info(f"Common architectures: {architecture}")
     progress.info(f"Deployment target: macOS {deployment_target}")
     progress.info("")
