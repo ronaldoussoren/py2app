@@ -125,6 +125,12 @@ Key                           Value Type (TOML) Description
 ``iconfile``                  string            Path for the icon file to use. Default
                                                 is a generic icon.
 
+                                                The path can refer to either a macOS
+                                                icon file (`.icns`), or to an `icon set`_
+                                                (`.iconset`). Icon sets are converted
+                                                to an iconfile using the `iconutil`
+                                                command.
+
 ``resources``                 see below         Description of data files to include
                                                 in the bundle.
 
@@ -192,3 +198,6 @@ Key                          Value Type (TOML) Description
 ``matplotlib-backends``      array of string   The matplotlib backends to include for scripts using
                                                this library. Defaults to all backends.
 ============================ ================= ===========================================================
+
+
+.. _`icon set`: https://developer.apple.com/library/archive/documentation/Xcode/Reference/xcode_ref-Asset_Catalog_Format/IconSetType.html

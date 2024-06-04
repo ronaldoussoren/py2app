@@ -4,6 +4,7 @@ import marshal
 import pathlib
 import plistlib
 import shutil
+import subprocess
 import sys
 import types
 import zipfile
@@ -34,7 +35,7 @@ from .bundletemplate.plist_template import (
 )
 from .bundletemplate.setup import main as bundle_stub_path  # XXX: Replace
 from .macho_audit import audit_macho_issues
-from .util import codesign_adhoc, find_converter  # XXX: Replace
+from .util import codesign_adhoc, find_converter, reset_blocking_status  # XXX: Replace
 
 
 def _pack_uint32(x):
@@ -276,7 +277,6 @@ def create_bundle_structure(bundle: BundleOptions, progress: Progress) -> pathli
         # are consistent.
         shutil.rmtree(root)
 
-    # XXX: These paths are also in _bundlepaths.py
     for subpath in progress.iter_task(
         paths.all_directories(), "Create bundle structure", lambda n: n
     ):
@@ -293,7 +293,6 @@ def add_iconfile(
 
     task_id = progress.add_task("Add bundle icon file", count=1)
     if bundle.iconfile is None:
-        # XXX: Switch to own default icon?
         iconfile = (
             pathlib.Path(sys.base_prefix)
             / "Resources/Python.app/Contents/Resources/PythonApplet.icns"
@@ -303,8 +302,33 @@ def add_iconfile(
     else:
         iconfile = bundle.iconfile
 
-    data = iconfile.read_bytes()
-    (paths.resources / f"{bundle.name}.icns").write_bytes(data)
+    if iconfile.suffix == ".iconset":
+        # Convert an iconset to a icon file using system tools.
+        #
+        # XXX: iconutil appears to be part of the base install,
+        # but I haven't verified this yet with a clean install.
+        with reset_blocking_status():
+            res = subprocess.call(
+                [
+                    "/usr/bin/iconutil",
+                    "-c",
+                    "icns",
+                    "-o",
+                    paths.resources / f"{bundle.name}.icns",
+                    iconfile,
+                ]
+            )
+
+            if res.returncode != 0:
+                progress.error("Converting bundle icon {iconfile} failed")
+
+    else:
+        if iconfile.suffix != ".icns":
+            progress.error("Unrecognized source format for bundle icon: {iconfile}")
+
+        data = iconfile.read_bytes()
+        (paths.resources / f"{bundle.name}.icns").write_bytes(data)
+
     plist["CFBundleIconFile"] = f"{bundle.name}.icns"
     progress.step_task(task_id)
 
