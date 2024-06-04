@@ -8,10 +8,6 @@
  * for the plugin bundle stub due to the possibility of having
  * multiple plugins loaded in the same process.
  *
- * XXX: This needs a second variant that emulates
- * a python3 executable inside the bundle (for use
- * as sys.executable)
- *
  * XXX: What's needed to support venv from a bundled Python?
  *
  * XXX: T.B.D. how to implement semi-standalone bundles
@@ -42,6 +38,17 @@
  *      find Python; in all other cases launch problems are either
  *      bugs in py2app or a user script that doesn't work right)
  *
+ * The build machinery uses a preprocessor define to control which
+ * variant is build:
+ * - `-DLAUNCH_PRIMARY`: Main executable for an .app bundle
+ * - `-DLAUNCH_SECONDARY`: Additional "script" in a bundle
+ * - `-DLAUNCH_PYTHON`: Equivalent to `python3` outside of a bundle
+ *
+ * Note that all types of binaries only work when located inside a
+ * bundle, the "secondary" and "python" types can more easily be used
+ * outside of a bundle by creating symbolic links in a convenient place.
+ *
+ * XXX: Actually implement the second and third variants.
  */
 #include <unistd.h>
 #include <stdio.h>

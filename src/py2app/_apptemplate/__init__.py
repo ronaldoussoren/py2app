@@ -20,6 +20,12 @@ ARCH_FLAGS = {
     BuildArch.UNIVERSAL2: ["-arch", "arm64", "-arch", "x86_64"],
 }
 
+LAUNCHER_FLAGS = {
+    LauncherType.MAIN_PROGRAM: "-DLAUNCH_PRIMARY",
+    LauncherType.SECONDARY_PROGRAM: "-DLAUNCH_SECONDARY",
+    LauncherType.PYTHON_BINARY: "-DLAUNCH_PYTHON",
+}
+
 
 def _pyflags() -> List[str]:
     """
@@ -58,8 +64,6 @@ def copy_app_launcher(
     """
     # XXX: Need to arrange for creating relevant launcher templates
     #      during wheel building
-    # XXX: Maybe need to add the deployment target as well.
-    # XXX: 'program_type' is not used yet.
     # XXX: Probably need to pass progress instance to warn when
     #      the launcher needs to be compiled.
 
@@ -85,6 +89,7 @@ def copy_app_launcher(
             "-framework",
             "Foundation",
             f"-mmacosx-version-min={deployment_target}",
+            LAUNCHER_FLAGS[program_type],
         ]
         + ARCH_FLAGS[arch]
         + _pyflags(),
