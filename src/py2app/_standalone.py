@@ -98,9 +98,8 @@ def macho_standalone(
 
                 if target_path not in seen and target_path not in todo:
                     progress.update(task_id, total=len(todo) + len(seen))
-                    if not target_path.exists():
-                        shutil.copy2(filename, target_path, follow_symlinks=False)
-                        todo.add(target_path)
+                    shutil.copy2(filename, target_path, follow_symlinks=False)
+                    todo.add(target_path)
 
         def changefunc(name):
             result = changes.get(name, name)  # noqa: B023
