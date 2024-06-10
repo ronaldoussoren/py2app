@@ -6,17 +6,36 @@ that requires rewriting macholib as well.
 """
 
 import contextlib
+import os
 import pathlib
 import shutil
+import sys
 import typing
 
 import macholib.MachO
-from macholib.util import in_system_path
+from macholib.util import in_system_path, is_platform_file
 
+from ._bundlepaths import BundlePaths
 from ._config import BundleOptions
 from ._modulegraph import ModuleGraph
 from .progress import Progress
-from .util import iter_platform_files
+
+
+def iter_platform_files(path: pathlib.Path) -> typing.Iterator[str]:
+    """
+    Yield all Mach-O files in the tree starting at *path*
+    """
+    # XXX: Switch to path.wak() when dropping support
+    #      for 3.11.
+    for root_str, _dirs, files in os.walk(path):
+        root = pathlib.Path(root_str)
+        for fn in files:
+            current = root / fn
+            if current.is_symlink():
+                continue
+
+            if is_platform_file(str(current)):
+                yield current
 
 
 @contextlib.contextmanager
@@ -40,8 +59,69 @@ def rewrite_headers(path: pathlib.Path, m: macholib.MachO.MachO) -> None:
             fp.flush()
 
 
+def copy_library(src: pathlib.Path, dst: pathlib.Path) -> None:
+    shutil.copy2(src, dst, follow_symlinks=False)
+    os.chmod(dst, 0o755)
+
+
+def copy_framework(
+    src: pathlib.Path, dst: pathlib.Path, version: str = "Current"
+) -> None:
+    """
+    Copy a framework at *src* to the folder *dst*, only including the specified version
+    """
+    # XXX:
+    # - Add filter to drop unnecessary bits
+    if src.suffix != ".framework":
+        raise RuntimeError("{src} is not a framework")
+
+    if version == "Current":
+        version = (src / "Versions/Current").readlink().name
+
+    dst = dst / src.name
+    dst.mkdir(parents=True, exist_ok=True)
+    (dst / "Versions").mkdir(parents=True)
+    (dst / "Versions/Current").symlink_to(version)
+
+    dst = dst / "Versions" / version
+    src = src / "Versions" / version
+
+    shutil.copytree(src, dst)
+
+
+def is_framework_path(path: pathlib.Path) -> bool:
+    """
+    Return true iff *path* is the main library of a framework
+    """
+    for p in path.parents:
+        if p.suffix == ".framework":
+            if p.stem == path.name:
+                return True
+    return False
+
+
+def framework_info(path: pathlib.Path) -> typing.Tuple[pathlib.Path, str]:
+    """
+    Given *path* located in a framework return the root of the framework
+    directory and the version of the framework used.
+    """
+    version = "Current"
+    last: typing.Optional[pathlib.Path] = None
+    for p in path.parents:
+        if p.name == "Versions":
+            assert isinstance(last, pathlib.Path)
+            version = last.name
+        elif p.suffix == ".framework":
+            assert version != "Current"
+            return p, version
+
+        last = p
+
+    raise RuntimeError(f"Cannot determine framework info for {path}")
+
+
 def macho_standalone(
-    root: pathlib.Path,
+    paths: BundlePaths,
     graph: ModuleGraph,
     bundle: BundleOptions,
     ext_map: typing.Dict[pathlib.Path, pathlib.Path],
@@ -60,13 +140,28 @@ def macho_standalone(
           with '@rpath'
     """
     # XXX:
-    # - Recipe interaction
     # - 'Excludes'
     # - 'Includes'
-    # - Fill 'todo' based on the module graph (Extension modules),
+    #
+    # XXX: Recipe interaction
+    #
+    # XXX: Fill 'todo' based on the module graph (Extension modules),
     #   plus the load commands (should make recipe interaction
-    #   easier)
-    todo = {pathlib.Path(p) for p in iter_platform_files(root)}
+    #   easier) [Maybe, current code works just fine for now]
+    #
+    # XXX: What if "Python.framework" is in "includes" or "excludes"?
+    # XXX: Logic for dealing with "excludes"
+    include = {pathlib.Path(p) for p in bundle.macho_include}
+    # exclude = {pathlib.Path(p) for p in bundle.macho_exclude}
+
+    for fn in include:
+        if fn.stem == ".framework":
+            copy_framework(fn, paths.framework / fn.name)
+
+        else:
+            copy_library(fn, paths.framework / fn.name)
+
+    todo = set(iter_platform_files(paths.root))
     seen = set()
     task_id = progress.add_task("Copy MachO dependencies", count=len(todo))
 
@@ -90,16 +185,47 @@ def macho_standalone(
                     )
                     continue
 
-                # XXX: Needs adjustments for frameworks
-                target_path = root / "Contents/Frameworks" / filename.name
-                rpath = f"@rpath/{filename.name}"
+                if is_framework_path(filename):
+                    fwk, version = framework_info(filename)
+                    rpath = f"@rpath/{fwk.name}/Versions/{version}/{fwk.stem}"
 
-                changes[str(filename)] = rpath
+                    if str(fwk / "Versions" / version) == sys.base_prefix:
+                        # Python framework, perform a minimal copy to avoid including
+                        # the entire standard library.
+                        #
+                        # The code copies the embedded Python library as if
+                        # it were a libpython.dylib.
+                        target_path = paths.framework / f"libpython{version}.dylib"
+                        rpath = f"@rpath/{target_path.name}"
 
-                if target_path not in seen and target_path not in todo:
-                    progress.update(task_id, total=len(todo) + len(seen))
-                    shutil.copy2(filename, target_path, follow_symlinks=False)
-                    todo.add(target_path)
+                        changes[str(filename)] = rpath
+
+                        if target_path not in seen and target_path not in todo:
+                            todo.add(target_path)
+                            progress.update(task_id, total=len(todo) + len(seen))
+                            copy_library(filename, target_path)
+
+                        continue
+
+                    changes[str(filename)] = rpath
+
+                    if not (fwk / "Versions" / version).is_dir():
+                        copy_framework(fwk, paths.framework, version)
+                        for p in iter_platform_files(paths.root):
+                            if p not in seen and p not in todo:
+                                todo.add(p)
+                                progress.update(task_id, total=len(todo) + len(seen))
+
+                else:
+                    target_path = paths.framework / filename.name
+                    rpath = f"@rpath/{filename.name}"
+
+                    changes[str(filename)] = rpath
+
+                    if target_path not in seen and target_path not in todo:
+                        todo.add(target_path)
+                        progress.update(task_id, total=len(todo) + len(seen))
+                        copy_library(filename, target_path)
 
         def changefunc(name):
             result = changes.get(name, name)  # noqa: B023

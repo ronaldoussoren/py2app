@@ -657,7 +657,7 @@ def build_bundle(
     )  # XXX: Needs more info which is collected in collect_python
     add_plist(paths, plist, progress)
 
-    macho_standalone(paths.root.parent, graph, bundle, ext_map, progress)
+    macho_standalone(paths, graph, bundle, ext_map, progress)
 
     codesign(paths.root.parent, progress)
 
