@@ -193,7 +193,17 @@ def macho_standalone(
                 if in_system_path(filename):
                     continue
 
+                if filename.startswith("@loader_path/"):
+                    filename = pathlib.Path(current.parent / filename.partition("/")[2])
+                    if not filename.exists():
+                        progress.error(
+                            f"Required MachO library file {filename} does not exist"
+                        )
+                        continue
+                    continue
+
                 filename = pathlib.Path(filename)
+
                 if not filename.exists():
                     progress.error(
                         f"Required MachO library file {filename} does not exist"
