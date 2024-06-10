@@ -3,6 +3,8 @@ Wrapper around class:`modulegraph2.ModuleGraph` with additional
 functionality useful for py2app.
 """
 
+import importlib.resources
+import io
 import typing
 
 import modulegraph2
@@ -21,6 +23,23 @@ from modulegraph2 import (
 
 ATTR_ZIPSAFE = "py2app.zipsafe"
 ATTR_BOOTSTRAP = "py2app.bootstrap"
+ATTR_IGNORE_RESOURCES = "py2app.ignore_resources"
+
+
+def load_bootstrap(bootstrap: typing.Union[str, io.StringIO]) -> str:
+    """
+    Load a bootstrap script and return the script text
+    """
+    if isinstance(bootstrap, io.StringIO):
+        return bootstrap.read()
+
+    else:
+        package, _, fname = bootstrap.partition(":")
+        return (
+            importlib.resources.files(package)
+            .joinpath(fname)
+            .read_text(encoding="utf-8")
+        )
 
 
 class ModuleGraph(modulegraph2.ModuleGraph):
@@ -29,22 +48,49 @@ class ModuleGraph(modulegraph2.ModuleGraph):
     py2app-specific functionality.
     """
 
-    def set_bootstrap(self, node: BaseNode, bootstrap: str) -> None:
+    def set_ignore_resources(self, node: BaseNode) -> None:
+        """
+        Mark *node* as a node whose package resources should not
+        be copied into the bundle.
+        """
+        node.extension_attributes[ATTR_IGNORE_RESOURCES] = True
+
+    def ignore_resources(self, node: BaseNode) -> bool:
+        """
+        Return true iff the package resources for *node* should
+        not be copied into the bundle.
+        """
+        return node.extension_attributes.get(ATTR_IGNORE_RESOURCES, False)
+
+    def add_bootstrap(
+        self, node: BaseNode, bootstrap: typing.Union[str, io.StringIO]
+    ) -> None:
         """
         Add a bundle bootstrap scriptlet for a particular node in the graph
         """
+        bootstrap_source = load_bootstrap(bootstrap)
 
-        # Validate the source code:
-        compile(bootstrap, f"bootstrap for {node.identifier}", dont_inherit=True)
+        # XXX: I don't particularly like this, but is needed to be idempotent while running
+        #      recipes repeatedly.
+        if bootstrap_source in node.extension_attributes.get(ATTR_BOOTSTRAP, []):
+            return
 
-        node.extension_attributes[ATTR_BOOTSTRAP] = bootstrap
+        node.extension_attributes.setdefault(ATTR_BOOTSTRAP, []).append(
+            bootstrap_source
+        )
+
+        self.add_dependencies_for_source(bootstrap_source)
 
     def bootstrap(self, node: BaseNode) -> typing.Optional[str]:
         """
         Return the bootstrap scriptlet for a node, or None when
         the node doesn't have a bootstrap scriptlet.
         """
-        return node.extension_attributes.get(ATTR_BOOTSTRAP, None)
+        value = node.extension_attributes.get(ATTR_BOOTSTRAP, None)
+        if value:
+            return "\n".join(value)
+
+        return None
 
     def mark_zipunsafe(self, node: BaseNode) -> None:
         """

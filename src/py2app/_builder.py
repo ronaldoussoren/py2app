@@ -1,5 +1,4 @@
 import importlib.resources
-import io
 import itertools
 import marshal
 import pathlib
@@ -110,7 +109,10 @@ def iter_resources(node: Union[Package, NamespacePackage]):
 
 @singledispatch
 def zip_node(
-    node: object, zf: zipfile.ZipFile, more_extensions: Dict[str, ExtensionModule]
+    node: object,
+    graph: ModuleGraph,
+    zf: zipfile.ZipFile,
+    more_extensions: Dict[str, ExtensionModule],
 ) -> None:
     """
     Include a single modulegraph2 node into the Python library
@@ -123,6 +125,7 @@ def zip_node(
 @zip_node.register(BytecodeModule)
 def zip_py_node(
     node: Union[SourceModule, BytecodeModule],
+    graph: ModuleGraph,
     zf: zipfile.ZipFile,
     more_extensions: Dict[str, ExtensionModule],
 ) -> None:
@@ -139,7 +142,10 @@ def zip_py_node(
 
 @zip_node.register
 def zip_script_node(
-    node: Script, zf: zipfile.ZipFile, more_extensions: Dict[str, ExtensionModule]
+    node: Script,
+    graph: ModuleGraph,
+    zf: zipfile.ZipFile,
+    more_extensions: Dict[str, ExtensionModule],
 ) -> None:
     """
     Include the compiled version of a script into the zipfile.
@@ -150,6 +156,7 @@ def zip_script_node(
 @zip_node.register
 def zip_ext_node(
     node: ExtensionModule,
+    graph: ModuleGraph,
     zf: zipfile.ZipFile,
     more_extensions: Dict[str, ExtensionModule],
 ) -> None:
@@ -167,15 +174,21 @@ def zip_ext_node(
 @zip_node.register(Package)
 @zip_node.register(NamespacePackage)
 def zip_package_node(
-    node: Package, zf: zipfile.ZipFile, more_extensions: Dict[str, ExtensionModule]
+    node: Package,
+    graph: ModuleGraph,
+    zf: zipfile.ZipFile,
+    more_extensions: Dict[str, ExtensionModule],
 ) -> None:
     path = node.identifier.replace(".", "/")
     zf.mkdir(path)
 
     if isinstance(node, Package):
-        zip_node(node.init_module, zf, more_extensions)
+        zip_node(node.init_module, graph, zf, more_extensions)
 
-    # Copy resource data (using importlib API!)
+    # Copy resource data for the package.
+    if graph.ignore_resources(node):
+        return
+
     for relname, data in iter_resources(node):
         zf.writestr(f"{path}/{relname}", data)
 
@@ -196,6 +209,7 @@ def get_dist_info(value):
 @zip_node.register
 def zip_distribution(
     node: PyPIDistribution,
+    graph: ModuleGraph,
     zf: zipfile.ZipFile,
     more_extensions: Dict[str, ExtensionModule],
 ) -> None:
@@ -214,13 +228,15 @@ def zip_distribution(
 
 
 @singledispatch
-def fs_node(node: object, root: pathlib.Path) -> None:
+def fs_node(node: object, graph: ModuleGraph, root: pathlib.Path) -> None:
     assert_never(node)
 
 
 @fs_node.register(SourceModule)
 @fs_node.register(BytecodeModule)
-def fs_py_node(node: Union[SourceModule, BytecodeModule], root: pathlib.Path) -> None:
+def fs_py_node(
+    node: Union[SourceModule, BytecodeModule], graph: ModuleGraph, root: pathlib.Path
+) -> None:
     if node.filename.stem == "__init__":
         path = node.identifier.replace(".", "/") + "/__init__.pyc"
     else:
@@ -232,14 +248,14 @@ def fs_py_node(node: Union[SourceModule, BytecodeModule], root: pathlib.Path) ->
 
 
 @fs_node.register
-def fs_script_node(node: Script, root: pathlib.Path) -> None:
+def fs_script_node(node: Script, graph: ModuleGraph, root: pathlib.Path) -> None:
     path = root / relpath_for_script(node)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(code_to_bytes(node.code))
 
 
 @fs_node.register
-def fs_ext_node(node: ExtensionModule, root: pathlib.Path) -> None:
+def fs_ext_node(node: ExtensionModule, graph: ModuleGraph, root: pathlib.Path) -> None:
     # XXX: Copying should be separate function.
     # XXX: Handle extensions in packages, subdiretory might not be here yet
     ext_path = root / (node.identifier.replace(".", "/") + ".so")
@@ -251,16 +267,21 @@ def fs_ext_node(node: ExtensionModule, root: pathlib.Path) -> None:
 
 @fs_node.register(Package)
 @fs_node.register(NamespacePackage)
-def fs_package_node(node: Union[Package, NamespacePackage], root: pathlib.Path) -> None:
+def fs_package_node(
+    node: Union[Package, NamespacePackage], graph: ModuleGraph, root: pathlib.Path
+) -> None:
     # XXX: To be impolemented
     path = node.identifier.replace(".", "/")
 
     (root / path).mkdir(parents=True, exist_ok=True)
 
     if isinstance(node, Package):
-        fs_node(node.init_module, root)
+        fs_node(node.init_module, graph, root)
 
-    # Copy resource data (using importlib API!)
+    # Copy resource data for the package
+    if graph.ignore_resources(node):
+        return
+
     for relname, data in iter_resources(node):
         (root / path / relname).write_bytes(data)
 
@@ -431,16 +452,7 @@ def add_bootstrap(
             if bootstrap is None:
                 continue
 
-            if isinstance(bootstrap, io.StringIO):
-                stream.write(bootstrap.read())
-            else:
-                package, _, fname = bootstrap.partition(":")
-                stream.write(
-                    importlib.resources.files(package)
-                    .joinpath(fname)
-                    .read_text(encoding="utf-8")
-                )
-
+            stream.write(bootstrap)
             stream.write("\n")
 
         stream.write(
@@ -548,19 +560,19 @@ def collect_python(
         for node in progress.iter_task(
             included_distributions.values(), "Collect dist-info", lambda n: n.name
         ):
-            zip_node(node, zf, more_extensions)
+            zip_node(node, graph, zf, more_extensions)
 
     if zip_nodes:
         for node in progress.iter_task(
             zip_nodes, "Collect site-packages.zip", lambda n: n.identifier
         ):
-            zip_node(node, zf, more_extensions)
+            zip_node(node, graph, zf, more_extensions)
 
     if unzip_nodes:
         for node in progress.iter_task(
             unzip_nodes, "Collect site-packages directory", lambda n: n.identifier
         ):
-            fs_node(node, paths.pylib)
+            fs_node(node, graph, paths.pylib)
 
     ext_map = {}
     if more_extensions:

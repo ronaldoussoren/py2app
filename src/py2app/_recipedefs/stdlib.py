@@ -111,3 +111,16 @@ def mark_expected_missing(graph: ModuleGraph, options: RecipeOptions) -> None:
         for _, m2 in graph.outgoing(m):
             if isinstance(m2, MissingModule) and m2.identifier in expected_missing:
                 m.extension_attributes["py2app.expected_missing"] = True
+
+
+@recipe("fixup for ctypes", modules=["ctypes"])
+def use_prescript_for_importlib(graph: ModuleGraph, options: RecipeOptions) -> None:
+    m = graph.find_node("ctypes")
+    if m is None:
+        return
+
+    graph.add_bootstrap(m, "py2app.bootstrap:setup_ctypes.py")
+
+    m = graph.find_node("ctypes.macholib")
+    if m is not None:
+        graph.set_ignore_resources(m)

@@ -1,9 +1,16 @@
 """
-Interaction with macholib.MachOStandalone
-
-XXX: Longer term this needs a complete rewrite, but
-that requires rewriting macholib as well.
+The main entry point in this module is "macho_standalone", which
+copies dependent Mach-O libraries into a bundle.
 """
+
+# XXX: This likely needs work to properly handle @rpath, @loader_path and
+#      @executable_path. In particular, the code needs to keep track
+#      of the source of Mach-O files to properly resolve such relative paths
+#      to find the referenced files.
+#
+# XXX: Longer term create "macholib2" with a modern interface.
+
+__all__ = ("macho_standalone",)
 
 import contextlib
 import os
@@ -25,7 +32,7 @@ def iter_platform_files(path: pathlib.Path) -> typing.Iterator[str]:
     """
     Yield all Mach-O files in the tree starting at *path*
     """
-    # XXX: Switch to path.wak() when dropping support
+    # XXX: Switch to path.walk() when dropping support
     #      for 3.11.
     for root_str, _dirs, files in os.walk(path):
         root = pathlib.Path(root_str)
@@ -40,6 +47,9 @@ def iter_platform_files(path: pathlib.Path) -> typing.Iterator[str]:
 
 @contextlib.contextmanager
 def writable(path: pathlib.Path):
+    """
+    Contextmanager that temporarily makes a file writable
+    """
     mode = path.stat().st_mode
 
     path.chmod(mode | 0o200)
@@ -49,17 +59,24 @@ def writable(path: pathlib.Path):
         path.chmod(mode)
 
 
-def rewrite_headers(path: pathlib.Path, m: macholib.MachO.MachO) -> None:
+def rewrite_headers(path: pathlib.Path, macho: macholib.MachO.MachO) -> None:
+    """
+    Rewrite the Mach-O headers for *path* using the (updated) information
+    in *macho*.
+    """
     with writable(path):
         with path.open("rb+") as fp:
-            for _header in m.headers:
+            for _header in macho.headers:
                 fp.seek(0)
-                m.write(fp)
+                macho.write(fp)
             fp.seek(0, 2)
             fp.flush()
 
 
 def copy_library(src: pathlib.Path, dst: pathlib.Path) -> None:
+    """
+    Copy a shared library from *src* to *dst*
+    """
     shutil.copy2(src, dst, follow_symlinks=False)
     os.chmod(dst, 0o755)
 
@@ -70,8 +87,6 @@ def copy_framework(
     """
     Copy a framework at *src* to the folder *dst*, only including the specified version
     """
-    # XXX:
-    # - Add filter to drop unnecessary bits
     if src.suffix != ".framework":
         raise RuntimeError("{src} is not a framework")
 
