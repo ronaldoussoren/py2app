@@ -130,14 +130,16 @@ class ModuleGraph(modulegraph2.ModuleGraph):
                 node.extension_attributes[ATTR_ZIPSAFE] = False
                 return False
 
-        # Try to avoid having packages that are partially zipsafe,
-        # if any node in a package is not zipsafe the entire package
-        # is not.
+        #
+        # Package, and all modules in them, are either zipsafe or
+        # note. We cannot have a package that is zipsafe but containing
+        # modules or subpackages that aren't.
+        #
 
         if "." in node.identifier:
             # The name is in package, use the root package to start
             # the scan.
-            base = self.find_node(node.identifier.split(".", 1)[0])
+            base = self.find_node(node.identifier.partition(".")[0])
         elif isinstance(node, (Package, NamespacePackage)):
             base = node
         else:
@@ -148,9 +150,6 @@ class ModuleGraph(modulegraph2.ModuleGraph):
 
         # This function uses the 'py2app.zipsafe' attribute to cache
         # the zipsafe status of a package.
-        #
-        # This is safe to do because the graph will not be updated
-        # by the time this function is used.
         try:
             value = base.extension_attributes[ATTR_ZIPSAFE]
         except KeyError:
@@ -159,51 +158,15 @@ class ModuleGraph(modulegraph2.ModuleGraph):
             assert isinstance(value, bool)
             return value
 
-        # XXX: The code below needs work, this does NOT find
-        #      all nodes in a package, only those explicitly
-        #      imported. Using "incoming" instead of "outgoing"
-        #      would help, but that also includes excluded nodes.
-        #
-        #      Being too conservative here would not be a problem
-        #      though.
-
-        todo = [base]
-        seen = set()
-
-        while todo:
-            current = todo.pop()
-            if current.identifier in seen:
+        for subnode in self.iter_graph():
+            if not subnode.identifier.startswith(base_identifier):
                 continue
-            seen.add(current.identifier)
 
-            for _, subnode in self.outgoing(node):
-                if not subnode.identifier.startswith(base_identifier):
-                    continue
-
-                if isinstance(subnode, Module):
-                    if subnode.uses_dunder_file:
-                        base.extension_attributes[ATTR_ZIPSAFE] = False
-                        subnode.extension_attributes[ATTR_ZIPSAFE] = False
-                        return False
-
-                elif isinstance(subnode, Package):
-                    if ATTR_ZIPSAFE in subnode.init_module.extension_attributes:
-                        if not node.init_module.extension_attributes[ATTR_ZIPSAFE]:
-                            base.extension_attributes[ATTR_ZIPSAFE] = False
-                            subnode.extension_attributes[ATTR_ZIPSAFE] = False
-                            return False
-
-                    elif subnode.init_module.uses_dunder_file:
-                        base.extension_attributes[ATTR_ZIPSAFE] = False
-                        subnode.extension_attributes[ATTR_ZIPSAFE] = False
-                        return False
-
-                    todo.append(node)
-                elif isinstance(subnode, NamespacePackage):
-                    todo.append(subnode)
+            if subnode.extension_attributes.get(ATTR_ZIPSAFE, None) is False:
+                base.extension_attributes[ATTR_ZIPSAFE] = False
+                return False
 
         base.extension_attributes[ATTR_ZIPSAFE] = True
-        node.extension_attributes[ATTR_ZIPSAFE] = True
         return True
 
     def collect_nodes(

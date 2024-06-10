@@ -2,7 +2,9 @@
 Recipes related to the standard library
 """
 
-from modulegraph2 import MissingModule, ModuleGraph
+import importlib.resources
+
+from modulegraph2 import MissingModule, ModuleGraph, Package
 
 from .._config import RecipeOptions
 from .._modulegraph import ATTR_ZIPSAFE
@@ -113,11 +115,52 @@ def mark_expected_missing(graph: ModuleGraph, options: RecipeOptions) -> None:
                 m.extension_attributes["py2app.expected_missing"] = True
 
 
+def _contains_dylib(resources: importlib.resources.abc.Traversable):
+    """
+    Return true if *resources* contains a dylib somewhere in
+    the resource tree.
+    """
+    if resources.is_file():
+        return resources.name.endswith(".dylib")
+
+    todo = list(resources.iterdir())
+    while todo:
+        current = todo.pop()
+        if current.is_file():
+            if current.name.endswith(".dylib"):
+                return True
+            continue
+
+        for child in current.iterdir():
+            todo.append(child)
+    return False
+
+
 @recipe("fixup for ctypes", modules=["ctypes"])
 def use_prescript_for_importlib(graph: ModuleGraph, options: RecipeOptions) -> None:
     m = graph.find_node("ctypes")
     if m is None:
         return
+
+    for _edge, using_module in graph.incoming(m):
+        # using_module imports ctypes, mark those as
+        # not-zipsafe when they contain a dylib resource.
+        #
+        # This ensures that the dylib can be found in
+        # the filesystem regardless of how the module
+        # locates it.
+
+        if isinstance(using_module, Package):
+            package = using_module
+        elif "." in using_module.name:
+            package = graph.find_node(using_module.name.rpartition(".")[0])
+        else:
+            # Toplevel module, cannot have package data.
+            continue
+
+        package_resources = importlib.resources.files(package.name)
+        if _contains_dylib(package_resources):
+            graph.mark_zipunsafe(using_module)
 
     graph.add_bootstrap(m, "py2app.bootstrap:setup_ctypes.py")
 

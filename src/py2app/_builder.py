@@ -78,7 +78,7 @@ EXCL_EXTENSIONS = {
     ".pyi",
     ".so",
 }
-EXCL_NAMES = {".svn"}
+EXCL_NAMES = {".svn", "__pycache__"}
 
 
 def iter_resources(node: Union[Package, NamespacePackage]):
@@ -97,9 +97,24 @@ def iter_resources(node: Union[Package, NamespacePackage]):
                 yield resource.name, resource.read_bytes()
 
             else:
-                # Directories are annoying. These could subfolders with resources,
-                # but can also be subpackages (which will be handled themselves as needed)
-                pass
+                # A resource directory could also be a subpackage. Only
+                # include subresources when the resource itself doesn't contain
+                # python files.
+                for subresource in resource.iterdir():
+                    if any(subresource.name.endswith(ext) for ext in EXCL_EXTENSIONS):
+                        break
+                else:
+                    todo = [(resource.name, r) for r in resource.iterdir()]
+                    while todo:
+                        relpath, current = todo.pop()
+                        if current.is_file():
+                            yield f"{relpath}/{current.name}", current.read_bytes()
+                        else:
+                            todo.extend(
+                                (f"{relpath}/{current.name}", r)
+                                for r in current.iterdir()
+                            )
+
     except AttributeError:
         pass
 
@@ -270,7 +285,6 @@ def fs_ext_node(node: ExtensionModule, graph: ModuleGraph, root: pathlib.Path) -
 def fs_package_node(
     node: Union[Package, NamespacePackage], graph: ModuleGraph, root: pathlib.Path
 ) -> None:
-    # XXX: To be impolemented
     path = node.identifier.replace(".", "/")
 
     (root / path).mkdir(parents=True, exist_ok=True)
@@ -283,7 +297,9 @@ def fs_package_node(
         return
 
     for relname, data in iter_resources(node):
-        (root / path / relname).write_bytes(data)
+        target = root / path / relname
+        target.parent.mkdir(exist_ok=True, parents=True)
+        target.write_bytes(data)
 
 
 def create_bundle_structure(bundle: BundleOptions, progress: Progress) -> pathlib.Path:
