@@ -24,6 +24,7 @@ from modulegraph2 import (
     SourceModule,
 )
 
+from . import _recipedefs  # noqa: F401
 from ._apptemplate import LauncherType, copy_app_launcher, get_app_plist
 from ._bundlepaths import BundlePaths, bundle_paths
 from ._config import BuildType, BundleOptions, Py2appConfiguration
