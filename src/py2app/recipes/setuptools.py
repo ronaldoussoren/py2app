@@ -21,7 +21,7 @@ PRESCRIPT = textwrap.dedent(
 
         metadata = pkg_resources.EggMetadata(importer)
         if metadata.has_metadata('PKG-INFO'):
-            yield Distribution.from_filename(path_item, metadata=metadata)
+            yield pkg_resources.Distribution.from_filename(path_item, metadata=metadata)
         for subitem in metadata.resource_listdir(''):
             if not only and pkg_resources._is_egg_path(subitem):
                 subpath = os.path.join(path_item, subitem)
