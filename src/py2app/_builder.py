@@ -16,6 +16,7 @@ from typing import Any, Dict, Union, assert_never
 from modulegraph2 import (
     BytecodeModule,
     ExtensionModule,
+    MissingModule,
     NamespacePackage,
     Package,
     PyPIDistribution,
@@ -489,23 +490,28 @@ ignore_filter = shutil.ignore_patterns(".git", ".svn", "*.sv", "*.bak", "*~", ".
 
 
 def add_resources(
-    paths: BundlePaths, bundle: BundleOptions, progress: Progress
+    paths: BundlePaths, bundle: BundleOptions, graph: ModuleGraph, progress: Progress
 ) -> None:
-    # XXX: Add a mechanisme for recipes to add resources as well.
-    #      (Those resources will likely be files included with py2app)
-    #
     # XXX: Cleanly handle mach-o resources, in particular the '.dylib'
     #      folders added by `delocate` tool (move those libraries to
     #      .../Frameworks)
     #      Special care is needed to support ctypes, add symlinks for
     #      shared libraries outside of .dylibs to .../Frameworks.
     #
-    if not bundle.resources:
+    # XXX: Handle duplicate resources (that is, the same file added
+    #      more than once): Warn for duplicates, error when the two
+    #      specifications aren't equivalent.
+
+    # There are two sources for resources: the bundle definition
+    # and resources added to nodes by recipes.
+    all_resources = list(bundle.resources) if bundle.resources else []
+    for node in graph.iter_graph():
+        all_resources.extend(graph.resources(node))
+
+    if not all_resources:
         return
 
-    for rsrc in progress.iter_task(
-        bundle.resources, "Copy resources", lambda n: str(n)
-    ):
+    for rsrc in progress.iter_task(all_resources, "Copy resources", lambda n: str(n)):
         for src in rsrc.sources:
             converter = find_converter(src)
             if converter is not None:
@@ -669,17 +675,11 @@ def build_bundle(
 
     process_recipes(graph, config.recipe, progress)
 
-    # XXX: Warn about various types of "missing" nodes in
-    #      the graph.
-
-    # XXX: Consider dynamically calculating the order of
-    #      steps by adding a decorator that documents
-    #      dependencies between steps.
     paths = create_bundle_structure(bundle, progress)
     plist = get_info_plist(bundle)
     add_iconfile(paths, plist, bundle, progress)
     add_loader(paths, bundle, progress)
-    add_resources(paths, bundle, progress)
+    add_resources(paths, bundle, graph, progress)
     ext_map = collect_python(bundle, paths, graph, progress)
     add_bootstrap(
         paths, bundle, graph, progress
@@ -688,22 +688,13 @@ def build_bundle(
 
     macho_standalone(paths, graph, bundle, ext_map, progress)
 
+    # XXX: Add support for using 'real' signatures
+    #     (e.g. notarization), but only for standalone
+    #     bundles.
     codesign(paths.root.parent, progress)
-
-    # - Run machostandalone
-    # XXX: Does machostandalone affect other stuff?
-    # XXX: Longer term replace 'macholib' by 'macholib2' with
-    #      a nicer interface.
-    #
-    # - Run codesigning:
-    #   - Strip signatures
-    #   - Add ad-hoc signature for arm64
-    #   - or sign using given identity (with signing modes!)
-    #     only allowed for "standalone" bundles.
 
     make_readonly(paths.root.parent, bundle, progress)
 
-    # XXX: The information is printed *before* the progress bars, not after
     architecture, deployment_target, warnings = audit_macho_issues(paths.root.parent)
     progress.info("")
     progress.info(
@@ -716,4 +707,10 @@ def build_bundle(
     for w in warnings:
         progress.warning(w)
 
-    # XXX: Print summary about the bundle
+    # XXX: This should classify the kind of missing, and suppress
+    #      warnings about values that are imported, but are (likely)
+    #      global variables in a 'from' import. See build_app for the
+    #      classification algorithm.
+    for node in graph.iter_graph():
+        if isinstance(node, MissingModule) and not graph.is_expected_missing(node):
+            progress.warning(f"Used module {node.name!r} not found")

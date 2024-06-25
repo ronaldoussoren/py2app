@@ -5,7 +5,6 @@ for py2app.
 
 XXX:
     - finish implementation
-    - add option for generating a pyrpoject.toml
     - target.prescripts (although current impl. is buggy)
 """
 
@@ -445,12 +444,6 @@ class py2app(Command):
 
         # Global options
         if self.strip is not None:
-            # XXX: Test is not necessary because setuptools validates the type.
-            # if not isinstance(self.strip, (int, bool)):
-            #    # The documented interface uses "bool", but setuptools option
-            #    # parsing will set the attribute to an integer.
-            #    raise DistutilsOptionError("Strip is not a boolean")
-
             global_options["strip"] = bool(self.strip)
 
         # Recipe options

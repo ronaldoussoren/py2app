@@ -72,6 +72,9 @@ class inherited(typing.Generic[T]):
         except AttributeError:
             raise AttributeError(self._key) from None
 
+    def __set__(self, instance: InheritedPropertyHolder, value: T) -> None:
+        instance._local[self._key] = value
+
 
 class local(typing.Generic[T]):
     __slots__ = ("_key", "_default")
@@ -88,6 +91,9 @@ class local(typing.Generic[T]):
                 raise AttributeError(self._key) from None
             assert not isinstance(self._default, _NoDefault)
             return self._default
+
+    def __set__(self, instance: PropertyHolder, value: T) -> None:
+        self._default = value
 
 
 class Resource:

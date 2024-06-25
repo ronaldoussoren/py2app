@@ -3,10 +3,14 @@ Recipes related to the standard library
 """
 
 import importlib.resources
+import pathlib
+import sys
+import textwrap
+import typing
 
-from modulegraph2 import MissingModule, ModuleGraph, Package
+from modulegraph2 import ExtensionModule, MissingModule, ModuleGraph, Package
 
-from .._config import RecipeOptions
+from .._config import RecipeOptions, Resource
 from .._modulegraph import ATTR_ZIPSAFE
 from .._recipes import recipe
 
@@ -40,9 +44,18 @@ UNNEEDED_REFS = [
 # Standard library imports that won't be found (at least
 # not on macOS) and shouldn't be reported on.
 EXPECTED_MISSING = [
+    ("copy", ("org.python.core",)),
+    ("org.python.core", ("org.python",)),
+    ("org.python", ("org",)),
+    ("pickle", ("org.python.core",)),
     ("importlib", ("_frozen_importlib_external",)),
     ("mimetypes", ("winreg",)),
+    ("platform", ("_winreg", "vms_lib", "java.lang")),
+    ("java.lang", ("java",)),
     ("os", ("nt",)),
+    ("ntpath", ("nt",)),
+    ("getpass", ("msvcrt",)),
+    ("subprocess", ("msvcrt",)),
     ("re", ("sys.getwindowsversion",)),
     ("subprocess", ("_winapi",)),
     (
@@ -112,7 +125,7 @@ def mark_expected_missing(graph: ModuleGraph, options: RecipeOptions) -> None:
 
         for _, m2 in graph.outgoing(m):
             if isinstance(m2, MissingModule) and m2.identifier in expected_missing:
-                m.extension_attributes["py2app.expected_missing"] = True
+                graph.set_expected_missing(m2)
 
 
 def _contains_dylib(resources: importlib.resources.abc.Traversable):
@@ -167,3 +180,150 @@ def use_prescript_for_importlib(graph: ModuleGraph, options: RecipeOptions) -> N
     m = graph.find_node("ctypes.macholib")
     if m is not None:
         graph.set_ignore_resources(m)
+
+
+@recipe("fixup for tkinter", modules=["_tkinter"])
+def tkinter(graph: ModuleGraph, options: RecipeOptions) -> None:
+    """
+    Recipe to copy Tcl/Tk support libraries into the bundle.
+    """
+    m = graph.find_node("_tkinter")
+    if m is None or not isinstance(m, ExtensionModule):
+        return
+
+    prefix = pathlib.Path(sys.base_prefix)
+
+    paths: typing.List[pathlib.Path] = []
+
+    lib = prefix / "lib"
+    for fn in lib.iterdir():
+        if not fn.is_dir():
+            continue
+
+        if fn.name.startswith("tk"):
+            tk_path = fn
+            paths.append(fn)
+
+        elif fn.name.startswith("tcl"):
+            tcl_path = fn
+            paths.append(fn)
+
+    if not paths:
+        return
+
+    prescript = textwrap.dedent(
+        f"""\
+        def _boot_tkinter():
+            import os
+            import sys
+
+            resourcepath = sys.py2app_bundle_resources
+            os.putenv("TCL_LIBRARY", os.path.join(resourcepath, "lib/{tcl_path.name}"))
+            os.putenv("TK_LIBRARY", os.path.join(resourcepath, "lib/{tk_path.name}"))
+
+        _boot_tkinter()
+        """
+    )
+
+    graph.add_bootstrap_scriptlet(m, prescript)
+    graph.add_resources(m, [Resource(destination=pathlib.Path("lib"), sources=paths)])
+
+
+@recipe("fixup for ssl", modules=["ssl"])
+def ssl(graph: ModuleGraph, options: RecipeOptions) -> None:
+    """
+    Recipe for handlign the 'ssl' module, in particular
+    copying CA certificate paths (even if those are
+    suboptimal
+
+    The recipe tries to use the 'truststore' package
+    when it is installed to ensure that 'ssl' uses the
+    system trust store.
+
+    The recipe warns when 'truststore' is not available,
+    and when the 'ssl' module cannot access the filesystem
+    based trust store (as used by 'certifi').
+    """
+    node = graph.find_node("ssl")
+    if node is None:
+        return
+
+    ts_node = graph.find_node("truststore")
+    if ts_node is None:
+        try:
+            import truststore  # noqa: F401
+        except ImportError:
+            # XXX: These warnings are printed multiple times, and should be printed
+            #      through the 'progress' instance.
+            print("WARNING: Please ensure that the 'truststore' package is installed")
+            print("         to ensure that 'ssl' uses the system trust store.")
+
+        else:
+            # Automatically use 'truststore'
+            graph.add_bootstrap_scriptlet(
+                node,
+                textwrap.dedent(
+                    """\
+                    import truststore
+
+                    truststore.inject_into_ssl()
+                    """
+                ),
+            )
+
+            # The rest of this recipe is not necessary.
+            return
+    else:
+        # Automatically use 'truststore' (this can result in multiple
+        # calls to 'truststore.inject_into_ssl' when the application
+        # also calls this function, but that is not a problem.
+        graph.add_bootstrap_scriptlet(
+            node,
+            textwrap.dedent(
+                """\
+            import truststore
+
+            truststore.inject_into_ssl()
+            """
+            ),
+        )
+        return
+
+    import ssl
+
+    datafiles = []
+    paths = ssl.get_default_verify_paths()
+    if paths.cafile is not None:
+        datafiles.append(pathlib.Path(paths.cafile))
+        cafile_path = str(pathlib.Path(paths.cafile).parent)
+    else:
+        cafile_path = None
+
+    if paths.capath is not None:
+        datafiles.append(pathlib.Path(paths.capath))
+        capath_path = str(pathlib.Path(paths.capath).parent)
+    else:
+        capath_path = None
+
+    if cafile_path is None and capath_path is None:
+        # XXX: Should be printed to the 'progress' instance.
+        print("WARNING: 'ssl' cannot validate certificates")
+
+    prescript = textwrap.dedent(
+        f"""
+    def _setup_openssl():
+        import os
+        resourcepath = os.environ["RESOURCEPATH"]
+        os.environ["{paths.openssl_cafile_env}"] = os.path.join(
+            resourcepath, "openssl.ca", "{cafile_path or 'no-such-file'}")
+        os.environ["{paths.openssl_capath_env}"] = os.path.join(
+            resourcepath, "openssl.ca", "{capath_path or 'no-such-file'}")
+
+    _setup_openssl()
+    """
+    )
+
+    graph.add_bootstrap_scriptlet(node, prescript)
+    graph.add_resources(
+        node, [Resource(destination=pathlib.Path("openssl.ca"), sources=datafiles)]
+    )

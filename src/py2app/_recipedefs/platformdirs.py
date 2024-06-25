@@ -9,7 +9,7 @@ def platformdirs(graph: ModuleGraph, options: RecipeOptions) -> None:
     """
     Recipe for `platformdirs <https://pypi.org/project/platformdirs>`_
     """
-    m = graph.find_node("sphinx")
+    m = graph.find_node("platformdirs")
     if m is None or m.filename is None:
         return None
 

@@ -139,7 +139,10 @@ def iter_recipes(graph: ModuleGraph):
     """
     Yield all recipes that are relevant for the *graph*
     """
-    # XXX: This is fairly expensive,
+
+    # Collecting the distributions is fairly expensive, but must
+    # be done very time this function is called because the graph
+    # may have been changed between uses.
     distributions = {d.name: d.version for d in graph.distributions()}
 
     for recipe in RECIPE_REGISTRY:
@@ -172,13 +175,6 @@ def process_recipes(graph: ModuleGraph, options: RecipeOptions, progress: Progre
     recipes might update the graph, which might require
     other recipes to be (re)run
     """
-    # XXX: How to cleanly determine if the graph has
-    #      been updated?
-    # XXX: Stuff should be attached to graph nodes instead
-    #      of updating other state because recipes might
-    #      make nodes unreachable, making state updates
-    #      invalid.
-
     task_id = progress.add_task("Processing recipes", count=None)
 
     steps = 0
@@ -197,5 +193,5 @@ def process_recipes(graph: ModuleGraph, options: RecipeOptions, progress: Progre
         else:
             break
 
-    # progress.update(task_id, count=steps, current="")
+    progress.update(task_id, count=steps, current="")
     progress.task_done(task_id)

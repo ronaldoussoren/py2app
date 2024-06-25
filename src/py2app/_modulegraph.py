@@ -21,9 +21,13 @@ from modulegraph2 import (
     Package,
 )
 
+from ._config import Resource
+
 ATTR_ZIPSAFE = "py2app.zipsafe"
 ATTR_BOOTSTRAP = "py2app.bootstrap"
 ATTR_IGNORE_RESOURCES = "py2app.ignore_resources"
+ATTR_RESOURCES = "py2app.resources"
+ATTR_EXPECTED_MISSING = "py2app.expected_missing"
 
 
 def load_bootstrap(bootstrap: typing.Union[str, io.StringIO]) -> str:
@@ -48,6 +52,43 @@ class ModuleGraph(modulegraph2.ModuleGraph):
     py2app-specific functionality.
     """
 
+    #
+    # Note: All "add_" methods should ensure that they are idempotent
+    #       when adding the same value more than once because resources
+    #       can be run multiple times while building the graph.
+
+    def set_expected_missing(self, node: MissingModule) -> None:
+        """
+        Mark *node* as expected missing
+        """
+        node.extension_attributes[ATTR_EXPECTED_MISSING] = True
+
+    def is_expected_missing(self, node: BaseNode) -> bool:
+        """
+        Return true if node is expected missing, and false otherwise
+        """
+        return node.extension_attributes.get(ATTR_EXPECTED_MISSING, False)
+
+    def add_resources(self, node: BaseNode, resources: typing.List[Resource]) -> None:
+        """
+        Add a resource definition for *node*. The *resources*
+        specify files that should be copied into the bundle
+        when this node is included (but aren't part of the
+        package resources as defined by *importlib.resources*).
+
+        The same resource definition will not be added more
+        than once.
+        """
+        node_resources = node.extension_attributes.setdefault(ATTR_RESOURCES, [])
+        node_resources.extend(rsrc for rsrc in resources if rsrc not in node_resources)
+
+    def resources(self, node: BaseNode) -> typing.List[Resource]:
+        """
+        Return the resources that should be copied into the bundle
+        for *node* (excluding resources as defined by *importlib.resources*
+        """
+        return node.extension_attributes.get(ATTR_RESOURCES, [])
+
     def set_ignore_resources(self, node: BaseNode) -> None:
         """
         Mark *node* as a node whose package resources should not
@@ -62,16 +103,12 @@ class ModuleGraph(modulegraph2.ModuleGraph):
         """
         return node.extension_attributes.get(ATTR_IGNORE_RESOURCES, False)
 
-    def add_bootstrap(
-        self, node: BaseNode, bootstrap: typing.Union[str, io.StringIO]
-    ) -> None:
+    def add_bootstrap_scriptlet(self, node: BaseNode, bootstrap_source: str) -> None:
         """
         Add a bundle bootstrap scriptlet for a particular node in the graph
-        """
-        bootstrap_source = load_bootstrap(bootstrap)
 
-        # XXX: I don't particularly like this, but is needed to be idempotent while running
-        #      recipes repeatedly.
+        The method will add each bootstrap scriptlet at most once.
+        """
         if bootstrap_source in node.extension_attributes.get(ATTR_BOOTSTRAP, []):
             return
 
@@ -80,6 +117,17 @@ class ModuleGraph(modulegraph2.ModuleGraph):
         )
 
         self.add_dependencies_for_source(bootstrap_source)
+
+    def add_bootstrap(
+        self, node: BaseNode, bootstrap: typing.Union[str, io.StringIO]
+    ) -> None:
+        """
+        Add a bundle bootstrap scriptlet for a particular node in the graph.
+
+        The method will add each bootstrap scriptlet at most once.
+        """
+        bootstrap_source = load_bootstrap(bootstrap)
+        self.add_bootstrap_scriptlet(node, bootstrap_source)
 
     def bootstrap(self, node: BaseNode) -> typing.Optional[str]:
         """

@@ -26,8 +26,6 @@ def parse_arguments(argv):
         allow_abbrev=False,
     )
 
-    # XXX: Consider walking up the tree upto to the top of
-    # project tree (the directory containing a `.git` directory)
     parser.add_argument(
         "--pyproject-toml",
         "-c",
@@ -54,17 +52,12 @@ def parse_arguments(argv):
         const=_config.BuildType.ALIAS,
         help="build an alias bundle.",
     )
-
-    # XXX, consider  making this multi-value
-    #      (but: at the moment there is no verbosity
-    #       in the first place)
     parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
         help="print more information while building.",
     )
-
     parser.add_argument(
         "--version",
         action="version",
@@ -85,9 +78,9 @@ def parse_arguments(argv):
         print(f"{args.pyproject}: {exc}", file=sys.stderr)
         sys.exit(1)
 
-    # XXX: I don't particularly like poking directly in '_locals'
     if args.build_type is not None:
-        config._local["build-type"] = args.build_type
+        config.build_type = args.build_type
+
     return args.verbose, config
 
 
@@ -101,6 +94,7 @@ def main():
     for bundle in config.bundles:
         # XXX: Sort bundles to ensure nested bundles get build
         #      after their enclosing bundle.
+        # XXX: This needs additional configuration!
         progress.update(
             task_id,
             current=f"{bundle.build_type.value} {'plugin' if bundle.plugin else 'application'} {bundle.name!r}",
@@ -110,9 +104,8 @@ def main():
     progress.update(task_id, current="")
     progress._progress.stop()
 
-    # XXX: Report on the results
-    sys.exit(1 if progress.have_error else 0)
+    return 1 if progress.have_error else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
