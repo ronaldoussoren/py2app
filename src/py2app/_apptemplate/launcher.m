@@ -50,12 +50,83 @@
  *
  * XXX: Actually implement the second and third variants.
  */
+
+/* XXX: ENABLE_DYLD_DEBUG should be undefined by default */
+#define ENABLE_DYLD_DEBUG
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "Python.h"
 
 #import <Cocoa/Cocoa.h>
+
+#ifdef ENABLE_DYLD_DEBUG
+#include <mach-o/dyld.h>
+
+static int debug_dylib_usage = 0;
+
+/* debug_dyld_usage - Report about shared libraries outside of the app
+ *
+ * The function logs information about all Mach-O images
+ * loaded by the application that are not in the bundle and
+ * are also not system libraries.
+ *
+ * This is primarily meant to be used while testing py2app itself.
+ *
+ * To enable either add 'debug_dylib_usage' to the python configuration
+ * in Info.plist, or set 'PY2APP_DEBUG_DYLIB' in the shell environment.
+ *
+ * Production builds of py2app do not have this feature available.
+ */
+static void debug_dyld_usage(void)
+{
+    if (!debug_dylib_usage) return;
+
+    uint32_t dylib_count = _dyld_image_count();
+    char executable_path[1024];
+    uint32_t bufsize = sizeof(executable_path);
+
+    /* Find the bundle path */
+    if (_NSGetExecutablePath(executable_path, &bufsize) != 0) {
+        NSLog(@"Cannot validate dylib usage due to _NSGetExecutablePath failing");
+        return;
+    }
+
+    char* end;
+    for (int i = 0; i < 3; i++) {
+        end = strrchr(executable_path, '/');
+        if (!end) {
+            NSLog(@"Cannot validate dylib usage unexpected executable path structure");
+            return;
+        }
+        *end-- = 0;
+    }
+    *end++ = '/';
+    *end = 0;
+    bufsize = strlen(executable_path);
+
+    for (uint32_t i = 0; i < dylib_count; i++)  {
+        const char* image_name = _dyld_get_image_name(i);
+
+        /* Check for system libraries */
+        if (strncmp(image_name, "/System/", 8) == 0) {
+            continue;
+        }
+        if (strncmp(image_name, "/usr/", 5) == 0 && strncmp(image_name, "/usr/local/", 11) != 0) {
+            continue;
+        }
+
+        /* Check for files in the bundle */
+        if (strncmp(image_name, executable_path, end-executable_path-1) == 0) {
+            continue;
+        }
+
+        NSLog(@"Mach-O image outside of the bundle: %s", image_name);
+    }
+}
+
+#endif /* ENABLE_DYLD_DEBUG */
 
 /* setup_python - Initialize the python interpreter.
  *
@@ -245,6 +316,23 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
         Py_DECREF(value);
         goto pyerror;
     }
+
+#ifdef ENABLE_DYLD_DEBUG
+    /* 8. Check if dylib loading should be verified */
+    if (pyconfig != nil && [[pyconfig class] isSubclassOfClass:[NSDictionary class]]) {
+        NSNumber* value;
+
+        /*  - optimization_level (int), default 0 */
+        value = pyconfig[@"debug_dylib_usage"];
+        if (value && [[pyconfig class] isSubclassOfClass:[NSNumber class]]) {
+            debug_dylib_usage = [value intValue];
+        }
+    }
+
+    if (getenv("PY2APP_DEBUG_DYLIB") != 0) {
+        debug_dylib_usage = 1;
+    }
+#endif
     Py_DECREF(value);
     return;
 
@@ -315,6 +403,12 @@ main(int argc, char * const *argv, char * const *envp)
     int rval = PyRun_SimpleFile(mainFile, [mainPy UTF8String]);
     fclose(mainFile);
     [mainPy release];
+
+
+#ifdef ENABLE_DYLD_DEBUG
+    debug_dyld_usage();
+#endif
+
 
     /* XXX: Finalizing the interpreter can be problematic, maybe
      *      turn this into a config option?
