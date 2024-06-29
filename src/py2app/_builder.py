@@ -1,3 +1,4 @@
+import collections
 import importlib.resources
 import itertools
 import marshal
@@ -7,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import types
+import typing
 import zipfile
 from functools import singledispatch
 from importlib.util import MAGIC_NUMBER
@@ -15,8 +17,10 @@ from typing import Any, Dict, Union, assert_never
 
 from modulegraph2 import (
     BytecodeModule,
+    DependencyInfo,
     ExtensionModule,
     MissingModule,
+    Module,
     NamespacePackage,
     Package,
     PyPIDistribution,
@@ -391,6 +395,7 @@ def add_loader(paths: BundlePaths, bundle: BundleOptions, progress: Progress) ->
             paths.main / bundle.name,
             arch=bundle.macho_arch,
             deployment_target=bundle.deployment_target,
+            debug_macho_usage=bundle.debug_macho_usage,
         )
 
     progress.step_task(task_id)
@@ -542,9 +547,28 @@ def get_info_plist(bundle: BundleOptions) -> Dict[str, Any]:
     if bundle.plugin:
         # XXX: Switch bundle template to similar structure as the
         #      new app template.
-        return bundle_info_plist_dict(bundle.name, bundle.plist)
+        plist = bundle_info_plist_dict(bundle.name, bundle.plist)
     else:
-        return get_app_plist(bundle.name, bundle.plist)
+        plist = get_app_plist(bundle.name, bundle.plist)
+
+    plist["PyConfig"] = pyconfig = {}
+
+    if bundle.debug_macho_usage:
+        pyconfig["debug_macho_usage"] = True
+
+    if bundle.python_malloc_debug:
+        pyconfig["malloc_debug"] = True
+
+    if bundle.python_dev_mode:
+        pyconfig["dev_mode"] = True
+
+    if bundle.python_verbose:
+        pyconfig["verbose"] = 1
+
+    if bundle.python_use_faulthandler:
+        pyconfig["faulthandler"] = True
+
+    return plist
 
 
 def collect_python(
@@ -661,6 +685,74 @@ def codesign(root: pathlib.Path, progress: Progress) -> None:
     # progress.step_task(task_id)
 
 
+def classify_missing(graph: ModuleGraph) -> ...:
+    """ """
+    missing_unconditional: typing.DefaultDict[str, typing.Set[str]] = (
+        collections.defaultdict(set)
+    )
+    missing_conditional: typing.DefaultDict[str, typing.Set[str]] = (
+        collections.defaultdict(set)
+    )
+    missing_fromlist: typing.DefaultDict[str, typing.Set[str]] = (
+        collections.defaultdict(set)
+    )
+    missing_fromlist_conditional: typing.DefaultDict[str, typing.Set[str]] = (
+        collections.defaultdict(set)
+    )
+
+    for module in graph.iter_graph():
+        if not isinstance(module, MissingModule):
+            continue
+        if graph.is_expected_missing(module):
+            continue
+
+        is_optional = True
+        in_fromlist = None
+
+        for edges, m in graph.incoming(module):
+            if not isinstance(edges, set):
+                continue
+
+            for edge in edges:
+                if not isinstance(edge, DependencyInfo):
+                    continue
+
+                if edge.is_optional or not edge.is_global:
+                    is_optional = True
+                else:
+                    is_optional = False
+
+                if edge.in_fromlist:
+                    in_fromlist = True
+                elif in_fromlist is None:
+                    in_fromlist = False
+
+            if in_fromlist:
+                if (
+                    isinstance(m, (Script, Module, Package))
+                    and module.identifier.rsplit(".", 1)[-1] in m.globals_written
+                ):
+                    # Imported name is a global name in *m*, not a submodule.
+                    continue
+
+                if is_optional:
+                    missing_fromlist_conditional[module.identifier].add(m.identifier)
+                else:
+                    missing_fromlist[module.identifier].add(m.identifier)
+            else:
+                if is_optional:
+                    missing_conditional[module.identifier].add(m.identifier)
+                else:
+                    missing_unconditional[module.identifier].add(m.identifier)
+
+    return (
+        missing_unconditional,
+        missing_conditional,
+        missing_fromlist,
+        missing_fromlist_conditional,
+    )
+
+
 def build_bundle(
     config: Py2appConfiguration, bundle: BundleOptions, progress: Progress
 ) -> bool:
@@ -681,9 +773,15 @@ def build_bundle(
     add_loader(paths, bundle, progress)
     add_resources(paths, bundle, graph, progress)
     ext_map = collect_python(bundle, paths, graph, progress)
+
+    # XXX: Add py2app option to enable 'debug_dylib_usage', which
+    #      should also build a launcher binary with this feature
+    #      available (enabled by the debug_macho_usage parameter
+    #      of this function)
     add_bootstrap(
         paths, bundle, graph, progress
     )  # XXX: Needs more info which is collected in collect_python
+
     add_plist(paths, plist, progress)
 
     macho_standalone(paths, graph, bundle, ext_map, progress)
@@ -707,10 +805,51 @@ def build_bundle(
     for w in warnings:
         progress.warning(w)
 
-    # XXX: This should classify the kind of missing, and suppress
-    #      warnings about values that are imported, but are (likely)
-    #      global variables in a 'from' import. See build_app for the
-    #      classification algorithm.
-    for node in graph.iter_graph():
-        if isinstance(node, MissingModule) and not graph.is_expected_missing(node):
-            progress.warning(f"Used module {node.name!r} not found")
+    (
+        missing_unconditional,
+        missing_conditional,
+        missing_fromlist,
+        missing_fromlist_conditional,
+    ) = classify_missing(graph)
+
+    if missing_unconditional:
+        progress.warning(
+            "The following modules are imported unconditionally, but were not found"
+        )
+        for name in sorted(missing_unconditional):
+            progress.warning(
+                f"* {name} (imported from {', '.join(missing_unconditional[name])})"
+            )
+        progress.warning("")
+
+    if missing_conditional:
+        progress.warning(
+            "The following modules are imported conditionally, but were not found"
+        )
+        for name in sorted(missing_conditional):
+            progress.warning(
+                f"* {name} (imported from {', '.join(missing_conditional[name])})"
+            )
+        progress.warning("")
+
+    # XXX: The two fromlist warning sets should be optional because they have a higher
+    #      change at being false positives.
+    if missing_fromlist:
+        progress.warning(
+            "The following modules are imported unconditionally through 'from .. import ..', but were not found"
+        )
+        for name in sorted(missing_fromlist):
+            progress.warning(
+                f"* {name} (imported from {', '.join(missing_fromlist[name])})"
+            )
+        progress.warning("")
+
+    if missing_fromlist_conditional:
+        progress.warning(
+            "The following modules are imported conditionally through 'from .. import ..', but were not found"
+        )
+        for name in sorted(missing_fromlist_conditional):
+            progress.warning(
+                f"* {name} (imported from {', '.join(missing_fromlist_conditional[name])})"
+            )
+        progress.warning("")

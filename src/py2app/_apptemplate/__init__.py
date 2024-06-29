@@ -58,6 +58,7 @@ def copy_app_launcher(
     arch: BuildArch,
     deployment_target: str,
     program_type: LauncherType = LauncherType.MAIN_PROGRAM,
+    debug_macho_usage: bool = False,
 ) -> None:
     """
     Copy the app launcher template into the specified location
@@ -71,28 +72,31 @@ def copy_app_launcher(
         f"launcher-{arch.value}-{deployment_target}-{sys.abiflags}-{program_type.value}"
     )
     launcher = importlib.resources.files(__name__).joinpath(source_fn)
-    if launcher.exists():
+    if launcher.exists() and not debug_macho_usage:
         path.write_bytes(launcher.read_bytes())
         path.chmod(0o755)
         return
 
     launcher = importlib.resources.files(__name__).joinpath("launcher.m")
     subprocess.run(
-        [
-            "cc",
-            "-o",
-            path,
-            launcher,
-            "-rpath",
-            "@loader_path/../Frameworks",
-            "-Wl,-headerpad_max_install_names",
-            "-framework",
-            "Foundation",
-            f"-mmacosx-version-min={deployment_target}",
-            LAUNCHER_FLAGS[program_type],
-        ]
-        + ARCH_FLAGS[arch]
-        + _pyflags(),
+        (
+            [
+                "cc",
+                "-o",
+                path,
+                launcher,
+                "-rpath",
+                "@loader_path/../Frameworks",
+                "-Wl,-headerpad_max_install_names",
+                "-framework",
+                "Foundation",
+                f"-mmacosx-version-min={deployment_target}",
+                LAUNCHER_FLAGS[program_type],
+            ]
+            + ARCH_FLAGS[arch]
+            + _pyflags()
+            + (["-DENABLE_MACHO_DEBUG"] if debug_macho_usage else [])
+        ),
         check=True,
     )
 

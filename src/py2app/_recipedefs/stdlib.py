@@ -47,10 +47,13 @@ EXPECTED_MISSING = [
     ("copy", ("org.python.core",)),
     ("org.python.core", ("org.python",)),
     ("org.python", ("org",)),
+    ("ctypes", ("nt",)),
+    ("asyncio.windows_events", ("msvrt",)),
     ("pickle", ("org.python.core",)),
     ("importlib", ("_frozen_importlib_external",)),
     ("mimetypes", ("winreg",)),
-    ("platform", ("_winreg", "vms_lib", "java.lang")),
+    ("urllib.request", ("winreg",)),
+    ("platform", ("_winreg", "vms_lib", "java", "java.lang")),
     ("java.lang", ("java",)),
     ("os", ("nt",)),
     ("ntpath", ("nt",)),
@@ -255,6 +258,12 @@ def ssl(graph: ModuleGraph, options: RecipeOptions) -> None:
         except ImportError:
             # XXX: These warnings are printed multiple times, and should be printed
             #      through the 'progress' instance.
+            # XXX: Consider adding a 'py2app.warnings' to the extension attributes
+            #      of the node and print those warnings at the end of a build to
+            #      get a summary at the end and have a chokepoint for deduplicating. This
+            #      would also ensure that the warning is only printed when 'ssl' actually
+            #      ends up in the bundle (e.g. not when a recipe drops all links to the
+            #      package).
             print("WARNING: Please ensure that the 'truststore' package is installed")
             print("         to ensure that 'ssl' uses the system trust store.")
 

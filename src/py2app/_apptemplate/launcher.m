@@ -51,9 +51,6 @@
  * XXX: Actually implement the second and third variants.
  */
 
-/* XXX: ENABLE_DYLD_DEBUG should be undefined by default */
-#define ENABLE_DYLD_DEBUG
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,10 +58,10 @@
 
 #import <Cocoa/Cocoa.h>
 
-#ifdef ENABLE_DYLD_DEBUG
+#ifdef ENABLE_MACHO_DEBUG
 #include <mach-o/dyld.h>
 
-static int debug_dylib_usage = 0;
+static int debug_macho_usage = 0;
 
 /* debug_dyld_usage - Report about shared libraries outside of the app
  *
@@ -74,14 +71,14 @@ static int debug_dylib_usage = 0;
  *
  * This is primarily meant to be used while testing py2app itself.
  *
- * To enable either add 'debug_dylib_usage' to the python configuration
+ * To enable either add 'debug_macho_usage' to the python configuration
  * in Info.plist, or set 'PY2APP_DEBUG_DYLIB' in the shell environment.
  *
  * Production builds of py2app do not have this feature available.
  */
 static void debug_dyld_usage(void)
 {
-    if (!debug_dylib_usage) return;
+    if (!debug_macho_usage) return;
 
     uint32_t dylib_count = _dyld_image_count();
     char executable_path[1024];
@@ -126,7 +123,7 @@ static void debug_dyld_usage(void)
     }
 }
 
-#endif /* ENABLE_DYLD_DEBUG */
+#endif /* ENABLE_MACHO_DEBUG */
 
 /* setup_python - Initialize the python interpreter.
  *
@@ -152,7 +149,7 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
 
         /*  - malloc debug (bool), default False */
         value = pyconfig[@"malloc_debug"];
-        if (value != nil && [[pyconfig class] isSubclassOfClass:[NSNumber class]]) {
+        if (value != nil && [[value class] isSubclassOfClass:[NSNumber class]]) {
             if ([value boolValue]) {
                 preconfig.allocator = PYMEM_ALLOCATOR_DEBUG;
             } else {
@@ -162,7 +159,7 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
 
         /*  - dev_mode (bool), default False  */
         value = pyconfig[@"dev_mode"];
-        if (value && [[pyconfig class] isSubclassOfClass:[NSNumber class]]) {
+        if (value && [[value class] isSubclassOfClass:[NSNumber class]]) {
             config.dev_mode = [value boolValue];
         }
     }
@@ -190,14 +187,20 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
 
         /*  - optimization_level (int), default 0 */
         value = pyconfig[@"optimization_level"];
-        if (value && [[pyconfig class] isSubclassOfClass:[NSNumber class]]) {
+        if (value && [[value class] isSubclassOfClass:[NSNumber class]]) {
             config.optimization_level = [value intValue];
         }
 
         /*  - verbose (int), default 0 */
         value = pyconfig[@"verbose"];
-        if (value && [[pyconfig class] isSubclassOfClass:[NSNumber class]]) {
+        if (value && [[value class] isSubclassOfClass:[NSNumber class]]) {
             config.verbose = [value intValue];
+        }
+
+        /*  - faulthandler (bool), default False */
+        value = pyconfig[@"faulthandler"];
+        if (value && [[value class] isSubclassOfClass:[NSNumber class]]) {
+            config.faulthandler = [value intValue];
         }
     }
 
@@ -317,22 +320,22 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
         goto pyerror;
     }
 
-#ifdef ENABLE_DYLD_DEBUG
+#ifdef ENABLE_MACHO_DEBUG
     /* 8. Check if dylib loading should be verified */
     if (pyconfig != nil && [[pyconfig class] isSubclassOfClass:[NSDictionary class]]) {
         NSNumber* value;
 
-        /*  - optimization_level (int), default 0 */
-        value = pyconfig[@"debug_dylib_usage"];
-        if (value && [[pyconfig class] isSubclassOfClass:[NSNumber class]]) {
-            debug_dylib_usage = [value intValue];
+        /*  - debug_macho_usage (bool), default False */
+        value = pyconfig[@"debug_macho_usage"];
+        if (value && [[value class] isSubclassOfClass:[NSNumber class]]) {
+            debug_macho_usage = [value intValue];
         }
     }
 
-    if (getenv("PY2APP_DEBUG_DYLIB") != 0) {
-        debug_dylib_usage = 1;
+    if (getenv("PY2APP_DEBUG_MACHO") != 0) {
+        debug_macho_usage = 1;
     }
-#endif
+#endif /* ENABLE_MACHO_DEBUG */
     Py_DECREF(value);
     return;
 
@@ -405,9 +408,9 @@ main(int argc, char * const *argv, char * const *envp)
     [mainPy release];
 
 
-#ifdef ENABLE_DYLD_DEBUG
+#ifdef ENABLE_MACHO_DEBUG
     debug_dyld_usage();
-#endif
+#endif /* ENABLE_MACHO_DEBUG */
 
 
     /* XXX: Finalizing the interpreter can be problematic, maybe

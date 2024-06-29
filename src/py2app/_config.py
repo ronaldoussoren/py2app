@@ -151,11 +151,17 @@ class BundleOptions:
         self._global = global_options
         self._local = local_options
 
+    @property
+    def debug_macho_usage(self) -> bool:
+        return self._global.debug_macho_usage
+
     build_type = inherited[BuildType]("build-type", "build_type")
     macho_strip = inherited[bool]("strip", "macho_strip")
     macho_arch = inherited[BuildArch]("arch", "macho_arch")
     deployment_target = inherited[str]("deployment-target", "deployment_target")
     python_optimize = inherited[int]("python.optimize", "python_optimize")
+    python_malloc_debug = inherited[bool]("python.malloc-debug", "python_malloc_debug")
+    python_dev_mode = inherited[bool]("python.dev-mode", "python_dev_mode")
     python_verbose = inherited[bool]("python.verbose", "python_verbose")
     python_use_pythonpath = inherited[bool](
         "python.use-pythonpath", "python_use_pythonpath"
@@ -231,6 +237,8 @@ class BundleOptions:
         result.append(f"  deployment_target = {self.deployment_target!r}\n")
         result.append(f"  python_optimize = {self.python_optimize!r}\n")
         result.append(f"  python_verbose = {self.python_verbose!r}\n")
+        result.append(f"  python_malloc_debug = {self.python_malloc_debug!r}\n")
+        result.append(f"  python_dev_mode = {self.python_dev_mode!r}\n")
         result.append(f"  python_use_pythonpath = {self.python_use_pythonpath!r}\n")
         result.append(f"  python_use_sitepackages = {self.python_use_sitepackages!r}\n")
         result.append(f"  python_use_faulthandler = {self.python_use_faulthandler!r}\n")
@@ -264,6 +272,7 @@ class Py2appConfiguration:
         self._local = global_options
         self.bundles = bundles
         self.recipe = recipe_options
+        self.debug_macho_usage = False
 
     build_type = local[BuildType]("build-type", BuildType.STANDALONE)
     deployment_target = local[str]("deployment-target", _DEFAULT_TARGET)
@@ -271,6 +280,8 @@ class Py2appConfiguration:
     macho_arch = local[BuildArch]("arch", BuildArch(_DEFAULT_ARCH))
     python_optimize = local[int]("python.optimize", sys.flags.optimize)
     python_verbose = local[bool]("python.verbose", bool(sys.flags.verbose))
+    python_malloc_debug = local[bool]("python.malloc-debug", False)
+    python_dev_mode = local[bool]("python.dev-mode", False)
     python_use_pythonpath = local[bool]("python.use-pythonpath", False)
     python_use_sitepackages = local[bool]("python.use-sitepackages", False)
     python_use_faulthandler = local[bool]("python.use-faulthandler", False)
@@ -286,6 +297,8 @@ class Py2appConfiguration:
         result.append(f"  python_use_pythonpath = {self.python_use_pythonpath!r}\n")
         result.append(f"  python_use_sitepackages = {self.python_use_sitepackages!r}\n")
         result.append(f"  python_use_faulthandler = {self.python_use_faulthandler!r}\n")
+        result.append(f"  python_maloc_debug = {self.python_maloc_debug!r}\n")
+        result.append(f"  python_dev_mode = {self.python_dev_mode!r}\n")
         result.append(f"  build_type = {self.build_type}\n")
         result.append("\n")
         recipe = repr(self.recipe)
@@ -309,7 +322,9 @@ class Py2appConfiguration:
         return "".join(result)
 
 
-def parse_pyproject(file_contents: dict, config_root: pathlib.Path):
+def parse_pyproject(
+    file_contents: dict, config_root: pathlib.Path
+) -> Py2appConfiguration:
     try:
         config = file_contents["tool"]["py2app"]
     except KeyError:

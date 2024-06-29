@@ -63,6 +63,19 @@ def parse_arguments(argv):
         action="version",
         version=f"%(prog)s {__version__}",
     )
+
+    #
+    # Experimental or internal options (can be documented,
+    # but should not be present in command-line help)
+    #
+
+    parser.add_argument(
+        "--x-debug-macho-usage",
+        dest="debug_macho_usage",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+
     args = parser.parse_args(argv)
 
     try:
@@ -80,6 +93,9 @@ def parse_arguments(argv):
 
     if args.build_type is not None:
         config.build_type = args.build_type
+
+    if args.debug_macho_usage:
+        config.debug_macho_usage = True
 
     return args.verbose, config
 
