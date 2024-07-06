@@ -1,11 +1,12 @@
 import argparse
 import pathlib
 import sys
+import typing
 
 try:
     import tomllib
 except ImportError:
-    import tomli as tomllib
+    import tomli as tomllib  # type: ignore
 
 from . import __version__, _builder, _config, _progress
 
@@ -18,7 +19,9 @@ installing dependencies.
 """
 
 
-def parse_arguments(argv):
+def parse_arguments(
+    argv: typing.List[str],
+) -> typing.Tuple[bool, _config.Py2appConfiguration]:
     parser = argparse.ArgumentParser(
         prog=f"{sys.executable} -mpy2app",
         description=DESCRIPTION,
@@ -92,7 +95,7 @@ def parse_arguments(argv):
     return args.verbose, config
 
 
-def main():
+def main() -> int:
     verbose, config = parse_arguments(sys.argv[1:])
 
     progress = _progress.Progress(level=2 if verbose else 1)
