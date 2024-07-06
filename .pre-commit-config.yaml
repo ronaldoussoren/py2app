@@ -1,5 +1,5 @@
 default_language_version:
-    python: python3.9
+    python: python3.12
 repos:
   - repo: https://github.com/pre-commit/mirrors-isort
     rev: v5.10.1
@@ -19,7 +19,7 @@ repos:
     rev: v3.16.0
     hooks:
     -   id: pyupgrade
-        args: ['--py36-plus']
+        args: ['--py38-plus']
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.3.0
