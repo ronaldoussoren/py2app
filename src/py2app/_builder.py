@@ -308,7 +308,7 @@ def fs_package_node(
         target.write_bytes(data)
 
 
-def create_bundle_structure(bundle: BundleOptions, progress: Progress) -> pathlib.Path:
+def create_bundle_structure(bundle: BundleOptions, progress: Progress) -> BundlePaths:
     """
     Create the directory structure for a bundle and return the
     path to the root of the tree.
@@ -846,6 +846,7 @@ def build_bundle(
     add_plist(paths, plist, progress)
 
     if bundle.build_type == BuildType.STANDALONE:
+        assert graph is not None
         macho_standalone(paths, graph, bundle, ext_map, progress)
     elif bundle.build_type == BuildType.ALIAS:
         rewrite_libpython(paths, bundle, progress)

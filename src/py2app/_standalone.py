@@ -10,7 +10,7 @@ copies dependent Mach-O libraries into a bundle.
 #
 # XXX: Longer term create "macholib2" with a modern interface.
 
-__all__ = ("macho_standalone",)
+__all__ = ("macho_standalone", "set_deployment_target", "rewrite_libpython")
 
 import contextlib
 import os
@@ -27,15 +27,13 @@ from macholib.util import in_system_path, is_platform_file
 from ._bundlepaths import BundlePaths
 from ._config import BundleOptions
 from ._modulegraph import ModuleGraph
-from .progress import Progress
+from ._progress import Progress
 
 
-def iter_platform_files(path: pathlib.Path) -> typing.Iterator[str]:
+def iter_platform_files(path: pathlib.Path) -> typing.Iterator[pathlib.Path]:
     """
     Yield all Mach-O files in the tree starting at *path*
     """
-    # XXX: Switch to path.walk() when dropping support
-    #      for 3.11.
     for root_str, _dirs, files in os.walk(path):
         root = pathlib.Path(root_str)
         for fn in files:
@@ -48,7 +46,7 @@ def iter_platform_files(path: pathlib.Path) -> typing.Iterator[str]:
 
 
 @contextlib.contextmanager
-def writable(path: pathlib.Path):
+def writable(path: pathlib.Path) -> typing.Iterator[None]:
     """
     Contextmanager that temporarily makes a file writable
     """
@@ -254,7 +252,7 @@ def macho_standalone(
                         progress.update(task_id, total=len(todo) + len(seen))
                         copy_library(filename, target_path)
 
-        def changefunc(name):
+        def changefunc(name: str) -> str:
             result = changes.get(name, name)  # noqa: B023
             return result
 
@@ -267,7 +265,7 @@ def macho_standalone(
     progress.task_done(task_id)
 
 
-def get_libpython(path: pathlib.Path) -> pathlib.Path:
+def get_libpython(path: pathlib.Path) -> pathlib.Path | None:
     """
     Return the libpython that 'path' was linked with.
     """
@@ -323,7 +321,7 @@ def rewrite_libpython(
         )
         return
 
-    def changefunc(name):
+    def changefunc(name: str) -> str:
         result = changes.get(name, name)  # noqa: B023
         return result
 
@@ -376,6 +374,7 @@ def set_deployment_target(
         for header in m.headers:
             for lc, cmd, _data in header.commands:
                 if lc.cmd == macholib.mach_o.LC_VERSION_MIN_MACOSX:
+                    assert isinstance(cmd, macholib.mach_o.version_min_command)
                     cmd.version = encoded_version
                     changed = True
 
