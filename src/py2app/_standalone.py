@@ -20,6 +20,7 @@ import sys
 import sysconfig
 import typing
 
+import macholib.mach_o
 import macholib.MachO
 from macholib.util import in_system_path, is_platform_file
 
@@ -355,4 +356,28 @@ def set_deployment_target(
     """
     Set the deployment target for stub executables to *deployment_target*
     """
-    pass
+    all_paths = [bundle.script]
+    all_paths.extend(bundle.extra_scripts)
+    for path in progress.iter_task(
+        all_paths, f"Set deployment target to {deployment_target}", lambda n: n.stem
+    ):
+        target = paths.main / path.stem
+        m = macholib.MachO.MachO(str(target))
+
+        # major << 16 | minor << 8 | micro
+        parts = [int(p) for p in deployment_target.split(".")]
+        encoded_version = 0
+        for p in parts:
+            encoded_version = (encoded_version << 8) | p
+        encoded_version <<= (3 - len(parts)) * 8
+
+        changed = False
+
+        for header in m.headers:
+            for lc, cmd, _data in header.commands:
+                if lc.cmd == macholib.mach_o.LC_VERSION_MIN_MACOSX:
+                    cmd.version = encoded_version
+                    changed = True
+
+        if changed:
+            rewrite_headers(target, m)

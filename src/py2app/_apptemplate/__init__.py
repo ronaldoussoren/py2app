@@ -56,21 +56,17 @@ def copy_app_launcher(
     path,
     *,
     arch: BuildArch,
-    deployment_target: str,
     program_type: LauncherType = LauncherType.MAIN_PROGRAM,
+    deployment_target: str,
     debug_macho_usage: bool = False,
 ) -> None:
     """
     Copy the app launcher template into the specified location
     """
-    # XXX: Need to arrange for creating relevant launcher templates
-    #      during wheel building
-    # XXX: Probably need to pass progress instance to warn when
-    #      the launcher needs to be compiled.
 
-    source_fn = (
-        f"launcher-{arch.value}-{deployment_target}-{sys.abiflags}-{program_type.value}"
-    )
+    # The deployment target is not used as part of the cache file name
+    # because the target version will be replaced while building a bundle.
+    source_fn = f"launcher-{arch.value}-{sys.abiflags}-{program_type.value}"
     launcher = importlib.resources.files(__name__).joinpath(source_fn)
     if launcher.exists() and not debug_macho_usage:
         path.write_bytes(launcher.read_bytes())

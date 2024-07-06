@@ -853,13 +853,9 @@ def build_bundle(
         progress.error("Build type {bundle.build_type} is not supported")
         return
 
-    # XXX: Add support for using 'real' signatures
-    #     (e.g. notarization), but only for standalone
-    #     bundles.
-    codesign(paths.root.parent, progress)
-
     if bundle.build_type == BuildType.ALIAS:
         # The rest of this function is not relevant for alias builds
+        codesign(paths.root.parent, progress)
         return
 
     architecture, deployment_target, warnings = audit_macho_issues(paths.root.parent)
@@ -869,6 +865,11 @@ def build_bundle(
     # XXX: Check and document the error message for launching the bundle on
     # a version of the OS that is too old.
     set_deployment_target(paths, bundle, progress, deployment_target)
+
+    # XXX: Add support for using 'real' signatures
+    #     (e.g. notarization), but only for standalone
+    #     bundles.
+    codesign(paths.root.parent, progress)
 
     make_readonly(paths.root.parent, bundle, progress)
 
