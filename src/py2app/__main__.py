@@ -36,18 +36,10 @@ def parse_arguments(argv):
         help="path to pyproject.toml (default: %(default)s)",
     )
     parser.add_argument(
-        "--semi-standalone",
-        dest="build_type",
-        default=None,
-        action="store_const",
-        const=_config.BuildType.SEMI_STANDALONE,
-        help="build a semi-standalone bundle.",
-    )
-    parser.add_argument(
         "--alias",
         "-A",
         dest="build_type",
-        default=_config.BuildType.SEMI_STANDALONE,
+        default=_config.BuildType.ALIAS,
         action="store_const",
         const=_config.BuildType.ALIAS,
         help="build an alias bundle.",

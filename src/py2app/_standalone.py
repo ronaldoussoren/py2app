@@ -17,6 +17,7 @@ import os
 import pathlib
 import shutil
 import sys
+import sysconfig
 import typing
 
 import macholib.MachO
@@ -263,3 +264,95 @@ def macho_standalone(
     progress.update(task_id, current=None)
     progress.update(task_id, current="")
     progress.task_done(task_id)
+
+
+def get_libpython(path: pathlib.Path) -> pathlib.Path:
+    """
+    Return the libpython that 'path' was linked with.
+    """
+    m = macholib.MachO.MachO(str(path))
+    for header in m.headers:
+        for _idx, _name, filename in header.walkRelocatables():
+            p = pathlib.Path(filename)
+            if p.name == "Python":
+                return p
+            elif p.name.startswith("libpython") and p.suffix == ".dylib":
+                return p
+    else:
+        return None
+
+
+def get_system_libpython() -> pathlib.Path | None:
+    """
+    Return the libpython that sys.executable is linked with.
+    """
+    fwk = sysconfig.get_config_var("PYTHONFRAMEWORK")
+    if fwk:
+        m = macholib.MachO.MachO(sys.executable)
+        for header in m.headers:
+            for _idx, _name, filename in header.walkRelocatables():
+                if filename.endswith(f"/{fwk}"):
+                    return pathlib.Path(filename)
+    else:
+        m = macholib.MachO.MachO(sys.executable)
+        for header in m.headers:
+            for _idx, _name, filename in header.walkRelocatables():
+                p = pathlib.Path(filename)
+                if p.name.startswith("libpython") and p.suffix == ".dylib":
+                    return p
+
+    # No libpython was found, likely because sys.executable is
+    # statically linked.
+    return None
+
+
+def rewrite_libpython(
+    paths: BundlePaths,
+    bundle: BundleOptions,
+    progress: Progress,
+) -> None:
+    """
+    Rewrite the references to libpython in the bundle launchers to
+    whichever libpython the current executable is linked with.
+    """
+    system_path = get_system_libpython()
+    if system_path is None:
+        progress.error(
+            "Cannot determine libpython for sys.executable, is python statically linked?"
+        )
+        return
+
+    def changefunc(name):
+        result = changes.get(name, name)  # noqa: B023
+        return result
+
+    all_paths = [bundle.script]
+    all_paths.extend(bundle.extra_scripts)
+    for path in progress.iter_task(
+        all_paths, "Rewrite reference to libpython in loader", lambda n: n.stem
+    ):
+        target = paths.main / path.stem
+        loader_path = get_libpython(target)
+        if loader_path is None:
+            progress.error(f"{target} is not linked to a python library")
+            continue
+
+        changes = {str(loader_path): str(system_path)}
+
+        m = macholib.MachO.MachO(str(target))
+
+        changed = m.rewriteLoadCommands(changefunc)
+        if changed:
+            rewrite_headers(target, m)
+
+
+def set_deployment_target(
+    paths: BundlePaths,
+    bundle: BundleOptions,
+    progress: Progress,
+    deployment_target: str,
+) -> None:
+    """
+    Set the deployment target for stub executables to *deployment_target*
+    """
+    pass

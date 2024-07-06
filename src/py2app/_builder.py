@@ -7,6 +7,7 @@ import plistlib
 import shutil
 import subprocess
 import sys
+import textwrap
 import types
 import typing
 import zipfile
@@ -35,7 +36,7 @@ from ._config import BuildType, BundleOptions, Py2appConfiguration
 from ._modulegraph import ModuleGraph
 from ._progress import Progress
 from ._recipes import process_recipes
-from ._standalone import macho_standalone
+from ._standalone import macho_standalone, rewrite_libpython, set_deployment_target
 from .bundletemplate.plist_template import (
     infoPlistDict as bundle_info_plist_dict,  # XXX: Replace
 )
@@ -69,7 +70,7 @@ def code_to_bytes(code: types.CodeType) -> bytearray:
 
 
 def relpath_for_script(node: Script) -> str:
-    return f"bundle-scripts/{node.identifier.split('/')[-1]}"
+    return f"bundle-scripts/{node.filename.stem}"
 
 
 # XXX: What to do about ".dylib" (and the ".dylibs" folder in a lot of wheels...)
@@ -436,15 +437,16 @@ def add_plist(paths: BundlePaths, plist: Dict[str, Any], progress: Progress) -> 
 BOOTSTRAP_MOD = {
     (False, BuildType.STANDALONE): "boot_app.py",
     (False, BuildType.ALIAS): "boot_aliasapp.py",
-    (False, BuildType.SEMI_STANDALONE): "boot_app.py",
     (True, BuildType.STANDALONE): "boot_plugin.py",
     (True, BuildType.ALIAS): "boot_aliasplugin.py",
-    (True, BuildType.SEMI_STANDALONE): "boot_plugin.py",
 }
 
 
 def add_bootstrap(
-    paths: BundlePaths, bundle: BundleOptions, graph: ModuleGraph, progress: Progress
+    paths: BundlePaths,
+    bundle: BundleOptions,
+    graph: ModuleGraph | None,
+    progress: Progress,
 ) -> None:
     # XXX:
     # - This doesn't work (yet) inside an app bundle because py2app won't
@@ -461,7 +463,48 @@ def add_bootstrap(
 
     bootstrap_path = paths.resources / "__boot__.py"
 
+    # XXX:
+    # - All hardcoded fragments should either access only builtin modules,
+    #   or addition should be moved to an earlier phase using *graph.add_bootstrap*.
+    # - handle argv_emulator and argv_inject with recipes, but these
+    #   should only be enabled for the main script and not for secondary
+    #   scripts.
+    # - Likewise for 'emulate_shell_environment'
+
     with open(bootstrap_path, "w") as stream:
+        if bundle.build_type == BuildType.ALIAS:
+            # The bundle does not include Python source code, and
+            # code objects could refer to non-existing paths.
+            #
+            # Disable the linecache module for regular builds.
+            stream.write(
+                importlib.resources.files("py2app.bootstrap")
+                .joinpath("_disable_linecache.py")
+                .read_text(encoding="utf-8")
+            )
+            stream.write("\n")
+
+        if bundle.chdir:
+            if bundle.plugin:
+                progress.warning(f"Ignoring 'chdir' for plugin bundle {bundle.name!r}")
+
+            else:
+                # XXX: This should only be enabled for the main script, not
+                #      for extra scripts.
+                stream.write(
+                    textwrap.dedent(
+                        """\
+                    def _chdir_resources() -> None:
+                        import os, sys
+
+                        os.chdir(sys.py2app_bundle_resources)
+
+                    _chdir_resources()
+
+                    """
+                    )
+                )
+
         stream.write(
             importlib.resources.files("py2app.bootstrap")
             .joinpath("_setup_importlib.py")
@@ -469,13 +512,14 @@ def add_bootstrap(
         )
         stream.write("\n")
 
-        for node in graph.iter_graph():
-            bootstrap = graph.bootstrap(node)
-            if bootstrap is None:
-                continue
+        if graph is not None:
+            for node in graph.iter_graph():
+                bootstrap = graph.bootstrap(node)
+                if bootstrap is None:
+                    continue
 
-            stream.write(bootstrap)
-            stream.write("\n")
+                stream.write(bootstrap)
+                stream.write("\n")
 
         stream.write(
             importlib.resources.files("py2app.bootstrap")
@@ -484,8 +528,17 @@ def add_bootstrap(
         )
         stream.write("\n")
 
-        stream.write(f'DEFAULT_SCRIPT = "{bundle.script}"\n')
-        stream.write("SCRIPT_MAP = {}\n")
+        script_map = {}
+        if bundle.build_type == BuildType.ALIAS:
+            stream.write(f'DEFAULT_SCRIPT = "{bundle.script.resolve()}"\n')
+            for script in bundle.extra_scripts:
+                script_map[script.stem] = script.resolve()
+        else:
+            stream.write(f'DEFAULT_SCRIPT = "{bundle.script.stem}"\n')
+            for script in bundle.extra_scripts:
+                script_map[script.stem] = script.stem
+
+        stream.write(f"SCRIPT_MAP = {script_map!r}\n")
         stream.write("_run()\n")
 
 
@@ -495,7 +548,10 @@ ignore_filter = shutil.ignore_patterns(".git", ".svn", "*.sv", "*.bak", "*~", ".
 
 
 def add_resources(
-    paths: BundlePaths, bundle: BundleOptions, graph: ModuleGraph, progress: Progress
+    paths: BundlePaths,
+    bundle: BundleOptions,
+    graph: ModuleGraph | None,
+    progress: Progress,
 ) -> None:
     # XXX: Cleanly handle mach-o resources, in particular the '.dylib'
     #      folders added by `delocate` tool (move those libraries to
@@ -510,8 +566,9 @@ def add_resources(
     # There are two sources for resources: the bundle definition
     # and resources added to nodes by recipes.
     all_resources = list(bundle.resources) if bundle.resources else []
-    for node in graph.iter_graph():
-        all_resources.extend(graph.resources(node))
+    if graph is not None:
+        for node in graph.iter_graph():
+            all_resources.extend(graph.resources(node))
 
     if not all_resources:
         return
@@ -568,6 +625,9 @@ def get_info_plist(bundle: BundleOptions) -> Dict[str, Any]:
     if bundle.python_use_faulthandler:
         pyconfig["faulthandler"] = True
 
+    if bundle.build_type == BuildType.ALIAS:
+        pyconfig["sys.path"] = [str(bundle.script.resolve().parent)] + sys.path[1:]
+
     return plist
 
 
@@ -580,7 +640,6 @@ def collect_python(
     #      handle @rpath, @loader_path (but this requires
     #      rewriting modulegraph as well...)
     #
-    # XXX: semi-standalone and alias should not include stdlib
     # XXX: recipes and bundle-templates must be able to replace
     #      the source of a python module (e.g. site.py)
 
@@ -759,41 +818,60 @@ def build_bundle(
     """
     Build the output for *bundle*. Returns *True* if successful and *False* otherwise.
     """
+
     # XXX: There is no nice way to report errors at this point
     #      (ok, errors, fatal errors) other than in progress output.
 
-    graph = get_module_graph(bundle, progress)
-    graph.add_module("zipfile")
+    if bundle.build_type != BuildType.ALIAS:
+        graph = get_module_graph(bundle, progress)
+        graph.add_module("zipfile")
 
-    process_recipes(graph, config.recipe, progress)
+        process_recipes(graph, config.recipe, progress)
+    else:
+        graph = None
 
     paths = create_bundle_structure(bundle, progress)
     plist = get_info_plist(bundle)
     add_iconfile(paths, plist, bundle, progress)
     add_loader(paths, bundle, progress)
     add_resources(paths, bundle, graph, progress)
-    ext_map = collect_python(bundle, paths, graph, progress)
 
-    # XXX: Add py2app option to enable 'debug_dylib_usage', which
-    #      should also build a launcher binary with this feature
-    #      available (enabled by the debug_macho_usage parameter
-    #      of this function)
+    if bundle.build_type != BuildType.ALIAS:
+        ext_map = collect_python(bundle, paths, graph, progress)
+
     add_bootstrap(
         paths, bundle, graph, progress
     )  # XXX: Needs more info which is collected in collect_python
 
     add_plist(paths, plist, progress)
 
-    macho_standalone(paths, graph, bundle, ext_map, progress)
+    if bundle.build_type == BuildType.STANDALONE:
+        macho_standalone(paths, graph, bundle, ext_map, progress)
+    elif bundle.build_type == BuildType.ALIAS:
+        rewrite_libpython(paths, bundle, progress)
+    else:
+        progress.error("Build type {bundle.build_type} is not supported")
+        return
 
     # XXX: Add support for using 'real' signatures
     #     (e.g. notarization), but only for standalone
     #     bundles.
     codesign(paths.root.parent, progress)
 
-    make_readonly(paths.root.parent, bundle, progress)
+    if bundle.build_type == BuildType.ALIAS:
+        # The rest of this function is not relevant for alias builds
+        return
 
     architecture, deployment_target, warnings = audit_macho_issues(paths.root.parent)
+
+    # Set the deployment target for the launcher executables to the lowest
+    # deployment target of Mach-O files in the bundle.
+    # XXX: Check and document the error message for launching the bundle on
+    # a version of the OS that is too old.
+    set_deployment_target(paths, bundle, progress, deployment_target)
+
+    make_readonly(paths.root.parent, bundle, progress)
+
     progress.info("")
     progress.info(
         f"[bold]Built {'plugin' if bundle.plugin else 'app'} {bundle.name}[/bold]"

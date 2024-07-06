@@ -135,6 +135,7 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
     PyPreConfig preconfig;
     PyConfig config;
     PyStatus status;
+    NSArray* path_suffixes = nil;
 
     PyPreConfig_InitIsolatedConfig(&preconfig);
     preconfig.utf8_mode = 1;
@@ -202,6 +203,11 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
         if (value && [[value class] isSubclassOfClass:[NSNumber class]]) {
             config.faulthandler = [value intValue];
         }
+
+        path_suffixes = pyconfig[@"sys.path"];
+        if (path_suffixes != nil && ![[path_suffixes class] isSubclassOfClass:[NSArray class]]) {
+            path_suffixes = nil;
+        }
     }
 
     /* 3. Perform Path Configuration
@@ -259,7 +265,6 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
     config.module_search_paths.items = NULL;
     config.module_search_paths.length = 0;
 
-    static NSArray* path_suffixes = nil;
     if (path_suffixes == nil) {
         path_suffixes = [NSArray arrayWithObjects:
             @"python-libraries.zip",

@@ -31,9 +31,6 @@ class BuildType(enum.Enum):
     STANDALONE = "standalone"
     ALIAS = "alias"
 
-    # XXX: Still support semi-standalone?
-    SEMI_STANDALONE = "semi-standalone"
-
 
 class BuildArch(enum.Enum):
     ARM64 = "arm64"
@@ -166,9 +163,6 @@ class BundleOptions:
     python_use_pythonpath = inherited[bool](
         "python.use-pythonpath", "python_use_pythonpath"
     )
-    python_use_sitepackages = inherited[bool](
-        "python.use-sitepackages", "python_use_sitepackages"
-    )
     python_use_faulthandler = inherited[bool](
         "python.use-faulthandler", "python_use_faulthandler"
     )
@@ -240,7 +234,6 @@ class BundleOptions:
         result.append(f"  python_malloc_debug = {self.python_malloc_debug!r}\n")
         result.append(f"  python_dev_mode = {self.python_dev_mode!r}\n")
         result.append(f"  python_use_pythonpath = {self.python_use_pythonpath!r}\n")
-        result.append(f"  python_use_sitepackages = {self.python_use_sitepackages!r}\n")
         result.append(f"  python_use_faulthandler = {self.python_use_faulthandler!r}\n")
         result.append(">")
         return "".join(result)
@@ -283,7 +276,6 @@ class Py2appConfiguration:
     python_malloc_debug = local[bool]("python.malloc-debug", False)
     python_dev_mode = local[bool]("python.dev-mode", False)
     python_use_pythonpath = local[bool]("python.use-pythonpath", False)
-    python_use_sitepackages = local[bool]("python.use-sitepackages", False)
     python_use_faulthandler = local[bool]("python.use-faulthandler", False)
 
     def __repr__(self):
@@ -295,7 +287,6 @@ class Py2appConfiguration:
         result.append(f"  python_optimize = {self.python_optimize!r}\n")
         result.append(f"  python_verbose = {self.python_verbose!r}\n")
         result.append(f"  python_use_pythonpath = {self.python_use_pythonpath!r}\n")
-        result.append(f"  python_use_sitepackages = {self.python_use_sitepackages!r}\n")
         result.append(f"  python_use_faulthandler = {self.python_use_faulthandler!r}\n")
         result.append(f"  python_maloc_debug = {self.python_maloc_debug!r}\n")
         result.append(f"  python_dev_mode = {self.python_dev_mode!r}\n")

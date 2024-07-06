@@ -529,7 +529,7 @@ class py2app(Command):
             raise DistutilsOptionError("Cannot have both alias and semi-standalone")
 
         if self.semi_standalone:
-            bundle_options["build-type"] = _config.BuildType.SEMI_STANDALONE
+            raise DistutilsOptionError("semi-standalone is no longer supported")
         elif self.alias:
             bundle_options["build-type"] = _config.BuildType.ALIAS
         else:
