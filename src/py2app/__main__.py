@@ -39,7 +39,7 @@ def parse_arguments(argv):
         "--alias",
         "-A",
         dest="build_type",
-        default=_config.BuildType.ALIAS,
+        default=_config.BuildType.STANDALONE,
         action="store_const",
         const=_config.BuildType.ALIAS,
         help="build an alias bundle.",
