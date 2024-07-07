@@ -21,10 +21,14 @@ import pathlib
 import typing
 
 import packaging
-from modulegraph2 import BaseNode, ModuleGraph, Script
+import packaging.specifiers
+from modulegraph2 import BaseNode, PyPIDistribution, Script
 
 from ._config import RecipeOptions
+from ._modulegraph import ModuleGraph
 from ._progress import Progress
+
+_RECIPE_FUNC = typing.Callable[[ModuleGraph, RecipeOptions], None]
 
 
 class ModuleGraphProxy:
@@ -45,33 +49,38 @@ class ModuleGraphProxy:
     def add_module(self, module_name: str) -> BaseNode:
         node = self.__graph.find_node(module_name)
         if node is not None:
+            assert isinstance(node, BaseNode)
             return node
 
         self.__updated = True
         return self.__graph.add_module(module_name)
 
     def add_script(self, script_path: pathlib.Path) -> Script:
-        node = self.__graph.find_node(script_path)
+        node = self.__graph.find_node(str(script_path))
         if node is not None:
+            assert isinstance(node, Script)
             return node
         self.__updated = True
         return self.__graph.add_script(script_path)
 
-    def import_package(self, importing_module, package_name):
+    def import_package(self, importing_module: BaseNode, package_name: str) -> BaseNode:
         # XXX: This is not good enough, will result in false positive update
         #      value if import_package was called earlier
         node = self.__graph.find_node(package_name)
         if node is not None:
+            assert isinstance(node, BaseNode)
             if node.extension_attributes.get("py2app.full_package", False):
                 return node
         self.__updated = True
         node = self.__graph.import_package(importing_module, package_name)
+        assert isinstance(node, BaseNode)
         node.extension_attributes["py2app.full_package"] = True
         return node
 
-    def import_module(self, importing_module, module_name):
+    def import_module(self, importing_module: BaseNode, module_name: str) -> BaseNode:
         node = self.__graph.find_node(module_name)
         if node is not None:
+            assert isinstance(node, BaseNode)
             try:
                 self.__graph.edge_data(importing_module, node)
             except KeyError:
@@ -83,12 +92,14 @@ class ModuleGraphProxy:
         self.__updated = True
         return self.__graph.import_module(importing_module, module_name)
 
-    def add_distribution(self, distribution):
+    def add_distribution(
+        self, distribution: typing.Union[PyPIDistribution, str]
+    ) -> typing.Union[PyPIDistribution, str]:
         # XXX: Need check if there actually is an update
         self.__updated = True
         return self.__graph.add_distribution(distribution)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> typing.Any:
         if name.startswith("_"):
             raise AttributeError(name)
         return getattr(self.__graph, name)
@@ -98,7 +109,7 @@ class ModuleGraphProxy:
 class RecipeInfo:
     # XXX: Should there be a name here?
     name: str
-    callback: typing.Callable[[ModuleGraph, RecipeOptions], None]
+    callback: _RECIPE_FUNC
 
     # Only trigger when "distribution" is in the graph
     distribution: typing.Optional[str] = None
@@ -116,12 +127,18 @@ class RecipeInfo:
 RECIPE_REGISTRY = []
 
 
-def recipe(name, *, distribution=None, version_spec=None, modules=()):
+def recipe(
+    name: str,
+    *,
+    distribution: typing.Optional[str] = None,
+    version_spec: typing.Optional[str] = None,
+    modules: typing.Sequence[str] = (),
+) -> typing.Callable[[_RECIPE_FUNC], _RECIPE_FUNC]:
     # XXX: Should this move to a separate module with helper functions
     #      for recipes?
     #      Other functions in such a module could help in standardizing
     #      annotations.
-    def decorator(function):
+    def decorator(function: _RECIPE_FUNC) -> _RECIPE_FUNC:
         RECIPE_REGISTRY.append(
             RecipeInfo(
                 name=name,
@@ -136,7 +153,7 @@ def recipe(name, *, distribution=None, version_spec=None, modules=()):
     return decorator
 
 
-def iter_recipes(graph: ModuleGraph):
+def iter_recipes(graph: ModuleGraph) -> typing.Iterator[RecipeInfo]:
     """
     Yield all recipes that are relevant for the *graph*
     """
@@ -152,9 +169,9 @@ def iter_recipes(graph: ModuleGraph):
                 continue
 
             if recipe.version_spec is not None:
-                if distributions[recipe.distribution] not in packaging.VersionSpec(
-                    recipe.version_spec, True
-                ):
+                if distributions[
+                    recipe.distribution
+                ] not in packaging.specifiers.SpecifierSet(recipe.version_spec, True):
                     continue
 
         if recipe.modules:
@@ -168,7 +185,9 @@ def iter_recipes(graph: ModuleGraph):
         yield recipe
 
 
-def process_recipes(graph: ModuleGraph, options: RecipeOptions, progress: Progress):
+def process_recipes(
+    graph: ModuleGraph, options: RecipeOptions, progress: Progress
+) -> None:
     """
     Run all recipes that are relevant for *graph*
 
@@ -189,7 +208,7 @@ def process_recipes(graph: ModuleGraph, options: RecipeOptions, progress: Progre
 
             recipe.callback(proxy, options)
 
-        if proxy.is_updated:
+        if typing.cast(ModuleGraphProxy, proxy).is_updated:
             progress.info(f"Recipe {recipe.name!r} updated the dependency graph")
         else:
             break

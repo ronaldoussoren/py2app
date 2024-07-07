@@ -14,9 +14,10 @@ import zipfile
 from functools import singledispatch
 from importlib.util import MAGIC_NUMBER
 from itertools import chain
-from typing import Any, Dict, Union, assert_never
+from typing import Any, Dict, Union
 
 from modulegraph2 import (
+    BaseNode,
     BytecodeModule,
     DependencyInfo,
     ExtensionModule,
@@ -45,7 +46,7 @@ from .macho_audit import audit_macho_issues
 from .util import codesign_adhoc, find_converter, reset_blocking_status  # XXX: Replace
 
 
-def _pack_uint32(x):
+def _pack_uint32(x: int) -> bytes:
     """Convert a 32-bit integer to little-endian."""
     return (int(x) & 0xFFFFFFFF).to_bytes(4, "little")
 
@@ -70,6 +71,7 @@ def code_to_bytes(code: types.CodeType) -> bytearray:
 
 
 def relpath_for_script(node: Script) -> str:
+    assert node.filename is not None
     return f"bundle-scripts/{node.filename.stem}"
 
 
@@ -87,7 +89,9 @@ EXCL_EXTENSIONS = {
 EXCL_NAMES = {".svn", "__pycache__"}
 
 
-def iter_resources(node: Union[Package, NamespacePackage]):
+def iter_resources(
+    node: Union[Package, NamespacePackage]
+) -> typing.Iterator[typing.Tuple[str, bytes]]:
     """
     Yield all resources in a package, including those in subdirectories.
     """
@@ -139,7 +143,9 @@ def zip_node(
     Include a single modulegraph2 node into the Python library
     zipfile for a bundle.
     """
-    assert_never(node)
+    raise NotImplementedError(
+        f"zip_node not implemented for type {type(node).__name__}"
+    )
 
 
 @zip_node.register(SourceModule)
@@ -154,6 +160,8 @@ def zip_py_node(
     Include the compiled version of a SourceModule into
     the zipfile for a bundle.
     """
+    assert node.filename is not None
+    assert node.code is not None
     if node.filename.stem == "__init__":
         path = node.identifier.replace(".", "/") + "/__init__.pyc"
     else:
@@ -171,6 +179,7 @@ def zip_script_node(
     """
     Include the compiled version of a script into the zipfile.
     """
+    assert node.code is not None
     zf.writestr(relpath_for_script(node), code_to_bytes(node.code))
 
 
@@ -217,7 +226,7 @@ def zip_package_node(
 EXCL_DIST_INFO = {"RECORD", "INSTALLER", "WHEEL"}
 
 
-def get_dist_info(value):
+def get_dist_info(value: str) -> typing.Optional[str]:
     parts = value.split("/")
     for idx, p in enumerate(parts):
         if p.endswith(".dist-info"):
@@ -250,7 +259,7 @@ def zip_distribution(
 
 @singledispatch
 def fs_node(node: object, graph: ModuleGraph, root: pathlib.Path) -> None:
-    assert_never(node)
+    raise NotImplementedError(f"fs_node not implemented for type {type(node).__name__}")
 
 
 @fs_node.register(SourceModule)
@@ -258,6 +267,8 @@ def fs_node(node: object, graph: ModuleGraph, root: pathlib.Path) -> None:
 def fs_py_node(
     node: Union[SourceModule, BytecodeModule], graph: ModuleGraph, root: pathlib.Path
 ) -> None:
+    assert node.filename is not None
+    assert node.code is not None
     if node.filename.stem == "__init__":
         path = node.identifier.replace(".", "/") + "/__init__.pyc"
     else:
@@ -270,6 +281,7 @@ def fs_py_node(
 
 @fs_node.register
 def fs_script_node(node: Script, graph: ModuleGraph, root: pathlib.Path) -> None:
+    assert node.code is not None
     path = root / relpath_for_script(node)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(code_to_bytes(node.code))
@@ -279,6 +291,7 @@ def fs_script_node(node: Script, graph: ModuleGraph, root: pathlib.Path) -> None
 def fs_ext_node(node: ExtensionModule, graph: ModuleGraph, root: pathlib.Path) -> None:
     # XXX: Copying should be separate function.
     # XXX: Handle extensions in packages, subdiretory might not be here yet
+    assert node.filename is not None
     ext_path = root / (node.identifier.replace(".", "/") + ".so")
 
     ext_path.parent.mkdir(parents=True, exist_ok=True)
@@ -323,7 +336,7 @@ def create_bundle_structure(bundle: BundleOptions, progress: Progress) -> Bundle
         shutil.rmtree(root)
 
     for subpath in progress.iter_task(
-        paths.all_directories(), "Create bundle structure", lambda n: n
+        paths.all_directories(), "Create bundle structure", lambda n: str(n)
     ):
         subpath.mkdir(parents=True, exist_ok=True)
     return paths
@@ -364,7 +377,7 @@ def add_iconfile(
                 ]
             )
 
-            if res.returncode != 0:
+            if res != 0:
                 progress.error("Converting bundle icon {iconfile} failed")
 
     else:
@@ -514,6 +527,8 @@ def add_bootstrap(
 
         if graph is not None:
             for node in graph.iter_graph():
+                if not isinstance(node, BaseNode):
+                    continue
                 bootstrap = graph.bootstrap(node)
                 if bootstrap is None:
                     continue
@@ -528,11 +543,11 @@ def add_bootstrap(
         )
         stream.write("\n")
 
-        script_map = {}
+        script_map: typing.Dict[str, str] = {}
         if bundle.build_type == BuildType.ALIAS:
             stream.write(f'DEFAULT_SCRIPT = "{bundle.script.resolve()}"\n')
             for script in bundle.extra_scripts:
-                script_map[script.stem] = script.resolve()
+                script_map[script.stem] = str(script.resolve())
         else:
             stream.write(f'DEFAULT_SCRIPT = "{bundle.script.stem}"\n')
             for script in bundle.extra_scripts:
@@ -568,6 +583,8 @@ def add_resources(
     all_resources = list(bundle.resources) if bundle.resources else []
     if graph is not None:
         for node in graph.iter_graph():
+            if not isinstance(node, BaseNode):
+                continue
             all_resources.extend(graph.resources(node))
 
     if not all_resources:
@@ -608,7 +625,8 @@ def get_info_plist(bundle: BundleOptions) -> Dict[str, Any]:
     else:
         plist = get_app_plist(bundle.name, bundle.plist)
 
-    plist["PyConfig"] = pyconfig = {}
+    pyconfig: typing.Dict[str, typing.Any] = {}
+    plist["PyConfig"] = pyconfig
 
     if bundle.debug_macho_usage:
         pyconfig["debug_macho_usage"] = True
@@ -662,10 +680,10 @@ def collect_python(
     zf = zipfile.ZipFile(paths.pylib_zipped, "w")
 
     if included_distributions:
-        for node in progress.iter_task(
-            included_distributions.values(), "Collect dist-info", lambda n: n.name
+        for dist in progress.iter_task(
+            list(included_distributions.values()), "Collect dist-info", lambda n: n.name
         ):
-            zip_node(node, graph, zf, more_extensions)
+            zip_node(dist, graph, zf, more_extensions)
 
     if zip_nodes:
         for node in progress.iter_task(
@@ -682,10 +700,11 @@ def collect_python(
     ext_map = {}
     if more_extensions:
         for ext_name, node in progress.iter_task(
-            more_extensions.items(),
+            list(more_extensions.items()),
             "Collect zipped extensions",
             lambda n: n[1].identifier,
         ):
+            assert node.filename is not None
             (paths.extlib / ext_name).write_bytes(node.filename.read_bytes())
             ext_map[paths.extlib / ext_name] = node.filename
     return ext_map
@@ -702,7 +721,9 @@ def make_readonly(
 
 
 def get_module_graph(bundle: BundleOptions, progress: Progress) -> ModuleGraph:
-    def node_done(graph, node):
+    scan_count = 0
+
+    def node_done(graph: ModuleGraph, node: BaseNode) -> None:
         nonlocal scan_count
 
         progress.update(task_id, current=node.identifier)
@@ -719,7 +740,6 @@ def get_module_graph(bundle: BundleOptions, progress: Progress) -> ModuleGraph:
     graph = ModuleGraph()
     graph.add_post_processing_hook(node_done)
     task_id = progress.add_task("Scanning Python dependencies", count=None)
-    scan_count = 0
     graph.add_excludes(bundle.py_exclude)
 
     for script in itertools.chain((bundle.script,), bundle.extra_scripts):
@@ -744,7 +764,14 @@ def codesign(root: pathlib.Path, progress: Progress) -> None:
     # progress.step_task(task_id)
 
 
-def classify_missing(graph: ModuleGraph) -> ...:
+def classify_missing(
+    graph: ModuleGraph,
+) -> typing.Tuple[
+    typing.Dict[str, typing.Set[str]],
+    typing.Dict[str, typing.Set[str]],
+    typing.Dict[str, typing.Set[str]],
+    typing.Dict[str, typing.Set[str]],
+]:
     """ """
     missing_unconditional: typing.DefaultDict[str, typing.Set[str]] = (
         collections.defaultdict(set)
@@ -814,7 +841,7 @@ def classify_missing(graph: ModuleGraph) -> ...:
 
 def build_bundle(
     config: Py2appConfiguration, bundle: BundleOptions, progress: Progress
-) -> bool:
+) -> None:
     """
     Build the output for *bundle*. Returns *True* if successful and *False* otherwise.
     """
@@ -837,6 +864,7 @@ def build_bundle(
     add_resources(paths, bundle, graph, progress)
 
     if bundle.build_type != BuildType.ALIAS:
+        assert graph is not None
         ext_map = collect_python(bundle, paths, graph, progress)
 
     add_bootstrap(
@@ -865,7 +893,8 @@ def build_bundle(
     # deployment target of Mach-O files in the bundle.
     # XXX: Check and document the error message for launching the bundle on
     # a version of the OS that is too old.
-    set_deployment_target(paths, bundle, progress, deployment_target)
+    if deployment_target is not None:
+        set_deployment_target(paths, bundle, progress, deployment_target)
 
     # XXX: Add support for using 'real' signatures
     #     (e.g. notarization), but only for standalone
@@ -873,6 +902,8 @@ def build_bundle(
     codesign(paths.root.parent, progress)
 
     make_readonly(paths.root.parent, bundle, progress)
+
+    assert graph is not None
 
     progress.info("")
     progress.info(

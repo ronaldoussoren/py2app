@@ -4,6 +4,8 @@ Mac OS X .app build command for distutils
 Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 """
 
+# mypy: ignore-errors
+
 import collections
 import imp
 import io

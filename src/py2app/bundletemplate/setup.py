@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 import distutils.sysconfig
 import distutils.util
 import os

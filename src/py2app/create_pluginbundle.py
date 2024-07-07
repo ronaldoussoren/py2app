@@ -27,7 +27,7 @@ def create_pluginbundle(
     ] = mergetree,
     condition: typing.Callable[[str], bool] = skipscm,
     plist: typing.Optional[typing.Dict[str, typing.Any]] = None,
-    arch: str = None,
+    arch: typing.Optional[str] = None,
 ) -> typing.Tuple[str, dict]:
     destpath = make_path(destdir)
     if plist is None:

@@ -2,6 +2,8 @@
 
 import typing
 
+def lc_str_value(offset: int, cmd_info: tuple) -> bytes: ...
+
 class MachO:
     headers: typing.List[typing.Any]  # XXX
     filename: str

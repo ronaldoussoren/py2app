@@ -8,10 +8,16 @@ import sys
 import textwrap
 import typing
 
-from modulegraph2 import ExtensionModule, MissingModule, ModuleGraph, Package
+from modulegraph2 import (
+    BaseNode,
+    ExtensionModule,
+    MissingModule,
+    NamespacePackage,
+    Package,
+)
 
 from .._config import RecipeOptions, Resource
-from .._modulegraph import ATTR_ZIPSAFE
+from .._modulegraph import ATTR_ZIPSAFE, ModuleGraph
 from .._recipes import recipe
 
 # References between modules in the standard
@@ -71,7 +77,9 @@ EXPECTED_MISSING = [
 ]
 
 
-def _mods(values):
+def _mods(
+    values: typing.Sequence[typing.Tuple[str, typing.Sequence[str]]]
+) -> typing.Sequence[str]:
     return tuple(v[0] for v in values)
 
 
@@ -109,6 +117,7 @@ def mark_importlib_zipsafe(graph: ModuleGraph, options: RecipeOptions) -> None:
     if node is None:
         return
 
+    assert isinstance(node, Package)
     node.init_module.extension_attributes[ATTR_ZIPSAFE] = True
     node.extension_attributes[ATTR_ZIPSAFE] = True
 
@@ -116,6 +125,7 @@ def mark_importlib_zipsafe(graph: ModuleGraph, options: RecipeOptions) -> None:
     if node is None:
         return
 
+    assert isinstance(node, BaseNode)
     node.extension_attributes[ATTR_ZIPSAFE] = True
 
 
@@ -123,7 +133,12 @@ def mark_importlib_zipsafe(graph: ModuleGraph, options: RecipeOptions) -> None:
 def mark_expected_missing(graph: ModuleGraph, options: RecipeOptions) -> None:
     for python_package, expected_missing in EXPECTED_MISSING:
         m = graph.find_node(python_package)
-        if m is None or m.filename is None:
+        if m is None:
+            continue
+
+        assert isinstance(m, BaseNode)
+
+        if m.filename is None:
             continue
 
         for _, m2 in graph.outgoing(m):
@@ -131,7 +146,7 @@ def mark_expected_missing(graph: ModuleGraph, options: RecipeOptions) -> None:
                 graph.set_expected_missing(m2)
 
 
-def _contains_dylib(resources: importlib.resources.abc.Traversable):
+def _contains_dylib(resources: importlib.resources.abc.Traversable) -> bool:
     """
     Return true if *resources* contains a dylib somewhere in
     the resource tree.
@@ -166,10 +181,17 @@ def use_prescript_for_importlib(graph: ModuleGraph, options: RecipeOptions) -> N
         # the filesystem regardless of how the module
         # locates it.
 
+        package: typing.Union[Package, NamespacePackage]
+
         if isinstance(using_module, Package):
             package = using_module
         elif "." in using_module.name:
-            package = graph.find_node(using_module.name.rpartition(".")[0])
+            found = graph.find_node(using_module.name.rpartition(".")[0])
+
+            # Name is in package, validatet that we actually found
+            # a package
+            assert isinstance(found, (Package, NamespacePackage))
+            package = found
         else:
             # Toplevel module, cannot have package data.
             continue

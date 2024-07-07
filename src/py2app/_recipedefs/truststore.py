@@ -1,6 +1,7 @@
-from modulegraph2 import ModuleGraph
+from modulegraph2 import BaseNode
 
 from .._config import RecipeOptions
+from .._modulegraph import ModuleGraph
 from .._recipes import recipe
 
 
@@ -10,7 +11,7 @@ def truststore(graph: ModuleGraph, options: RecipeOptions) -> None:
     Recipe for `platformdirs <https://pypi.org/project/platformdirs>`_
     """
     m = graph.find_node("truststore._api")
-    if m is None or m.filename is None:
+    if not isinstance(m, BaseNode) or m.filename is None:
         return
 
     graph.remove_all_edges(m, "truststore._windows")

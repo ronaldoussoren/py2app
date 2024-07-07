@@ -101,7 +101,6 @@ def main() -> int:
     progress = _progress.Progress(level=2 if verbose else 1)
     task_id = progress.add_task("Processing bundles", len(config.bundles))
 
-    ok = True
     for bundle in config.bundles:
         # XXX: Sort bundles to ensure nested bundles get build
         #      after their enclosing bundle.
@@ -110,7 +109,7 @@ def main() -> int:
             task_id,
             current=f"{bundle.build_type.value} {'plugin' if bundle.plugin else 'application'} {bundle.name!r}",
         )
-        _builder.build_bundle(config, bundle, progress) and ok
+        _builder.build_bundle(config, bundle, progress)
         progress.step_task(task_id)
     progress.update(task_id, current="")
     progress._progress.stop()

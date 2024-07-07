@@ -45,6 +45,26 @@ repos:
         - flake8-raise
         - flake8-tidy-imports
 
+# XXX: Enabling this requires a new release of modulegraph2, and
+#      debugging why this command fails while the equivalent config
+#      in tox.ini does work.
+#  -   repo: https://github.com/pre-commit/mirrors-mypy
+#      rev: 'v1.10.1'
+#      hooks:
+#      -   id: mypy
+#          entry: env MYPYPATH=./stubs mypy
+#          args: [--namespace-packages, --check-untyped-defs, --disallow-untyped-defs]
+#          exclude: examples|py2app_tests
+#          additional_dependencies:
+#          - rich
+#          - types-setuptools
+#          - types-Pillow
+#          - types-attrs
+#          - packaging
+#          - modulegraph2
+#          - truststore
+#          - pyobjc-core
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:

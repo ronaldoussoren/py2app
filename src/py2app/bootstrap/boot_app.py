@@ -11,9 +11,9 @@ def _run() -> None:
     import zipfile
 
     sys.frozen = "macosx_app"  # type: ignore
-    base = sys.py2app_bundle_resources
+    base = sys.py2app_bundle_resources  # type: ignore[attr-defined]
 
-    argv0 = sys.py2app_argv0.rsplit("/", 1)[-1]
+    argv0 = sys.py2app_argv0.rsplit("/", 1)[-1]  # type: ignore[attr-defined]
     script = SCRIPT_MAP.get(argv0, DEFAULT_SCRIPT)  # noqa: F821
 
     path = f"{base}/python-libraries.zip/bundle-scripts/{script}"

@@ -27,7 +27,7 @@ class Progress:
         self._progress.advance(task_id)
 
     def iter_task(
-        self, items: typing.List[T], label: str, current: typing.Callable[[T], str]
+        self, items: typing.Sequence[T], label: str, current: typing.Callable[[T], str]
     ) -> typing.Iterator[T]:
         task_id = self.add_task(label, count=len(items))
 

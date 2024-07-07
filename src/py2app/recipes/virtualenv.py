@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 virtualenv installs a wrapper for the real distutils into the
 virtual environment. Ignore that wrapper, but go for the real

@@ -428,12 +428,12 @@ class py2app(Command):
             "bdist", ("dist_dir", "dist_dir"), ("bdist_base", "bdist_base")
         )
 
-        recipe_options = {"zip-unsafe": []}
-        global_options = {}
+        recipe_options: typing.Dict[str, typing.Any] = {"zip-unsafe": []}
+        global_options: typing.Dict[str, typing.Any] = {}
 
         # the setuptools interface allows for exactly 1 bundle configuration
-        bundle_options = {}
-        bundles = []
+        bundle_options: typing.Dict[str, typing.Any] = {}
+        bundles: typing.List[_config.BundleOptions] = []
         self.config = _config.Py2appConfiguration(
             bundles, global_options, _config.RecipeOptions(recipe_options)
         )
@@ -460,14 +460,14 @@ class py2app(Command):
 
         dist = self.distribution
         if self.app is not None:
-            app = fixup_targets(self.app)
+            app = fixup_targets(self.app)  # type: ignore
         else:
-            app = fixup_targets(dist.app)
+            app = fixup_targets(dist.app)  # type: ignore
 
         if self.plugin is not None:
-            plugin = fixup_targets(self.plugin)
+            plugin = fixup_targets(self.plugin)  # type: ignore
         else:
-            plugin = fixup_targets(dist.plugin)
+            plugin = fixup_targets(dist.plugin)  # type: ignore
 
         if app and plugin:
             raise DistutilsOptionError(
@@ -687,7 +687,7 @@ class py2app(Command):
         # XXX: Not yet present in new configuration
         # self.include_plugins = fancy_split("include-plugins", self.include_plugins)
 
-    def run(self):
+    def run(self) -> None:
         if self.warnings:
             for w in self.warnings:
                 print(w)
@@ -696,16 +696,15 @@ class py2app(Command):
         progress = _progress.Progress()
         task_id = progress.add_task("Processing bundles", len(self.config.bundles))
 
-        ok = True
         for bundle in self.config.bundles:
             progress.update(
                 task_id,
                 current=f"{bundle.build_type.value} {'plugin' if bundle.plugin else 'application'} {bundle.name!r}",
             )
-            ok = _builder.build_bundle(self.config, bundle, progress) and ok
+            _builder.build_bundle(self.config, bundle, progress)
             progress.step_task(task_id)
         progress.update(task_id, current="")
         progress._progress.stop()
 
-        if not ok:
+        if progress.have_error:
             raise DistutilsError("Building bundles failed")

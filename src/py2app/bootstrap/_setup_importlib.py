@@ -7,10 +7,11 @@ from importlib.abc import MetaPathFinder
 
 
 class Py2AppExtensionLoader(MetaPathFinder):
-    def __init__(self, libdir):
+    def __init__(self, libdir: str) -> None:
         self._libdir = libdir
 
-    def find_spec(self, fullname, path, target=None):
+    # XXX: type annations would require importing typing
+    def find_spec(self, fullname, path, target=None):  # type: ignore
         ext_path = f"{self._libdir}/{fullname}.so"
         if not os.path.exists(ext_path):
             return None

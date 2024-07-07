@@ -15,7 +15,7 @@ class MachOStandalone:
         base: str,
         dest: typing.Optional[str] = None,
         graph: typing.Optional[str] = None,
-        env: typing.Dict[str, str] = None,
+        env: typing.Optional[typing.Dict[str, str]] = None,
         executable_path: typing.Optional[str] = None,
     ): ...
     def run(self) -> typing.Set[str]: ...

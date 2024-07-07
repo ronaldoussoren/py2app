@@ -19,6 +19,7 @@ from modulegraph2 import (
     Module,
     NamespacePackage,
     Package,
+    PyPIDistribution,
 )
 
 from ._config import Resource
@@ -69,7 +70,11 @@ class ModuleGraph(modulegraph2.ModuleGraph):
         """
         return node.extension_attributes.get(ATTR_EXPECTED_MISSING, False)
 
-    def add_resources(self, node: BaseNode, resources: typing.List[Resource]) -> None:
+    def add_resources(
+        self,
+        node: typing.Union[BaseNode, PyPIDistribution],
+        resources: typing.List[Resource],
+    ) -> None:
         """
         Add a resource definition for *node*. The *resources*
         specify files that should be copied into the bundle
@@ -82,28 +87,34 @@ class ModuleGraph(modulegraph2.ModuleGraph):
         node_resources = node.extension_attributes.setdefault(ATTR_RESOURCES, [])
         node_resources.extend(rsrc for rsrc in resources if rsrc not in node_resources)
 
-    def resources(self, node: BaseNode) -> typing.List[Resource]:
+    def resources(
+        self, node: typing.Union[BaseNode, PyPIDistribution]
+    ) -> typing.List[Resource]:
         """
         Return the resources that should be copied into the bundle
         for *node* (excluding resources as defined by *importlib.resources*
         """
         return node.extension_attributes.get(ATTR_RESOURCES, [])
 
-    def set_ignore_resources(self, node: BaseNode) -> None:
+    def set_ignore_resources(
+        self, node: typing.Union[BaseNode, PyPIDistribution]
+    ) -> None:
         """
         Mark *node* as a node whose package resources should not
         be copied into the bundle.
         """
         node.extension_attributes[ATTR_IGNORE_RESOURCES] = True
 
-    def ignore_resources(self, node: BaseNode) -> bool:
+    def ignore_resources(self, node: typing.Union[BaseNode, PyPIDistribution]) -> bool:
         """
         Return true iff the package resources for *node* should
         not be copied into the bundle.
         """
         return node.extension_attributes.get(ATTR_IGNORE_RESOURCES, False)
 
-    def add_bootstrap_scriptlet(self, node: BaseNode, bootstrap_source: str) -> None:
+    def add_bootstrap_scriptlet(
+        self, node: typing.Union[BaseNode, PyPIDistribution], bootstrap_source: str
+    ) -> None:
         """
         Add a bundle bootstrap scriptlet for a particular node in the graph
 
@@ -119,7 +130,9 @@ class ModuleGraph(modulegraph2.ModuleGraph):
         self.add_dependencies_for_source(bootstrap_source)
 
     def add_bootstrap(
-        self, node: BaseNode, bootstrap: typing.Union[str, io.StringIO]
+        self,
+        node: typing.Union[BaseNode, PyPIDistribution],
+        bootstrap: typing.Union[str, io.StringIO],
     ) -> None:
         """
         Add a bundle bootstrap scriptlet for a particular node in the graph.
@@ -129,7 +142,9 @@ class ModuleGraph(modulegraph2.ModuleGraph):
         bootstrap_source = load_bootstrap(bootstrap)
         self.add_bootstrap_scriptlet(node, bootstrap_source)
 
-    def bootstrap(self, node: BaseNode) -> typing.Optional[str]:
+    def bootstrap(
+        self, node: typing.Union[BaseNode, PyPIDistribution]
+    ) -> typing.Optional[str]:
         """
         Return the bootstrap scriptlet for a node, or None when
         the node doesn't have a bootstrap scriptlet.
@@ -140,13 +155,13 @@ class ModuleGraph(modulegraph2.ModuleGraph):
 
         return None
 
-    def mark_zipunsafe(self, node: BaseNode) -> None:
+    def mark_zipunsafe(self, node: typing.Union[BaseNode, PyPIDistribution]) -> None:
         """
         Mark *node* as unsafe to be executed from a zip archive
         """
         node.extension_attributes[ATTR_ZIPSAFE] = False
 
-    def is_zipsafe(self, node: BaseNode) -> bool:
+    def is_zipsafe(self, node: typing.Union[BaseNode, PyPIDistribution]) -> bool:
         """
         Return False if *node* cannot be executed from a zip archive,
         return True otherwise.
@@ -174,7 +189,10 @@ class ModuleGraph(modulegraph2.ModuleGraph):
                 if not node.init_module.extension_attributes[ATTR_ZIPSAFE]:
                     node.extension_attributes[ATTR_ZIPSAFE] = False
                     return False
-            elif node.init_module.uses_dunder_file:
+            elif (
+                isinstance(node.init_module, Module)
+                and node.init_module.uses_dunder_file
+            ):
                 node.extension_attributes[ATTR_ZIPSAFE] = False
                 return False
 
@@ -188,6 +206,10 @@ class ModuleGraph(modulegraph2.ModuleGraph):
             # The name is in package, use the root package to start
             # the scan.
             base = self.find_node(node.identifier.partition(".")[0])
+
+            # Node is inside a package, the package itself should
+            # be part of the graph.
+            assert base is not None
         elif isinstance(node, (Package, NamespacePackage)):
             base = node
         else:
@@ -231,7 +253,14 @@ class ModuleGraph(modulegraph2.ModuleGraph):
         for node in self.iter_graph():
             if isinstance(
                 node,
-                (BuiltinModule, FrozenModule, AliasNode, MissingModule, ExcludedModule),
+                (
+                    BuiltinModule,
+                    FrozenModule,
+                    AliasNode,
+                    MissingModule,
+                    ExcludedModule,
+                    PyPIDistribution,
+                ),
             ):
                 continue
 
@@ -244,3 +273,13 @@ class ModuleGraph(modulegraph2.ModuleGraph):
                 unzip_nodes.append(node)
 
         return zip_nodes, unzip_nodes
+
+    def add_post_processing_hook(
+        self, hook: typing.Callable[["ModuleGraph", BaseNode], None]
+    ) -> None:
+        # XXX: The typing.cast here is an indication that I'm using typing wrong
+        super().add_post_processing_hook(
+            typing.cast(
+                typing.Callable[[modulegraph2.ModuleGraph, BaseNode], None], hook
+            )
+        )
