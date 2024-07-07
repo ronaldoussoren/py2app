@@ -83,3 +83,13 @@ xcmappingmodel = "py2app.converters.coredata:convert_mappingmodel"
 
 [tool.flit.sdist]
 exclude = [".github"]
+
+# This includes prebuild stub executables, even though those are
+# depedant on the python version.
+# XXX: Move back to setuptools to better control wheel creation
+#      - do not include launcher stubs in sdist
+#      - generate the launcher stubs when building a wheel
+#      - wheel is python-version specific (due to launcher binaries)
+# XXX: All of these should be automated to enable using trusted
+#      publishers on PyPI for releases.
+include = ["src/py2app/_apptemplate/launcher-*"]
