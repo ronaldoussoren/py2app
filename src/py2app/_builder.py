@@ -34,6 +34,7 @@ from . import _recipedefs  # noqa: F401
 from ._apptemplate import LauncherType, copy_app_launcher, get_app_plist
 from ._bundlepaths import BundlePaths, bundle_paths
 from ._config import BuildType, BundleOptions, Py2appConfiguration
+from ._macho_audit import audit_macho_issues
 from ._modulegraph import ModuleGraph
 from ._progress import Progress
 from ._recipes import process_recipes
@@ -42,7 +43,6 @@ from .bundletemplate.plist_template import (
     infoPlistDict as bundle_info_plist_dict,  # XXX: Replace
 )
 from .bundletemplate.setup import main as bundle_stub_path  # XXX: Replace
-from .macho_audit import audit_macho_issues
 from .util import codesign_adhoc, find_converter, reset_blocking_status  # XXX: Replace
 
 

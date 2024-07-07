@@ -11,7 +11,6 @@ import imp
 import io
 import itertools
 import os
-import pathlib
 import plistlib
 import shlex
 import shutil
@@ -74,7 +73,6 @@ from py2app.util import (
 )
 
 from ._progress import Progress
-from .macho_audit import audit_macho_issues
 from .recipes._types import RecipeInfo
 
 
@@ -1759,29 +1757,6 @@ class py2app(Command):
 
             if arch in ("universal2", "arm64"):
                 codesign_adhoc(self.target.appdir, self.progress)
-
-            # XXX: Longer-term it would be nice to adjust the bundle
-            #      executables to match the detected CPU types.
-            architecture, deployment_target, warnings = audit_macho_issues(
-                pathlib.Path(self.target.appdir)
-            )
-            self.progress.info("")
-            if architecture == "universal2":
-                self.progress.info("Bundle supports all Mac CPU types")
-            elif architecture is None:
-                self.progress.info(
-                    "WARNING: some MachO files only support arm64, others only x86_64"
-                )
-            else:
-                self.progress.info(f"Bundle supports CPU type {architecture!r}")
-
-            if deployment_target is not None:
-                self.progress.info(
-                    f"Bundle supports macOS {deployment_target} or later"
-                )
-
-            for wrn in warnings:
-                self.progress.warning(wrn)
 
         self.app_files.append(dst)
 
