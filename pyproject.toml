@@ -69,8 +69,7 @@ setuptools = [
 py2app = "py2app._setuptools_stub:finalize_distribution_options"
 
 [project.entry-points."distutils.commands"]
-py2app = "py2app.build_app:py2app"
-py2app2 = "py2app._setuptools_stub:py2app"
+py2app = "py2app._setuptools_stub:py2app"
 
 [project.entry-points."distutils.setup_keywords"]
 app =    "py2app._setuptools_stub:validate_target"
