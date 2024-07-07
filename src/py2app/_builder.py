@@ -441,9 +441,12 @@ def add_plist(paths: BundlePaths, plist: Dict[str, Any], progress: Progress) -> 
     Create the Info.plist file in the output.
     """
     task_id = progress.add_task("Add Info.plist", count=1)
-    info_plist = paths.root / "Info.plist"
-    with open(info_plist, "wb") as stream:
+    with open(paths.root / "Info.plist", "wb") as stream:
         plistlib.dump(plist, stream)
+
+    with open(paths.root / "PkgInfo", "w") as stream:
+        stream.write(plist["CFBundlePackageType"] + plist["CFBundleSignature"])
+
     progress.step_task(task_id)
 
 
