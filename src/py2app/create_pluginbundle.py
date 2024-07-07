@@ -9,7 +9,7 @@ if sys.version_info[:2] < (3, 10):
 else:
     import importlib.resources as importlib_resources
 
-from . import bundletemplate, progress
+from . import _progress, bundletemplate
 from .util import make_exec, make_path, mergecopy, mergetree, skipscm
 
 
@@ -17,7 +17,7 @@ def create_pluginbundle(
     destdir: typing.Union[str, os.PathLike[str]],
     name: str,
     *,
-    progress: progress.Progress,
+    progress: _progress.Progress,
     extension: str = ".plugin",
     platform: str = "MacOS",
     copy: typing.Callable[[str, str], None] = mergecopy,

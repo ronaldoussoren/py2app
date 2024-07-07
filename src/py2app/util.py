@@ -19,7 +19,7 @@ from modulegraph import zipio
 from modulegraph.find_modules import PY_SUFFIXES
 from modulegraph.modulegraph import Node
 
-from .progress import Progress
+from ._progress import Progress
 
 if sys.version_info[:2] < (3, 10):
     import importlib_metadata

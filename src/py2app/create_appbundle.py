@@ -10,7 +10,7 @@ import plistlib
 import shutil
 import typing
 
-from . import apptemplate, progress
+from . import _progress, apptemplate
 from .util import make_exec, make_path, mergecopy, mergetree, skipscm
 
 
@@ -18,7 +18,7 @@ def create_appbundle(
     destdir: typing.Union[str, os.PathLike[str]],
     name: str,
     *,
-    progress: progress.Progress,
+    progress: _progress.Progress,
     extension: str = ".app",
     platform: str = "MacOS",
     copy: typing.Callable[[str, str], None] = mergecopy,

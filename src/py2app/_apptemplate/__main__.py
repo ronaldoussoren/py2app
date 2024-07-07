@@ -6,7 +6,7 @@ from .._config import BuildArch
 from . import LauncherType, copy_app_launcher
 
 
-def build_executable_cache():
+def build_executable_cache() -> None:
     """
     Build the cached executables for the current python release
     """

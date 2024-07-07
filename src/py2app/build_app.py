@@ -71,8 +71,8 @@ from py2app.util import (
     strip_files,
 )
 
+from ._progress import Progress
 from .macho_audit import audit_macho_issues
-from .progress import Progress
 from .recipes._types import RecipeInfo
 
 

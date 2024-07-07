@@ -65,7 +65,7 @@ def fixup_targets(
             f"target definition should be a sequence: {targets!r}"
         )
 
-    result = []
+    result: typing.List[_ScriptInfo] = []
     for target_def in targets:
         if isinstance(target_def, str):
             result.append({"script": target_def, "extra_scripts": []})
@@ -107,9 +107,11 @@ class Py2appDistribution(Distribution):
     def __new__(self) -> "Py2appDistribution":
         raise RuntimeError("Don't instantiate!")  # pragma: no-cover
 
-    def get_version(self) -> str: ...  # noqa: E704
+    def get_version(self) -> str:
+        return "42"  # noqa: E704
 
-    def get_name(self) -> str: ...  # # noqa: E704
+    def get_name(self) -> str:
+        return "name"  # # noqa: E704
 
 
 def finalize_distribution_options(dist: Py2appDistribution) -> None:

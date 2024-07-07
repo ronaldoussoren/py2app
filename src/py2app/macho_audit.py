@@ -12,7 +12,7 @@ from macholib import MachO, mach_o
 from macholib.util import is_platform_file
 
 
-def decode_deployment_target(value):
+def decode_deployment_target(value: int) -> str:
     micro = value & 0xFF
     minor = value >> 8 & 0xFF
     macro = value >> 16 & 0xFF
@@ -38,7 +38,7 @@ def macho_files(base: pathlib.Path) -> typing.Iterator[pathlib.Path]:
 
 def audit_macho_issues(
     bundle_path: pathlib.Path,
-) -> typing.Tuple[str, str, typing.List[str]]:
+) -> typing.Tuple[typing.Optional[str], typing.Optional[str], typing.List[str]]:
     """
     Returns (architecture, deployment_target, warnings)
 
@@ -63,7 +63,7 @@ def audit_macho_issues(
         "arm64": 0xB0000,
         "x86_64": 0xA0900,
     }
-    architecture = "universal2"
+    architecture: typing.Optional[str] = "universal2"
 
     for macho_path in macho_files(bundle_path):
         m = MachO.MachO(str(macho_path))

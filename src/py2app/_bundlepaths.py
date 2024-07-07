@@ -1,5 +1,6 @@
 import dataclasses
 import pathlib
+import typing
 
 from ._config import BuildType
 
@@ -15,7 +16,7 @@ class BundlePaths:
     pylib: pathlib.Path
     framework: pathlib.Path
 
-    def all_directories(self):
+    def all_directories(self) -> typing.List[pathlib.Path]:
         """
         Return all directories for the bundle paths
         """

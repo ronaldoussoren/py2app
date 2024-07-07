@@ -17,10 +17,11 @@ Support for recipes
 """
 
 import dataclasses
+import pathlib
 import typing
 
 import packaging
-from modulegraph2 import ModuleGraph
+from modulegraph2 import BaseNode, ModuleGraph, Script
 
 from ._config import RecipeOptions
 from ._progress import Progress
@@ -33,15 +34,15 @@ class ModuleGraphProxy:
     # XXX: This functionality should be part of ObjectGraph,
     #      e.g. add a 'changecount' attribute that's incremented
     #      by adding/removing nodes and edges.
-    def __init__(self, graph):
+    def __init__(self, graph: ModuleGraph) -> None:
         self.__graph = graph
         self.__updated = False
 
     @property
-    def is_updated(self):
+    def is_updated(self) -> bool:
         return self.__updated
 
-    def add_module(self, module_name):
+    def add_module(self, module_name: str) -> BaseNode:
         node = self.__graph.find_node(module_name)
         if node is not None:
             return node
@@ -49,7 +50,7 @@ class ModuleGraphProxy:
         self.__updated = True
         return self.__graph.add_module(module_name)
 
-    def add_script(self, script_path):
+    def add_script(self, script_path: pathlib.Path) -> Script:
         node = self.__graph.find_node(script_path)
         if node is not None:
             return node

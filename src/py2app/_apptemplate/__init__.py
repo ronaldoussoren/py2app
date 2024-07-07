@@ -1,5 +1,6 @@
 import enum
 import importlib.resources
+import pathlib
 import subprocess
 import sys
 import sysconfig
@@ -53,7 +54,7 @@ def _pyflags() -> List[str]:
 
 
 def copy_app_launcher(
-    path,
+    path: pathlib.Path,
     *,
     arch: BuildArch,
     program_type: LauncherType = LauncherType.MAIN_PROGRAM,
@@ -68,10 +69,19 @@ def copy_app_launcher(
     # because the target version will be replaced while building a bundle.
     source_fn = f"launcher-{arch.value}-{sys.abiflags}-{program_type.value}"
     launcher = importlib.resources.files(__name__).joinpath(source_fn)
-    if launcher.exists() and not debug_macho_usage:
-        path.write_bytes(launcher.read_bytes())
-        path.chmod(0o755)
-        return
+    if debug_macho_usage:
+        # The Traversable ABC does not have an 'exists' method, just
+        # try to access the file and handle the exception when the file
+        # does not exist.
+        try:
+            data = launcher.read_bytes()
+        except OSError:
+            pass
+
+        else:
+            path.write_bytes(data)
+            path.chmod(0o755)
+            return
 
     launcher = importlib.resources.files(__name__).joinpath("launcher.m")
     subprocess.run(
@@ -79,8 +89,8 @@ def copy_app_launcher(
             [
                 "cc",
                 "-o",
-                path,
-                launcher,
+                str(path),
+                str(launcher),
                 "-rpath",
                 "@loader_path/../Frameworks",
                 "-Wl,-headerpad_max_install_names",

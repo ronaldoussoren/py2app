@@ -4,6 +4,7 @@ Representation of the py2app configuration.
 XXX: It should be possible to simplify this code
      a lot.
 XXX: Should this module validate existence of paths?
+XXX: Try to avoid using typing.Any
 """
 
 import enum
@@ -51,7 +52,7 @@ class PropertyHolder(typing.Protocol):
 
 class InheritedPropertyHolder(typing.Protocol):
     _local: typing.Dict[str, typing.Any]
-    _global: typing.Dict[str, typing.Any]
+    _global: "Py2appConfiguration"
 
 
 class inherited(typing.Generic[T]):
@@ -99,16 +100,16 @@ class Resource:
         "sources": "Source paths relative to the configuration folder",
     }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Resource destination={self.destination!r} sources={self.sources!r}>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.destination} <-- {', '.join(str(s) for s in self.sources)}"
 
     @classmethod
     def from_config(
         cls, config_item: typing.Any, config_root: pathlib.Path, location: str
-    ):
+    ) -> "Resource":
         if isinstance(config_item, str):
             return cls(pathlib.Path("."), [config_root / config_item])
         elif isinstance(config_item, (list, tuple)):
@@ -131,10 +132,10 @@ class Resource:
         self.destination = destination
         self.sources = list(sources)
 
-    def __ne__(self, other):
+    def __ne__(self, other: typing.Any) -> bool:
         return not (self == other)
 
-    def __eq__(self, other):
+    def __eq__(self, other: typing.Any) -> bool:
         if not isinstance(other, Resource):
             return False
 
@@ -144,7 +145,11 @@ class Resource:
 
 
 class BundleOptions:
-    def __init__(self, global_options, local_options):
+    def __init__(
+        self,
+        global_options: "Py2appConfiguration",
+        local_options: typing.Dict[str, typing.Any],
+    ) -> None:
         self._global = global_options
         self._local = local_options
 
@@ -152,10 +157,10 @@ class BundleOptions:
     def debug_macho_usage(self) -> bool:
         return self._global.debug_macho_usage
 
-    build_type = inherited[BuildType]("build-type", "build_type")
+    build_type = inherited[BuildType]("build_type", "build_type")
     macho_strip = inherited[bool]("strip", "macho_strip")
     macho_arch = inherited[BuildArch]("arch", "macho_arch")
-    deployment_target = inherited[str]("deployment-target", "deployment_target")
+    deployment_target = inherited[str]("deployment_target", "deployment_target")
     python_optimize = inherited[int]("python.optimize", "python_optimize")
     python_malloc_debug = inherited[bool]("python.malloc-debug", "python_malloc_debug")
     python_dev_mode = inherited[bool]("python.dev-mode", "python_dev_mode")
@@ -201,7 +206,7 @@ class BundleOptions:
     emulate_shell_environment = local[bool]("emulate-shell-environment", False)
     redirect_to_asl = local[bool]("redirect-to-asl", False)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = []
         result.append("<BundleOptions\n")
         result.append(f"  build_type = {self.build_type}\n")
@@ -240,7 +245,7 @@ class BundleOptions:
 
 
 class RecipeOptions:
-    def __init__(self, options):
+    def __init__(self, options: typing.Dict[str, typing.Any]) -> None:
         self._local = options
 
     zip_unsafe = local[typing.Sequence[str]]("zip-unsafe", ())
@@ -249,7 +254,7 @@ class RecipeOptions:
         "matplotlib-backends", None
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = []
         result.append("<RecipeOptions\n")
         result.append(f"  zip_unsafe = {self.zip_unsafe!r}\n")
@@ -261,14 +266,19 @@ class RecipeOptions:
 
 
 class Py2appConfiguration:
-    def __init__(self, bundles, global_options, recipe_options):
+    def __init__(
+        self,
+        bundles: typing.List[BundleOptions],
+        global_options: typing.Dict[str, typing.Any],
+        recipe_options: RecipeOptions,
+    ) -> None:
         self._local = global_options
         self.bundles = bundles
         self.recipe = recipe_options
         self.debug_macho_usage = False
 
-    build_type = local[BuildType]("build-type", BuildType.STANDALONE)
-    deployment_target = local[str]("deployment-target", _DEFAULT_TARGET)
+    build_type = local[BuildType]("build_type", BuildType.STANDALONE)
+    deployment_target = local[str]("deployment_target", _DEFAULT_TARGET)
     macho_strip = local[bool]("strip", True)
     macho_arch = local[BuildArch]("arch", BuildArch(_DEFAULT_ARCH))
     python_optimize = local[int]("python.optimize", sys.flags.optimize)
@@ -278,7 +288,7 @@ class Py2appConfiguration:
     python_use_pythonpath = local[bool]("python.use-pythonpath", False)
     python_use_faulthandler = local[bool]("python.use-faulthandler", False)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = []
         result.append("<Py2appConfiguration\n")
         result.append(f"  deployment_target = {self.deployment_target!r}\n")
@@ -288,7 +298,7 @@ class Py2appConfiguration:
         result.append(f"  python_verbose = {self.python_verbose!r}\n")
         result.append(f"  python_use_pythonpath = {self.python_use_pythonpath!r}\n")
         result.append(f"  python_use_faulthandler = {self.python_use_faulthandler!r}\n")
-        result.append(f"  python_maloc_debug = {self.python_maloc_debug!r}\n")
+        result.append(f"  python_malloc_debug = {self.python_malloc_debug!r}\n")
         result.append(f"  python_dev_mode = {self.python_dev_mode!r}\n")
         result.append(f"  build_type = {self.build_type}\n")
         result.append("\n")
@@ -323,9 +333,9 @@ def parse_pyproject(
             "Configuration doesn't contain a 'tool.py2app' key"
         ) from None
 
-    global_options = {}
-    recipe_options = {"zip-unsafe": []}
-    bundles = []
+    global_options: typing.Dict[str, typing.Any] = {}
+    recipe_options: typing.Dict[str, typing.Any] = {"zip-unsafe": []}
+    bundles: typing.List[BundleOptions] = []
 
     result = Py2appConfiguration(bundles, global_options, RecipeOptions(recipe_options))
     for key, value in config.items():
@@ -350,7 +360,7 @@ def parse_pyproject(
 
         elif key == "build-type":
             try:
-                global_options["build-type"] = BuildType(value)
+                global_options["build_type"] = BuildType(value)
             except ValueError:
                 raise ConfigurationError(
                     "'tool.py2app.build-type' has invalid value"
@@ -371,7 +381,7 @@ def parse_pyproject(
                 or re.fullmatch("[0-9]+([.][0-9]+)?", value) is None
             ):
                 raise ConfigurationError("'tool.py2app.deployment-target' is not valid")
-            global_options[key] = value
+            global_options["deployment_target"] = value
         elif key == "python":
             if not isinstance(value, dict):
                 raise ConfigurationError("'tool.py2app.python' is not a dictionary")
@@ -411,7 +421,7 @@ def parse_pyproject(
         raise ConfigurationError("'tool.py2app.bundle' is not a sequence of dicts")
 
     for bundle_name, bundle_value in bundle_config.items():
-        local_options = {
+        local_options: typing.Dict[str, typing.Any] = {
             "plist": {},
             "include": [],
             "exclude": [],
@@ -548,7 +558,7 @@ def parse_pyproject(
                     raise ConfigurationError(
                         f"'tool.py2app.bundle.{bundle_name}.deployment-target' is not valid"
                     )
-                local_options[key] = value
+                local_options["deployment_target"] = value
 
             elif key == "python":
                 if not isinstance(value, dict):

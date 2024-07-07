@@ -27,7 +27,7 @@ class Progress:
         self._progress.advance(task_id)
 
     def iter_task(
-        self, items: typing.List[T], label: str, current=typing.Callable[[T], str]
+        self, items: typing.List[T], label: str, current: typing.Callable[[T], str]
     ) -> typing.Iterator[T]:
         task_id = self.add_task(label, count=len(items))
 
@@ -38,10 +38,10 @@ class Progress:
 
         self.update(task_id, current="")
 
-    def update(self, task_id: rich.progress.TaskID, **kwds):
+    def update(self, task_id: rich.progress.TaskID, **kwds: typing.Any) -> None:
         self._progress.update(task_id, **kwds)
 
-    def task_done(self, task_id: rich.progress.TaskID):
+    def task_done(self, task_id: rich.progress.TaskID) -> None:
         task = self._progress.tasks[task_id]
         if task.total is None:
             self._progress.update(task_id, total=task.completed, current="")
