@@ -46,6 +46,9 @@ class Progress:
         if task.total is None:
             self._progress.update(task_id, total=task.completed, current="")
 
+    def print(self, message: str) -> None:  # noqa: A003
+        self._progress.print(message)
+
     def info(self, message: str) -> None:
         if self._level >= 1:
             self._progress.print(message)
@@ -56,8 +59,10 @@ class Progress:
 
     def warning(self, message: str) -> None:
         # XXX: Color doesn't work?
-        self._progress.print(f"[orange]{message}[/orange]")
+        if message:
+            self._progress.print(f":orange_circle: {message}")
 
     def error(self, message: str) -> None:
-        self._progress.print(f"[red]{message}[/red]")
+        if message:
+            self._progress.print(f":red_circle: {message}")
         self.have_error = True

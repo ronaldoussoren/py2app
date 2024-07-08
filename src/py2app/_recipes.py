@@ -31,8 +31,10 @@ _RECIPE_FUNC = typing.Callable[[ModuleGraph, RecipeOptions], None]
 
 @dataclasses.dataclass
 class RecipeInfo:
-    # XXX: Should there be a name here?
+    # Name of the recipe for user reporting
     name: str
+
+    # The actual recipe function
     callback: _RECIPE_FUNC
 
     # Only trigger when "distribution" is in the graph
@@ -58,10 +60,7 @@ def recipe(
     version_spec: typing.Optional[str] = None,
     modules: typing.Sequence[str] = (),
 ) -> typing.Callable[[_RECIPE_FUNC], _RECIPE_FUNC]:
-    # XXX: Should this move to a separate module with helper functions
-    #      for recipes?
-    #      Other functions in such a module could help in standardizing
-    #      annotations.
+
     def decorator(function: _RECIPE_FUNC) -> _RECIPE_FUNC:
         RECIPE_REGISTRY.append(
             RecipeInfo(

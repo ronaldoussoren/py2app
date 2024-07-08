@@ -13,6 +13,9 @@ from macholib.util import is_platform_file
 
 
 def decode_deployment_target(value: int) -> str:
+    """
+    Return a user friendly representation of an encoded deployment target
+    """
     micro = value & 0xFF
     minor = value >> 8 & 0xFF
     macro = value >> 16 & 0xFF
@@ -24,6 +27,10 @@ def decode_deployment_target(value: int) -> str:
 
 
 def macho_files(base: pathlib.Path) -> typing.Iterator[pathlib.Path]:
+    """
+    Yield Path objects for all MachO files in the filesystem
+    tree starting at *base*.
+    """
     for root, _, files in os.walk(str(base.resolve())):
         for fn in files:
             p = pathlib.Path(root) / fn
@@ -147,17 +154,3 @@ def audit_macho_issues(
         ),
         sorted(set(warnings)),  # Deduplicate
     )
-
-
-if __name__ == "__main__":
-    for p in pathlib.Path("/Applications").iterdir():
-        if not p.is_dir():
-            continue
-
-        architecture, deployment_target, warnings = audit_macho_issues(p)
-        print(f"{p!s}:")
-        print(f"  Common architecture: {architecture}")
-        print(f"  Deployment target:   {deployment_target}")
-        for w in warnings:
-            print(w)
-        print()

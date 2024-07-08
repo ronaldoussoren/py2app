@@ -84,6 +84,8 @@ class ModuleGraph(modulegraph2.ModuleGraph):
         # XXX: This currently assumes code uses the modulegraph2 API and
         #      does not add nodes or edges through the lower-level
         #      objectgraph API.
+        # XXX: This is magic enough that the tracker mechanism should be
+        #      moved to objectgraph.
         tracker = _ChangeTracker()
         self.__tracked_changes.append(tracker)
         try:

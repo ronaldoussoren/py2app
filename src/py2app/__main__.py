@@ -28,6 +28,10 @@ def parse_arguments(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         allow_abbrev=False,
     )
+    """
+    Parse command-line arguments, return if the build should
+    be verbose and the parsed configuration.
+    """
 
     parser.add_argument(
         "--pyproject-toml",
@@ -96,6 +100,10 @@ def parse_arguments(
 
 
 def main() -> int:
+    """
+    Main function for ``python -m py2app``, returns 0 if
+    there are no errors and 1 if there are.
+    """
     verbose, config = parse_arguments(sys.argv[1:])
 
     progress = _progress.Progress(level=2 if verbose else 1)
@@ -112,6 +120,12 @@ def main() -> int:
         _builder.build_bundle(config, bundle, progress)
         progress.step_task(task_id)
     progress.update(task_id, current="")
+
+    if progress.have_error:
+        progress.print("")
+        progress.print(
+            ":stop_sign: [red]Build failed (see earlier messages for details)[/red]"
+        )
     progress._progress.stop()
 
     return 1 if progress.have_error else 0

@@ -328,7 +328,7 @@ def create_bundle_structure(bundle: BundleOptions, progress: Progress) -> Bundle
     """
 
     root = pathlib.Path("dist2") / f"{bundle.name}{bundle.extension}"
-    paths = bundle_paths(root, bundle.build_type)
+    paths = bundle_paths(root)
 
     if root.is_dir():
         # Remove an existing build to ensure that builds
@@ -360,11 +360,15 @@ def add_iconfile(
     else:
         iconfile = bundle.iconfile
 
+    if not iconfile.exists():
+        progress.error("Icon {str(iconfile)!r} does not exist")
+        return
+
     if iconfile.suffix == ".iconset":
         # Convert an iconset to a icon file using system tools.
         #
-        # XXX: iconutil appears to be part of the base install,
-        # but I haven't verified this yet with a clean install.
+        # The iconutil tool was introduced in macOS 10.8.
+
         with reset_blocking_status():
             res = subprocess.call(
                 [
@@ -382,7 +386,9 @@ def add_iconfile(
 
     else:
         if iconfile.suffix != ".icns":
-            progress.error("Unrecognized source format for bundle icon: {iconfile}")
+            progress.error(
+                "Unrecognized source format for bundle icon: {str(iconfile)}"
+            )
 
         data = iconfile.read_bytes()
         (paths.resources / f"{bundle.name}.icns").write_bytes(data)
@@ -731,6 +737,12 @@ def get_module_graph(bundle: BundleOptions, progress: Progress) -> ModuleGraph:
     scan_count = 0
 
     def node_done(graph: ModuleGraph, node: BaseNode) -> None:
+        """
+        Callback for when *node* is fully imported in *graph*.
+
+        This callback currently only ensures that the ``encodings``
+        package is included in its entirety.
+        """
         nonlocal scan_count
 
         progress.update(task_id, current=node.identifier)
@@ -852,10 +864,6 @@ def build_bundle(
     """
     Build the output for *bundle*. Returns *True* if successful and *False* otherwise.
     """
-
-    # XXX: There is no nice way to report errors at this point
-    #      (ok, errors, fatal errors) other than in progress output.
-
     if bundle.build_type != BuildType.ALIAS:
         graph = get_module_graph(bundle, progress)
         graph.add_module("zipfile")
