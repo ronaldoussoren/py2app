@@ -925,8 +925,10 @@ def build_bundle(
         f"[bold]Built {'plugin' if bundle.plugin else 'app'} {bundle.name}[/bold]"
     )
     progress.info("")
-    progress.info(f"Common architectures: {architecture}")
-    progress.info(f"Deployment target: macOS {deployment_target}")
+    progress.info(f"Common architectures: [bold]{architecture}[/bold]")
+    progress.info(
+        f"Deployment target: [bold]macOS {deployment_target}[/bold]", highlight=False
+    )
     progress.info("")
     for w in warnings:
         progress.warning(w)

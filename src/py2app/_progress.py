@@ -46,12 +46,15 @@ class Progress:
         if task.total is None:
             self._progress.update(task_id, total=task.completed, current="")
 
-    def print(self, message: str) -> None:  # noqa: A003
-        self._progress.print(message)
-
-    def info(self, message: str) -> None:
-        if self._level >= 1:
+    def print(self, message: str, *, highlight=None) -> None:  # noqa: A003
+        if highlight is not None:
+            self._progress.print(message, highlight=highlight)
+        else:
             self._progress.print(message)
+
+    def info(self, message: str, *, highlight=None) -> None:
+        if self._level >= 1:
+            self.print(message, highlight=highlight)
 
     def trace(self, message: str) -> None:
         if self._level >= 2:
