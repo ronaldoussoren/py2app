@@ -595,6 +595,9 @@ def add_resources(
 
     for rsrc in progress.iter_task(all_resources, "Copy resources", lambda n: str(n)):
         for src in rsrc.sources:
+            if not src.exists():
+                progress.error(f"Resource {str(src)!r} does not exist")
+                continue
             converter = find_converter(src)
             if converter is not None:
                 converter(src, paths.resources / rsrc.destination / src.name)
@@ -605,6 +608,7 @@ def add_resources(
                     follow_symlinks=False,
                 )
             else:
+
                 shutil.copytree(
                     src,
                     paths.resources / rsrc.destination / src.name,
