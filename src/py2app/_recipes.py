@@ -17,92 +17,16 @@ Support for recipes
 """
 
 import dataclasses
-import pathlib
 import typing
 
 import packaging
 import packaging.specifiers
-from modulegraph2 import BaseNode, PyPIDistribution, Script
 
 from ._config import RecipeOptions
 from ._modulegraph import ModuleGraph
 from ._progress import Progress
 
 _RECIPE_FUNC = typing.Callable[[ModuleGraph, RecipeOptions], None]
-
-
-class ModuleGraphProxy:
-    # XXX: Class name is suboptimal
-    # XXX: Typing...
-    #
-    # XXX: This functionality should be part of ObjectGraph,
-    #      e.g. add a 'changecount' attribute that's incremented
-    #      by adding/removing nodes and edges.
-    def __init__(self, graph: ModuleGraph) -> None:
-        self.__graph = graph
-        self.__updated = False
-
-    @property
-    def is_updated(self) -> bool:
-        return self.__updated
-
-    def add_module(self, module_name: str) -> BaseNode:
-        node = self.__graph.find_node(module_name)
-        if node is not None:
-            assert isinstance(node, BaseNode)
-            return node
-
-        self.__updated = True
-        return self.__graph.add_module(module_name)
-
-    def add_script(self, script_path: pathlib.Path) -> Script:
-        node = self.__graph.find_node(str(script_path))
-        if node is not None:
-            assert isinstance(node, Script)
-            return node
-        self.__updated = True
-        return self.__graph.add_script(script_path)
-
-    def import_package(self, importing_module: BaseNode, package_name: str) -> BaseNode:
-        # XXX: This is not good enough, will result in false positive update
-        #      value if import_package was called earlier
-        node = self.__graph.find_node(package_name)
-        if node is not None:
-            assert isinstance(node, BaseNode)
-            if node.extension_attributes.get("py2app.full_package", False):
-                return node
-        self.__updated = True
-        node = self.__graph.import_package(importing_module, package_name)
-        assert isinstance(node, BaseNode)
-        node.extension_attributes["py2app.full_package"] = True
-        return node
-
-    def import_module(self, importing_module: BaseNode, module_name: str) -> BaseNode:
-        node = self.__graph.find_node(module_name)
-        if node is not None:
-            assert isinstance(node, BaseNode)
-            try:
-                self.__graph.edge_data(importing_module, node)
-            except KeyError:
-                pass
-
-            else:
-                return node
-
-        self.__updated = True
-        return self.__graph.import_module(importing_module, module_name)
-
-    def add_distribution(
-        self, distribution: typing.Union[PyPIDistribution, str]
-    ) -> typing.Union[PyPIDistribution, str]:
-        # XXX: Need check if there actually is an update
-        self.__updated = True
-        return self.__graph.add_distribution(distribution)
-
-    def __getattr__(self, name: str) -> typing.Any:
-        if name.startswith("_"):
-            raise AttributeError(name)
-        return getattr(self.__graph, name)
 
 
 @dataclasses.dataclass
@@ -199,16 +123,15 @@ def process_recipes(
 
     steps = 0
     while True:
-        proxy = typing.cast(ModuleGraph, ModuleGraphProxy(graph))
+        with graph.tracked_changes() as tracker:
+            for recipe in iter_recipes(graph):
+                progress.update(task_id, current=recipe.name)
+                progress.step_task(task_id)
+                steps += 1
 
-        for recipe in iter_recipes(graph):
-            progress.update(task_id, current=recipe.name)
-            progress.step_task(task_id)
-            steps += 1
+                recipe.callback(graph, options)
 
-            recipe.callback(proxy, options)
-
-        if typing.cast(ModuleGraphProxy, proxy).is_updated:
+        if tracker.updated:
             progress.info(f"Recipe {recipe.name!r} updated the dependency graph")
         else:
             break

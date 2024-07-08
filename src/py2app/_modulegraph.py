@@ -3,8 +3,10 @@ Wrapper around class:`modulegraph2.ModuleGraph` with additional
 functionality useful for py2app.
 """
 
+import contextlib
 import importlib.resources
 import io
+import os
 import typing
 
 import modulegraph2
@@ -20,6 +22,7 @@ from modulegraph2 import (
     NamespacePackage,
     Package,
     PyPIDistribution,
+    Script,
 )
 
 from ._config import Resource
@@ -47,6 +50,13 @@ def load_bootstrap(bootstrap: typing.Union[str, io.StringIO]) -> str:
         )
 
 
+class _ChangeTracker:
+    __slots__ = ("updated",)
+
+    def __init__(self) -> None:
+        self.updated = False
+
+
 class ModuleGraph(modulegraph2.ModuleGraph):
     """
     Subclass of *modulegraph2.ModuleGraph* that adds some
@@ -57,6 +67,89 @@ class ModuleGraph(modulegraph2.ModuleGraph):
     # Note: All "add_" methods should ensure that they are idempotent
     #       when adding the same value more than once because resources
     #       can be run multiple times while building the graph.
+    def __init__(
+        self, *, use_stdlib_implies: bool = True, use_builtin_hooks: bool = True
+    ):
+        super().__init__(
+            use_stdlib_implies=use_stdlib_implies, use_builtin_hooks=use_builtin_hooks
+        )
+        self.__tracked_changes: typing.List[_ChangeTracker] = []
+
+    @contextlib.contextmanager
+    def tracked_changes(self) -> typing.Iterator[_ChangeTracker]:
+        """
+        Contextmanager for detecting if the graph was updated by adding
+        nodes or edges to the graph.
+        """
+        # XXX: This currently assumes code uses the modulegraph2 API and
+        #      does not add nodes or edges through the lower-level
+        #      objectgraph API.
+        tracker = _ChangeTracker()
+        self.__tracked_changes.append(tracker)
+        try:
+            yield tracker
+        finally:
+            self.__tracked_changes.remove(tracker)
+
+    def __set_updated(self) -> None:
+        """
+        Set the "updated" flag to true for all active change trackers
+        """
+        for tracker in self.__tracked_changes:
+            tracker.updated = True
+
+    def add_module(self, module_name: str) -> BaseNode:
+        node = self.find_node(module_name)
+        if node is not None:
+            assert isinstance(node, BaseNode)
+            return node
+
+        self.__set_updated()
+        return super().add_module(module_name)
+
+    def add_script(self, script_path: os.PathLike) -> Script:
+        node = self.find_node(str(script_path))
+        if node is not None:
+            assert isinstance(node, Script)
+            return node
+        self.__set_updated()
+        return super().add_script(script_path)
+
+    def import_package(self, importing_module: BaseNode, package_name: str) -> BaseNode:
+        # XXX: This is not good enough, will result in false positive update
+        #      value if import_package was called earlier
+        node = self.find_node(package_name)
+        if node is not None:
+            assert isinstance(node, BaseNode)
+            if node.extension_attributes.get("py2app.full_package", False):
+                return node
+        self.__set_updated()
+        node = super().import_package(importing_module, package_name)
+        assert isinstance(node, BaseNode)
+        node.extension_attributes["py2app.full_package"] = True
+        return node
+
+    def import_module(self, importing_module: BaseNode, module_name: str) -> BaseNode:
+        node = self.find_node(module_name)
+        if node is not None:
+            assert isinstance(node, BaseNode)
+            try:
+                self.edge_data(importing_module, node)
+            except KeyError:
+                pass
+
+            else:
+                return node
+
+        self.__set_updated()
+        return super().import_module(importing_module, module_name)
+
+    def add_distribution(
+        self, distribution: typing.Union[PyPIDistribution, str]
+    ) -> typing.Union[PyPIDistribution, str]:
+        # XXX: Need check if there actually is an update
+        self.__set_updated()
+        return super().add_distribution(distribution)
 
     def set_expected_missing(self, node: MissingModule) -> None:
         """
