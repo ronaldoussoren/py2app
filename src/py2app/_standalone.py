@@ -261,6 +261,8 @@ def macho_standalone(
 
         def changefunc(name: str) -> str:
             result = changes.get(name, name)  # noqa: B023
+            if result != name:
+                progress.trace(f"{current}: Rewrite {name} to {result}")  # noqa: B023
             return result
 
         changed = m.rewriteLoadCommands(changefunc)
