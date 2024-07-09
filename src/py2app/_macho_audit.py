@@ -72,6 +72,9 @@ def audit_macho_issues(
     }
     architecture: typing.Optional[str] = "universal2"
 
+    # Default @rpath for stub executables:
+    base_rpath = {bundle_path / "Frameworks"}
+
     for macho_path in macho_files(bundle_path):
         m = MachO.MachO(str(macho_path))
         cur_archs = set()
@@ -103,8 +106,16 @@ def audit_macho_issues(
 
             # Check that all link commands refer to either a system location
             # or start with '@' (@rpath, @executable_path, ...)
-            # XXX: The '@' check can be made stricter
-            # XXX: Check that linked to libraries actually exist in the bundle
+
+            # Calculate the RPATH search path for the current file.
+            rpath = set(base_rpath)
+            for cmd in hdr.commands:
+                if isinstance(cmd[1], mach_o.rpath_command):
+                    rpath.add(
+                        pathlib.Path(MachO.lc_str_value(cmd[1].path, cmd).decode())
+                    )
+
+            # Validate commands that load a shared library or framework
             for cmd in hdr.commands:
                 if isinstance(cmd[1], mach_o.dylib_command):
                     name = MachO.lc_str_value(cmd[1].name, cmd).decode()
@@ -114,7 +125,43 @@ def audit_macho_issues(
                         and not name.startswith("@")
                     ):
                         warnings.append(
-                            f"{macho_path} links to library {name!r} outside of system locations"
+                            f"{str(macho_path)!r} links to library {name!r} outside of system locations"
+                        )
+                    elif name.startswith("@loader_path/"):
+                        _, _, relpath = name.partition("/")
+
+                        if not (macho_path.parent / relpath).exists():
+                            warnings.append(
+                                f"{str(macho_path)!r} links to library {name!r} that "
+                                f"doesn't exist at {str(macho_path.parent / relpath)!r}"
+                            )
+
+                    elif name.startswith("@rpath/"):
+                        _, _, relpath = name.partition("/")
+
+                        for rp in rpath:
+                            if (rp / relpath).exists():
+                                break
+                        else:
+                            warnings.append(
+                                f"{str(macho_path)!r} links to library {name!r} that "
+                                f"doesn't exist on rpath: {', '.join(map(str, sorted(rpath)))}"
+                            )
+
+                    elif name.startswith("@executable_path/"):
+                        # These shouldn't be present in practice as that would
+                        # break when using virtual environments.
+
+                        dirpath = bundle_path / "Contents/MacOS"
+                        _, _, relpath = name.partition("/")
+                        if not os.path.exists(dirpath / relpath):
+                            warnings.append(
+                                f"{str(macho_path)!r} uses {name!r} to link to non-existing {str(dirpath / relpath)!r}"
+                            )
+
+                    elif name.startswith("@"):
+                        warnings.append(
+                            f"{str(macho_path)!r}: Unhandled special path in link command: {name}"
                         )
 
         if "x86_64" in cur_archs and "arm64" in cur_archs:

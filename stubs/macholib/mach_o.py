@@ -20,3 +20,7 @@ class dylib_command:
     timestamp: int
     current_version: int
     compatibility_version: int
+
+
+class rpath_command:
+    path: int

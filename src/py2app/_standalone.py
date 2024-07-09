@@ -9,6 +9,13 @@ copies dependent Mach-O libraries into a bundle.
 #      to find the referenced files.
 #
 # XXX: Longer term create "macholib2" with a modern interface.
+#
+# XXX: Scan for LC_RPATH entries and rewrite or erase paths that refer to
+#      outside the bundle (see rtree sample)
+#
+# XXX: Related to ^^^: The code appears to rewrite existing @loader_path commands
+#      in a way to breaks references (likely due to not copying required files?)
+
 
 __all__ = ("macho_standalone", "set_deployment_target", "rewrite_libpython")
 
