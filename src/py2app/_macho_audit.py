@@ -1,8 +1,10 @@
 """
-Helpers for auditing the result
-of "MachoStandalone" for issues
-that might affect portability.
+The 'audit_macho_issues' function checks the MachO files in
+a bundle for issues that can make the bundle less standalone
+than intended:
 """
+
+__all__ = ("audit_macho_issues",)
 
 import os
 import pathlib
@@ -57,6 +59,15 @@ def audit_macho_issues(
       files in the bundle bundle (for example "13.2")
 
     * The ``warnings`` are a list of warnings to be shown to the user.
+
+      - Missing or unexpected load commands
+
+      - Deployment target mismatch between x86_64 and arm64
+
+      - Load commands that refer to files outside of the bundle (except for system locations)
+
+      - @rpath/..., @executable_path/... and @loader_path/... that
+        refer to files that cannot be found.
     """
     # XXX: Adjust for py2app's needs:
     # - Check if linked to libraries actually exist:
