@@ -69,13 +69,6 @@ def audit_macho_issues(
       - @rpath/..., @executable_path/... and @loader_path/... that
         refer to files that cannot be found.
     """
-    # XXX: Adjust for py2app's needs:
-    # - Check if linked to libraries actually exist:
-    #   1. @rpath/... should be present in Frameworks folder
-    #   2. system paths should be in FS or in dyld "cache"
-
-    # Deployment target per CPU type, this allows us to report more clearly
-    # about issues.
     warnings = []
     deployment_targets = {
         "arm64": 0xB0000,
@@ -84,7 +77,7 @@ def audit_macho_issues(
     architecture: typing.Optional[str] = "universal2"
 
     # Default @rpath for stub executables:
-    base_rpath = {bundle_path / "Frameworks"}
+    base_rpath = {bundle_path / "Contents/Frameworks"}
 
     for macho_path in macho_files(bundle_path):
         m = MachO.MachO(str(macho_path))
@@ -122,13 +115,41 @@ def audit_macho_issues(
             rpath = set(base_rpath)
             for cmd in hdr.commands:
                 if isinstance(cmd[1], mach_o.rpath_command):
-                    rpath.add(
-                        pathlib.Path(MachO.lc_str_value(cmd[1].path, cmd).decode())
-                    )
+                    path = MachO.lc_str_value(cmd[1].path, cmd).decode()
+                    if path.startswith("/"):
+                        warnings.append(
+                            f"{str(macho_path)!r} has RPATH entry with absolute path: {path}"
+                        )
+                        continue
+
+                    elif path.startswith("@loader_path/"):
+                        _, _, relpath = path.partition("/")
+
+                        rpath.add(macho_path.parent / relpath)
+
+                    elif path.startswith("@rpath/"):
+                        warnings.append(
+                            f"{str(macho_path)!r} has RPATH entry referring to @rpath: {path}"
+                        )
+                        continue
+
+                    elif path.startswith("@executable_path/"):
+                        dirpath = bundle_path / "Contents/MacOS"
+                        _, _, relpath = path.partition("/")
+
+                        rpath.add(macho_path.parent / relpath)
+
+                    else:
+                        warnings.append(
+                            f"{str(macho_path)!r}: Unhandled special path in link command {mach_o.LC_NAMES[cmd[0].cmd]}: {path}"
+                        )
 
             # Validate commands that load a shared library or framework
             for cmd in hdr.commands:
-                if isinstance(cmd[1], mach_o.dylib_command):
+                if (
+                    isinstance(cmd[1], mach_o.dylib_command)
+                    and cmd[0].cmd != mach_o.LC_ID_DYLIB
+                ):
                     name = MachO.lc_str_value(cmd[1].name, cmd).decode()
                     if (
                         not name.startswith("/usr/lib")
@@ -172,7 +193,7 @@ def audit_macho_issues(
 
                     elif name.startswith("@"):
                         warnings.append(
-                            f"{str(macho_path)!r}: Unhandled special path in link command: {name}"
+                            f"{str(macho_path)!r}: Unhandled special path in link command {mach_o.LC_NAMES[cmd[0].cmd]}: {name}"
                         )
 
         if "x86_64" in cur_archs and "arm64" in cur_archs:
