@@ -266,6 +266,26 @@ def macho_standalone(
             return result
 
         changed = m.rewriteLoadCommands(changefunc)
+
+        # Check for LC_RPATH entries that refer to absolute paths, those result in bundles
+        # that can load libraries outside of the bundle. Seen in at least one wheel on PyPI.
+        for header in m.headers:
+            for idx, (lc, cmd, data) in enumerate(header.commands):
+                if lc.cmd == macholib.mach_o.LC_RPATH:
+                    assert isinstance(cmd, macholib.mach_o.rpath_command)
+                    path = macholib.MachO.lc_str_value(
+                        cmd.path, (lc, cmd, data)
+                    ).decode()
+                    if path.startswith("@"):
+                        continue
+
+                    progress.warning(
+                        f"{str(current)!r}: replacing non-portable LC_RPATH entry {path!r}"
+                    )
+                    header.rewriteDataForCommand(idx, b"@executable_path/../Frameworks")
+
+                    changed = True
+
         if changed:
             rewrite_headers(current, m)
 
