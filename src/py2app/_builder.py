@@ -904,6 +904,18 @@ def build_bundle(
 
     architecture, deployment_target, warnings = audit_macho_issues(paths.root.parent)
 
+    # XXX: Validate the 'architecture':
+    # - Error out when 'architecture' is None (no architecture supports all Mach-O files)
+    # - Two options:
+    #   - Change stub executables to match the architecture
+    #   - Error out when architecture doesn't match *bundle.macho_arch*
+    #   (The latter is more explicit, but will result in failures when
+    #    using a universal build of Python with single-arch wheels, which can
+    #    be annoying when not targeting other systems)
+    #   (For the first option: easiest would be to move creating the stub
+    #    executables to this point, although this requires redoing some of the
+    #    work of _standalone)
+
     # Set the deployment target for the launcher executables to the lowest
     # deployment target of Mach-O files in the bundle.
     # XXX: Check and document the error message for launching the bundle on
