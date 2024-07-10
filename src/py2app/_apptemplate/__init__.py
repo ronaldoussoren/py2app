@@ -45,6 +45,11 @@ def _pyflags() -> List[str]:
         + sysconfig.get_config_var("SYSLIBS").split()
     )
 
+    # drop '-arch' flags from _pyflags, those will be added later
+    for idx in range(len(flags) - 1, -1, -1):
+        if flags[idx] == "-arch":
+            del flags[idx : idx + 2]
+
     # Remove debug flags, those result in a dSYM directory for the build
     # and those aren't useful for us.
     while "-g" in flags:
@@ -84,6 +89,7 @@ def copy_app_launcher(
             return
 
     launcher = importlib.resources.files(__name__).joinpath("launcher.m")
+
     subprocess.run(
         (
             [
