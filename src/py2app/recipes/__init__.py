@@ -1,7 +1,6 @@
 from . import PIL  # noqa: F401
 from . import black  # noqa: F401
 from . import gcloud  # noqa: F401
-from . import lxml  # noqa: F401
 from . import matplotlib  # noqa: F401
 from . import multiprocessing  # noqa: F401
 from . import pandas  # noqa: F401
