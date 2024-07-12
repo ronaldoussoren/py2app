@@ -10,7 +10,6 @@ def _run() -> None:
     import site  # noqa: F401
     import zipfile
 
-    sys.frozen = "macosx_app"  # type: ignore
     base = sys.py2app_bundle_resources  # type: ignore[attr-defined]
 
     argv0 = sys.py2app_argv0.rsplit("/", 1)[-1]  # type: ignore[attr-defined]

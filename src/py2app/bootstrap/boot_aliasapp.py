@@ -8,8 +8,6 @@ def _run() -> None:
     global __file__
     import site  # noqa: F401
 
-    sys.frozen = "macosx_app"  # type: ignore
-
     argv0 = sys.py2app_argv0.rsplit("/", 1)[-1]  # type: ignore[attr-defined]
     script = SCRIPT_MAP.get(argv0, DEFAULT_SCRIPT)  # noqa: F821
 

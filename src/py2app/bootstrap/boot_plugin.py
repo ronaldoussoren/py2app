@@ -6,21 +6,19 @@ DEFAULT_SCRIPT: str
 
 def _run() -> None:
     global __file__
-    import os
+    import marshal
     import site  # noqa: F401
+    import zipfile
 
-    sys.frozen = "macosx_plugin"  # type: ignore
-    base = os.environ["RESOURCEPATH"]
+    base = sys.py2app_bundle_resources  # type: ignore[attr-defined]
 
-    if "ARGVZERO" in os.environ:
-        argv0 = os.path.basename(os.environ["ARGVZERO"])
-    else:
-        argv0 = None
-
+    argv0 = sys.py2app_argv0.rsplit("/", 1)[-1]  # type: ignore[attr-defined]
     script = SCRIPT_MAP.get(argv0, DEFAULT_SCRIPT)  # noqa: F821
 
-    __file__ = path = os.path.join(base, script)
-    with open(path, "rb") as fp:
-        source = fp.read() + b"\n"
+    path = f"{base}/python-libraries.zip/bundle-scripts/{script}"
+    sys.argv[0] = __file__ = path
 
-    exec(compile(source, path, "exec"), globals(), globals())
+    zf = zipfile.ZipFile(f"{base}/python-libraries.zip", "r")
+    source = zf.read(f"bundle-scripts/{script}")
+
+    exec(marshal.loads(source[16:]), globals(), globals())
