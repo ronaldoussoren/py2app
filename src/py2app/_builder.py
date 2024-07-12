@@ -31,7 +31,6 @@ from modulegraph2 import (
 )
 
 from . import _recipedefs  # noqa: F401
-from ._apptemplate import LauncherType, copy_launcher, get_plist
 from ._bundlepaths import BundlePaths, bundle_paths
 from ._config import BuildType, BundleOptions, Py2appConfiguration
 from ._macho_audit import audit_macho_issues
@@ -39,6 +38,7 @@ from ._modulegraph import ModuleGraph
 from ._progress import Progress
 from ._recipes import process_recipes
 from ._standalone import macho_standalone, rewrite_libpython, set_deployment_target
+from ._stubs import LauncherType, copy_launcher, get_plist
 from .util import codesign_adhoc, find_converter, reset_blocking_status  # XXX: Replace
 
 
