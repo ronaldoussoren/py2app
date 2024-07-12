@@ -20,6 +20,4 @@ from . import shiboken6  # noqa: F401
 from . import sip  # noqa: F401
 from . import sphinx  # noqa: F401
 from . import sqlalchemy  # noqa: F401
-from . import virtualenv  # noqa: F401
 from . import wx  # noqa: F401
-from . import zmq  # noqa: F401
