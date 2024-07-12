@@ -10,45 +10,14 @@
  *
  * XXX: What's needed to support venv from a bundled Python?
  *
- * XXX: T.B.D. how to implement semi-standalone bundles
- *      (which use an installed python and look for that
- *       at run time). Current opinion: drop that feature.
- *
- *       Possibly another axis of variants (see list below for
- *       primary axis) that performs manual runtime linking
- *       of libpython.
- *
- * XXX: The code should be split into several files (probably
- *      as a header-only library) to allow for code reuse in
- *      a number of variants and in the bundle stub)
- *
- *      In the end we need:
- *      - plugin bundle stub
- *      - plugin bundle stub using subinterpreters
- *      - app bundle stub
- *      - python3 command-line tool
- *      - stub for "extra" scripts
- *
- *      the preprocessor can help here, but is not ideal.
- *
- * XXX: The current code just prints to stderr on problems,
- *      but should pop up a GUI instead (see previous implementation)
- *
- *      Should it? Maybe only in semi-standalone mode when it cannot
- *      find Python; in all other cases launch problems are either
- *      bugs in py2app or a user script that doesn't work right)
- *
  * The build machinery uses a preprocessor define to control which
  * variant is build:
- * - `-DLAUNCH_PRIMARY`: Main executable for an .app bundle
- * - `-DLAUNCH_SECONDARY`: Additional "script" in a bundle
+ * - No defines:   Main or secondary executable for an .app bundle
  * - `-DLAUNCH_PYTHON`: Equivalent to `python3` outside of a bundle
  *
  * Note that all types of binaries only work when located inside a
- * bundle, the "secondary" and "python" types can more easily be used
- * outside of a bundle by creating symbolic links in a convenient place.
- *
- * XXX: Actually implement the second and third variants.
+ * bundle, but can be used outside of the bundle by creating symbolic
+ * links in a convenient place.
  */
 
 #include <unistd.h>
@@ -122,8 +91,10 @@ static void debug_dyld_usage(void)
         NSLog(@"Mach-O image outside of the bundle: %s", image_name);
     }
 }
-
 #endif /* ENABLE_MACHO_DEBUG */
+
+
+static int finalize_python = 1;
 
 /* setup_python - Initialize the python interpreter.
  *
@@ -139,6 +110,11 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
 
     PyPreConfig_InitIsolatedConfig(&preconfig);
     preconfig.utf8_mode = 1;
+
+#ifdef LAUNCH_PYTHON
+    /* 5. Parse argv when used as python3 */
+    preconfig.parse_argv = 1;
+#endif
 
     /*
      * 2. Customize interpreter pre-configuration using the `PyConfig`
@@ -165,11 +141,15 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
         }
     }
 
-    status = Py_PreInitialize(&preconfig);
+    status = Py_PreInitializeFromBytesArgs(&preconfig, argc, (char**)argv);
     if (PyStatus_Exception(status)) goto configerror;
 
 
     PyConfig_InitIsolatedConfig(&config);
+#ifdef LAUNCH_PYTHON
+    /* 5. Parse argv when used as python3 */
+    config.parse_argv = 1;
+#endif
 
     /* 1. Basic configuration */
 
@@ -202,6 +182,12 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
         value = pyconfig[@"faulthandler"];
         if (value && [[value class] isSubclassOfClass:[NSNumber class]]) {
             config.faulthandler = [value intValue];
+        }
+
+        /* - finalize (bool), default True */
+        value = pyconfig[@"finalize"];
+        if (value && [[value class] isSubclassOfClass:[NSNumber class]]) {
+            finalize_python = [value intValue];
         }
 
         path_suffixes = pyconfig[@"sys.path"];
@@ -291,14 +277,20 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
     status = PyConfig_SetBytesArgv(&config, argc, argv);
     if (PyStatus_Exception(status)) goto configerror;
 
+#ifdef LAUNCH_PYTHON
+    /* 5. Finish configuration */
+    status = PyConfig_Read(&config);
+    if (PyStatus_Exception(status)) goto configerror;
+#endif
 
-    /* 5. Initialize the Python interpreter: */
+
+    /* 6. Initialize the Python interpreter: */
     status = Py_InitializeFromConfig(&config);
     PyConfig_Clear(&config);
     if (PyStatus_Exception(status)) goto configerror;
 
 
-    /* 6. Inject `sys.py2app_bundle_resources` */
+    /* 7. Inject `sys.py2app_bundle_resources` */
     const char* resourcePath = mainBundle.resourcePath.UTF8String;
     PyObject* value = PyUnicode_DecodeUTF8(resourcePath, strlen(resourcePath), NULL);
     if (!value) {
@@ -313,7 +305,8 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
     }
     Py_DECREF(value);
 
-    /* 7. Inject `sys.py2app_argv0` */
+#ifndef LAUNCH_PYTHON
+    /* 8. Inject `sys.py2app_argv0` */
     value = PyUnicode_DecodeUTF8(argv[0], strlen(argv[0]), NULL);
     if (!value) {
         status = PyStatus_Error("cannot convert argv[0] to python");
@@ -324,6 +317,8 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
         Py_DECREF(value);
         goto pyerror;
     }
+    Py_DECREF(value);
+#endif
 
 #ifdef ENABLE_MACHO_DEBUG
     /* 8. Check if dylib loading should be verified */
@@ -341,7 +336,6 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
         debug_macho_usage = 1;
     }
 #endif /* ENABLE_MACHO_DEBUG */
-    Py_DECREF(value);
     return;
 
 pyerror:
@@ -380,12 +374,16 @@ static void clear_bundle_address(void)
     }
 }
 
-
 int
 main(int argc, char * const *argv, char * const *envp)
 {
-    NSString* mainPy;
-    FILE* mainFile;
+    NSString* prebootPy;
+    FILE* prebootFile;
+#ifndef LAUNCH_PYTHON
+    NSString* bootPy;
+    FILE* bootFile;
+#endif
+    int rval;
 
     @autoreleasepool {
         NSBundle* mainBundle = [NSBundle mainBundle];
@@ -398,19 +396,44 @@ main(int argc, char * const *argv, char * const *envp)
         clear_bundle_address();
         setup_python(mainBundle, argc, argv, envp);
 
-        mainPy = [[[mainBundle resourcePath] stringByAppendingPathComponent:@"__boot__.py"] retain];
+        prebootPy = [[[mainBundle resourcePath] stringByAppendingPathComponent:@"__preboot__.py"] retain];
+#ifndef LAUNCH_PYTHON
+        bootPy = [[[mainBundle resourcePath] stringByAppendingPathComponent:@"__boot__.py"] retain];
+#endif
     }
 
 
-    mainFile = fopen([mainPy UTF8String], "r");
-    if (mainFile == NULL) {
-        NSLog(@"Cannot open %@, errno=%d", mainPy, errno);
+    prebootFile = fopen([prebootPy UTF8String], "r");
+    if (prebootFile == NULL) {
+        NSLog(@"Cannot open %@, errno=%d", prebootPy, errno);
         return 1;
     }
 
-    int rval = PyRun_SimpleFile(mainFile, [mainPy UTF8String]);
-    fclose(mainFile);
-    [mainPy release];
+#ifndef LAUNCH_PYTHON
+    bootFile = fopen([bootPy UTF8String], "r");
+    if (bootFile == NULL) {
+        NSLog(@"Cannot open %@, errno=%d", bootPy, errno);
+        fclose(prebootFile);
+        return 1;
+    }
+#endif
+
+    rval = PyRun_SimpleFile(prebootFile, [prebootPy UTF8String]);
+    if (rval == 0) {
+#ifndef LAUNCH_PYTHON
+        rval = PyRun_SimpleFile(bootFile, [bootPy UTF8String]);
+#elif defined(LAUNCH_PYTHON)
+        rval = Py_RunMain();
+#endif
+    }
+
+    fclose(prebootFile);
+    [prebootPy release];
+
+#ifndef LAUNCH_PYTHON
+    fclose(bootFile);
+    [bootPy release];
+#endif
 
 
 #ifdef ENABLE_MACHO_DEBUG
@@ -418,9 +441,12 @@ main(int argc, char * const *argv, char * const *envp)
 #endif /* ENABLE_MACHO_DEBUG */
 
 
-    /* XXX: Finalizing the interpreter can be problematic, maybe
-     *      turn this into a config option?
-     */
-    Py_Finalize();
+    if (finalize_python) {
+        Py_Finalize();
+    }
+#ifndef LAUNCH_PYTHON
     return rval == 0?0:2;
+#else
+    return rval;
+#endif
 }

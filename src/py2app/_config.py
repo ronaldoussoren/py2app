@@ -165,6 +165,7 @@ class BundleOptions:
     python_malloc_debug = inherited[bool]("python.malloc-debug", "python_malloc_debug")
     python_dev_mode = inherited[bool]("python.dev-mode", "python_dev_mode")
     python_verbose = inherited[bool]("python.verbose", "python_verbose")
+    python_finalize = inherited[bool]("python.finalize", "python_finalize")
     python_use_pythonpath = inherited[bool](
         "python.use-pythonpath", "python_use_pythonpath"
     )
@@ -236,6 +237,7 @@ class BundleOptions:
         result.append(f"  deployment_target = {self.deployment_target!r}\n")
         result.append(f"  python_optimize = {self.python_optimize!r}\n")
         result.append(f"  python_verbose = {self.python_verbose!r}\n")
+        result.append(f"  python_finalize = {self.python_finalize!r}\n")
         result.append(f"  python_malloc_debug = {self.python_malloc_debug!r}\n")
         result.append(f"  python_dev_mode = {self.python_dev_mode!r}\n")
         result.append(f"  python_use_pythonpath = {self.python_use_pythonpath!r}\n")
@@ -283,6 +285,7 @@ class Py2appConfiguration:
     macho_arch = local[BuildArch]("arch", BuildArch(_DEFAULT_ARCH))
     python_optimize = local[int]("python.optimize", sys.flags.optimize)
     python_verbose = local[bool]("python.verbose", bool(sys.flags.verbose))
+    python_finalize = local[bool]("python.finalize", True)
     python_malloc_debug = local[bool]("python.malloc-debug", False)
     python_dev_mode = local[bool]("python.dev-mode", False)
     python_use_pythonpath = local[bool]("python.use-pythonpath", False)
@@ -296,6 +299,7 @@ class Py2appConfiguration:
         result.append(f"  macho_arch = {self.macho_arch!r}\n")
         result.append(f"  python_optimize = {self.python_optimize!r}\n")
         result.append(f"  python_verbose = {self.python_verbose!r}\n")
+        result.append(f"  python_finalize = {self.python_finalize!r}\n")
         result.append(f"  python_use_pythonpath = {self.python_use_pythonpath!r}\n")
         result.append(f"  python_use_faulthandler = {self.python_use_faulthandler!r}\n")
         result.append(f"  python_malloc_debug = {self.python_malloc_debug!r}\n")
@@ -391,6 +395,7 @@ def parse_pyproject(
                     "use-sitepackages",
                     "use-faulthandler",
                     "verbose",
+                    "finalize",
                 }:
                     if not isinstance(py_value, bool):
                         raise ConfigurationError(
@@ -571,6 +576,7 @@ def parse_pyproject(
                         "use-sitepackages",
                         "use-faulthandler",
                         "verbose",
+                        "finalize",
                     }:
                         if not isinstance(py_value, bool):
                             raise ConfigurationError(

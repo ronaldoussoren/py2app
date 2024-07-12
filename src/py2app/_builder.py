@@ -421,7 +421,7 @@ def add_loader(paths: BundlePaths, bundle: BundleOptions, progress: Progress) ->
     progress.step_task(task_id)
 
     copy_app_launcher(
-        paths.main / "python",
+        paths.main / "python3",
         arch=bundle.macho_arch,
         deployment_target=bundle.deployment_target,
         program_type=LauncherType.PYTHON_BINARY,
@@ -437,7 +437,6 @@ def add_loader(paths: BundlePaths, bundle: BundleOptions, progress: Progress) ->
                 paths.main / script.stem,
                 arch=bundle.macho_arch,
                 deployment_target=bundle.deployment_target,
-                program_type=LauncherType.SECONDARY_PROGRAM,
             )
             progress.step_task(task_id)
 
@@ -483,17 +482,15 @@ def add_bootstrap(
     #
     # - Setting DEFAULT_SCRIPT and SCRIPT_MAP is incorrect/incomplete
 
+    # XXX: Split into __preboot__.py and __boot__.py, the former used
+    #      for initial setup and the latter for actually launching app
+    #      code. The preboot file is also used for the "python3" command
+    #      emulation.
+
+    prebootstrap_path = paths.resources / "__preboot__.py"
     bootstrap_path = paths.resources / "__boot__.py"
 
-    # XXX:
-    # - All hardcoded fragments should either access only builtin modules,
-    #   or addition should be moved to an earlier phase using *graph.add_bootstrap*.
-    # - handle argv_emulator and argv_inject with recipes, but these
-    #   should only be enabled for the main script and not for secondary
-    #   scripts.
-    # - Likewise for 'emulate_shell_environment'
-
-    with open(bootstrap_path, "w") as stream:
+    with open(prebootstrap_path, "w") as stream:
         if bundle.build_type == BuildType.ALIAS:
             # The bundle does not include Python source code, and
             # code objects could refer to non-existing paths.
@@ -505,6 +502,36 @@ def add_bootstrap(
                 .read_text(encoding="utf-8")
             )
             stream.write("\n")
+
+        stream.write(
+            importlib.resources.files("py2app.bootstrap")
+            .joinpath("_setup_importlib.py")
+            .read_text(encoding="utf-8")
+        )
+        stream.write("\n")
+
+        # XXX: Audit recipes  for this, if needed split
+        #      into two sets of bootstrap.
+        if graph is not None:
+            for node in graph.iter_graph():
+                if not isinstance(node, BaseNode):
+                    continue
+                bootstrap = graph.bootstrap(node)
+                if bootstrap is None:
+                    continue
+
+                stream.write(bootstrap)
+                stream.write("\n")
+
+    # XXX:
+    # - All hardcoded fragments should either access only builtin modules,
+    #   or addition should be moved to an earlier phase using *graph.add_bootstrap*.
+    # - handle argv_emulator and argv_inject with recipes, but these
+    #   should only be enabled for the main script and not for secondary
+    #   scripts.
+    # - Likewise for 'emulate_shell_environment'
+
+    with open(bootstrap_path, "w") as stream:
 
         if bundle.chdir:
             if bundle.plugin:
@@ -526,24 +553,6 @@ def add_bootstrap(
                     """
                     )
                 )
-
-        stream.write(
-            importlib.resources.files("py2app.bootstrap")
-            .joinpath("_setup_importlib.py")
-            .read_text(encoding="utf-8")
-        )
-        stream.write("\n")
-
-        if graph is not None:
-            for node in graph.iter_graph():
-                if not isinstance(node, BaseNode):
-                    continue
-                bootstrap = graph.bootstrap(node)
-                if bootstrap is None:
-                    continue
-
-                stream.write(bootstrap)
-                stream.write("\n")
 
         stream.write(
             importlib.resources.files("py2app.bootstrap")

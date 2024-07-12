@@ -10,8 +10,7 @@ from .._config import BuildArch
 
 
 class LauncherType(enum.Enum):
-    MAIN_PROGRAM = "main"
-    SECONDARY_PROGRAM = "secondary"
+    STUB_PROGRAM = "main"
     PYTHON_BINARY = "python"
 
 
@@ -22,9 +21,8 @@ ARCH_FLAGS = {
 }
 
 LAUNCHER_FLAGS = {
-    LauncherType.MAIN_PROGRAM: "-DLAUNCH_PRIMARY",
-    LauncherType.SECONDARY_PROGRAM: "-DLAUNCH_SECONDARY",
-    LauncherType.PYTHON_BINARY: "-DLAUNCH_PYTHON",
+    LauncherType.STUB_PROGRAM: [],
+    LauncherType.PYTHON_BINARY: ["-DLAUNCH_PYTHON"],
 }
 
 
@@ -62,7 +60,7 @@ def copy_app_launcher(
     path: pathlib.Path,
     *,
     arch: BuildArch,
-    program_type: LauncherType = LauncherType.MAIN_PROGRAM,
+    program_type: LauncherType = LauncherType.STUB_PROGRAM,
     deployment_target: str,
     debug_macho_usage: bool = False,
 ) -> None:
@@ -103,8 +101,8 @@ def copy_app_launcher(
                 "-framework",
                 "Foundation",
                 f"-mmacosx-version-min={deployment_target}",
-                LAUNCHER_FLAGS[program_type],
             ]
+            + LAUNCHER_FLAGS[program_type]
             + ARCH_FLAGS[arch]
             + _pyflags()
             + (["-DENABLE_MACHO_DEBUG"] if debug_macho_usage else [])
