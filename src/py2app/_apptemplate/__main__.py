@@ -3,7 +3,7 @@ import sys
 import sysconfig
 
 from .._config import BuildArch
-from . import LauncherType, copy_app_launcher
+from . import LauncherType, copy_launcher
 
 
 def build_executable_cache() -> None:
@@ -22,7 +22,7 @@ def build_executable_cache() -> None:
             )
             fn.unlink(missing_ok=True)
             print(f"Generate {fn.name}")
-            copy_app_launcher(
+            copy_launcher(
                 fn,
                 arch=arch,
                 deployment_target=deployment_target,

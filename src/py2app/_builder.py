@@ -31,7 +31,7 @@ from modulegraph2 import (
 )
 
 from . import _recipedefs  # noqa: F401
-from ._apptemplate import LauncherType, copy_app_launcher, get_app_plist
+from ._apptemplate import LauncherType, copy_launcher, get_plist
 from ._bundlepaths import BundlePaths, bundle_paths
 from ._config import BuildType, BundleOptions, Py2appConfiguration
 from ._macho_audit import audit_macho_issues
@@ -39,10 +39,6 @@ from ._modulegraph import ModuleGraph
 from ._progress import Progress
 from ._recipes import process_recipes
 from ._standalone import macho_standalone, rewrite_libpython, set_deployment_target
-from .bundletemplate.plist_template import (
-    infoPlistDict as bundle_info_plist_dict,  # XXX: Replace
-)
-from .bundletemplate.setup import main as bundle_stub_path  # XXX: Replace
 from .util import codesign_adhoc, find_converter, reset_blocking_status  # XXX: Replace
 
 
@@ -404,23 +400,19 @@ def add_loader(paths: BundlePaths, bundle: BundleOptions, progress: Progress) ->
     task_id = progress.add_task(
         "Add stub executable", count=2 + len(bundle.extra_scripts)
     )
-    if bundle.plugin:
-        stub = pathlib.Path(bundle_stub_path(arch=bundle.macho_arch.value))
-
-        main_path = paths.main / bundle.name
-        main_path.write_bytes(stub.read_bytes())
-        main_path.chmod(0o755)
-    else:
-        copy_app_launcher(
-            paths.main / bundle.name,
-            arch=bundle.macho_arch,
-            deployment_target=bundle.deployment_target,
-            debug_macho_usage=bundle.debug_macho_usage,
-        )
+    copy_launcher(
+        paths.main / bundle.name,
+        arch=bundle.macho_arch,
+        deployment_target=bundle.deployment_target,
+        debug_macho_usage=bundle.debug_macho_usage,
+        program_type=(
+            LauncherType.STUB_PLUGIN if bundle.plugin else LauncherType.STUB_APP
+        ),
+    )
 
     progress.step_task(task_id)
 
-    copy_app_launcher(
+    copy_launcher(
         paths.main / "python3",
         arch=bundle.macho_arch,
         deployment_target=bundle.deployment_target,
@@ -433,7 +425,7 @@ def add_loader(paths: BundlePaths, bundle: BundleOptions, progress: Progress) ->
         for script in progress.iter_task(
             bundle.extra_scripts, "Add stubs for extra-scripts", lambda n: n.name
         ):
-            copy_app_launcher(
+            copy_launcher(
                 paths.main / script.stem,
                 arch=bundle.macho_arch,
                 deployment_target=bundle.deployment_target,
@@ -638,14 +630,7 @@ def get_info_plist(bundle: BundleOptions) -> Dict[str, Any]:
     on the template for the bundle kind and the specified
     Info.plist contents.
     """
-    # XXX: Consider moving plist merging to this file, logic should
-    #      be similar between app and plugin types.
-    if bundle.plugin:
-        # XXX: Switch bundle template to similar structure as the
-        #      new app template.
-        plist = bundle_info_plist_dict(bundle.name, bundle.plist)
-    else:
-        plist = get_app_plist(bundle.name, bundle.plist)
+    plist = get_plist(bundle.name, bundle.plist, bundle.plugin)
 
     pyconfig: typing.Dict[str, typing.Any] = {}
     plist["PyConfig"] = pyconfig

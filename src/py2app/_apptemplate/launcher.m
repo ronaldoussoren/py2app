@@ -10,10 +10,15 @@
  *
  * XXX: What's needed to support venv from a bundled Python?
  *
+ * XXX: This (like the stub in 0.x) does not support having more
+ *      than one Python plugin in a process. Longer term this can
+ *      be resolved by using subinterpreters.
+ *
  * The build machinery uses a preprocessor define to control which
  * variant is build:
  * - No defines:   Main or secondary executable for an .app bundle
  * - `-DLAUNCH_PYTHON`: Equivalent to `python3` outside of a bundle
+ * - `-DPLUGIN_BUNDLE`: Main binary for a plugin bundle
  *
  * Note that all types of binaries only work when located inside a
  * bundle, but can be used outside of the bundle by creating symbolic
@@ -27,7 +32,25 @@
 
 #import <Cocoa/Cocoa.h>
 
-#ifdef ENABLE_MACHO_DEBUG
+#ifdef PLUGIN_BUNDLE
+#include <mach-o/dyld.h>
+static
+const char *bundle_path(void) {
+    int i;
+    const struct mach_header *myHeader = _dyld_get_image_header_containing_address(&bundle_path);
+    uint32_t count = _dyld_image_count();
+    for (i = 0; i < count; i++) {
+        if (_dyld_get_image_header(i) == myHeader) {
+            return _dyld_get_image_name(i);
+        }
+    }
+    abort();
+    return NULL;
+}
+
+#endif /* PLUGIN_BUNDLE */
+
+#if defined(ENABLE_MACHO_DEBUG) && !defined(PLUGIN_BUNDLE)
 #include <mach-o/dyld.h>
 
 static int debug_macho_usage = 0;
@@ -306,7 +329,7 @@ static char path_buffer[MAXPATHLEN*2];
     }
     Py_DECREF(value);
 
-#ifndef LAUNCH_PYTHON
+#if !defined(LAUNCH_PYTHON) && !defined(PLUGIN_BUNDLE)
     /* 8. Inject `sys.py2app_argv0` */
     uint32_t path_buffer_size = sizeof(path_buffer);
     if (_NSGetExecutablePath(path_buffer, &path_buffer_size) == -1) {
@@ -328,6 +351,16 @@ static char path_buffer[MAXPATHLEN*2];
     }
     if (PySys_SetObject("py2app_argv0", value) == -1) {
         status = PyStatus_Error("cannot set sys.py2app_argv0");
+        Py_DECREF(value);
+        goto pyerror;
+    }
+    Py_DECREF(value);
+#endif
+
+#ifdef PLUGIN_BUNDLE
+    value = PyLong_FromVoidPtr(mainBundle);
+    if (PySys_SetObject("py2app_bundle_address", value) == -1) {
+        status = PyStatus_Error("cannot set sys.py2app_bundle_address");
         Py_DECREF(value);
         goto pyerror;
     }
@@ -388,8 +421,17 @@ static void clear_bundle_address(void)
     }
 }
 
+
+#ifndef PLUGIN_BUNDLE
+#define ERR 1
 int
 main(int argc, char * const *argv, char * const *envp)
+#else
+#define ERR
+static void __attribute__ ((constructor)) _py2app_bundle_load(void);
+
+static void _py2app_bundle_load(void)
+#endif
 {
     NSString* prebootPy;
     FILE* prebootFile;
@@ -408,19 +450,32 @@ main(int argc, char * const *argv, char * const *envp)
          * does not return an object that refers to the bundle
          * the linked to executable is in.
          */
+#ifdef PLUGIN_BUNDLE
+        char** envp = _NSGetEnviron();
+        char** argv = { bundle_path(), NULL };
+        int argc = 1;
+
+        if (argv[0] == NULL) {
+            NSLog("Cannot determine path to bundle");
+            return;
+        }
+
+        char* resolved = realpath(argv[0], NULL);
+#else /* !PLUGIN_BUNDLE */
 
 static  char path_buffer[MAXPATHLEN*2];
         uint32_t bufsize = sizeof(path_buffer);
 
         if (_NSGetExecutablePath(path_buffer, &bufsize) != 0) {
             NSLog(@"Cannot determine path");
-            return 1;
+            return ERR;
         }
 
         char* resolved = realpath(path_buffer, NULL);
+#endif
         if (resolved == NULL) {
             NSLog(@"Cannot determine path");
-            return 1;
+            return ERR;
         }
 
         /* Resolved structure should be "path/to/bundle.app/Contents/MacOS/exe"
@@ -431,15 +486,21 @@ static  char path_buffer[MAXPATHLEN*2];
             char *c = strrchr(resolved, '/');
             if (c == NULL) {
                 NSLog(@"Cannot determine path");
-                return 1;
+                return ERR;
             }
             *c = '\0';
         }
 
         NSBundle* mainBundle = [NSBundle bundleWithPath:[NSString stringWithUTF8String:resolved]];
         if (!mainBundle) {
-            NSLog(@"Not in an application bundle, exiting");
-            return 1;
+            NSLog(@"Not in a bundle, exiting");
+            return ERR;
+        }
+
+        if (Py_IsInitialized()) {
+            /* See comment at the start of this file */
+            NSLog(@"The Python interpreter is already initialized, bailing out");
+            return ERR;
         }
 
         clear_bundle_address();
@@ -456,7 +517,7 @@ static  char path_buffer[MAXPATHLEN*2];
     prebootFile = fopen([prebootPy UTF8String], "r");
     if (prebootFile == NULL) {
         NSLog(@"Cannot open %@, errno=%d", prebootPy, errno);
-        return 1;
+        return ERR;
     }
 
 #ifndef LAUNCH_PYTHON
@@ -464,7 +525,7 @@ static  char path_buffer[MAXPATHLEN*2];
     if (bootFile == NULL) {
         NSLog(@"Cannot open %@, errno=%d", bootPy, errno);
         fclose(prebootFile);
-        return 1;
+        return ERR;
     }
 #endif
 
@@ -485,6 +546,16 @@ static  char path_buffer[MAXPATHLEN*2];
     [bootPy release];
 #endif
 
+#ifdef PLUGIN_BUNDLE
+    /* Whatever happened, we cannot finalize the Python interpreter */
+
+    PyErr_Clear();
+    PyGILState_Release(gilState);
+    if (gilState == PyGILState_LOCKED) {
+        PyEval_SaveThread();
+    }
+
+#else /* !PLUGIN_BUNDLE */
 
 #ifdef ENABLE_MACHO_DEBUG
     debug_dyld_usage();
@@ -499,4 +570,6 @@ static  char path_buffer[MAXPATHLEN*2];
 #else
     return rval;
 #endif
+
+#endif /* !PLUGIN_BUNDLE */
 }

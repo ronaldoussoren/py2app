@@ -10,7 +10,8 @@ from .._config import BuildArch
 
 
 class LauncherType(enum.Enum):
-    STUB_PROGRAM = "main"
+    STUB_APP = "app"
+    STUB_PLUGIN = "plugin"
     PYTHON_BINARY = "python"
 
 
@@ -21,7 +22,8 @@ ARCH_FLAGS = {
 }
 
 LAUNCHER_FLAGS = {
-    LauncherType.STUB_PROGRAM: [],
+    LauncherType.STUB_APP: [],
+    LauncherType.STUB_PLUGIN: ["-DBUNDLE_PLUGIN", "-bundle"],
     LauncherType.PYTHON_BINARY: ["-DLAUNCH_PYTHON"],
 }
 
@@ -56,11 +58,11 @@ def _pyflags() -> List[str]:
     return flags
 
 
-def copy_app_launcher(
+def copy_launcher(
     path: pathlib.Path,
     *,
     arch: BuildArch,
-    program_type: LauncherType = LauncherType.STUB_PROGRAM,
+    program_type: LauncherType = LauncherType.STUB_APP,
     deployment_target: str,
     debug_macho_usage: bool = False,
 ) -> None:
@@ -111,7 +113,11 @@ def copy_app_launcher(
     )
 
 
-def get_app_plist(bundle_executable: str, plist: dict = {}) -> dict:  # noqa: B006, M511
+def get_plist(
+    bundle_executable: str,
+    plist: dict = {},  # noqa: B006, M511
+    is_plugin: bool = False,
+) -> dict:
     """
     Return a plist template for an app bundle, merging 'plist' into the
     default values.
@@ -133,7 +139,7 @@ def get_app_plist(bundle_executable: str, plist: dict = {}) -> dict:  # noqa: B0
         "NSAppleScriptEnabled": False,
         "NSHumanReadableCopyright": "Copyright not specified",
         "NSMainNibFile": "MainMenu",
-        "NSPrincipalClass": "NSApplication",
+        "NSPrincipalClass": bundle_executable if is_plugin else "NSApplication",
     }
     pdict.update(plist)
     return pdict
