@@ -16,7 +16,6 @@ class BundlePaths:
     Record the paths to interesting bits of a bundle:
 
     - ``root``: 'Contents' folder;
-    - ``bin``:  Location for secondary binaries ("extra_scripts");
     - ``resources``: Root of the resource folder;
     - ``main``: Folder containing the main bundle binary;
     - ``pylib``: Location of Python libraries used that aren't zip safe;
@@ -26,7 +25,6 @@ class BundlePaths:
     """
 
     root: pathlib.Path
-    bin: pathlib.Path  # noqa: A003
     resources: pathlib.Path
     main: pathlib.Path
     pylib: pathlib.Path
@@ -40,7 +38,6 @@ class BundlePaths:
         """
         return [
             self.root,
-            self.bin,
             self.resources,
             self.main,
             self.pylib,
@@ -56,7 +53,6 @@ def bundle_paths(root: pathlib.Path) -> BundlePaths:
     # See doc/bundle-structure.rst, section "Python Locations"
     return BundlePaths(
         root=root / "Contents",
-        bin=root / "Contents/Resources/bin",
         resources=root / "Contents/Resources",
         main=root / "Contents/MacOS",
         pylib_zipped=root / "Contents/Resources/python-libraries.zip",

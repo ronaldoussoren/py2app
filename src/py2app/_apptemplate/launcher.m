@@ -103,6 +103,9 @@ static int finalize_python = 1;
  */
 static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char* const* envp)
 {
+#ifndef LAUNCH_PYTHON
+static char path_buffer[MAXPATHLEN*2];
+#endif
     PyPreConfig preconfig;
     PyConfig config;
     PyStatus status;
@@ -112,7 +115,6 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
     preconfig.utf8_mode = 1;
 
 #ifdef LAUNCH_PYTHON
-    /* 5. Parse argv when used as python3 */
     preconfig.parse_argv = 1;
 #endif
 
@@ -147,7 +149,6 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
 
     PyConfig_InitIsolatedConfig(&config);
 #ifdef LAUNCH_PYTHON
-    /* 5. Parse argv when used as python3 */
     config.parse_argv = 1;
 #endif
 
@@ -307,9 +308,22 @@ static void setup_python(NSBundle* mainBundle, int argc, char* const* argv, char
 
 #ifndef LAUNCH_PYTHON
     /* 8. Inject `sys.py2app_argv0` */
-    value = PyUnicode_DecodeUTF8(argv[0], strlen(argv[0]), NULL);
+    uint32_t path_buffer_size = sizeof(path_buffer);
+    if (_NSGetExecutablePath(path_buffer, &path_buffer_size) == -1) {
+        status = PyStatus_Error("cannot fetch executable path");
+        goto pyerror;
+    }
+
+    char* resolved = realpath(path_buffer, NULL);
+    if (resolved == NULL) {
+        status = PyStatus_Error("cannot fetch executable path");
+        goto pyerror;
+    }
+
+    value = PyUnicode_DecodeUTF8(resolved, strlen(resolved), NULL);
+    free(resolved);
     if (!value) {
-        status = PyStatus_Error("cannot convert argv[0] to python");
+        status = PyStatus_Error("cannot convert executable path to python");
         goto pyerror;
     }
     if (PySys_SetObject("py2app_argv0", value) == -1) {
@@ -386,8 +400,43 @@ main(int argc, char * const *argv, char * const *envp)
     int rval;
 
     @autoreleasepool {
-        NSBundle* mainBundle = [NSBundle mainBundle];
+        /*
+         * The main bundle is determined in a circumspect way to
+         * support symlinks to the bundle executable.
+         *
+         * When such symlinks exist the [NSBundle mainBundle] method
+         * does not return an object that refers to the bundle
+         * the linked to executable is in.
+         */
 
+static  char path_buffer[MAXPATHLEN*2];
+        uint32_t bufsize = sizeof(path_buffer);
+
+        if (_NSGetExecutablePath(path_buffer, &bufsize) != 0) {
+            NSLog(@"Cannot determine path");
+            return 1;
+        }
+
+        char* resolved = realpath(path_buffer, NULL);
+        if (resolved == NULL) {
+            NSLog(@"Cannot determine path");
+            return 1;
+        }
+
+        /* Resolved structure should be "path/to/bundle.app/Contents/MacOS/exe"
+         * Drop the last 3 segments.
+         */
+
+        for (int i = 0; i < 3 ;i++) {
+            char *c = strrchr(resolved, '/');
+            if (c == NULL) {
+                NSLog(@"Cannot determine path");
+                return 1;
+            }
+            *c = '\0';
+        }
+
+        NSBundle* mainBundle = [NSBundle bundleWithPath:[NSString stringWithUTF8String:resolved]];
         if (!mainBundle) {
             NSLog(@"Not in an application bundle, exiting");
             return 1;
@@ -395,6 +444,7 @@ main(int argc, char * const *argv, char * const *envp)
 
         clear_bundle_address();
         setup_python(mainBundle, argc, argv, envp);
+        free(resolved);
 
         prebootPy = [[[mainBundle resourcePath] stringByAppendingPathComponent:@"__preboot__.py"] retain];
 #ifndef LAUNCH_PYTHON
