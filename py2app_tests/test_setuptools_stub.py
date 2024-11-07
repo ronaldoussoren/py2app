@@ -2224,7 +2224,7 @@ class TestSetuptoolsConfiguration(TestCase):
         (
             "expected-missing-imports=",
             None,
-            "expected missing imports either a comma sperated list "
+            "expected missing imports either a comma separated list "
             "or @ followed by file containing a list of imports, one per line",
         ),
     ]

@@ -2,16 +2,21 @@ doc/_build
 workenv
 build
 dist
+dist2
 py2app.egg-info
 .DS_Store
 __pycache__
 .tox
 .coverage
 htmlcov
+TODO.txt
 
 syntax: glob
 *.dSYM
 *.pyc
 *.pyo
 *.so
+*.sv
+*.swp
 .coverage*
+launcher-*-*

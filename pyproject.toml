@@ -9,7 +9,7 @@ authors = [
 ]
 description = "Create standalone macOS applications with Python"
 dynamic = [ "version"]
-requires-python = ">=3.7,<4"
+requires-python = ">=3.8,<4"
 readme = "README.rst"
 license = { text = "MIT" }
 keywords=[".app", "standalone"]
@@ -29,6 +29,9 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Objective C",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Software Development :: User Interfaces",
@@ -66,8 +69,7 @@ setuptools = [
 py2app = "py2app._setuptools_stub:finalize_distribution_options"
 
 [project.entry-points."distutils.commands"]
-py2app = "py2app.build_app:py2app"
-py2app2 = "py2app._setuptools_stub:py2app"
+py2app = "py2app._setuptools_stub:py2app"
 
 [project.entry-points."distutils.setup_keywords"]
 app =    "py2app._setuptools_stub:validate_target"
@@ -81,3 +83,13 @@ xcmappingmodel = "py2app.converters.coredata:convert_mappingmodel"
 
 [tool.flit.sdist]
 exclude = [".github"]
+
+# This includes prebuild stub executables, even though those are
+# depedant on the python version.
+# XXX: Move back to setuptools to better control wheel creation
+#      - do not include launcher stubs in sdist
+#      - generate the launcher stubs when building a wheel
+#      - wheel is python-version specific (due to launcher binaries)
+# XXX: All of these should be automated to enable using trusted
+#      publishers on PyPI for releases.
+include = ["src/py2app/_apptemplate/launcher-*"]

@@ -12,9 +12,10 @@ The app itself:
       various forms of imports (absolute, relative, old-style python2,
       namespace packages 'pip-style', namespace package other,
       zipped eggs and non-zipped eggs, develop eggs)
-    - add another test that does something simular, using virtualenv to
+    - add another test that does something similar, using virtualenv to
       manage a python installation
 """
+
 import glob
 import hashlib
 import os
@@ -93,7 +94,7 @@ class TestBasicApp(unittest.TestCase):
             print("Creating basic_app extension failed")
             try:
                 os.waitpid(0, 0)
-            except os.error:
+            except OSError:
                 pass
             raise AssertionError("Creating basic_app extension failed")
 
@@ -114,13 +115,13 @@ class TestBasicApp(unittest.TestCase):
             print("Creating basic_app bundle failed")
             try:
                 os.waitpid(0, 0)
-            except os.error:
+            except OSError:
                 pass
             raise AssertionError("Creating basic_app bundle failed")
 
         try:
             os.waitpid(0, 0)
-        except os.error:
+        except OSError:
             pass
 
         cls.checksums = make_checksums(os.path.join(cls.app_dir, "dist/BasicApp.app"))

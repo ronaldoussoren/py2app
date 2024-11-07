@@ -1,9 +1,9 @@
-py2app is a Python setuptools command which will allow
-you to make standalone macOS application bundles
-and plugins from Python scripts.
+py2app is a tool that will create standalone application
+and plugin bundles on macOS from Python scripts.
 
-NOTE: py2app must be used on macOS to build applications,
-it cannot create Mac applications on other platforms.
+**NOTE:** The master branch is work in progress, current releases
+are created from branch ``v0.28-branch``.
+
 
 Project links
 -------------

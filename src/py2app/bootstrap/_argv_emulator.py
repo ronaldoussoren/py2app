@@ -8,10 +8,6 @@ When that is done we continue starting the application.
 This is a workaround to convert scripts that expect filenames on the
 command-line to work in a GUI environment. GUI applications should not
 use this feature.
-
-NOTE: This module uses ctypes and not the Carbon modules in the stdlib
-because the latter don't work in 64-bit mode and are also not available
-with python 3.x.
 """
 
 import ctypes
@@ -36,9 +32,6 @@ class EventTypeSpec(ctypes.Structure):
 
 def _ctypes_setup() -> ctypes.CDLL:
     carbon = ctypes.CDLL("/System/Library/Carbon.framework/Carbon")
-
-    # timer_func = ctypes.CFUNCTYPE(
-    #        None, ctypes.c_void_p, ctypes.c_long)
 
     ae_callback = ctypes.CFUNCTYPE(
         ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p
@@ -109,7 +102,6 @@ def _ctypes_setup() -> ctypes.CDLL:
 
 
 def _run_argvemulator(timeout: float = 60.0) -> None:
-
     # Configure ctypes
     carbon = _ctypes_setup()
 
@@ -301,7 +293,7 @@ def _run_argvemulator(timeout: float = 60.0) -> None:
     carbon.AERemoveEventHandler(kAEInternetSuite, kAEISGetURL, open_url_handler, FALSE)
 
 
-def _argv_emulation() -> None:
+def _argv_emulator() -> None:
     import os
 
     # only use if started by LaunchServices
@@ -309,4 +301,4 @@ def _argv_emulation() -> None:
         _run_argvemulator()
 
 
-_argv_emulation()
+_argv_emulator()

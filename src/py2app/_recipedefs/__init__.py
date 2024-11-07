@@ -5,4 +5,4 @@ All submodules from this package must be
 imported in __init__
 """
 
-from . import sphinx, stdlib  # noqa: F401
+from . import opencv, platformdirs, sphinx, stdlib, truststore  # noqa: F401

@@ -5,7 +5,6 @@ for py2app.
 
 XXX:
     - finish implementation
-    - add option for generating a pyrpoject.toml
     - target.prescripts (although current impl. is buggy)
 """
 
@@ -55,7 +54,6 @@ def fancy_split(name: str, s: typing.Any) -> typing.List[str]:
 def fixup_targets(
     targets: typing.Sequence[typing.Union[str, _ScriptInfo]],
 ) -> typing.Sequence[_ScriptInfo]:
-
     if targets is None:
         return []
 
@@ -67,7 +65,7 @@ def fixup_targets(
             f"target definition should be a sequence: {targets!r}"
         )
 
-    result = []
+    result: typing.List[_ScriptInfo] = []
     for target_def in targets:
         if isinstance(target_def, str):
             result.append({"script": target_def, "extra_scripts": []})
@@ -110,10 +108,10 @@ class Py2appDistribution(Distribution):
         raise RuntimeError("Don't instantiate!")  # pragma: no-cover
 
     def get_version(self) -> str:
-        ...  # pragma: no-cover
+        return "42"  # noqa: E704
 
     def get_name(self) -> str:
-        ...  # pragma: no-cover
+        return "name"  # # noqa: E704
 
 
 def finalize_distribution_options(dist: Py2appDistribution) -> None:
@@ -122,7 +120,7 @@ def finalize_distribution_options(dist: Py2appDistribution) -> None:
     point for py2app, to deal with autodiscovery in
     setuptools 61.
 
-    This addin will set the name attribute
+    This action will set the name attribute
     when a py2app distribution is detected that does not
     yet have this attribute.
     """
@@ -186,7 +184,7 @@ class py2app(Command):
         (
             "expected-missing-imports=",
             None,
-            "expected missing imports either a comma sperated list "
+            "expected missing imports either a comma separated list "
             "or @ followed by file containing a list of imports, one per line",
         ),
         (
@@ -430,12 +428,12 @@ class py2app(Command):
             "bdist", ("dist_dir", "dist_dir"), ("bdist_base", "bdist_base")
         )
 
-        recipe_options = {"zip-unsafe": []}
-        global_options = {}
+        recipe_options: typing.Dict[str, typing.Any] = {"zip-unsafe": []}
+        global_options: typing.Dict[str, typing.Any] = {}
 
         # the setuptools interface allows for exactly 1 bundle configuration
-        bundle_options = {}
-        bundles = []
+        bundle_options: typing.Dict[str, typing.Any] = {}
+        bundles: typing.List[_config.BundleOptions] = []
         self.config = _config.Py2appConfiguration(
             bundles, global_options, _config.RecipeOptions(recipe_options)
         )
@@ -448,12 +446,6 @@ class py2app(Command):
 
         # Global options
         if self.strip is not None:
-            # XXX: Test is not necessary because setuptools validates the type.
-            # if not isinstance(self.strip, (int, bool)):
-            #    # The documented interface uses "bool", but setuptools option
-            #    # parsing will set the attribute to an integer.
-            #    raise DistutilsOptionError("Strip is not a boolean")
-
             global_options["strip"] = bool(self.strip)
 
         # Recipe options
@@ -468,14 +460,14 @@ class py2app(Command):
 
         dist = self.distribution
         if self.app is not None:
-            app = fixup_targets(self.app)
+            app = fixup_targets(self.app)  # type: ignore
         else:
-            app = fixup_targets(dist.app)
+            app = fixup_targets(dist.app)  # type: ignore
 
         if self.plugin is not None:
-            plugin = fixup_targets(self.plugin)
+            plugin = fixup_targets(self.plugin)  # type: ignore
         else:
-            plugin = fixup_targets(dist.plugin)
+            plugin = fixup_targets(dist.plugin)  # type: ignore
 
         if app and plugin:
             raise DistutilsOptionError(
@@ -539,7 +531,7 @@ class py2app(Command):
             raise DistutilsOptionError("Cannot have both alias and semi-standalone")
 
         if self.semi_standalone:
-            bundle_options["build-type"] = _config.BuildType.SEMI_STANDALONE
+            raise DistutilsOptionError("semi-standalone is no longer supported")
         elif self.alias:
             bundle_options["build-type"] = _config.BuildType.ALIAS
         else:
@@ -695,7 +687,7 @@ class py2app(Command):
         # XXX: Not yet present in new configuration
         # self.include_plugins = fancy_split("include-plugins", self.include_plugins)
 
-    def run(self):
+    def run(self) -> None:
         if self.warnings:
             for w in self.warnings:
                 print(w)
@@ -704,16 +696,15 @@ class py2app(Command):
         progress = _progress.Progress()
         task_id = progress.add_task("Processing bundles", len(self.config.bundles))
 
-        ok = True
         for bundle in self.config.bundles:
             progress.update(
                 task_id,
                 current=f"{bundle.build_type.value} {'plugin' if bundle.plugin else 'application'} {bundle.name!r}",
             )
-            ok = _builder.build_bundle(self.config, bundle, progress) and ok
+            _builder.build_bundle(self.config, bundle, progress)
             progress.step_task(task_id)
         progress.update(task_id, current="")
         progress._progress.stop()
 
-        if not ok:
+        if progress.have_error:
             raise DistutilsError("Building bundles failed")

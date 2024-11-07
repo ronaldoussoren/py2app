@@ -1,13 +1,14 @@
-from modulegraph2 import ModuleGraph
+from modulegraph2 import BaseNode
 
 from .._config import RecipeOptions
+from .._modulegraph import ModuleGraph
 from .._recipes import recipe
 
 
 @recipe("sphinx", distribution="sphinx", modules=["sphinx"])
 def sphinx(graph: ModuleGraph, options: RecipeOptions) -> None:
     m = graph.find_node("sphinx")
-    if m is None or m.filename is None:
+    if not isinstance(m, BaseNode) or m.filename is None:
         return None
 
     for name in [

@@ -19,7 +19,7 @@ from modulegraph import zipio
 from modulegraph.find_modules import PY_SUFFIXES
 from modulegraph.modulegraph import Node
 
-from .progress import Progress
+from ._progress import Progress
 
 if sys.version_info[:2] < (3, 10):
     import importlib_metadata
@@ -34,10 +34,13 @@ def find_converter(
 ) -> typing.Optional[typing.Callable[..., None]]:
     if not gConverterTab:
         for ep in importlib_metadata.entry_points(group="py2app.converter"):
-            if sys.version_info[:2] >= (3, 10):
-                assert isinstance(
-                    ep, importlib_metadata.EntryPoint
-                ), f"{ep!r} is not an EntryPoint but {type(ep)!r}"
+            # if sys.version_info[:2] >= (3, 10):
+            #    XXX: Disabled because setuptool's vendoring of importlib_metadata
+            #    XXX: messes things up.
+            #
+            #    assert isinstance(
+            #        ep, importlib_metadata.EntryPoint
+            #    ), f"{ep!r} is not an EntryPoint but {type(ep)!r}"
             function = ep.load()
             if hasattr(function, "py2app_suffix"):
                 print(f"WARNING: using 'py2app_suffix' is deprecated for {function}")
@@ -324,6 +327,7 @@ del __load
 
 
 def make_loader(fn: str) -> str:
+    # XXX: Replace by an importlib finder
     return LOADER % fn
 
 
@@ -492,7 +496,6 @@ def copy_tree(
     condition: typing.Optional[typing.Callable[[str], bool]] = None,
     progress: typing.Optional[Progress] = None,
 ) -> typing.List[str]:
-
     """
     Copy an entire directory tree 'src' to a new location 'dst'.  Both
     'src' and 'dst' must be directory names.  If 'src' is not a
@@ -525,7 +528,7 @@ def copy_tree(
         raise DistutilsFileError("cannot copy tree '%s': not a directory" % src)
     try:
         names = zipio.listdir(src)
-    except os.error as exc:
+    except OSError as exc:
         (errno, errstr) = exc.args
         if dry_run:
             names = []
@@ -719,7 +722,6 @@ def codesign_adhoc(
 
     for _ in range(5):
         try:
-            progress.info(f"Signing {bundle}")
             _dosign(bundle, progress=progress)
             break
         except subprocess.CalledProcessError:

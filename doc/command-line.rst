@@ -14,7 +14,7 @@ This command reads configuration from a ``pyproject.toml`` file and
 performs the build. The command has a number of arguments that affect
 the build:
 
-* ``--pyproject-tom FILE``
+* ``--pyproject-tom FILE``, ``-c FILE``
 
   Specify a different configuration file in the same format as
   ``pyproject.toml``. All paths in this file will be resolved
@@ -27,11 +27,23 @@ the build:
   Perform a semi-standalone build. This creates a bundle that
   contains all code and resources except for the Python interpreter.
 
-* ``--alias``
+* ``--alias``, ``-A``
 
   Perform an alias build. This creates a bundle that contains
   symbolic links to code and is primarily useful during development
   because it allows for a quicker edit&test cycle.
+
+* ``--verbose``, ``-v``
+
+  Print more information while building.
+
+* ``--help``, ``-h``
+
+  Show help about the command-line interface.
+
+* ``--version``
+
+  Show program version.
 
 See :doc:`pyproject` for information on the structure of the pyproject
 configuration file.

@@ -2,7 +2,9 @@ import tkinter
 
 __version__ = "2.5b3"
 
-import objc  # noqa: F401
+import objc
+
+print(objc.__version__)
 
 
 class Application(tkinter.Frame):

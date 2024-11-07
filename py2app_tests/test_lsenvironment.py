@@ -1,6 +1,7 @@
 """
 Testcase for checking argv_emulation
 """
+
 import ast  # noqa: F401
 import os
 import platform  # noqa: F401

@@ -4,12 +4,13 @@ Mac OS X .app build command for distutils
 Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 """
 
+# mypy: ignore-errors
+
 import collections
 import imp
 import io
 import itertools
 import os
-import pathlib
 import plistlib
 import shlex
 import shutil
@@ -71,8 +72,7 @@ from py2app.util import (
     strip_files,
 )
 
-from .macho_audit import audit_macho_issues
-from .progress import Progress
+from ._progress import Progress
 from .recipes._types import RecipeInfo
 
 
@@ -101,11 +101,9 @@ class Py2appDistribution(Distribution):
     def __new__(self) -> "Py2appDistribution":
         raise RuntimeError("Don't instantiate!")
 
-    def get_version(self) -> str:
-        ...
+    def get_version(self) -> str: ...  # noqa: E704
 
-    def get_name(self) -> str:
-        ...
+    def get_name(self) -> str: ...  # noqa: E704
 
 
 PYTHONFRAMEWORK: str = typing.cast(str, get_config_var("PYTHONFRAMEWORK"))
@@ -132,7 +130,7 @@ def finalize_distribution_options(dist: Py2appDistribution) -> None:
     point for py2app, to deal with autodiscovery in
     setuptools 61.
 
-    This addin will set the name and py_modules attributes
+    This action will set the name and py_modules attributes
     when a py2app distribution is detected that does not
     yet have these attributes.
     are not already set
@@ -255,11 +253,13 @@ class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
         return destfn
 
 
-def iter_recipes() -> typing.Iterator[
-    typing.Tuple[
-        str, typing.Callable[["py2app", ModuleGraph], typing.Optional[RecipeInfo]]
+def iter_recipes() -> (
+    typing.Iterator[
+        typing.Tuple[
+            str, typing.Callable[["py2app", ModuleGraph], typing.Optional[RecipeInfo]]
+        ]
     ]
-]:
+):
     for name in dir(recipes):
         if name.startswith("_"):
             continue
@@ -400,7 +400,7 @@ class py2app(Command):
         (
             "expected-missing-imports=",
             None,
-            "expected missing imports either a comma sperated list "
+            "expected missing imports either a comma separated list "
             "or @ followed by file containing a list of imports, one per line",
         ),
         (
@@ -697,7 +697,6 @@ class py2app(Command):
         if not self.plist:
             self.plist = {}
         if isinstance(self.plist, str):
-
             with open(self.plist, "rb") as fp:
                 self.plist = plistlib.load(fp)
 
@@ -908,9 +907,7 @@ class py2app(Command):
     def iter_datamodels(
         self, resdir: typing.Union[str, os.PathLike[str]]
     ) -> typing.Iterator[typing.Tuple[str, str]]:
-        for (path, files) in (
-            normalize_data_file(fn) for fn in (self.datamodels or ())
-        ):
+        for path, files in (normalize_data_file(fn) for fn in (self.datamodels or ())):
             for fn in files:
                 basefn, ext = os.path.splitext(fn)
                 if ext != ".xcdatamodel":
@@ -928,7 +925,7 @@ class py2app(Command):
     def iter_mappingmodels(
         self, resdir: typing.Union[str, os.PathLike[str]]
     ) -> typing.Iterator[typing.Tuple[str, str]]:
-        for (path, files) in (
+        for path, files in (
             normalize_data_file(fn) for fn in (self.mappingmodels or ())
         ):
             for fn in files:
@@ -968,7 +965,7 @@ class py2app(Command):
     def iter_data_files(self) -> typing.Iterator[typing.Tuple[str, str]]:
         dist = self.distribution
         allres = chain(getattr(dist, "data_files", ()) or (), self.resources)
-        for (path, files) in (normalize_data_file(fn) for fn in allres):
+        for path, files in (normalize_data_file(fn) for fn in allres):
             for fn in files:
                 assert isinstance(fn, str)
                 yield fn, os.path.join(path, os.path.basename(fn))
@@ -1195,7 +1192,7 @@ class py2app(Command):
             if isinstance(item, Package) and item.filename == "-":
                 # In python3.3 or later the default importer supports namespace
                 # packages without an __init__ file, don't use that
-                # funcionality because that causes problems with our support
+                # functionality because that causes problems with our support
                 # for loading C extensions.
                 #
                 fn = os.path.join(self.temp_dir, "empty_package", "__init__.py")
@@ -1279,18 +1276,18 @@ class py2app(Command):
                 invalid_relative_import.append(module)
 
         if missing:
-            missing_unconditional: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
-            missing_fromimport: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
-            missing_fromimport_conditional: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
-            missing_conditional: typing.DefaultDict[
-                str, typing.Set[str]
-            ] = collections.defaultdict(set)
+            missing_unconditional: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
+            missing_fromimport: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
+            missing_fromimport_conditional: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
+            missing_conditional: typing.DefaultDict[str, typing.Set[str]] = (
+                collections.defaultdict(set)
+            )
 
             self.progress.info("")
             self.progress.info("checking for any import problems")
@@ -1761,29 +1758,6 @@ class py2app(Command):
             if arch in ("universal2", "arm64"):
                 codesign_adhoc(self.target.appdir, self.progress)
 
-            # XXX: Longer-term it would be nice to adjust the bundle
-            #      executables to match the detected CPU types.
-            architecture, deployment_target, warnings = audit_macho_issues(
-                pathlib.Path(self.target.appdir)
-            )
-            self.progress.info("")
-            if architecture == "universal2":
-                self.progress.info("Bundle supports all Mac CPU types")
-            elif architecture is None:
-                self.progress.info(
-                    "WARNING: some MachO files only support arm64, others only x86_64"
-                )
-            else:
-                self.progress.info(f"Bundle supports CPU type {architecture!r}")
-
-            if deployment_target is not None:
-                self.progress.info(
-                    f"Bundle supports macOS {deployment_target} or later"
-                )
-
-            for wrn in warnings:
-                self.progress.warning(wrn)
-
         self.app_files.append(dst)
 
     def copy_package_data(
@@ -2085,7 +2059,6 @@ class py2app(Command):
             real_prefix = None
             global_site_packages = False
             with open(os.path.join(sys.prefix, "pyvenv.cfg")) as fp:
-
                 for ln in fp:
                     if ln.startswith("home = "):
                         _, home_path = ln.split("=", 1)
@@ -2172,7 +2145,6 @@ class py2app(Command):
             prescripts.append("disable_linecache")
             prescripts.append("boot_" + self.style)
         else:
-
             # Add ctypes prescript because it is needed to
             # find libraries in the bundle, but we don't run
             # recipes and hence the ctypes recipe is not used
@@ -2385,7 +2357,6 @@ class py2app(Command):
         sourcefn: typing.Union[str, os.PathLike[str]],
         destfn: typing.Union[str, os.PathLike[str]],
     ) -> None:
-
         todo = [(sourcefn, destfn)]
 
         while todo:

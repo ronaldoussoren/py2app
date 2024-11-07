@@ -4,7 +4,10 @@ py2app Setuptools Configuration
 Setup function arguments
 ------------------------
 
-The primary way to configure py2app is to use a "setup.py" script that
+.. deprecated:: 2.0
+   Please move away from using the setuptools command interface
+
+The legacy way to configure py2app is to use a "setup.py" script that
 calls ``setuptools.setup()`` with a number of specific arguments.
 
 The basic structure:
@@ -166,7 +169,7 @@ Options for 'py2app' command:
    * - ``--optimize``
      - optimize
      - level (integer)
-     - Specifies the optimization level for the Pytho interpreter
+     - Specifies the optimization level for the Python interpreter
        level 0 to disable, level 1 for ``python -O``, and level 2
        for ``python -OO``. Defaults to the optimization level of the
        process running py2app.
@@ -265,7 +268,7 @@ Options for 'py2app' command:
 
    * - ``--extension``
      - extensionn
-     - file extension, includding the dot
+     - file extension, including the dot
      - The extension to use of the output, defaults to ".app" for applications
        and ".plugin" for plugins. Commonly only used for plugins.
 
@@ -366,7 +369,7 @@ Options for 'py2app' command:
    * - ``--use-pythonpath``
      - use_pythonpath
      - None (use ``True`` in setup.py)
-     - Allow the PYTHONPATH environment varialble to affect the interpreter's
+     - Allow the PYTHONPATH environment variable to affect the interpreter's
        search path.
 
        This is generally not useful, PYTHONPATH is not included in the minimal

@@ -1,33 +1,62 @@
+"""
+*BundlePaths* defines the paths to interesting locations
+in a  bundle.
+"""
+
 import dataclasses
 import pathlib
-import sys
+import typing
 
-from ._config import BuildType
+__all__ = ("BundlePaths", "bundle_paths")
 
 
 @dataclasses.dataclass(frozen=True)
 class BundlePaths:
+    """
+    Record the paths to interesting bits of a bundle:
+
+    - ``root``: 'Contents' folder;
+    - ``resources``: Root of the resource folder;
+    - ``main``: Folder containing the main bundle binary;
+    - ``pylib``: Location of Python libraries used that aren't zip safe;
+    - ``pylib_zipped``: Location of the zip file containing the Python libraries used;
+    - ``extlib``: Location of C extensions with special handling;
+    - ``framework``: Location for included native libraries and frameworks.
+    """
+
     root: pathlib.Path
     resources: pathlib.Path
     main: pathlib.Path
+    pylib: pathlib.Path
     pylib_zipped: pathlib.Path
     extlib: pathlib.Path
-    pylib: pathlib.Path
+    framework: pathlib.Path
+
+    def all_directories(self) -> typing.List[pathlib.Path]:
+        """
+        Return all directories for the bundle paths
+        """
+        return [
+            self.root,
+            self.resources,
+            self.main,
+            self.pylib,
+            self.extlib,
+            self.framework,
+        ]
 
 
-def bundle_paths(root: pathlib.Path, build_type: BuildType) -> BundlePaths:
-    lib = root / "Contents/Resources/lib"
-
-    if build_type == BuildType.SEMI_STANDALONE:
-        pylib_zipped = lib / ("python%d.%d/site-packages.zip" % (sys.version_info[:2]))
-    else:
-        pylib_zipped = lib / ("python%d%d.zip" % (sys.version_info[:2]))
-
+def bundle_paths(root: pathlib.Path) -> BundlePaths:
+    """
+    Return a ``BundlePaths`` value for a bundle located at *root*.
+    """
+    # See doc/bundle-structure.rst, section "Python Locations"
     return BundlePaths(
         root=root / "Contents",
         resources=root / "Contents/Resources",
         main=root / "Contents/MacOS",
-        pylib_zipped=pylib_zipped,
-        pylib=lib / "site-packages",
-        extlib=lib / "lib-dynload",
+        pylib_zipped=root / "Contents/Resources/python-libraries.zip",
+        pylib=root / "Contents/Resources/python-libraries",
+        extlib=root / "Contents/Resources/lib-dynload",
+        framework=root / "Contents/Frameworks",
     )

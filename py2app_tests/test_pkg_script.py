@@ -2,6 +2,7 @@
 Test case for a project that includes a script that has the same
 base-name as a package used by the script.
 """
+
 import os
 import shutil
 import signal

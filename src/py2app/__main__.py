@@ -1,43 +1,80 @@
 import argparse
 import pathlib
 import sys
+import typing
 
 try:
     import tomllib
 except ImportError:
-    import tomli as tomllib
+    import tomli as tomllib  # type: ignore
 
-from . import _builder, _config, _progress
+from . import __version__, _builder, _config, _progress
+
+DESCRIPTION = """\
+Build macOS executable bundles, in particular ".app" bundles.
+
+By default this will build fully standalone bundles, that is
+applications that can be used on different machines without
+installing dependencies.
+"""
 
 
-def parse_arguments(argv):
+def parse_arguments(
+    argv: typing.List[str],
+) -> typing.Tuple[bool, _config.Py2appConfiguration]:
     parser = argparse.ArgumentParser(
-        prog=f"{sys.executable} -mpy2app", description="Build macOS executable bundles"
+        prog=f"{sys.executable} -mpy2app",
+        description=DESCRIPTION,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        allow_abbrev=False,
     )
+    """
+    Parse command-line arguments, return if the build should
+    be verbose and the parsed configuration.
+    """
+
     parser.add_argument(
         "--pyproject-toml",
+        "-c",
         dest="pyproject",
-        default="pyproject.toml",
+        default="./pyproject.toml",
         metavar="FILE",
         type=pathlib.Path,
-        help="pyproject.toml path",
-    )
-    parser.add_argument(
-        "--semi-standalone",
-        dest="build_type",
-        default=None,
-        action="store_const",
-        const=_config.BuildType.SEMI_STANDALONE,
-        help="build a semi-standalone bundle",
+        help="path to pyproject.toml (default: %(default)s)",
     )
     parser.add_argument(
         "--alias",
+        "-A",
         dest="build_type",
-        default=_config.BuildType.SEMI_STANDALONE,
+        default=_config.BuildType.STANDALONE,
         action="store_const",
         const=_config.BuildType.ALIAS,
-        help="build an alias bundle",
+        help="build an alias bundle.",
     )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="print more information while building.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
+
+    #
+    # Experimental or internal options (can be documented,
+    # but should not be present in command-line help)
+    #
+
+    parser.add_argument(
+        "--x-debug-macho-usage",
+        dest="debug_macho_usage",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+
     args = parser.parse_args(argv)
 
     try:
@@ -53,32 +90,46 @@ def parse_arguments(argv):
         print(f"{args.pyproject}: {exc}", file=sys.stderr)
         sys.exit(1)
 
-    # XXX: I don't particularly like poking directly in '_locals'
     if args.build_type is not None:
-        config._local["build-type"] = args.build_type
-    return config
+        config.build_type = args.build_type
+
+    if args.debug_macho_usage:
+        config.debug_macho_usage = True
+
+    return args.verbose, config
 
 
-def main():
-    config = parse_arguments(sys.argv[1:])
+def main() -> int:
+    """
+    Main function for ``python -m py2app``, returns 0 if
+    there are no errors and 1 if there are.
+    """
+    verbose, config = parse_arguments(sys.argv[1:])
 
-    progress = _progress.Progress()
+    progress = _progress.Progress(level=2 if verbose else 1)
     task_id = progress.add_task("Processing bundles", len(config.bundles))
 
-    ok = True
     for bundle in config.bundles:
+        # XXX: Sort bundles to ensure nested bundles get build
+        #      after their enclosing bundle.
+        # XXX: This needs additional configuration!
         progress.update(
             task_id,
             current=f"{bundle.build_type.value} {'plugin' if bundle.plugin else 'application'} {bundle.name!r}",
         )
-        ok = _builder.build_bundle(config, bundle, progress) and ok
+        _builder.build_bundle(config, bundle, progress)
         progress.step_task(task_id)
     progress.update(task_id, current="")
+
+    if progress.have_error:
+        progress.print("")
+        progress.print(
+            ":stop_sign: [red]Build failed (see earlier messages for details)[/red]"
+        )
     progress._progress.stop()
 
-    if not ok:
-        raise SystemExit(1)
+    return 1 if progress.have_error else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

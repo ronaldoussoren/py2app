@@ -15,84 +15,27 @@ Support for recipes
 - Non-goal (for now) is making it easy/possible to maintain
   recipes out of tree.
 """
+
 import dataclasses
 import typing
 
 import packaging
-from modulegraph2 import ModuleGraph
+import packaging.specifiers
 
 from ._config import RecipeOptions
+from ._modulegraph import ModuleGraph
 from ._progress import Progress
 
-
-class ModuleGraphProxy:
-    # XXX: Class name is suboptimal
-    # XXX: Typing...
-    def __init__(self, graph):
-        self.__graph = graph
-        self.__updated = False
-
-    @property
-    def is_updated(self):
-        return self.__updated
-
-    def add_module(self, module_name):
-        node = self.__graph.find_node(module_name)
-        if node is not None:
-            return node
-
-        self.__updated = True
-        return self.__graph.add_module(module_name)
-
-    def add_script(self, script_path):
-        node = self.__graph.find_node(script_path)
-        if node is not None:
-            return node
-        self.__updated = True
-        return self.__graph.add_script(script_path)
-
-    def import_package(self, importing_module, package_name):
-        # XXX: This is not good enough, will result in false positive update
-        #      value if import_package was called earlier
-        node = self.__graph.find_node(package_name)
-        if node is not None:
-            if node.extension_attributes.get("py2app.full_package", False):
-                return node
-        self.__updated = True
-        node = self.__graph.import_package(importing_module, package_name)
-        node.extension_attributes["py2app.full_package"] = True
-        return node
-
-    def import_module(self, importing_module, module_name):
-        node = self.__graph.find_node(module_name)
-        if node is not None:
-            try:
-                self.__graph.edge_data(importing_module, node)
-            except KeyError:
-                pass
-
-            else:
-                return node
-
-        self.__updated = True
-        return self.__graph.import_module(importing_module, module_name)
-
-    def add_distribution(self, distribution):
-        # XXX: Need check if there actually is an update
-        self.__updated = True
-        return self.__graph.add_distribution(distribution)
-
-    def __getattr__(self, name):
-        if name.startswith("_"):
-            raise AttributeError(name)
-        return getattr(self.__graph, name)
+_RECIPE_FUNC = typing.Callable[[ModuleGraph, RecipeOptions], None]
 
 
 @dataclasses.dataclass
 class RecipeInfo:
-    # XXX: Should there be a name here?
+    # Name of the recipe for user reporting
     name: str
-    callback: typing.Callable[[ModuleGraph, RecipeOptions], None]
+
+    # The actual recipe function
+    callback: _RECIPE_FUNC
 
     # Only trigger when "distribution" is in the graph
     distribution: typing.Optional[str] = None
@@ -110,12 +53,15 @@ class RecipeInfo:
 RECIPE_REGISTRY = []
 
 
-def recipe(name, *, distribution=None, version_spec=None, modules=()):
-    # XXX: Should this move to a separate module with helper functions
-    #      for recipes?
-    #      Other functions in such a module could help in standardizing
-    #      annotations.
-    def decorator(function):
+def recipe(
+    name: str,
+    *,
+    distribution: typing.Optional[str] = None,
+    version_spec: typing.Optional[str] = None,
+    modules: typing.Sequence[str] = (),
+) -> typing.Callable[[_RECIPE_FUNC], _RECIPE_FUNC]:
+
+    def decorator(function: _RECIPE_FUNC) -> _RECIPE_FUNC:
         RECIPE_REGISTRY.append(
             RecipeInfo(
                 name=name,
@@ -130,11 +76,14 @@ def recipe(name, *, distribution=None, version_spec=None, modules=()):
     return decorator
 
 
-def iter_recipes(graph: ModuleGraph):
+def iter_recipes(graph: ModuleGraph) -> typing.Iterator[RecipeInfo]:
     """
     Yield all recipes that are relevant for the *graph*
     """
-    # XXX: This is fairly expensive,
+
+    # Collecting the distributions is fairly expensive, but must
+    # be done very time this function is called because the graph
+    # may have been changed between uses.
     distributions = {d.name: d.version for d in graph.distributions()}
 
     for recipe in RECIPE_REGISTRY:
@@ -143,9 +92,9 @@ def iter_recipes(graph: ModuleGraph):
                 continue
 
             if recipe.version_spec is not None:
-                if distributions[recipe.distribution] not in packaging.VersionSpec(
-                    recipe.version_spec, True
-                ):
+                if distributions[
+                    recipe.distribution
+                ] not in packaging.specifiers.SpecifierSet(recipe.version_spec, True):
                     continue
 
         if recipe.modules:
@@ -159,7 +108,9 @@ def iter_recipes(graph: ModuleGraph):
         yield recipe
 
 
-def process_recipes(graph: ModuleGraph, options: RecipeOptions, progress: Progress):
+def process_recipes(
+    graph: ModuleGraph, options: RecipeOptions, progress: Progress
+) -> None:
     """
     Run all recipes that are relevant for *graph*
 
@@ -167,29 +118,22 @@ def process_recipes(graph: ModuleGraph, options: RecipeOptions, progress: Progre
     recipes might update the graph, which might require
     other recipes to be (re)run
     """
-    # XXX: How to cleanly determine if the graph has
-    #      been updated?
-    # XXX: Stuff should be attached to graph nodes instead
-    #      of updating other state because recipes might
-    #      make nodes unreachable, making state updates
-    #      invalid.
-
     task_id = progress.add_task("Processing recipes", count=None)
 
     steps = 0
     while True:
-        proxy = typing.cast(ModuleGraph, ModuleGraphProxy(graph))
+        with graph.tracked_changes() as tracker:
+            for recipe in iter_recipes(graph):
+                progress.update(task_id, current=recipe.name)
+                progress.step_task(task_id)
+                steps += 1
 
-        for recipe in iter_recipes(graph):
-            progress.update(task_id, current=recipe.name)
-            progress.step_task(task_id)
-            steps += 1
+                recipe.callback(graph, options)
 
-            recipe.callback(proxy, options)
-
-        if proxy.is_updated:
+        if tracker.updated:
             progress.info(f"Recipe {recipe.name!r} updated the dependency graph")
         else:
             break
 
-    progress.update(task_id, total=steps, current="")
+    progress.update(task_id, count=steps, current="")
+    progress.task_done(task_id)

@@ -12,9 +12,10 @@ The app itself:
       various forms of imports (absolute, relative, old-style python2,
       namespace packages 'pip-style', namespace package other,
       zipped eggs and non-zipped eggs, develop eggs)
-    - add another test that does something simular, using virtualenv to
+    - add another test that does something similar, using virtualenv to
       manage a python installation
 """
+
 import hashlib
 import os
 import shutil

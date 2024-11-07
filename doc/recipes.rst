@@ -29,7 +29,7 @@ Built-in recipes
 ``docutils``:
     Several of its internal components are automatically imported
     (``languages``, ``parsers``, ``readers``, ``writers``,
-    ``parsers.rst.directives``, ``parsers.rst.langauges``).
+    ``parsers.rst.directives``, ``parsers.rst.languages``).
 
 ``matplotlib``:
     A dependency on ``pytz.zoneinfo.UTC`` is implied, and the ``matplotlib``

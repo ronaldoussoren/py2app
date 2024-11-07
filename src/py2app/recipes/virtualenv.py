@@ -1,11 +1,13 @@
+# mypy: ignore-errors
 """
 virtualenv installs a wrapper for the real distutils into the
 virtual environment. Ignore that wrapper, but go for the real
 distutils instead
 
-This recipe is rather compilicated and definitely not a
+This recipe is rather complicated and definitely not a
 good model for other recipes!!!
 """
+
 import imp
 import os
 import sys

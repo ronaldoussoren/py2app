@@ -13,12 +13,11 @@ the code might not work on older versions due to using newish APIs.
   ignored by py2app. Ensure that requirements are installed
   before invoking py2app.
 
-* Drop support for Python 3.5 or earlier, including
-  Python 2.7.
+* Py2app now only supports Python 3.8 or later.
 
-  The wheel metadata now contains "python_requires>=3.6",
-  which means pip will install py2app 0.28 for users of older
-  version of Python.
+* There is no "dryrun" option anymore, the new interface does not
+  have the option at all and the setuptools command ignores
+  the option.
 
 * Drop the "prefer_ppc" option, use the "arch" option instead
 
@@ -199,7 +198,7 @@ py2app 0.28
   the main code of py2app when they are not yet set (before
   autodiscovery kicks in).
 
-  In older versions of py2app buildin an app can fail in two
+  In older versions of py2app building an app can fail in two
   ways with setuptools 61.0 or later:
 
   - The name of the generated application is not based on
@@ -243,7 +242,7 @@ py2app 0.28
 
 * #412: Fix incompatibility with setuptools 60.8.1
 
-  The setuptools recipe did not recoginize all vendored dependencies
+  The setuptools recipe did not recognize all vendored dependencies
   in ``pkg_resources`` and that breaks app bundles that use ``pkg_resoures``.
 
 * PR #388: Add builtin definitions for 'quit' and 'exit' in site.py
@@ -551,7 +550,7 @@ Bug fixes:
 
 * Issue #226: Py2app could fail while reporting on possibly missing modules
 
-* Issue #228: The python executable included in the app bundle as ``sys.exectuable`` was not executable
+* Issue #228: The python executable included in the app bundle as ``sys.executable`` was not executable
 
 
 py2app 0.13

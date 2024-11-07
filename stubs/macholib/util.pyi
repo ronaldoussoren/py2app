@@ -1,4 +1,5 @@
 """ Minimal stubs """
+
 import typing
 
 NOT_SYSTEM_FILES: typing.List[str]

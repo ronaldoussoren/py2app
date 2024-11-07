@@ -6,12 +6,11 @@ DEFAULT_SCRIPT: str
 
 def _run() -> None:
     global __file__
-    import os
     import site  # noqa: F401
 
     sys.frozen = "macosx_app"  # type: ignore
 
-    argv0 = os.path.basename(os.environ["ARGVZERO"])
+    argv0 = sys.py2app_argv0.rsplit("/", 1)[-1]  # type: ignore[attr-defined]
     script = SCRIPT_MAP.get(argv0, DEFAULT_SCRIPT)  # noqa: F821
 
     sys.argv[0] = __file__ = script

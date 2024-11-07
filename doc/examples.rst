@@ -19,12 +19,6 @@ looks like the following::
     setup_requires=["py2app"],
     )
 
-The :doc:`py2applet` script can create ``setup.py`` files of this variety
-for you automatically::
-
-    $ py2applet --make-setup MyApplication.py
-
-
 Cross-platform
 --------------
 

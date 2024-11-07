@@ -1,3 +1,6 @@
 [tool.py2app.bundle.main]
   name = "Hello"
   script = "hello.py"
+  resources = [
+     "data.txt",
+  ]

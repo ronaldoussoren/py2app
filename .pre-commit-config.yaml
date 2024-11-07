@@ -1,5 +1,5 @@
 default_language_version:
-    python: python3.9
+    python: python3.12
 repos:
   - repo: https://github.com/pre-commit/mirrors-isort
     rev: v5.10.1
@@ -8,7 +8,7 @@ repos:
         additional_dependencies: [toml]
 
   - repo: https://github.com/psf/black
-    rev: 22.12.0
+    rev: 24.4.2
     hooks:
       - id: black
         # override until resolved: https://github.com/ambv/black/issues/402
@@ -16,20 +16,20 @@ repos:
         types: []
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.1
+    rev: v3.16.0
     hooks:
     -   id: pyupgrade
-        args: ['--py36-plus']
+        args: ['--py38-plus']
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.2
+    rev: v2.3.0
     hooks:
     -   id: codespell
         args: ["--config", ".codespellrc"]
         exclude: PyObjCTest|_metadata\.py$|\.fwinfo$|\.rtf$|\.mht$
 
   - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+    rev: 7.1.0
     hooks:
       - id: flake8
         args: ["--config", ".flake8" ]
@@ -45,8 +45,28 @@ repos:
         - flake8-raise
         - flake8-tidy-imports
 
+# XXX: Enabling this requires a new release of modulegraph2, and
+#      debugging why this command fails while the equivalent config
+#      in tox.ini does work.
+#  -   repo: https://github.com/pre-commit/mirrors-mypy
+#      rev: 'v1.10.1'
+#      hooks:
+#      -   id: mypy
+#          entry: env MYPYPATH=./stubs mypy
+#          args: [--namespace-packages, --check-untyped-defs, --disallow-untyped-defs]
+#          exclude: examples|py2app_tests
+#          additional_dependencies:
+#          - rich
+#          - types-setuptools
+#          - types-Pillow
+#          - types-attrs
+#          - packaging
+#          - modulegraph2
+#          - truststore
+#          - pyobjc-core
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.6.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
