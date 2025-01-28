@@ -663,7 +663,7 @@ def _dosign(
             (
                 "codesign",
                 "-s",
-                "-",
+                os.environ.get("PY2APP_SIGNING_IDENTITY", "-"),
                 "--preserve-metadata=identifier,entitlements,flags,runtime",
                 "-f",
             )
