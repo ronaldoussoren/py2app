@@ -1,4 +1,4 @@
-""" Minimal stubs """
+"""Minimal stubs"""
 
 import typing
 

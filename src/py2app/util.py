@@ -30,7 +30,7 @@ gConverterTab: typing.Dict[str, typing.Callable[..., None]] = {}  # XXX
 
 
 def find_converter(
-    source: typing.Union[str, os.PathLike[str]]
+    source: typing.Union[str, os.PathLike[str]],
 ) -> typing.Optional[typing.Callable[..., None]]:
     if not gConverterTab:
         for ep in importlib_metadata.entry_points(group="py2app.converter"):

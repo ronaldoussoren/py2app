@@ -86,7 +86,7 @@ EXCL_NAMES = {".svn", "__pycache__"}
 
 
 def iter_resources(
-    node: Union[Package, NamespacePackage]
+    node: Union[Package, NamespacePackage],
 ) -> typing.Iterator[typing.Tuple[str, bytes]]:
     """
     Yield all resources in a package, including those in subdirectories.

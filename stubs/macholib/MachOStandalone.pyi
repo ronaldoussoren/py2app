@@ -1,7 +1,8 @@
 """ """
 
-import typing
 import collections
+import typing
+
 from macholib.MachOGraph import MachOGraph
 
 class MachOStandalone:

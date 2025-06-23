@@ -1,14 +1,14 @@
 default_language_version:
     python: python3.12
 repos:
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.10.1
+  - repo: https://github.com/PyCQA/isort
+    rev: 6.0.1
     hooks:
       - id: isort
         additional_dependencies: [toml]
 
   - repo: https://github.com/psf/black
-    rev: 24.4.2
+    rev: 25.1.0
     hooks:
       - id: black
         # override until resolved: https://github.com/ambv/black/issues/402
@@ -16,20 +16,20 @@ repos:
         types: []
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.16.0
+    rev: v3.20.0
     hooks:
     -   id: pyupgrade
         args: ['--py38-plus']
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.1
     hooks:
     -   id: codespell
         args: ["--config", ".codespellrc"]
         exclude: PyObjCTest|_metadata\.py$|\.fwinfo$|\.rtf$|\.mht$
 
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.0
+    rev: 7.3.0
     hooks:
       - id: flake8
         args: ["--config", ".flake8" ]
@@ -66,7 +66,7 @@ repos:
 #          - pyobjc-core
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer

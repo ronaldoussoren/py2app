@@ -1,1 +1,1 @@
-""" py2app tests """
+"""py2app tests"""
