@@ -1,7 +1,8 @@
 """ """
 
 import typing
-from .modulegraph import Node, Extension, ModuleGraph
+
+from .modulegraph import Extension, ModuleGraph, Node
 
 PY_SUFFIXES: list[str]
 C_SUFFIXES: list[str]

@@ -1,1 +1,1 @@
-""" quot package """
+"""quot package"""

@@ -350,7 +350,7 @@ def validate_target(
 
 
 def normalize_data_file(
-    fn: typing.Union[str, typing.Tuple[str, typing.List[str]]]
+    fn: typing.Union[str, typing.Tuple[str, typing.List[str]]],
 ) -> typing.Tuple[str, typing.List[str]]:
     if isinstance(fn, str):
         fn = convert_path(fn)
@@ -1575,7 +1575,7 @@ class py2app(Command):
                 included_metadata.add(os.fspath(dist_info_path))
 
         def files_in_dir(
-            toplevel: typing.Union[str, os.PathLike[str]]
+            toplevel: typing.Union[str, os.PathLike[str]],
         ) -> typing.Iterator[str]:
             for dirname, _, fns in os.walk(toplevel):
                 for fn in fns:
