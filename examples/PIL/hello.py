@@ -23,6 +23,6 @@ def somefunc():
 
 if __name__ == "__main__":
     somefunc()
-    img = PIL.Image.open(PATH)
-    print(type(img))
-    print(img.size)
+    with PIL.Image.open(PATH) as img:
+        print(type(img))
+        print(img.size)
