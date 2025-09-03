@@ -9,4 +9,4 @@ on `www.python.org <https://www.python.org/downloads/macos/>`_.
 Py2app supports the Python versions that are supported by the CPython core
 developers and will add new versions of Python when they come available.
 
-Currently py2app supports Python 3.8 upto and including 3.13.
+Currently py2app supports Python 3.8 up to and including 3.14.
