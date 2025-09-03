@@ -5,6 +5,9 @@ import os
 import sys
 import types
 
+from importlib._bootstrap import _exec, _load
+from importlib import machinery, util
+
 _path_hooks: "list[str]"
 
 
@@ -19,9 +22,22 @@ class Loader:
         pkg_dir = os.path.join(
             os.environ["RESOURCEPATH"], "lib", "python%d.%d" % (sys.version_info[:2])
         )
-        return imp.load_module(
-            fullname, None, os.path.join(pkg_dir, fullname), ("", "", imp.PKG_DIRECTORY)
-        )
+        path = os.path.join(pkg_dir, fullname)
+        if os.path.isdir(path):
+            extensions = (machinery.SOURCE_SUFFIXES[:] +
+                          machinery.BYTECODE_SUFFIXES[:])
+            for extension in extensions:
+                init_path = os.path.join(path, '__init__' + extension)
+                if os.path.exists(init_path):
+                    path = init_path
+                    break
+            else:
+                raise ValueError('{!r} is not a package'.format(path))
+        spec = util.spec_from_file_location(fullname, path, submodule_search_locations=[])
+        if fullname in sys.modules:
+            return _exec(spec, sys.modules[fullname])
+        else:
+            return _load(spec)
 
 
 class Finder:

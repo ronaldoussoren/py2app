@@ -8,7 +8,6 @@ This recipe is rather complicated and definitely not a
 good model for other recipes!!!
 """
 
-import imp
 import os
 import sys
 import typing
@@ -50,7 +49,7 @@ def retry_import(mf: ModuleGraph, m: Node) -> typing.Optional[Node]:
     ]:
         if path is None:
             if name in sys.builtin_module_names:
-                return (None, None, ("", "", imp.C_BUILTIN))
+                return (None, None, ("", "", 6))  # imp.C_BUILTIN
 
             path = mf.path
 
@@ -66,9 +65,9 @@ def retry_import(mf: ModuleGraph, m: Node) -> typing.Optional[Node]:
     except ImportError:
         return None
 
-    if stuff[-1] == imp.PKG_DIRECTORY:
+    if stuff[-1] == 5:  # imp.PKG_DIRECTORY
         m.__class__ = Package
-    elif stuff[-1] == imp.PY_SOURCE:
+    elif stuff[-1] == 1:  # imp.PY_SOURCE
         m.__class__ = SourceModule
     else:
         m.__class__ = CompiledModule

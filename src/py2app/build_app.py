@@ -7,7 +7,7 @@ Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 # mypy: ignore-errors
 
 import collections
-import imp
+import importlib.machinery
 import io
 import itertools
 import os
@@ -1769,9 +1769,7 @@ class py2app(Command):
         This is a bit of a hack, it would be better to identify python eggs
         and copy those in whole.
         """
-        exts = [i[0] for i in imp.get_suffixes()]
-        exts.append(".py")
-        exts.append(".pyc")
+        exts = importlib.machinery.all_suffixes()
         exts.append(".pyo")
 
         def datafilter(item: str) -> bool:
