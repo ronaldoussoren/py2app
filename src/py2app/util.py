@@ -13,6 +13,9 @@ import time
 import typing
 from py_compile import compile  # noqa: A004
 
+from importlib._bootstrap import _load
+import importlib.machinery
+
 import macholib.util
 from macholib.util import is_platform_file
 from modulegraph import zipio
@@ -317,7 +320,9 @@ def __load():
             continue
         ext_path = os.path.join(path, ext)
         if os.path.exists(ext_path):
-            mod = imp.load_dynamic(__name__, ext_path)
+            loader = importlib.machinery.ExtensionFileLoader(__name__, ext_path)
+            spec = importlib.machinery.ModuleSpec(name=__name__, loader=loader, origin=ext_path)
+            mod = _load(spec)
             break
     else:
         raise ImportError(repr(ext) + " not found")
