@@ -6,12 +6,12 @@ import fcntl
 import io
 import os
 import pathlib
+import py_compile
 import stat
 import subprocess
 import sys
 import time
 import typing
-from py_compile import compile  # noqa: A004
 
 import macholib.util
 from macholib.util import is_platform_file
@@ -377,7 +377,7 @@ def byte_compile(
                         with open(fn, "wb") as fp_out:
                             fp_out.write(fp_in.read())
 
-                    compile(fn, cfile, dfile, optimize=optimize)
+                    py_compile.compile(fn, cfile, dfile, optimize=optimize)
                     os.unlink(fn)
 
                 elif suffix in PY_SUFFIXES:
