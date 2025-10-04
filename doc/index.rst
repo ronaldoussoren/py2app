@@ -30,7 +30,7 @@
       :link-type: doc
 
       - macOS 10.9 and later
-      - Python 3.7 and later
+      - Python 3.8 and later
       - x86_64 and arm64
 
    .. grid-item-card:: Installing py2app
