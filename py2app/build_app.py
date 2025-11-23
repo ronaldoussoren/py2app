@@ -249,9 +249,13 @@ def get_zipfile(dist, semi_standalone=False):
     return getattr(dist, "zipfile", None) or "site-packages.zip"
 
 
+# This is a crude hack, ignore some Tcl/Tk files that cause code signing errors
+# with CPython's 3.13 and 3.14 installers.
+_IGNORE_FILES = [ "tclooConfig.sh", "tclConfig.sh", "tkConfig.sh", "libtkstub8.6.a", "libtclstub8.6.a" ]
+
 def framework_copy_condition(src):
     # Skip Headers, .svn, and CVS dirs
-    return skipscm(src) and os.path.basename(src) != "Headers"
+    return skipscm(src) and os.path.basename(src) != "Headers" and not os.path.basename(src) in _IGNORE_FILES
 
 
 class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
