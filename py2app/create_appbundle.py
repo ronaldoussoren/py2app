@@ -3,7 +3,17 @@ import plistlib
 import shutil
 import sys
 
-from pkg_resources import resource_filename
+try:
+    import importlib.resources
+    import pathlib
+
+    def resource_filename(module, path):
+        modfiles = importlib.resources.files(module)
+        assert isinstance(modfiles, pathlib.Path)
+        return str(modfiles / "lib")
+
+except ImportError:
+    from pkg_resources import resource_filename
 
 import py2app.apptemplate
 from py2app.util import make_exec, makedirs, mergecopy, mergetree, skipscm
