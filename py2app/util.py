@@ -14,7 +14,15 @@ import zipfile
 from distutils import log
 
 import macholib.util
-import pkg_resources
+try:
+    from importlib.metadata import entry_points
+
+except ImportError:
+    import pkg_resources
+
+    def entry_points(group):
+        return list(pkg_resources.iter_entry_points("py2app.converter"))
+
 from macholib.util import is_platform_file
 from modulegraph import zipio
 from modulegraph.find_modules import PY_SUFFIXES
@@ -114,7 +122,7 @@ gConverterTab = {}
 
 def find_converter(source):
     if not gConverterTab:
-        for ep in pkg_resources.iter_entry_points("py2app.converter"):
+        for ep in entry_points(group="py2app.converter"):
             function = ep.load()
             if not hasattr(function, "py2app_suffix"):
                 print(
