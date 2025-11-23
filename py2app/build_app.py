@@ -29,7 +29,9 @@ from itertools import chain
 import macholib.dyld
 import macholib.MachO
 import macholib.MachOStandalone
-import pkg_resources
+
+if sys.version_info[:2] < (3, 9):
+    import pkg_resources
 from macholib.util import flipwritable
 from modulegraph import modulegraph, zipio
 from modulegraph.find_modules import find_modules, find_needed_modules, parse_mf_results
@@ -737,13 +739,13 @@ class py2app(Command):
         # included by apptemplate
         self.excludes.add("site")
         if getattr(self.distribution, "install_requires", None):
-            self.includes.add("pkg_resources")
-            self.eggs = pkg_resources.require(self.distribution.install_requires)
+            raise DistutilsOptionError("install_requires is no longer supported")
 
         # Setuptools/distribute style namespace packages uses
         # __import__('pkg_resources'), and that import isn't detected at the
         # moment. Forcefully include pkg_resources.
-        self.includes.add("pkg_resources")
+        if sys.version_info[:2] < (3, 9):
+            self.includes.add("pkg_resources")
 
         dylib_excludes = fancy_split(self.dylib_excludes)
         self.dylib_excludes = []
