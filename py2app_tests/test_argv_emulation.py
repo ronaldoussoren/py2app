@@ -15,10 +15,7 @@ import os
 import signal
 import platform
 import py2app
-if __name__ == "__main__":
-    from tools import kill_child_processes, version_tuple
-else:
-    from .tools import kill_child_processes, version_tuple
+from .tools import kill_child_processes, version_tuple
 
 DIR_NAME=os.path.dirname(os.path.abspath(__file__))
 
