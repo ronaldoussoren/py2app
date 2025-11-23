@@ -27,9 +27,8 @@ keys in the dictionary are recognized, most are optional:
     dest_base - directory and basename for the executable
                 if a directory is contained, must be the same for all targets
 """
-import pkg_resources
 
 # This makes the py2app command work in the distutils.core.setup() case
 import setuptools  # noqa: F401
 
-__version__ = pkg_resources.require("py2app")[0].version
+__version__ = "0.28.9"
