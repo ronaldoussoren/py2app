@@ -1,6 +1,7 @@
 """
 Automatic compilation of XIB files
 """
+
 from __future__ import print_function
 
 import os

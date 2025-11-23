@@ -5,6 +5,7 @@ You can drag in packages, Info.plist files, icons, etc.
 
 It's expected that only one Python script is dragged in.
 """
+
 from __future__ import print_function
 
 try:

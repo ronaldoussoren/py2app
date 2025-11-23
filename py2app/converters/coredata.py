@@ -1,6 +1,7 @@
 """
 Automatic compilation of CoreData model files
 """
+
 import os
 
 from py2app.decorators import converts

@@ -13,9 +13,9 @@ def update_metadata_cache_distinfo(infos, dist_info_path):
     if os.path.exists(fn):
         with open(fn, "r") as stream:
             for line in stream:
-                infos[
-                    os.path.realpath(os.path.join(dist_info_path, line.rstrip()))
-                ] = dist_info_path
+                infos[os.path.realpath(os.path.join(dist_info_path, line.rstrip()))] = (
+                    dist_info_path
+                )
 
     fn = os.path.join(dist_info_path, "RECORD")
     if os.path.exists(fn):

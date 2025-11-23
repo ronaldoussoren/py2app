@@ -7,10 +7,10 @@ import os
 import stat
 import subprocess
 import sys
+import textwrap
 import time
 import warnings
 import zipfile
-import textwrap
 from distutils import log
 
 import macholib.util
@@ -362,9 +362,9 @@ class FileSet(object):
         return res
 
 
-
 if imp is None:
-        LOADER = textwrap.dedent("""\
+    LOADER = textwrap.dedent(
+        """\
                 def __load():
                     import os, sys, importlib.machinery, importlib._bootstrap
                     ext = %r
@@ -382,10 +382,12 @@ if imp is None:
                         raise ImportError(repr(ext) + " not found")
                 __load()
                 del __load
-                """)
+                """
+    )
 
 else:
-        LOADER = textwrap.dedent("""\
+    LOADER = textwrap.dedent(
+        """\
                 def __load():
                     import os, sys, imp
                     ext = %r
@@ -400,7 +402,8 @@ else:
                         raise ImportError(repr(ext) + " not found")
                 __load()
                 del __load
-                """)
+                """
+    )
 
 
 def make_loader(fn):
@@ -423,7 +426,7 @@ def byte_compile(
         if verbose:
             print("writing byte-compilation script")
         if not dry_run:
-            kwargs = { "encoding": "utf-8" } if sys.version_info[0] == 3 else {}
+            kwargs = {"encoding": "utf-8"} if sys.version_info[0] == 3 else {}
             with NamedTemporaryFile(
                 suffix=".py", delete=False, mode="w", **kwargs
             ) as script:
@@ -623,7 +626,6 @@ def copy_tree(
     dry_run=0,
     condition=None,
 ):
-
     """
     Copy an entire directory tree 'src' to a new location 'dst'.  Both
     'src' and 'dst' must be directory names.  If 'src' is not a

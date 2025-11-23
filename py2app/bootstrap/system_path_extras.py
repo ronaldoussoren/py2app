@@ -1,4 +1,4 @@
-""" Add Apple's additional packages to sys.path """
+"""Add Apple's additional packages to sys.path"""
 
 
 def add_system_python_extras():

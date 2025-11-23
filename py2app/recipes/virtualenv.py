@@ -6,6 +6,7 @@ distutils instead
 This recipe is rather compilicated and definitely not a
 good model for other recipes!!!
 """
+
 from __future__ import absolute_import
 
 try:

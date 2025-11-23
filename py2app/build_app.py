@@ -3,13 +3,16 @@ Mac OS X .app build command for distutils
 
 Originally (loosely) based on code from py2exe's build_exe.py by Thomas Heller.
 """
+
 from __future__ import print_function
 
 import collections
+
 try:
     import imp
 except ImportError:
     from modulegraph import _imp as imp
+
 import os
 import plistlib
 import shlex
@@ -189,9 +192,9 @@ def rewrite_tkinter_load_commands(tkinter_path):
                 "_tkinter is linked to a version of Tcl not in /System"
             )
 
-        rewrite_map[
-            tcl_path
-        ] = "/System/Library/Frameworks/Tcl.framework/Versions/%s/Tcl" % (ver,)
+        rewrite_map[tcl_path] = (
+            "/System/Library/Frameworks/Tcl.framework/Versions/%s/Tcl" % (ver,)
+        )
 
     if not tk_path.startswith("/System/Library/Frameworks"):
         # ../Versions/8.5/Tk
@@ -201,9 +204,9 @@ def rewrite_tkinter_load_commands(tkinter_path):
                 "_tkinter is linked to a version of Tk not in /System"
             )
 
-        rewrite_map[
-            tk_path
-        ] = "/System/Library/Frameworks/Tk.framework/Versions/%s/Tk" % (ver,)
+        rewrite_map[tk_path] = (
+            "/System/Library/Frameworks/Tk.framework/Versions/%s/Tk" % (ver,)
+        )
 
     if rewrite_map:
         print("Relinking _tkinter.so to system Tcl/Tk")
@@ -989,9 +992,7 @@ class py2app(Command):
             sys.path = sys_old_path
 
     def iter_datamodels(self, resdir):
-        for (path, files) in (
-            normalize_data_file(fn) for fn in (self.datamodels or ())
-        ):
+        for path, files in (normalize_data_file(fn) for fn in (self.datamodels or ())):
             path = fsencoding(path)
             for fn in files:
                 fn = fsencoding(fn)
@@ -1009,7 +1010,7 @@ class py2app(Command):
             momc(src, dest)
 
     def iter_mappingmodels(self, resdir):
-        for (path, files) in (
+        for path, files in (
             normalize_data_file(fn) for fn in (self.mappingmodels or ())
         ):
             path = fsencoding(path)
@@ -1047,7 +1048,7 @@ class py2app(Command):
     def iter_data_files(self):
         dist = self.distribution
         allres = chain(getattr(dist, "data_files", ()) or (), self.resources)
-        for (path, files) in (normalize_data_file(fn) for fn in allres):
+        for path, files in (normalize_data_file(fn) for fn in allres):
             path = fsencoding(path)
             for fn in files:
                 fn = fsencoding(fn)

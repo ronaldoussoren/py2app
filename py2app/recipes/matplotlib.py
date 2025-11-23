@@ -4,6 +4,7 @@ import os
 
 import packaging
 
+
 def check(cmd, mf):
     m = mf.findNode("matplotlib")
     if m is None or m.filename is None:
