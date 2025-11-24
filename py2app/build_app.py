@@ -662,6 +662,9 @@ class py2app(Command):
         if sys.version_info[:2] < (3, 9):
             self.includes.add("pkg_resources")
 
+        elif sys.version_info[:2] < (3, 12):
+            self.includes.add("imp")
+
         dylib_excludes = fancy_split(self.dylib_excludes)
         self.dylib_excludes = []
         for fn in dylib_excludes:
