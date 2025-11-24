@@ -11,7 +11,6 @@ class Finder(object):
         if fullname in _path_hooks:  # noqa: F821
             import os
             from importlib.machinery import (
-                ModuleSpec,
                 SourceFileLoader,
                 SourcelessFileLoader,
             )

@@ -92,9 +92,7 @@ def importExternalTestCases(unittest, pathPattern="test_*.py", root=".", package
     """
 
     testFiles = recursiveGlob(root, pathPattern)
-    testModules = map(
-        lambda x: x[len(root) + 1 : -3].replace("/", "."), testFiles  # noqa: E203
-    )
+    testModules = [x[len(root) + 1:-3].replace("/", ".") for x in testFiles]
     if package is not None:
         testModules = [(package + "." + m) for m in testModules]
 
@@ -304,12 +302,6 @@ setup(
     long_description_content_type="text/x-rst; charset=UTF-8",
     classifiers=CLASSIFIERS,
     keywords=[".app", "standalone"],
-    install_requires=[
-        "altgraph>=0.17.5",
-        "modulegraph>=0.19.7",
-        "macholib>=1.16.4",
-        "packaging",
-    ],
     setup_requires=[
         "altgraph>=0.17.5",
         "modulegraph>=0.19.7",
@@ -376,12 +368,12 @@ setup(
     },
     entry_points={
         "setuptools.finalize_distribution_options": [
-            "py2app = py2app.build_app:finalize_distribution_options"
+            "py2app = py2app.build_support:finalize_distribution_options"
         ],
         "distutils.commands": ["py2app = py2app.build_app:py2app"],
         "distutils.setup_keywords": [
-            "app =    py2app.build_app:validate_target",
-            "plugin = py2app.build_app:validate_target",
+            "app =    py2app.build_support:validate_target",
+            "plugin = py2app.build_support:validate_target",
         ],
         "console_scripts": ["py2applet = py2app.script_py2applet:main"],
         "py2app.converter": [

@@ -14,6 +14,7 @@ import zipfile
 from distutils import log
 
 import macholib.util
+
 try:
     from importlib.metadata import entry_points
 
@@ -22,6 +23,7 @@ except ImportError:
 
     def entry_points(group):
         return list(pkg_resources.iter_entry_points("py2app.converter"))
+
 
 from macholib.util import is_platform_file
 from modulegraph import zipio
@@ -42,22 +44,30 @@ except ImportError:
 
 
 def os_path_islink(path):
-    warnings.warn("Use zipio.islink instead of os_path_islink", DeprecationWarning)
+    warnings.warn(
+        "Use zipio.islink instead of os_path_islink", DeprecationWarning, stacklevel=2
+    )
     return zipio.islink(path)
 
 
 def os_path_isdir(path):
-    warnings.warn("Use zipio.isdir instead of os_path_isdir", DeprecationWarning)
+    warnings.warn(
+        "Use zipio.isdir instead of os_path_isdir", DeprecationWarning, stacklevel=2
+    )
     return zipio.islink(path)
 
 
 def os_readlink(path):
-    warnings.warn("Use zipio.readlink instead of os_readlink", DeprecationWarning)
+    warnings.warn(
+        "Use zipio.readlink instead of os_readlink", DeprecationWarning, stacklevel=2
+    )
     return zipio.islink(path)
 
 
 def get_zip_data(path_to_zip, path_in_zip):
-    warnings.warn("Use zipio.open instead of get_zip_data", DeprecationWarning)
+    warnings.warn(
+        "Use zipio.open instead of get_zip_data", DeprecationWarning, stacklevel=2
+    )
     zf = zipfile.ZipFile(path_to_zip)
     return zf.read(path_in_zip)
 
@@ -67,7 +77,7 @@ def path_to_zip(path):
     Returns (pathtozip, pathinzip). If path isn't in a zipfile pathtozip
     will be None
     """
-    warnings.warn("Don't use this function", DeprecationWarning)
+    warnings.warn("Don't use this function", DeprecationWarning, stacklevel=2)
     zf = zipfile.ZipFile(path_to_zip)
     orig_path = path
     from distutils.errors import DistutilsFileError
@@ -103,7 +113,7 @@ def get_mtime(path, mustExist=True):
     """
     Get mtime of a path, even if it is inside a zipfile
     """
-    warnings.warn("Don't use this function", DeprecationWarning)
+    warnings.warn("Don't use this function", DeprecationWarning, stacklevel=2)
     try:
         return zipio.getmtime(path)
 
@@ -381,7 +391,8 @@ if imp is None:
                             continue
                         ext_path = os.path.join(path, ext)
                         if os.path.exists(ext_path):
-                            loader = importlib.machinery.ExtensionFileLoader(__name__, ext_path)
+                            loader = importlib.machinery.ExtensionFileLoader(
+                                 __name__, ext_path)
                             spec = importlib.machinery.ModuleSpec(
                                 name=__name__, loader=loader, origin=ext_path)
                             importlib._bootstrap._load(spec)

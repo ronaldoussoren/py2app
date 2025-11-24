@@ -30,8 +30,6 @@ import macholib.dyld
 import macholib.MachO
 import macholib.MachOStandalone
 
-if sys.version_info[:2] < (3, 9):
-    import pkg_resources
 from macholib.util import flipwritable
 from modulegraph import modulegraph, zipio
 from modulegraph.find_modules import find_modules, find_needed_modules, parse_mf_results
@@ -66,6 +64,7 @@ from py2app.util import (
     skipscm,
     strip_files,
 )
+from py2app.build_support import FixupTargets, Target
 
 try:
     from cStringIO import StringIO
@@ -97,39 +96,6 @@ elif hasattr(sys, "base_prefix"):
     sys_base_prefix = sys.base_prefix
 else:
     sys_base_prefix = sys.prefix
-
-
-def finalize_distribution_options(dist):
-    """
-    setuptools.finalize_distribution_options extension
-    point for py2app, to deail with autodiscovery in
-    setuptools 61.
-
-    This addin will set the name and py_modules attributes
-    when a py2app distribution is detected that does not
-    yet have these attributes.
-    are not already set
-    """
-    if getattr(dist, "app", None) is None and getattr(dist, "plugin", None) is None:
-        return
-
-    if getattr(dist.metadata, "py_modules", None) is None:
-        dist.py_modules = []
-
-    name = getattr(dist.metadata, "name", None)
-    if name is None or name == "UNKNOWN":
-        if dist.app:
-            targets = FixupTargets(dist.app, "script")
-        else:
-            targets = FixupTargets(dist.plugin, "script")
-
-        if not targets:
-            return
-
-        base = targets[0].get_dest_base()
-        name = os.path.basename(base)
-
-        dist.metadata.name = name
 
 
 def loader_paths(sourcefn, destfn):
@@ -251,11 +217,22 @@ def get_zipfile(dist, semi_standalone=False):
 
 # This is a crude hack, ignore some Tcl/Tk files that cause code signing errors
 # with CPython's 3.13 and 3.14 installers.
-_IGNORE_FILES = [ "tclooConfig.sh", "tclConfig.sh", "tkConfig.sh", "libtkstub8.6.a", "libtclstub8.6.a" ]
+_IGNORE_FILES = [
+    "tclooConfig.sh",
+    "tclConfig.sh",
+    "tkConfig.sh",
+    "libtkstub8.6.a",
+    "libtclstub8.6.a",
+]
+
 
 def framework_copy_condition(src):
     # Skip Headers, .svn, and CVS dirs
-    return skipscm(src) and os.path.basename(src) != "Headers" and not os.path.basename(src) in _IGNORE_FILES
+    return (
+        skipscm(src)
+        and os.path.basename(src) != "Headers"
+        and not os.path.basename(src) in _IGNORE_FILES
+    )
 
 
 class PythonStandalone(macholib.MachOStandalone.MachOStandalone):
@@ -312,72 +289,6 @@ def iterRecipes(module=recipes):
         check = getattr(getattr(module, name), "check", None)
         if check is not None:
             yield (name, check)
-
-
-# A very loosely defined "target".  We assume either a "script" or "modules"
-# attribute.  Some attributes will be target specific.
-class Target(object):
-    def __init__(self, **kw):
-        self.__dict__.update(kw)
-        # If modules is a simple string, assume they meant list
-        m = self.__dict__.get("modules")
-        if m and isinstance(m, basestring):
-            self.modules = [m]
-
-    def __repr__(self):
-        return "<Target %s>" % (self.__dict__,)
-
-    def get_dest_base(self):
-        dest_base = getattr(self, "dest_base", None)
-        if dest_base:
-            return dest_base
-
-        script = getattr(self, "script", None)
-        if script:
-            return os.path.basename(os.path.splitext(script)[0])
-        modules = getattr(self, "modules", None)
-        assert modules, "no script, modules or dest_base specified"
-        return modules[0].split(".")[-1]
-
-    def validate(self):
-        resources = getattr(self, "resources", [])
-        for r_filename in resources:
-            if not os.path.isfile(r_filename):
-                raise DistutilsOptionError(
-                    "Resource filename '%s' does not exist" % (r_filename,)
-                )
-
-
-def validate_target(dist, attr, value):
-    res = FixupTargets(value, "script")
-    other = {"app": "plugin", "plugin": "app"}
-    if res and getattr(dist, other[attr]):
-        raise DistutilsOptionError("You must specify either app or plugin, not both")
-
-
-def FixupTargets(targets, default_attribute):
-    if not targets:
-        return targets
-    try:
-        targets = eval(targets)
-    except:  # noqa: E722,B001
-        pass
-    ret = []
-    for target_def in targets:
-        if isinstance(target_def, basestring):
-            # Create a default target object, with the string as the attribute
-            target = Target(**{default_attribute: target_def})
-        else:
-            d = getattr(target_def, "__dict__", target_def)
-            if default_attribute not in d:
-                raise DistutilsOptionError(
-                    "This target class requires an attribute '%s'"
-                    % (default_attribute,)
-                )
-            target = Target(**d)
-        target.validate()
-        ret.append(target)
-    return ret
 
 
 def normalize_data_file(fn):
