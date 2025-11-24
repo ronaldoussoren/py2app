@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import glob
 import os
 
-import pkg_resources
+from py2app.util import resource_filename
 
 
 def check(cmd, mf):
@@ -20,7 +20,7 @@ def check(cmd, mf):
 
     plugin_dir = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.PluginsPath)
 
-    resources = [pkg_resources.resource_filename("py2app", "recipes/qt.conf")]
+    resources = [resource_filename("py2app", "recipes/qt.conf")]
     for item in cmd.qt_plugins:
         if "/" not in item:
             item = item + "/*"

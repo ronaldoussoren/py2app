@@ -16,7 +16,7 @@ import glob
 import os
 import sys
 
-import pkg_resources
+from py2app.util import resource_filename
 
 
 class Sip(object):
@@ -123,7 +123,7 @@ class Sip(object):
                 print("WARNING: ImportError in sip recipe ignored: %s" % (exc,))
 
         if mf.findNode("PyQt4") is not None or mf.findNode("PyQt5") is not None:
-            resources = [pkg_resources.resource_filename("py2app", "recipes/qt.conf")]
+            resources = [resource_filename("py2app", "recipes/qt.conf")]
 
             for item in cmd.qt_plugins:
                 if "/" not in item:

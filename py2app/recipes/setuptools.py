@@ -9,35 +9,38 @@ else:
 
 PRESCRIPT = textwrap.dedent(
     """\
-    import pkg_resources, zipimport, os
+    try:
+        import pkg_resources, zipimport, os
 
-    def find_eggs_in_zip(importer, path_item, only=False):
-        if importer.archive.endswith('.whl'):
-            # wheels are not supported with this finder
-            # they don't have PKG-INFO metadata, and won't ever contain eggs
-            return
+        def find_eggs_in_zip(importer, path_item, only=False):
+            if importer.archive.endswith('.whl'):
+                # wheels are not supported with this finder
+                # they don't have PKG-INFO metadata, and won't ever contain eggs
+                return
 
-        metadata = pkg_resources.EggMetadata(importer)
-        if metadata.has_metadata('PKG-INFO'):
-            yield Distribution.from_filename(path_item, metadata=metadata)
-        for subitem in metadata.resource_listdir(''):
-            if not only and pkg_resources._is_egg_path(subitem):
-                subpath = os.path.join(path_item, subitem)
-                dists = find_eggs_in_zip(zipimport.zipimporter(subpath), subpath)
-                for dist in dists:
-                    yield dist
-            elif subitem.lower().endswith(('.dist-info', '.egg-info')):
-                subpath = os.path.join(path_item, subitem)
-                submeta = pkg_resources.EggMetadata(zipimport.zipimporter(subpath))
-                submeta.egg_info = subpath
-                yield pkg_resources.Distribution.from_location(path_item, subitem, submeta)  # noqa: B950
+            metadata = pkg_resources.EggMetadata(importer)
+            if metadata.has_metadata('PKG-INFO'):
+                yield Distribution.from_filename(path_item, metadata=metadata)
+            for subitem in metadata.resource_listdir(''):
+                if not only and pkg_resources._is_egg_path(subitem):
+                    subpath = os.path.join(path_item, subitem)
+                    dists = find_eggs_in_zip(zipimport.zipimporter(subpath), subpath)
+                    for dist in dists:
+                        yield dist
+                elif subitem.lower().endswith(('.dist-info', '.egg-info')):
+                    subpath = os.path.join(path_item, subitem)
+                    submeta = pkg_resources.EggMetadata(zipimport.zipimporter(subpath))
+                    submeta.egg_info = subpath
+                    yield pkg_resources.Distribution.from_location(path_item, subitem, submeta)  # noqa: B950
 
-    def _fixup_pkg_resources():
-        pkg_resources.register_finder(zipimport.zipimporter, find_eggs_in_zip)
-        pkg_resources.working_set.entries = []
-        list(map(pkg_resources.working_set.add_entry, sys.path))
+        def _fixup_pkg_resources():
+            pkg_resources.register_finder(zipimport.zipimporter, find_eggs_in_zip)
+            pkg_resources.working_set.entries = []
+            list(map(pkg_resources.working_set.add_entry, sys.path))
 
-    _fixup_pkg_resources()
+        _fixup_pkg_resources()
+    except ImportError:
+        pass
 """
 )
 

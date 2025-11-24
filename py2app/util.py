@@ -17,6 +17,14 @@ import macholib.util
 
 try:
     from importlib.metadata import entry_points
+    from importlib.resources import files
+    import pathlib
+
+    def resource_filename(pkg, path):
+        p  = files(pkg) / path
+        assert isinstance(p, pathlib.Path)
+        return str(p)
+
 
 except ImportError:
     import pkg_resources
@@ -24,6 +32,7 @@ except ImportError:
     def entry_points(group):
         return list(pkg_resources.iter_entry_points("py2app.converter"))
 
+    from pkg_resources import resource_filename
 
 from macholib.util import is_platform_file
 from modulegraph import zipio

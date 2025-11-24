@@ -2,7 +2,28 @@ import ast
 import os
 import sys
 
-from pkg_resources import get_distribution
+try:
+    import importlib.metadata
+
+    def get_record_files(package):
+        return [str(p) for p in importlib.metadata.files(package)]
+
+
+
+except ImportError:
+    from pkg_resources import get_distribution
+
+    def get_record_files(package):
+        egg = get_distribution("black").egg_info
+        top = os.path.join(egg, "RECORD")
+        result = []
+        with open(top, "r") as f:
+            for line in f:
+                result.append(line.split(",", 1)[0])
+
+        return result
+
+
 
 
 def check(cmd, mf):
@@ -10,8 +31,7 @@ def check(cmd, mf):
     if m is None or m.filename is None:
         return None
 
-    egg = get_distribution("black").egg_info
-    top = os.path.join(egg, "RECORD")
+    files = get_record_files("black")
 
     # These cannot be in zip
     packages = ["black", "blib2to3"]
@@ -23,29 +43,27 @@ def check(cmd, mf):
     # Futhermore, b
 
     includes = set()
-    with open(top, "r") as f:
-        for line in f:
-            fname = line.split(",", 1)[0]
-            toplevel = fname.split("/", 1)[0]
-            if all(ch not in toplevel for ch in (".", "-")):
-                includes.add(toplevel)
+    for fname in files:
+        toplevel = fname.split("/", 1)[0]
+        if all(ch not in toplevel for ch in (".", "-")):
+            includes.add(toplevel)
 
-            if fname.endswith(".py"):
-                toplevel_node = mf.findNode(toplevel)
-                if toplevel_node is None:
-                    continue
-                # Black is mypyc compiled, but generally ships with
-                # the original source inside the wheel, that allows  us
-                # to extract dependencies from those sources.
-                #
-                # This is, to state is nicely, a crude hack that uses
-                # internal details of modulegraph.
-                fqname = fname[:-3].replace("/", ".")
-                source_path = os.path.join(os.path.dirname(egg), fname)
-                with open(source_path, "rb") as fp:
-                    update_dependencies_from_source(
-                        mf, fqname, fp, source_path, toplevel_node
-                    )
+        if fname.endswith(".py"):
+            toplevel_node = mf.findNode(toplevel)
+            if toplevel_node is None:
+                continue
+            # Black is mypyc compiled, but generally ships with
+            # the original source inside the wheel, that allows  us
+            # to extract dependencies from those sources.
+            #
+            # This is, to state is nicely, a crude hack that uses
+            # internal details of modulegraph.
+            fqname = fname[:-3].replace("/", ".")
+            source_path = os.path.join(os.path.dirname(egg), fname)
+            with open(source_path, "rb") as fp:
+                update_dependencies_from_source(
+                    mf, fqname, fp, source_path, toplevel_node
+                )
 
     includes = list(includes.difference(packages))
 
