@@ -1,6 +1,32 @@
 Release history
 ===============
 
+
+py2app 0.28.9
+-------------
+
+.. warning::
+
+   py2app won't work with editable installs.
+
+* Add support for python 3.14
+
+* py2app does not support free-threaded python
+
+* It is no longer possible to use an ``install_requires``
+  option when invoking py2app.
+
+  Support for this was inherited from setuptools, and
+  that feature has been deprecated for a long time at
+  this point.
+
+* Don't use ``pkg_resources``
+
+  The codebase still falls back to using ``pkg_resources``
+  for ancient versions of Python, but should no longer
+  use this library for versions that are still
+  in support.
+
 py2app 0.28.8
 -------------
 
