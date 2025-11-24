@@ -302,7 +302,7 @@ setup(
     long_description_content_type="text/x-rst; charset=UTF-8",
     classifiers=CLASSIFIERS,
     keywords=[".app", "standalone"],
-    setup_requires=[
+    install_requires=[
         "altgraph>=0.17.5",
         "modulegraph>=0.19.7",
         "macholib>=1.16.4",
