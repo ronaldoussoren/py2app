@@ -64,7 +64,7 @@ from py2app.util import (
     skipscm,
     strip_files,
 )
-from py2app.build_support import FixupTargets, Target
+from py2app.build_support import FixupTargets
 
 try:
     from cStringIO import StringIO

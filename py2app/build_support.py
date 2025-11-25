@@ -6,6 +6,7 @@ try:
 except NameError:
     basestring = str
 
+
 def finalize_distribution_options(dist):
     """
     setuptools.finalize_distribution_options extension
@@ -37,6 +38,7 @@ def finalize_distribution_options(dist):
         name = os.path.basename(base)
 
         dist.metadata.name = name
+
 
 def validate_target(dist, attr, value):
     res = FixupTargets(value, "script")

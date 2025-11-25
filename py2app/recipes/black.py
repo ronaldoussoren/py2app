@@ -6,9 +6,7 @@ try:
     import importlib.metadata
 
     def get_record_files(package):
-        return [str(p) for p in importlib.metadata.files(package)]
-
-
+        return [(str(p), str(p.locate())) for p in importlib.metadata.files(package)]
 
 except ImportError:
     from pkg_resources import get_distribution
@@ -19,11 +17,10 @@ except ImportError:
         result = []
         with open(top, "r") as f:
             for line in f:
-                result.append(line.split(",", 1)[0])
+                fname = line.split(",", 1)[0]
+                result.append((fname, os.path.join(os.path.dirname(egg), fname)))
 
         return result
-
-
 
 
 def check(cmd, mf):
@@ -43,7 +40,7 @@ def check(cmd, mf):
     # Futhermore, b
 
     includes = set()
-    for fname in files:
+    for fname, source_path in files:
         toplevel = fname.split("/", 1)[0]
         if all(ch not in toplevel for ch in (".", "-")):
             includes.add(toplevel)
@@ -59,7 +56,6 @@ def check(cmd, mf):
             # This is, to state is nicely, a crude hack that uses
             # internal details of modulegraph.
             fqname = fname[:-3].replace("/", ".")
-            source_path = os.path.join(os.path.dirname(egg), fname)
             with open(source_path, "rb") as fp:
                 update_dependencies_from_source(
                     mf, fqname, fp, source_path, toplevel_node
