@@ -22,6 +22,5 @@ setup(
     app=[
         dict(script="TinyTinyEdit.py", plist=plist),
     ],
-    install_requires=["pyobjc-framework-Cocoa"],
     setup_requires=["py2app"],
 )

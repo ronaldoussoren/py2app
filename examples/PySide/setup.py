@@ -8,10 +8,8 @@ from distutils.core import setup
 import py2app
 
 
-OPTIONS = {'arch': 'i386', 'argv_emulation': True, 'includes': 'wx',
+OPTIONS = {'argv_emulation': False,
                             'plist' : {
-                                        'LSPrefersPPC' : False,
-                                        'LSArchitecturePriority' : ['i386'],
                                         'CFBundleIdentifier' : 'com.saveon.placefind',
                                         'CFBundleName' : 'PlaceFind',
                                         'CFBundleDisplayName' : 'PlaceFind',

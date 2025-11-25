@@ -7,7 +7,7 @@ FILENAME = '/var/db/dhcpd_leases'
 
 def getLeases(fn):
     if os.path.exists(fn):
-        lines = file(fn, 'U')
+        lines = open(fn, 'U')
     else:
         lines = leases.EXAMPLE.splitlines()
     return list(leases.leases(lines))

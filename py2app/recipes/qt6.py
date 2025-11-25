@@ -47,7 +47,7 @@ def check(cmd, mf):
         # for modulegraph
         # 1. Use of 'sip'
         # 2. Use of other modules, datafiles and C libraries
-        #    in the PyQt5 package.
+        #    in the PyQt6 package.
         try:
             mf.import_hook("sip", m)
         except ImportError:
@@ -55,6 +55,7 @@ def check(cmd, mf):
 
         result = {"packages": ["PyQt6"]}
         result.update(extra)
+        print("XXX: PyQt", result)
         return result
 
     return None

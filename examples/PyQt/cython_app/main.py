@@ -6,8 +6,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-def main():
-    app = QApplication(sys.argv)
-    QMessageBox(text="Hello World").exec()

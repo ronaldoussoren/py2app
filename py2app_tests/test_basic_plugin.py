@@ -147,6 +147,9 @@ class TestBasicPlugin (unittest.TestCase):
         if os.path.exists('bundle_loader'):
             os.unlink('bundle_loader')
 
+        if os.path.exists('bundle_loader.dSYM'):
+            os.rmtree('bundle_loader.dSYM')
+
         if os.path.exists(os.path.join(cls.plugin_dir, 'build')):
             shutil.rmtree(os.path.join(cls.plugin_dir, 'build'))
 

@@ -25,14 +25,11 @@ setup(
     cmdclass = {'build_ext': build_ext},
     ext_modules = cythonize(["testLoad.pyx"], language_level=3),
 
-    setup_requires=['py2app'],
+    setup_requires=['py2app', 'Cython'],
     options={
              'cython': {"language_level":"3"},
-             'py2app': {"includes": "PyQt6.QWidget"}
+             'py2app': {"includes": ["PyQt6.QtWidgets"]}
             },
-    install_requires=[
-        "Cython"
-    ],
     entry_points={
         "console_scripts": [
             "testLoad = __main__:main"

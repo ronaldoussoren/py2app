@@ -1,7 +1,7 @@
 from setuptools import setup
 
 APP = ['main.py']
-DATA_FILES = ['view.qml']
+DATA_FILES = ['main.qml']
 OPTIONS = {'argv_emulation': False}
 
 setup(

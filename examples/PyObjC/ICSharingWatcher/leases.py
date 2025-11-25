@@ -2,10 +2,9 @@
 parse a dhcpd leases file
 """
 
-import itertools
 def leases(lines):
-    lines = itertools.imap(lambda s:s.strip(), lines)
-    for line in lines:
+    lines = map(lambda s:s.strip(), lines)
+    for line in (s.strip for s in lines):
         if line == '{':
             d = {}
             for line in lines:
