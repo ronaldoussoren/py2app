@@ -36,14 +36,14 @@ def check(cmd, mf):
     # black may include optimized platform specific C extension which has
     # unusual name, e.g. 610faff656c4cfcbb4a3__mypyc; best to determine it from
     # the egg-info/RECORD file.
-    #
-    # Futhermore, b
 
     includes = set()
     for fname, source_path in files:
-        toplevel = fname.split("/", 1)[0]
-        if all(ch not in toplevel for ch in (".", "-")):
+        if "/" not in fname and (fname.endswith(".py") or fname.endswith(".so")):
+            toplevel = fname.split(".")[0]
             includes.add(toplevel)
+        else:
+            toplevel = fname.split("/")[0]
 
         if fname.endswith(".py"):
             toplevel_node = mf.findNode(toplevel)

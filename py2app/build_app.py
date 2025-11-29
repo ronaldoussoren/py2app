@@ -1308,6 +1308,8 @@ class py2app(Command):
             if missing_unconditional:
                 warnings = []
                 for m in sorted(missing_unconditional):
+                    if m.endswith(".__main__"):
+                        continue
                     try:
                         if "." in m:
                             m1, m2 = m.rsplit(".", 1)
@@ -1326,7 +1328,18 @@ class py2app(Command):
                                 continue
 
                         else:
-                            o = __import__(m)
+                            try:
+                                o = __import__(m)
+                            except Exception:
+                                if self.may_log_missing(m):
+                                    warnings.append(
+                                        " * %s (%s)"
+                                        % (
+                                            m,
+                                            ", ".join(sorted(missing_unconditional[m])),
+                                        )
+                                    )
+                                continue
 
                         if isinstance(o, types.ModuleType):
                             if self.may_log_missing(m):
@@ -1351,6 +1364,7 @@ class py2app(Command):
             if missing_conditional and not self.no_report_missing_conditional_import:
                 warnings = []
                 for m in sorted(missing_conditional):
+                    print("missing conditional", m)
                     try:
                         if "." in m:
                             m1, m2 = m.rsplit(".", 1)
