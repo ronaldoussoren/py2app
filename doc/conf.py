@@ -160,7 +160,6 @@ html_theme_options = {
         },
     ],
     "globaltoc_expand_depth": 1,
-    "twitter_url": "https://twitter.com/ronaldoussoren",
     "github_url": "https://github.com/ronaldoussoren/py2app",
     "mastodon_url": "https://blog.ronaldoussoren.com/@ronald",
 }
