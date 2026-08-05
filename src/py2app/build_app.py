@@ -121,9 +121,6 @@ PLUGIN_SUFFIXES = {
 }
 
 
-sys_base_prefix = sys.base_prefix
-
-
 def finalize_distribution_options(dist: Py2appDistribution) -> None:
     """
     setuptools.finalize_distribution_options extension
@@ -605,44 +602,7 @@ class py2app(Command):
     def finalize_options(self) -> None:
         self.progress = Progress()
 
-        if sys_base_prefix != sys.prefix:
-            self._python_app = os.path.join(sys_base_prefix, "Resources", "Python.app")
-
-        elif os.path.exists(os.path.join(sys.prefix, "pyvenv.cfg")):
-            with open(os.path.join(sys.prefix, "pyvenv.cfg")) as fp:
-                for line in fp:
-                    if line.startswith("home = "):
-                        _, home_path = line.split("=", 1)
-                        prefix = os.path.dirname(home_path.strip())
-                        break
-
-                else:
-                    raise DistutilsPlatformError(
-                        "Pyvenv detected, but cannot determine base prefix"
-                    )
-
-                self._python_app = os.path.join(prefix, "Resources", "Python.app")
-
-        elif os.path.exists(os.path.join(sys.prefix, ".Python")):
-            # XXX: Python 2 virtualenv, check if this is still needed for
-            #      modern virtualenv on Python 3.
-            fn = os.path.join(
-                sys.prefix,
-                "lib",
-                "python%d.%d" % (sys.version_info[:2]),
-                "orig-prefix.txt",
-            )
-            if os.path.exists(fn):
-                with open(fn) as fp:
-                    prefix = fp.read().strip()
-                    self._python_app = os.path.join(prefix, "Resources", "Python.app")
-            else:
-                raise DistutilsPlatformError(
-                    "Virtualenv detected, but cannot determine base prefix"
-                )
-
-        else:
-            self._python_app = os.path.join(sys.prefix, "Resources", "Python.app")
+        self._python_app = os.path.join(sys.base_prefix, "Resources", "Python.app")
 
         if not self.strip:
             self.no_strip = True
@@ -808,38 +768,13 @@ class py2app(Command):
         # XXX: this is a bit of a hack!
         # ideally we'd use dylib functions to figure this out
         if prefix is None:
-            prefix = sys.prefix
+            prefix = sys.base_prefix
         if version is None:
             version = sys.version
         version = ".".join(version.split(".")[:2])
-        info = None
-        if sys_base_prefix != sys.prefix:
-            prefix = sys_base_prefix
-
-        elif os.path.exists(os.path.join(prefix, "pyvenv.cfg")):
-            with open(os.path.join(prefix, "pyvenv.cfg")) as fp:
-                for ln in fp:
-                    if ln.startswith("home = "):
-                        _, home_path = ln.split("=", 1)
-                        prefix = os.path.dirname(home_path.strip())
-                        break
-                else:
-                    raise DistutilsPlatformError(
-                        "Pyvenv detected, cannot determine base prefix"
-                    )
-
-        elif os.path.exists(os.path.join(prefix, ".Python")):
-            # We're in a virtualenv environment, locate the real prefix
-            fn = os.path.join(
-                prefix, "lib", "python%d.%d" % (sys.version_info[:2]), "orig-prefix.txt"
-            )
-
-            if os.path.exists(fn):
-                with open(fn) as fp:
-                    prefix = fp.read().strip()
 
         try:
-            fmwk = macholib.dyld.framework_find(os.fspath(prefix))
+            fmwk = macholib.dyld.framework_find(prefix)
         except ValueError:
             info = None
         else:
@@ -848,7 +783,7 @@ class py2app(Command):
         if info is not None:
             dylib = info["name"]
             runtime = os.path.join(info["location"], info["name"])
-        else:
+        else:  # For Anaconda Python Environments
             dylib = "libpython%d.%d.dylib" % (sys.version_info[:2])
             runtime = os.path.join(prefix, "lib", dylib)
 
@@ -1691,28 +1626,6 @@ class py2app(Command):
                     sfile = os.path.join(dpath, "Python")
                 self.copy_file(sfile, execdst)
                 make_exec(execdst)
-
-            elif os.path.exists(os.path.join(sys.prefix, ".Python")):
-                fn = os.path.join(
-                    sys.prefix,
-                    "lib",
-                    "python%d.%d" % (sys.version_info[:2]),
-                    "orig-prefix.txt",
-                )
-
-                if os.path.exists(fn):
-                    with open(fn) as fp:
-                        prefix = fp.read().strip()
-
-                rest_path = os.path.normpath(sys.executable)[
-                    len(os.path.normpath(sys.prefix)) + 1 :  # noqa: E203
-                ]
-                if rest_path.startswith("."):
-                    rest_path = rest_path[1:]
-
-                self.copy_file(os.path.join(prefix, rest_path), execdst)
-                make_exec(execdst)
-
             else:
                 self.copy_file(sys.executable, execdst)
                 make_exec(execdst)
@@ -2056,32 +1969,23 @@ class py2app(Command):
             # We're in a venv, which means sys.path
             # will be broken in alias builds unless we fix
             # it.
-            real_prefix = None
             global_site_packages = False
             with open(os.path.join(sys.prefix, "pyvenv.cfg")) as fp:
                 for ln in fp:
-                    if ln.startswith("home = "):
-                        _, home_path = ln.split("=", 1)
-                        real_prefix = os.path.dirname(home_path.strip())
-
-                    elif ln.startswith("include-system-site-packages = "):
+                    if ln.startswith("include-system-site-packages = "):
                         _, conifg_value = ln.split("=", 1)
                         global_site_packages = conifg_value == "true"
-
-            if real_prefix is None:
-                raise DistutilsPlatformError(
-                    "Pyvenv detected, cannot determine base prefix"
-                )
+                        break
 
             if self.site_packages or self.alias:
                 self.progress.info(
-                    f"Add paths for VENV ({real_prefix}, {global_site_packages}"
+                    f"Add paths for VENV ({sys.base_prefix}, {global_site_packages}"
                 )
                 prescripts.append("virtualenv_site_packages")
                 prescripts.append(
                     StringIO(
                         "_site_packages(%r, %r, %d)"
-                        % (sys.prefix, real_prefix, global_site_packages)
+                        % (sys.prefix, sys.base_prefix, global_site_packages)
                     )
                 )
 
