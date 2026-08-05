@@ -78,7 +78,7 @@ EXPECTED_MISSING = [
 
 
 def _mods(
-    values: typing.Sequence[typing.Tuple[str, typing.Sequence[str]]]
+    values: typing.Sequence[typing.Tuple[str, typing.Sequence[str]]],
 ) -> typing.Sequence[str]:
     return tuple(v[0] for v in values)
 

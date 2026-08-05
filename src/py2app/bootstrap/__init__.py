@@ -1,1 +1,1 @@
-""" py2app bootstrap files """
+"""py2app bootstrap files"""

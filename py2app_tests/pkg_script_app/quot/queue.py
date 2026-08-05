@@ -1,1 +1,1 @@
-""" quot.queue """
+"""quot.queue"""
