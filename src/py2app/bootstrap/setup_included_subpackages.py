@@ -8,12 +8,6 @@ import types
 _path_hooks: "list[str]"
 
 
-# XXX: Is this function used at all?
-def _included_subpackages(packages: "list[str]") -> None:
-    for _pkg in packages:
-        pass
-
-
 class Loader:
     def load_module(self, fullname: str) -> types.ModuleType:
         pkg_dir = os.path.join(
