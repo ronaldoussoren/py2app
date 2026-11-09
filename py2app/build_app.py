@@ -2440,7 +2440,9 @@ class py2app(Command):
         if sys.version_info[0] != 2:
             import zlib
 
-            self.copy_file(zlib.__file__, os.path.dirname(arcdir))
+        zlib_file = getattr(zlib, "__file__", None)
+        if zlib_file is not None:
+            self.copy_file(zlib_file, os.path.dirname(arcdir))
 
         ext_dir = os.path.join(pydir, os.path.basename(self.ext_dir))
         self.copy_tree(self.ext_dir, ext_dir, preserve_symlinks=True)
